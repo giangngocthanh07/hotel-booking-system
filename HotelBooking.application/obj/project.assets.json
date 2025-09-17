@@ -75,25 +75,31 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\HP VICTUS\\.nuget\\packages\\": {}
+    "C:\\Users\\ACERs\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\DA_Dotnet\\DATN\\HotelBooking\\HotelBooking.application\\HotelBooking.application.csproj",
+      "projectUniqueName": "E:\\Cybersoft\\FinalProject\\Hotel_Blazor\\HotelBooking.application\\HotelBooking.application.csproj",
       "projectName": "HotelBooking.application",
-      "projectPath": "D:\\DA_Dotnet\\DATN\\HotelBooking\\HotelBooking.application\\HotelBooking.application.csproj",
-      "packagesPath": "C:\\Users\\HP VICTUS\\.nuget\\packages\\",
-      "outputPath": "D:\\DA_Dotnet\\DATN\\HotelBooking\\HotelBooking.application\\obj\\",
+      "projectPath": "E:\\Cybersoft\\FinalProject\\Hotel_Blazor\\HotelBooking.application\\HotelBooking.application.csproj",
+      "packagesPath": "C:\\Users\\ACERs\\.nuget\\packages\\",
+      "outputPath": "E:\\Cybersoft\\FinalProject\\Hotel_Blazor\\HotelBooking.application\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "C:\\Users\\HP VICTUS\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\ACERs\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
       ],
       "sources": {
-        "C:\\Program Files\\dotnet\\library-packs": {},
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -142,7 +148,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

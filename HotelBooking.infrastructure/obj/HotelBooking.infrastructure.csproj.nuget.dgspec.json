@@ -1,26 +1,31 @@
 {
   "format": 1,
   "restore": {
-    "D:\\DA_Dotnet\\DATN\\HotelBooking\\HotelBooking.infrastructure\\HotelBooking.infrastructure.csproj": {}
+    "E:\\Cybersoft\\FinalProject\\Hotel_Blazor\\HotelBooking.infrastructure\\HotelBooking.infrastructure.csproj": {}
   },
   "projects": {
-    "D:\\DA_Dotnet\\DATN\\HotelBooking\\HotelBooking.infrastructure\\HotelBooking.infrastructure.csproj": {
+    "E:\\Cybersoft\\FinalProject\\Hotel_Blazor\\HotelBooking.infrastructure\\HotelBooking.infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\DA_Dotnet\\DATN\\HotelBooking\\HotelBooking.infrastructure\\HotelBooking.infrastructure.csproj",
+        "projectUniqueName": "E:\\Cybersoft\\FinalProject\\Hotel_Blazor\\HotelBooking.infrastructure\\HotelBooking.infrastructure.csproj",
         "projectName": "HotelBooking.infrastructure",
-        "projectPath": "D:\\DA_Dotnet\\DATN\\HotelBooking\\HotelBooking.infrastructure\\HotelBooking.infrastructure.csproj",
-        "packagesPath": "C:\\Users\\HP VICTUS\\.nuget\\packages\\",
-        "outputPath": "D:\\DA_Dotnet\\DATN\\HotelBooking\\HotelBooking.infrastructure\\obj\\",
+        "projectPath": "E:\\Cybersoft\\FinalProject\\Hotel_Blazor\\HotelBooking.infrastructure\\HotelBooking.infrastructure.csproj",
+        "packagesPath": "C:\\Users\\ACERs\\.nuget\\packages\\",
+        "outputPath": "E:\\Cybersoft\\FinalProject\\Hotel_Blazor\\HotelBooking.infrastructure\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\HP VICTUS\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\ACERs\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
-          "C:\\Program Files\\dotnet\\library-packs": {},
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -93,7 +98,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
