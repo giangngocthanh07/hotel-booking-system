@@ -1,0 +1,256 @@
+@import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Navbar */
+.navbar {
+    background: linear-gradient(90deg, #1a2a6c, #b21f1f);
+    transition: all 0.3s;
+}
+
+.navbar-brand, .nav-link {
+    color: white !important;
+    font-weight: 500;
+}
+
+.nav-link:hover, .nav-link.active {
+    color: #ffd700 !important;
+}
+
+.navbar-brand img {
+    height: 40px;
+}
+
+/* Hero Section */
+.hero-section {
+    background: url('https://images.unsplash.com/photo-1445019980597-93fa8acb246c?q=80&w=2074&auto=format&fit=crop') no-repeat center center fixed;
+    background-size: cover;
+    height: 600px;
+    position: relative;
+    display: flex;
+    align-items: flex-end; /* Align items to the bottom */
+    justify-content: center;
+    color: white;
+    text-align: center;
+    padding-bottom: 30px; /* Add padding to avoid touching the bottom edge */
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7));
+}
+
+.search-box {
+    background: #fff;
+    border: 3px solid #febb02; /* viền vàng */
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0; /* bỏ padding để khít form */
+    overflow: hidden; /* bo viền khít */
+}
+
+.search-box .input-group,
+.search-box .btn-search {
+    height: 60px;
+}
+
+.search-box h1 {
+    color: #1a2a6c;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+.input-group-text {
+    background-color: transparent;
+    border: none;
+    font-size: 1.2rem;
+    color: #555;
+}
+
+.form-control {
+    border: none;
+    box-shadow: none;
+    font-size: 1rem;
+    padding-left: 5px;
+}
+
+.form-control:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.btn-search {
+    background: #0071c2;
+    color: white;
+    font-weight: 600;
+    border: none;
+    border-radius: 6px;
+    height: 100%;
+    transition: all 0.3s;
+}
+
+.btn-search:hover {
+    background: #ffd700;
+    color: #1a2a6c;
+}
+
+/* Hero Image Card */
+        .hero-image { border-bottom-left-radius: .25rem; border-bottom-right-radius: .25rem; overflow: visible; }
+        .hero-image .card { border-radius: .5rem; }
+        @media (max-width: 767.98px) {
+            .hero-image { min-height: 260px; }
+            .hero-image .card { margin-bottom: 0; margin-top: 12px; }
+        }
+
+/* Hotel Cards */
+.hotel-card {
+    border: none;
+    border-radius: 12px;
+    overflow: hidden;
+    height: 100%;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.hotel-card:hover {
+    
+}
+
+.hotel-card:hover .card-title a,
+.hotel-card:hover .details-link {
+    color: #007bff !important;
+    text-decoration: underline;
+}
+
+.hotel-card:hover .details-link .details-icon {
+    transform: translateX(6px);
+}
+
+.hotel-card img {
+    height: 200px;
+    object-fit: cover;
+    width: 100%;
+}
+
+
+.card-body {
+    background: #fff;
+    padding: 20px;
+}
+
+.card-title {
+    color: #1a2a6c;
+    font-weight: 600;
+}
+
+.card-title a {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1a2a6c;
+    text-decoration: none;
+}
+
+.card-title a:hover {
+    color: #0071c2;
+}
+
+.card-desc {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.details-link {
+    color: #222 !important;
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 1rem;
+    box-shadow: none;
+    transition: color 0.2s;
+}
+.details-link:hover {
+    color: #007bff !important; /* Bootstrap blue */
+    text-decoration: underline;
+}
+.details-link .details-icon {
+    transition: transform 0.2s;
+}
+.details-link:hover .details-icon {
+    transform: translateX(6px);
+}
+
+
+.card-text.text-uppercase {
+    color: #b21f1f;
+}
+
+.coming-soon {
+    border-left: 5px solid #febb02;
+}
+/* About Section */
+.bg-light h2, .bg-light h3 {
+    color: #1a2a6c;
+    font-weight: 700;
+}
+
+.bg-light .lead {
+    color: #333;
+}
+
+/* Footer */
+.footer {
+    background: linear-gradient(90deg, #1a2a6c, #b21f1f);
+    color: white;
+    padding: 40px 0;
+}
+
+.footer a {
+    color: #ffd700;
+    text-decoration: none;
+}
+
+.footer a:hover {
+    color: white;
+}
+
+.social-icons i {
+    font-size: 1.5rem;
+    margin: 0 10px;
+    transition: color 0.3s;
+}
+
+.social-icons i:hover {
+    color: #ffd700;
+}
+
+/* General Page Styles */
+main.container-fluid {
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+h2, h3 {
+    color: #1a2a6c;
+    font-weight: 700;
+}
+
+.lead {
+    color: #333;
+}
+
+/* Ensure consistency for other pages */
+.page-content {
+    min-height: calc(100vh - 200px); /* Adjust based on navbar/footer height */
+}

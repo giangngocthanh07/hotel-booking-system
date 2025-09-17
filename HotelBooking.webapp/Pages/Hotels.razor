@@ -1,0 +1,254 @@
+@page "/Hotels"
+<!-- Hero Section -->
+<section class="hero-section position-relative min-vh-100">
+    <!-- Background Image -->
+    <div class="hero-bg">
+        <img src="https://your-cdn-link/hero-banner.jpg" alt="Hero Background" class="w-100 vh-100 object-fit-cover">
+    </div>
+
+    <!-- Overlay -->
+    <div class="hero-overlay position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-25"></div>
+
+    <!-- Heading  -->
+    <div class="hero-title position-absolute top-50 start-50 translate-middle text-center text-white">
+        <h1 class="fw-bold display-5">
+            STAY 24-HOURS WITH 24/7 <br /> SELF-SERVICES
+        </h1>
+    </div>
+
+    <!-- Search Form -->
+    <div class="hero-search position-absolute bottom-0 start-50 translate-middle-x w-100 mb-4" style="z-index: 3; max-width: 960px;">
+        <div class="card shadow-sm mx-auto">
+            <div class="card-body">
+                <form class="row g-2 align-items-end">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label small mb-1">Điểm đến</label>
+                        <input type="text" class="form-control form-control-sm"
+                            placeholder="Thành phố, khách sạn hoặc địa điểm" />
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label small mb-1">Nhận</label>
+                        <input type="date" class="form-control form-control-sm" />
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label small mb-1">Trả</label>
+                        <input type="date" class="form-control form-control-sm" />
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label small mb-1">Người</label>
+                        <select class="form-select form-select-sm">
+                            <option>2</option>
+                            <option>1</option>
+                            <option>3</option>
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-2 d-grid">
+                        <button type="button" class="btn btn-primary btn-sm w-100">
+                            <i class="bi bi-search me-1"></i> Tìm
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- Featured Hotels -->
+<section class="container my-5">
+    <h2 class="text-center mb-5">Tất cả các địa điểm</h2>
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card hotel-card h-100">
+                <a href="/hotels/saigon-centre" class="text-decoration-none">
+                    <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=2070&auto=format&fit=crop"
+                        class="card-img-top" alt="Saigon Centre">
+                </a>
+                <div class="card-body">
+                    <h5 class="card-title mb-2">
+                        <a href="/hotels/saigon-centre" class="text-decoration-none fw-bold">
+                            Saigon Centre
+                        </a>
+                    </h5>
+                    <p class="card-text text-uppercase fw-bold mb-1">
+                        <i class="fa fa-bed me-1 text-warning"></i>237 ROOMS
+                        <span class="ms-3">
+                            <i class="fa fa-location-dot me-1 text-danger"></i> HCMC
+                        </span>
+                    </p>
+                    <p class="card-text card-desc">
+                        Wink Hotel Saigon Centre shares the neighborhood with new beer pubs, fusion restaurants,
+                        boutique shops, and coffeehouses. Hip + historic.
+                    </p>
+                    <a href="/hotels/saigon-centre" class="details-link fw-bold text-decoration-none">
+                        Xem chi tiết <i class="fa fa-angle-right ms-1 details-icon"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card hotel-card h-100">
+                <a href="/hotels/danang-centre" class="text-decoration-none">
+                    <img src="https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=2070&auto=format&fit=crop"
+                        class="card-img-top" alt="Danang Centre">
+                </a>
+                <div class="card-body">
+                    <h5 class="card-title mb-2">
+                        <a href="/hotels/danang-centre" class="text-decoration-none fw-bold">Danang Centre</a>
+                    </h5>
+                    <p class="card-text text-uppercase fw-bold mb-1">
+                        <i class="fa fa-bed me-1 text-warning"></i>237 ROOMS
+                        <span class="ms-3">
+                            <i class="fa fa-location-dot me-1 text-danger"></i> Đà Nẵng
+                        </span>
+                    </p>
+                    <p class="card-text card-desc">
+                        It’s a neighborhood hub designed for innovation, comfort and function - the perfect launch pad
+                        for exploring.
+                    </p>
+                    <a href="/hotels/danang-centre" class="details-link fw-bold text-decoration-none">
+                        Xem chi tiết <i class="fa fa-angle-right ms-1 details-icon"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card hotel-card h-100">
+                <a href="/hotels/danang-riverside" class="text-decoration-none">
+                    <img src="https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?q=80&w=2048&auto=format&fit=crop"
+                        class="card-img-top" alt="Danang Riverside">
+                </a>
+                <div class="card-body">
+                    <h5 class="card-title mb-2">
+                        <a href="/hotels/danang-riverside" class="text-decoration-none fw-bold">Danang Riverside</a>
+                    </h5>
+                    <p class="card-text text-uppercase fw-bold mb-1">
+                        <i class="fa fa-bed me-1 text-warning"></i>237 ROOMS
+                        <span class="ms-3">
+                            <i class="fa fa-location-dot me-1 text-danger"></i> Đà Nẵng
+                        </span>
+                    </p>
+                    <p class="card-text card-desc">
+                        Wink Icon Danang Riverside is serenely settled into Vietnam's buzzing beach city. My Khe Beach =
+                        five minutes away with its beach bars + food trucks + sumptuous seafood restaurant + buzzing
+                        beer club.
+                    </p>
+                    <a href="/hotels/danang-riverside" class="details-link fw-bold text-decoration-none">
+                        Xem chi tiết <i class="fa fa-angle-right ms-1 details-icon"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card hotel-card h-100">
+                <a href="/hotels/tuy-hoa-beach" class="text-decoration-none">
+                    <img src="https://images.unsplash.com/photo-1445019980597-93fa8acb246c?q=80&w=2074&auto=format&fit=crop"
+                        class="card-img-top" alt="Nha Trang">
+                </a>
+                <div class="card-body">
+                    <h5 class="card-title mb-2">
+                        <a href="/hotels/tuy-hoa-beach" class="text-decoration-none fw-bold">Nha Trang</a>
+                    </h5>
+                    <p class="card-text text-uppercase fw-bold mb-1">
+                        <i class="fa fa-bed me-1 text-warning"></i>237 ROOMS
+                        <span class="ms-3">
+                            <i class="fa fa-location-dot me-1 text-danger"></i> Nha Trang
+                        </span>
+                    </p>
+                    <p class="card-text card-desc">
+                        Dive into Tuy Hoa, this beach city with its breathtaking natural beauty. Breathe in this
+                        undiscovered destination, between Quy Nhon and Nha Trang.
+                    </p>
+                    <a href="/hotels/tuy-hoa-beach" class="details-link fw-bold text-decoration-none">
+                        Xem chi tiết <i class="fa fa-angle-right ms-1 details-icon"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card hotel-card h-100">
+                <a href="/hotels/can-tho" class="text-decoration-none">
+                    <img src="https://images.unsplash.com/photo-1564501046972-82a8e35d691a?q=80&w=2070&auto=format&fit=crop"
+                        class="card-img-top" alt="Can Tho">
+                </a>
+                <div class="card-body">
+                    <h5 class="card-title mb-2">
+                        <a href="/hotels/can-tho" class="text-decoration-none fw-bold">Can Tho</a>
+                    </h5>
+                    <p class="card-text text-uppercase fw-bold mb-1">
+                        <i class="fa fa-bed me-1 text-warning"></i>237 ROOMS
+                        <span class="ms-3">
+                            <i class="fa fa-location-dot me-1 text-danger"></i> Cần Thơ
+                        </span>
+                    </p>
+                    <p class="card-text card-desc">
+                        Can Tho, the lively heart of the Mekong Delta's commerce and culture, it on the rise with Wink
+                        as your launchpad just a stone's throw from the waterfront lush landscape.
+                    </p>
+                    <a href="/hotels/can-tho" class="details-link fw-bold text-decoration-none">
+                        Xem chi tiết <i class="fa fa-angle-right ms-1 details-icon"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card hotel-card h-100">
+                <a href="/hotels/hai-phong" class="text-decoration-none">
+                    <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=2070&auto=format&fit=crop"
+                        class="card-img-top" alt="Hai Phong">
+                </a>
+                <div class="card-body">
+                    <h5 class="card-title mb-2">
+                        <a href="/hotels/hai-phong" class="text-decoration-none fw-bold">Hai Phong</a>
+                    </h5>
+                    <p class="card-text text-uppercase fw-bold mb-1">
+                        <i class="fa fa-bed me-1 text-warning"></i>237 ROOMS
+                        <span class="ms-3">
+                            <i class="fa fa-location-dot me-1 text-danger"></i> Hải Phòng
+                        </span>
+                    </p>
+                    <p class="card-text card-desc">
+                        Roll into Hai Phong, the đất cảng of northern Vietnam. Roam the phố cổ for vintage charm, then
+                        explore modern districts with sleek hotels, chic cafes, and stunning coastal areas.
+                    </p>
+                    <a href="/hotels/hai-phong" class="details-link fw-bold text-decoration-none">
+                        Xem chi tiết <i class="fa fa-angle-right ms-1 details-icon"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="text-center my-5">
+        <h3>COMING SOON</h3>
+    </div>
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card hotel-card coming-soon">
+                <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop"
+                    class="card-img-top" alt="Hanoi">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <a href="#" class="text-decoration-none">Hanoi</a>
+                    </h5>
+                    <p class="card-text text-uppercase fw-bold">
+                        <i class="fa fa-bed me-1 text-warning"></i>400 ROOMS
+                        <span class="ms-3">
+                            <i class="fa fa-location-dot me-1 text-danger"></i> Hà Nội
+                        </span>
+                    </p>
+
+                    <p class="card-text card-desc">Expected to begin operation since mid-2026. Wink Hotel Hanoi will
+                        introduce a
+                        fresh and dynamic presence to the city's hotel landscape.</p>
+                    <span class="badge bg-warning">Sắp mở cửa</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
