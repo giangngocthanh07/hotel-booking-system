@@ -37,6 +37,10 @@ public partial class Hotel
 
     public virtual Country? Country { get; set; }
 
+    public virtual ICollection<HotelAmenity> HotelAmenities { get; set; } = new List<HotelAmenity>();
+
+    public virtual ICollection<HotelPolicy> HotelPolicies { get; set; } = new List<HotelPolicy>();
+
     public virtual ICollection<Message> Messages { get; set; } = new List<Message>();
 
     public virtual User Owner { get; set; } = null!;
@@ -44,8 +48,4 @@ public partial class Hotel
     public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
 
     public virtual ICollection<RoomType> RoomTypes { get; set; } = new List<RoomType>();
-
-    public virtual ICollection<Amenity> Amenities { get; set; } = new List<Amenity>();
-
-    public virtual ICollection<Policy> Policies { get; set; } = new List<Policy>();
 }

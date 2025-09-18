@@ -19,11 +19,17 @@ public partial class HotelBookingContext : DbContext
 
     public virtual DbSet<Booking> Bookings { get; set; }
 
+    public virtual DbSet<BookingRoom> BookingRooms { get; set; }
+
     public virtual DbSet<City> Cities { get; set; }
 
     public virtual DbSet<Country> Countries { get; set; }
 
     public virtual DbSet<Hotel> Hotels { get; set; }
+
+    public virtual DbSet<HotelAmenity> HotelAmenities { get; set; }
+
+    public virtual DbSet<HotelPolicy> HotelPolicies { get; set; }
 
     public virtual DbSet<Message> Messages { get; set; }
 
@@ -39,13 +45,19 @@ public partial class HotelBookingContext : DbContext
 
     public virtual DbSet<Room> Rooms { get; set; }
 
+    public virtual DbSet<RoomAmenity> RoomAmenities { get; set; }
+
     public virtual DbSet<RoomImage> RoomImages { get; set; }
+
+    public virtual DbSet<RoomService> RoomServices { get; set; }
 
     public virtual DbSet<RoomType> RoomTypes { get; set; }
 
     public virtual DbSet<Service> Services { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
+
+    public virtual DbSet<UserRole> UserRoles { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer("Name=connectionStringHotelBooking");
@@ -93,25 +105,29 @@ public partial class HotelBookingContext : DbContext
                 .HasForeignKey(d => d.RoomTypeId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Bookings_RoomTypes");
+        });
 
-            entity.HasMany(d => d.Rooms).WithMany(p => p.Bookings)
-                .UsingEntity<Dictionary<string, object>>(
-                    "BookingRoom",
-                    r => r.HasOne<Room>().WithMany()
-                        .HasForeignKey("RoomId")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("FK_BookingRooms_Rooms"),
-                    l => l.HasOne<Booking>().WithMany()
-                        .HasForeignKey("BookingId")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("FK_BookingRooms_Bookings"),
-                    j =>
-                    {
-                        j.HasKey("BookingId", "RoomId").HasName("PK__BookingR__F0BD797E38132D46");
-                        j.ToTable("BookingRooms");
-                        j.HasIndex(new[] { "BookingId" }, "IX_BookingRooms_BookingId");
-                        j.HasIndex(new[] { "RoomId" }, "IX_BookingRooms_RoomId");
-                    });
+        modelBuilder.Entity<BookingRoom>(entity =>
+        {
+            entity.HasKey(e => new { e.BookingId, e.RoomId }).HasName("PK__BookingR__F0BD797E38132D46");
+
+            entity.HasIndex(e => e.BookingId, "IX_BookingRooms_BookingId");
+
+            entity.HasIndex(e => e.RoomId, "IX_BookingRooms_RoomId");
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+
+            entity.HasOne(d => d.Booking).WithMany(p => p.BookingRooms)
+                .HasForeignKey(d => d.BookingId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_BookingRooms_Bookings");
+
+            entity.HasOne(d => d.Room).WithMany(p => p.BookingRooms)
+                .HasForeignKey(d => d.RoomId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_BookingRooms_Rooms");
         });
 
         modelBuilder.Entity<City>(entity =>
@@ -167,38 +183,44 @@ public partial class HotelBookingContext : DbContext
                 .HasForeignKey(d => d.OwnerId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Hotels_Owner");
+        });
 
-            entity.HasMany(d => d.Amenities).WithMany(p => p.Hotels)
-                .UsingEntity<Dictionary<string, object>>(
-                    "HotelAmenity",
-                    r => r.HasOne<Amenity>().WithMany()
-                        .HasForeignKey("AmenityId")
-                        .HasConstraintName("FK_HotelAmenities_Amenities"),
-                    l => l.HasOne<Hotel>().WithMany()
-                        .HasForeignKey("HotelId")
-                        .HasConstraintName("FK_HotelAmenities_Hotels"),
-                    j =>
-                    {
-                        j.HasKey("HotelId", "AmenityId").HasName("PK__HotelAme__EE40948F26065B25");
-                        j.ToTable("HotelAmenities");
-                        j.HasIndex(new[] { "HotelId" }, "IX_HotelAmenities_HotelId");
-                    });
+        modelBuilder.Entity<HotelAmenity>(entity =>
+        {
+            entity.HasKey(e => new { e.HotelId, e.AmenityId }).HasName("PK__HotelAme__EE40948F26065B25");
 
-            entity.HasMany(d => d.Policies).WithMany(p => p.Hotels)
-                .UsingEntity<Dictionary<string, object>>(
-                    "HotelPolicy",
-                    r => r.HasOne<Policy>().WithMany()
-                        .HasForeignKey("PolicyId")
-                        .HasConstraintName("FK_HotelPolicies_Policies"),
-                    l => l.HasOne<Hotel>().WithMany()
-                        .HasForeignKey("HotelId")
-                        .HasConstraintName("FK_HotelPolicies_Hotels"),
-                    j =>
-                    {
-                        j.HasKey("HotelId", "PolicyId").HasName("PK__HotelPol__14E30845E7C3EC46");
-                        j.ToTable("HotelPolicies");
-                        j.HasIndex(new[] { "HotelId" }, "IX_HotelPolicies_HotelId");
-                    });
+            entity.HasIndex(e => e.HotelId, "IX_HotelAmenities_HotelId");
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+
+            entity.HasOne(d => d.Amenity).WithMany(p => p.HotelAmenities)
+                .HasForeignKey(d => d.AmenityId)
+                .HasConstraintName("FK_HotelAmenities_Amenities");
+
+            entity.HasOne(d => d.Hotel).WithMany(p => p.HotelAmenities)
+                .HasForeignKey(d => d.HotelId)
+                .HasConstraintName("FK_HotelAmenities_Hotels");
+        });
+
+        modelBuilder.Entity<HotelPolicy>(entity =>
+        {
+            entity.HasKey(e => new { e.HotelId, e.PolicyId }).HasName("PK__HotelPol__14E30845E7C3EC46");
+
+            entity.HasIndex(e => e.HotelId, "IX_HotelPolicies_HotelId");
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+
+            entity.HasOne(d => d.Hotel).WithMany(p => p.HotelPolicies)
+                .HasForeignKey(d => d.HotelId)
+                .HasConstraintName("FK_HotelPolicies_Hotels");
+
+            entity.HasOne(d => d.Policy).WithMany(p => p.HotelPolicies)
+                .HasForeignKey(d => d.PolicyId)
+                .HasConstraintName("FK_HotelPolicies_Policies");
         });
 
         modelBuilder.Entity<Message>(entity =>
@@ -332,21 +354,25 @@ public partial class HotelBookingContext : DbContext
             entity.HasOne(d => d.RoomType).WithMany(p => p.Rooms)
                 .HasForeignKey(d => d.RoomTypeId)
                 .HasConstraintName("FK_Rooms_RoomTypes");
+        });
 
-            entity.HasMany(d => d.Services).WithMany(p => p.Rooms)
-                .UsingEntity<Dictionary<string, object>>(
-                    "RoomService",
-                    r => r.HasOne<Service>().WithMany()
-                        .HasForeignKey("ServiceId")
-                        .HasConstraintName("FK__RoomServi__Servi__14270015"),
-                    l => l.HasOne<Room>().WithMany()
-                        .HasForeignKey("RoomId")
-                        .HasConstraintName("FK__RoomServi__RoomI__1332DBDC"),
-                    j =>
-                    {
-                        j.HasKey("RoomId", "ServiceId").HasName("PK__RoomServ__8ED78239812D49AF");
-                        j.ToTable("RoomServices");
-                    });
+        modelBuilder.Entity<RoomAmenity>(entity =>
+        {
+            entity.HasKey(e => new { e.RoomTypeId, e.AmenityId }).HasName("PK__RoomAmen__148A3961C8C36DBD");
+
+            entity.HasIndex(e => e.RoomTypeId, "IX_RoomAmenities_RoomTypeId");
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+
+            entity.HasOne(d => d.Amenity).WithMany(p => p.RoomAmenities)
+                .HasForeignKey(d => d.AmenityId)
+                .HasConstraintName("FK_RoomAmenities_Amenities");
+
+            entity.HasOne(d => d.RoomType).WithMany(p => p.RoomAmenities)
+                .HasForeignKey(d => d.RoomTypeId)
+                .HasConstraintName("FK_RoomAmenities_RoomTypes");
         });
 
         modelBuilder.Entity<RoomImage>(entity =>
@@ -363,6 +389,23 @@ public partial class HotelBookingContext : DbContext
                 .HasConstraintName("FK_RoomImages_RoomTypes");
         });
 
+        modelBuilder.Entity<RoomService>(entity =>
+        {
+            entity.HasKey(e => new { e.RoomId, e.ServiceId }).HasName("PK__RoomServ__8ED78239812D49AF");
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+
+            entity.HasOne(d => d.Room).WithMany(p => p.RoomServices)
+                .HasForeignKey(d => d.RoomId)
+                .HasConstraintName("FK__RoomServi__RoomI__1332DBDC");
+
+            entity.HasOne(d => d.Service).WithMany(p => p.RoomServices)
+                .HasForeignKey(d => d.ServiceId)
+                .HasConstraintName("FK__RoomServi__Servi__14270015");
+        });
+
         modelBuilder.Entity<RoomType>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__RoomType__3214EC072436EC76");
@@ -376,22 +419,6 @@ public partial class HotelBookingContext : DbContext
             entity.HasOne(d => d.Hotel).WithMany(p => p.RoomTypes)
                 .HasForeignKey(d => d.HotelId)
                 .HasConstraintName("FK_RoomTypes_Hotels");
-
-            entity.HasMany(d => d.Amenities).WithMany(p => p.RoomTypes)
-                .UsingEntity<Dictionary<string, object>>(
-                    "RoomAmenity",
-                    r => r.HasOne<Amenity>().WithMany()
-                        .HasForeignKey("AmenityId")
-                        .HasConstraintName("FK_RoomAmenities_Amenities"),
-                    l => l.HasOne<RoomType>().WithMany()
-                        .HasForeignKey("RoomTypeId")
-                        .HasConstraintName("FK_RoomAmenities_RoomTypes"),
-                    j =>
-                    {
-                        j.HasKey("RoomTypeId", "AmenityId").HasName("PK__RoomAmen__148A3961C8C36DBD");
-                        j.ToTable("RoomAmenities");
-                        j.HasIndex(new[] { "RoomTypeId" }, "IX_RoomAmenities_RoomTypeId");
-                    });
         });
 
         modelBuilder.Entity<Service>(entity =>
@@ -424,21 +451,23 @@ public partial class HotelBookingContext : DbContext
             entity.Property(e => e.PasswordHash).HasMaxLength(255);
             entity.Property(e => e.PhoneNumber).HasMaxLength(20);
             entity.Property(e => e.UserName).HasMaxLength(100);
+        });
 
-            entity.HasMany(d => d.Roles).WithMany(p => p.Users)
-                .UsingEntity<Dictionary<string, object>>(
-                    "UserRole",
-                    r => r.HasOne<Role>().WithMany()
-                        .HasForeignKey("RoleId")
-                        .HasConstraintName("FK_UserRoles_Roles"),
-                    l => l.HasOne<User>().WithMany()
-                        .HasForeignKey("UserId")
-                        .HasConstraintName("FK_UserRoles_Users"),
-                    j =>
-                    {
-                        j.HasKey("UserId", "RoleId").HasName("PK__UserRole__AF2760ADCB5D2FC2");
-                        j.ToTable("UserRoles");
-                    });
+        modelBuilder.Entity<UserRole>(entity =>
+        {
+            entity.HasKey(e => new { e.UserId, e.RoleId }).HasName("PK__UserRole__AF2760ADCB5D2FC2");
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+
+            entity.HasOne(d => d.Role).WithMany(p => p.UserRoles)
+                .HasForeignKey(d => d.RoleId)
+                .HasConstraintName("FK_UserRoles_Roles");
+
+            entity.HasOne(d => d.User).WithMany(p => p.UserRoles)
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("FK_UserRoles_Users");
         });
 
         OnModelCreatingPartial(modelBuilder);
