@@ -2,6 +2,8 @@
 
 using HotelBooking.webapp.Components;
 using MudBlazor.Services;
+using Blazored.LocalStorage;
+using HotelBooking.webapp.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,7 +21,7 @@ builder.Services.AddHttpClient("HotelBookingAPI", client =>
 });
 
 // add service blazor local storage
-// builder.Services.AddBlazoredLocalStorage();
+builder.Services.AddBlazoredLocalStorage();
 
 var app = builder.Build();
 

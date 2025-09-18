@@ -1,0 +1,120 @@
+@page "/customer-register"
+
+@*Add Service http client*@
+@inject IHttpClientFactory HttpClientFactory;
+@inject NavigationManager _navManager;
+
+@using System.Net.Http.Json
+@using System.Text.Json
+@using HotelBooking.webapp.ViewModels
+
+
+
+<div class="d-flex justify-content-center align-items-center min-vh-100">
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="bg-white border rounded shadow-sm p-4">
+                    <h2 class="mb-2">Đăng ký tài khoản</h2>
+                    <h6 class="mb-3 fw-normal">Đặt phòng khách sạn dễ dàng</h6>
+                    <p class="text-muted mb-4">Hãy tạo tài khoản để trải nghiệm dịch vụ đặt phòng tốt nhất từ chúng tôi.
+                    </p>
+                    <EditForm Model="@userRegister" OnValidSubmit="HandleValidSubmit">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="username" class="form-label">Username</label>
+                                <input @bind="userRegister.UserName" type="text" class="form-control" id="username"
+                                    required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="fullname" class="form-label">Full Name</label>
+                                <input @bind="userRegister.FullName" type="text" class="form-control" id="fullname"
+                                    required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="phone" class="form-label">Phone Number</label>
+                                <input @bind="userRegister.PhoneNumber" type="text" class="form-control" id="phone"
+                                    required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">Email</label>
+                                <input @bind="userRegister.Email" type="email" class="form-control" id="email" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="password" class="form-label">Password</label>
+                                <input @bind="userRegister.Password" type="password" class="form-control" id="password"
+                                    required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="confirmPassword" class="form-label">Confirm Password</label>
+                                <input @bind="userRegister.ConfirmPassword" type="password" class="form-control"
+                                    id="confirmPassword" required>
+                            </div>
+                        </div>
+                        <div class="form-check mt-4">
+                            <input class="form-check-input" type="checkbox" id="receiveEmail">
+                            <label class="form-check-label" for="receiveEmail">
+                                Vâng, tôi muốn nhận email từ Hotel Booking
+                            </label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="agreeTerm" required>
+                            <label class="form-check-label" for="agreeTerm">
+                                Tôi đồng ý với <a href="#">Điều khoản, Chính sách bảo mật và Phí dịch vụ</a>
+                            </label>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Tạo tài khoản</button>
+                        <div class="text-center mt-3">
+                            <small class="text-muted">Bạn đã có tài khoản? <a href="/customer-login">Đăng
+                                    nhập</a></small>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private UserRegisterVM userRegister = new UserRegisterVM();
+
+    private string messageAlert = "";
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            var client = HttpClientFactory.CreateClient("HotelBookingApi");
+            var response = await client.PostAsJsonAsync("api/auth/register", new
+            {
+                UserName = userRegister.UserName,
+                Email = userRegister.Email,
+                Password = userRegister.Password,
+                ConfirmPassword = userRegister.ConfirmPassword,
+                FullName = userRegister.FullName,
+                Phone = userRegister.PhoneNumber,
+                Avatar = userRegister.AvatarUrl,
+                DateOfBirth = userRegister.DateOfBirth,
+            });
+
+            if (response.IsSuccessStatusCode)
+            {
+                messageAlert = "Registration successful! Redirecting to login...";
+                // Redirect to login page after a short delay
+                await Task.Delay(2000);
+                _navManager.NavigateTo("/login");
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                messageAlert = $"Registration failed: {errorContent}";
+            }
+        }
+        catch (Exception ex)
+        {
+            messageAlert = $"An error occurred: {ex.Message}";
+        }
+    }
+}

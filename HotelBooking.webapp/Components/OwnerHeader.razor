@@ -1,0 +1,77 @@
+@* OwnerHeader.razor *@
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid flex-column">
+
+        <!-- Brand trên 1 dòng riêng, canh trái -->
+        <a class="navbar-brand fw-bold align-self-start mb-2" href="/owner/dashboard">
+            <i class="fas fa-hotel me-2"></i> Hotel Booking | Owner Dashboard
+        </a>
+
+        <!-- Nút toggle cho mobile -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#ownerNavbar"
+            aria-controls="ownerNavbar" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Menu ở dưới, căn giữa -->
+        <div class="collapse navbar-collapse w-100" id="ownerNavbar">
+            <ul class="navbar-nav justify-content-center w-100">
+                <!-- Home -->
+                <li class="nav-item mx-3">
+                    <a class="nav-link" href="/owner/dashboard">
+                        <i class="fas fa-home"></i> Home
+                    </a>
+                </li>
+
+                <!-- Property -->
+                <li class="nav-item dropdown mx-3">
+                    <a class="nav-link dropdown-toggle" href="#" id="propertyDropdown" role="button"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-building"></i> Property
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="propertyDropdown">
+                        <li><a class="dropdown-item" href="/owner/property/info">General Info</a></li>
+                        <li><a class="dropdown-item" href="/owner/property/photos">Photos</a></li>
+                        <li><a class="dropdown-item" href="/owner/property/policies">Policies</a></li>
+                        <li><a class="dropdown-item" href="/owner/property/facilities">Facilities & Services</a></li>
+                        <li><a class="dropdown-item" href="/owner/property/layout">Property Layout</a></li>
+                        <li><a class="dropdown-item" href="/owner/property/amenities">Room Amenities</a></li>
+                    </ul>
+                </li>
+
+                <!-- Inbox -->
+                <li class="nav-item dropdown mx-3">
+                    <a class="nav-link dropdown-toggle" href="#" id="inboxDropdown" role="button"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-envelope"></i> Inbox
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="inboxDropdown">
+                        <li><a class="dropdown-item" href="/owner/messages">Messages</a></li>
+                        <li><a class="dropdown-item" href="/owner/notifications">Notifications</a></li>
+                    </ul>
+                </li>
+
+                <!-- Reviews -->
+                <li class="nav-item mx-3">
+                    <a class="nav-link" href="/owner/reviews">
+                        <i class="fas fa-star"></i> Guest Reviews
+                    </a>
+                </li>
+
+                <!-- Finance -->
+                <li class="nav-item mx-3">
+                    <a class="nav-link" href="/owner/finance">
+                        <i class="fas fa-dollar-sign"></i> Finance
+                    </a>
+                </li>
+
+                <!-- Analytics -->
+                <li class="nav-item mx-3">
+                    <a class="nav-link" href="/owner/analytics">
+                        <i class="fas fa-chart-line"></i> Analytics
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
