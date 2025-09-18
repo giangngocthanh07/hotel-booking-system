@@ -1,12 +1,17 @@
 ﻿@page "/"
 @layout MainLayout
+@inject IJSRuntime JS
 @* trang chủ chứa nội dung tổng quan về dịch vụ của website *@
+
 <!-- Hero Carousel -->
 <div id="heroCarousel" class="carousel slide carousel-fade position-relative" data-bs-ride="carousel">
   <div class="carousel-inner">
-    <div class="carousel-item active vh-100 bg-cover" style="background-image: url('https://source.unsplash.com/1600x900/?hotel');"></div>
-    <div class="carousel-item vh-100 bg-cover" style="background-image: url('https://source.unsplash.com/1600x900/?resort');"></div>
-    <div class="carousel-item vh-100 bg-cover" style="background-image: url('https://source.unsplash.com/1600x900/?beach,hotel');"></div>
+    <div class="carousel-item active vh-100 bg-cover"
+      style="background-image: url('https://source.unsplash.com/1600x900/?hotel');"></div>
+    <div class="carousel-item vh-100 bg-cover"
+      style="background-image: url('https://source.unsplash.com/1600x900/?resort');"></div>
+    <div class="carousel-item vh-100 bg-cover"
+      style="background-image: url('https://source.unsplash.com/1600x900/?beach,hotel');"></div>
   </div>
 
   <!-- Nút điều hướng trái/phải -->
@@ -27,7 +32,8 @@
   </div>
 
   <!-- Search Form -->
-  <div class="hero-search position-absolute bottom-0 start-50 translate-middle-x w-100 mb-4" style="z-index: 3; max-width: 960px;">
+  <div class="hero-search position-absolute bottom-0 start-50 translate-middle-x w-100 mb-4"
+    style="z-index: 3; max-width: 960px;">
     <div class="card shadow-sm mx-auto">
       <div class="card-body">
         <form class="row g-2 align-items-end">
@@ -62,170 +68,174 @@
   </div>
 </div>
 
-
-<!-- Trải nghiệm -->
-<section class="py-5">
-    <div class="container text-center">
-        <h2 class="fw-bold">Trải nghiệm</h2>
-        <p class="text-muted mb-4">Những trải nghiệm đặc biệt mà bạn có thể tận hưởng khi đặt phòng với chúng tôi</p>
-        <div class="row g-4">
-            <div class="col-md-3">
-                <div class="card h-100 border-0 text-center">
-                    <div class="card-body">
-                        <i class="bi bi-suit-heart-fill fs-1 text-danger"></i>
-                        <h5 class="mt-3 fw-bold">Trải nghiệm địa phương</h5>
-                        <p class="text-muted small">Hoạt động & trải nghiệm do đối tác địa phương cung cấp.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card h-100 border-0 text-center">
-                    <div class="card-body">
-                        <i class="bi bi-bicycle fs-1 text-info"></i>
-                        <h5 class="mt-3 fw-bold">Tour & vận chuyển</h5>
-                        <p class="text-muted small">Thuê xe, tour tham quan — tiện lợi đặt cùng phòng.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card h-100 border-0 text-center">
-                    <div class="card-body">
-                        <i class="bi bi-wifi fs-1 text-success"></i>
-                        <h5 class="mt-3 fw-bold">Wi-fi miễn phí</h5>
-                        <p class="text-muted small">Hầu hết khách sạn hỗ trợ Wi‑Fi tốc độ cao miễn phí.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card h-100 border-0 text-center">
-                    <div class="card-body">
-                        <i class="bi bi-emoji-smile fs-1 text-warning"></i>
-                        <h5 class="mt-3 fw-bold">Dịch vụ chu đáo</h5>
-                        <p class="text-muted small">Đội ngũ hỗ trợ luôn sẵn sàng 24/7 cho bạn.</p>
-                    </div>
-                </div>
-            </div>
+<!-- địa điểm du lịch để booking-->
+<div class="container mt-5">
+  <h2 class="mb-4 text-center">Khám phá Việt Nam</h2>
+  <div class="position-relative carousel-wrapper">
+    <!-- Carousel wrapper -->
+    <div class="overflow-hidden" id="carouselWrapper">
+      <div id="multiCardCarousel" class="d-flex" style="gap:1rem; transition: transform 0.5s ease;">
+        <!-- Card items -->
+        <div class="card flex-shrink-0 destination-card">
+          <img src="https://source.unsplash.com/400x300/?city,travel" class="card-img-top">
+          <div class="card-body text-center">
+            <h5 class="card-title">Hà Nội</h5>
+          </div>
         </div>
+        <div class="card flex-shrink-0 destination-card">
+          <img src="https://source.unsplash.com/400x300/?city,travel" class="card-img-top">
+          <div class="card-body text-center">
+            <h5 class="card-title">Hà Nội 2</h5>
+          </div>
+        </div>
+        <div class="card flex-shrink-0 destination-card">
+          <img src="https://source.unsplash.com/400x300/?city,travel" class="card-img-top">
+          <div class="card-body text-center">
+            <h5 class="card-title">Hà Nội 3</h5>
+          </div>
+        </div>
+        <div class="card flex-shrink-0 destination-card">
+          <img src="https://source.unsplash.com/400x300/?city,travel" class="card-img-top">
+          <div class="card-body text-center">
+            <h5 class="card-title">Hà Nội4</h5>
+          </div>
+        </div>
+        <div class="card flex-shrink-0 destination-card">
+          <img src="https://source.unsplash.com/400x300/?city,travel" class="card-img-top">
+          <div class="card-body text-center">
+            <h5 class="card-title">Hà Nội5</h5>
+          </div>
+        </div>
+        <div class="card flex-shrink-0 destination-card">
+          <img src="https://source.unsplash.com/400x300/?city,travel" class="card-img-top">
+          <div class="card-body text-center">
+            <h5 class="card-title">Hà Nội6</h5>
+          </div>
+        </div>
+        <div class="card flex-shrink-0 destination-card">
+          <img src="https://source.unsplash.com/400x300/?city,travel" class="card-img-top">
+          <div class="card-body text-center">
+            <h5 class="card-title">Hà Nội7</h5>
+          </div>
+        </div>
+        <div class="card flex-shrink-0 destination-card">
+          <img src="https://source.unsplash.com/400x300/?city,travel" class="card-img-top">
+          <div class="card-body text-center">
+            <h5 class="card-title">Hà Nội8</h5>
+          </div>
+        </div>
+        <div class="card flex-shrink-0 destination-card">
+          <img src="https://source.unsplash.com/400x300/?city,travel" class="card-img-top">
+          <div class="card-body text-center">
+            <h5 class="card-title">Hà Nội9</h5>
+          </div>
+        </div>
+        <div class="card flex-shrink-0 destination-card">
+          <img src="https://source.unsplash.com/400x300/?city,travel" class="card-img-top">
+          <div class="card-body text-center">
+            <h5 class="card-title">Hà Nội0</h5>
+          </div>
+        </div>
+      </div>
     </div>
-</section>
 
-<!-- Our Rooms -->
-<section class="py-5 bg-light">
-    <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="fw-bold mb-0">Our Rooms</h2>
-            <a href="#" class="small text-decoration-none">Xem tất cả phòng →</a>
-        </div>
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="card h-100">
-                    <img src="https://source.unsplash.com/800x600/?hotel,room" class="card-img-top" alt="Deluxe Room">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold">Deluxe Room</h5>
-                        <p class="card-text text-muted small">Phòng rộng rãi với giường đôi, tầm nhìn thành phố, bao gồm bữa sáng.</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="fw-bold text-primary">₫1.200.000/đêm</div>
-                            <button class="btn btn-outline-primary btn-sm">Xem chi tiết</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card h-100">
-                    <img src="https://source.unsplash.com/800x600/?bedroom,luxury" class="card-img-top" alt="Suite">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold">Suite</h5>
-                        <p class="card-text text-muted small">Không gian sang trọng, phòng khách riêng, tiện nghi cao cấp.</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="fw-bold text-primary">₫2.400.000/đêm</div>
-                            <button class="btn btn-outline-primary btn-sm">Xem chi tiết</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card h-100">
-                    <img src="https://source.unsplash.com/800x600/?hotel,interior" class="card-img-top" alt="Family Room">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold">Family Room</h5>
-                        <p class="card-text text-muted small">Phù hợp gia đình, nhiều giường, không gian tiện nghi.</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="fw-bold text-primary">₫1.800.000/đêm</div>
-                            <button class="btn btn-outline-primary btn-sm">Xem chi tiết</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- Prev/Next buttons -->
+    <button class="carousel-btn prev-btn" id="prevBtn">&#10094;</button>
+    <button class="carousel-btn next-btn" id="nextBtn">&#10095;</button>
+  </div>
+</div>
+
+<!-- loại chỗ ở -->
+<div class="container mt-5">
+  <h2>Loại chỗ ở</h2>
+  <div class="accommodation-grid">
+    <div class="accommodation-card">
+      <span class="title-accommodation">Khách sạn</span>
+      <img src="https://picsum.photos/200/150?random=1" alt="">
     </div>
-</section>
-
-<!-- Offers / Ưu đãi -->
-<section class="py-5">
-    <div class="container">
-        <div class="text-center mb-4">
-            <h2 class="fw-bold">Ưu đãi nổi bật</h2>
-            <p class="text-muted">Ưu đãi giới hạn thời gian, giảm giá trực tiếp khi đặt qua hệ thống.</p>
-        </div>
-        <div class="row g-4">
-            <div class="col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="row g-0">
-                        <div class="col-4">
-                            <img src="https://source.unsplash.com/400x300/?discount,hotel" class="img-fluid rounded-start" alt="Offer 1">
-                        </div>
-                        <div class="col-8">
-                            <div class="card-body">
-                                <h5 class="card-title fw-bold">Giảm 20% - Đặt trước 30 ngày</h5>
-                                <p class="card-text small text-muted">Lên kế hoạch trước để nhận mức giá tốt nhất cho mùa cao điểm.</p>
-                                <a href="#" class="btn btn-primary btn-sm">Áp dụng ngay</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="row g-0">
-                        <div class="col-4">
-                            <img src="https://source.unsplash.com/400x300/?promo,travel" class="img-fluid rounded-start" alt="Offer 2">
-                        </div>
-                        <div class="col-8">
-                            <div class="card-body">
-                                <h5 class="card-title fw-bold">Ưu đãi cuối tuần</h5>
-                                <p class="card-text small text-muted">Giảm giá đặc biệt cho các đặt phòng vào cuối tuần.</p>
-                                <a href="#" class="btn btn-primary btn-sm">Xem chi tiết</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="accommodation-card">
+      <span class="title-accommodation">Căn hộ</span>
+      <img src="https://picsum.photos/200/150?random=2" alt="">
     </div>
-</section>
-
-
-<!-- About Section -->
-<section class="bg-light py-5">
-    <div class="container text-center">
-        <h2 class="fw-bold">Tại sao chọn HotelBooking?</h2>
-        <p class="lead mt-3">Chúng tôi mang đến trải nghiệm đặt phòng nhanh chóng, giá tốt và dịch vụ chuyên nghiệp.</p>
-        <div class="row mt-4">
-            <div class="col-md-4">
-                <i class="bi bi-credit-card fs-2 text-primary"></i>
-                <h5 class="mt-3 fw-bold">Thanh toán dễ dàng</h5>
-                <p class="text-muted">Hỗ trợ nhiều phương thức thanh toán an toàn.</p>
-            </div>
-            <div class="col-md-4">
-                <i class="bi bi-star-fill fs-2 text-warning"></i>
-                <h5 class="mt-3 fw-bold">Đánh giá thực tế</h5>
-                <p class="text-muted">Khách hàng đánh giá khách sạn minh bạch.</p>
-            </div>
-            <div class="col-md-4">
-                <i class="bi bi-headset fs-2 text-success"></i>
-                <h5 class="mt-3 fw-bold">Hỗ trợ 24/7</h5>
-                <p class="text-muted">Đội ngũ hỗ trợ luôn sẵn sàng giúp bạn.</p>
-            </div>
-        </div>
+    <div class="accommodation-card">
+      <span class="title-accommodation">Resort</span>
+      <img src="https://picsum.photos/200/150?random=3" alt="">
     </div>
-</section>
+    <div class="accommodation-card">
+      <span class="title-accommodation">Homestay</span>
+      <img src="https://picsum.photos/200/150?random=4" alt="">
+    </div>
+    <div class="accommodation-card">
+      <span class="title-accommodation">Biệt thự</span>
+      <img src="https://picsum.photos/200/150?random=5" alt="">
+    </div>
+    <div class="accommodation-card">
+      <span class="title-accommodation">Lều trại sang trọng</span>
+      <img src="https://picsum.photos/200/150?random=6" alt="">
+    </div>
+    <div class="accommodation-card">
+      <span class="title-accommodation">Nhà trọ</span>
+      <img src="https://picsum.photos/200/150?random=7" alt="">
+    </div>
+  </div>
+</div>
+
+
+@* thêm ý tưởng cho web hotel booking *@
+<!-- Các tính năng khác -->
+<div class="container mt-5">
+  <h2 class="mb-4 text-center">Tại sao chọn chúng tôi?</h2>
+  <div class="row">
+    <div class="col-md-4 mb-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body text-center">
+          <i class="bi bi-house fs-1 text-primary mb-3"></i>
+          <h5 class="card-title">Đa dạng lựa chọn</h5>
+          <p class="card-text">Khám phá hàng ngàn khách sạn, nhà nghỉ và căn hộ trên khắp thế giới.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 mb-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body text-center">
+          <i class="bi bi-percent fs-1 text-primary mb-3"></i>
+          <h5 class="card-title">Giá tốt nhất</h5>
+          <p class="card-text">Chúng tôi cam kết cung cấp giá cạnh tranh nhất trên thị trường.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 mb-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body text-center">
+          <i class="bi bi-shield-check fs-1 text-primary mb-3"></i>
+          <h5 class="card-title">An toàn & Bảo mật</h5>
+          <p class="card-text">Đặt phòng an toàn và bảo mật với hệ thống thanh toán đáng tin cậy.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Đăng ký đối tác -->
+<div class="container mt-5">
+  <div class="card bg-light text-center py-5">
+    <div class="card-body">
+      <h2 class="card-title mb-4">Bạn là chủ khách sạn?</h2>
+      <p class="card-text mb-4">Đăng ký ngay để quảng bá khách sạn của bạn và tiếp cận hàng triệu khách hàng.</p>
+      <a href="#" class="btn btn-primary">Đăng ký đối tác</a>
+    </div>
+  </div>
+</div>
+
+@code {
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    <!-- địa điểm du lịch -->
+    if (firstRender)
+    {
+      await JS.InvokeVoidAsync("initMultiCardCarousel");
+    }
+  }
+
+
+}

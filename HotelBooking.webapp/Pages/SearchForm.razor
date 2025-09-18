@@ -1,0 +1,51 @@
+@* @page "/search"
+
+<h3>🔎 Tìm khách sạn</h3>
+
+<EditForm Model="@searchModel" OnValidSubmit="HandleSearch">
+    <div class="row g-3">
+        <!-- Địa điểm -->
+        <div class="col-md-4">
+            <label class="form-label">Địa điểm</label>
+            <InputText @bind-Value="searchModel.Location" class="form-control" placeholder="Nhập thành phố hoặc khách sạn" />
+        </div>
+
+        <!-- Ngày nhận phòng -->
+        <div class="col-md-3">
+            <label class="form-label">Nhận phòng</label>
+            <InputDate @bind-Value="searchModel.CheckIn" class="form-control" />
+        </div>
+
+        <!-- Ngày trả phòng -->
+        <div class="col-md-3">
+            <label class="form-label">Trả phòng</label>
+            <InputDate @bind-Value="searchModel.CheckOut" class="form-control" />
+        </div>
+
+        <!-- Người lớn -->
+        <div class="col-md-1">
+            <label class="form-label">Người lớn</label>
+            <InputNumber @bind-Value="searchModel.Adults" class="form-control" />
+        </div>
+
+        <!-- Trẻ em -->
+        <div class="col-md-1">
+            <label class="form-label">Trẻ em</label>
+            <InputNumber @bind-Value="searchModel.Children" class="form-control" />
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+    </div>
+</EditForm>
+
+@code {
+    private SearchHotelRequest searchModel = new();
+
+    private void HandleSearch()
+    {
+        // Tạm thời log ra console (sau này gọi API)
+        Console.WriteLine($"Tìm {searchModel.Location}, từ {searchModel.CheckIn:d} đến {searchModel.CheckOut:d}");
+    }
+} *@

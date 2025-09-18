@@ -3,13 +3,15 @@
 <section class="hero-section position-relative min-vh-100">
     <!-- Background Image -->
     <div class="hero-bg">
-        <img src="https://your-cdn-link/hero-banner.jpg" alt="Hero Background" class="w-100 vh-100 object-fit-cover">
+        <img src="https://your-cdn-link/hero-banner.jpg" 
+             alt="Hero Background" 
+             class="w-100 vh-100 object-fit-cover" />
     </div>
 
     <!-- Overlay -->
-    <div class="hero-overlay position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-25"></div>
+    <div class="hero-overlay"></div>
 
-    <!-- Heading  -->
+    <!-- Heading -->
     <div class="hero-title position-absolute top-50 start-50 translate-middle text-center text-white">
         <h1 class="fw-bold display-5">
             STAY 24-HOURS WITH 24/7 <br /> SELF-SERVICES
@@ -17,33 +19,37 @@
     </div>
 
     <!-- Search Form -->
-    <div class="hero-search position-absolute bottom-0 start-50 translate-middle-x w-100 mb-4" style="z-index: 3; max-width: 960px;">
+    <div class="hero-search position-absolute bottom-0 start-50 translate-middle-x w-100 mb-4" style="max-width: 960px;">
         <div class="card shadow-sm mx-auto">
             <div class="card-body">
                 <form class="row g-2 align-items-end">
                     <div class="col-12 col-md-4">
-                        <label class="form-label small mb-1">Điểm đến</label>
-                        <input type="text" class="form-control form-control-sm"
-                            placeholder="Thành phố, khách sạn hoặc địa điểm" />
+                        <label for="destination" class="form-label small mb-1">Điểm đến</label>
+                        <input type="text" id="destination" name="destination"
+                               class="form-control form-control-sm"
+                               placeholder="Thành phố, khách sạn hoặc địa điểm" />
                     </div>
                     <div class="col-6 col-md-2">
-                        <label class="form-label small mb-1">Nhận</label>
-                        <input type="date" class="form-control form-control-sm" />
+                        <label for="checkin" class="form-label small mb-1">Nhận</label>
+                        <input type="date" id="checkin" name="checkin"
+                               class="form-control form-control-sm" />
                     </div>
                     <div class="col-6 col-md-2">
-                        <label class="form-label small mb-1">Trả</label>
-                        <input type="date" class="form-control form-control-sm" />
+                        <label for="checkout" class="form-label small mb-1">Trả</label>
+                        <input type="date" id="checkout" name="checkout"
+                               class="form-control form-control-sm" />
                     </div>
                     <div class="col-6 col-md-2">
-                        <label class="form-label small mb-1">Người</label>
-                        <select class="form-select form-select-sm">
-                            <option>2</option>
+                        <label for="guests" class="form-label small mb-1">Người</label>
+                        <select id="guests" name="guests" class="form-select form-select-sm">
+                            <option selected>2</option>
                             <option>1</option>
                             <option>3</option>
+                            <option>4+</option>
                         </select>
                     </div>
                     <div class="col-6 col-md-2 d-grid">
-                        <button type="button" class="btn btn-primary btn-sm w-100">
+                        <button type="button" class="btn btn-primary btn-sm">
                             <i class="bi bi-search me-1"></i> Tìm
                         </button>
                     </div>
@@ -52,7 +58,6 @@
         </div>
     </div>
 </section>
-
 
 <!-- Featured Hotels -->
 <section class="container my-5">

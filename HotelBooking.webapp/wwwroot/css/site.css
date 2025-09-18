@@ -10,12 +10,14 @@ body {
     transition: all 0.3s;
 }
 
-.navbar-brand, .nav-link {
+.navbar-brand,
+.nav-link {
     color: white !important;
     font-weight: 500;
 }
 
-.nav-link:hover, .nav-link.active {
+.nav-link:hover,
+.nav-link.active {
     color: #ffd700 !important;
 }
 
@@ -30,11 +32,13 @@ body {
     height: 600px;
     position: relative;
     display: flex;
-    align-items: flex-end; /* Align items to the bottom */
+    align-items: flex-end;
+    /* Align items to the bottom */
     justify-content: center;
     color: white;
     text-align: center;
-    padding-bottom: 30px; /* Add padding to avoid touching the bottom edge */
+    padding-bottom: 30px;
+    /* Add padding to avoid touching the bottom edge */
 }
 
 .hero-section::before {
@@ -49,14 +53,17 @@ body {
 
 .search-box {
     background: #fff;
-    border: 3px solid #febb02; /* viền vàng */
+    border: 3px solid #febb02;
+    /* viền vàng */
     border-radius: 12px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
     z-index: 1;
     max-width: 1100px;
     margin: 0 auto;
-    padding: 0; /* bỏ padding để khít form */
-    overflow: hidden; /* bo viền khít */
+    padding: 0;
+    /* bỏ padding để khít form */
+    overflow: hidden;
+    /* bo viền khít */
 }
 
 .search-box .input-group,
@@ -105,12 +112,26 @@ body {
 }
 
 /* Hero Image Card */
-        .hero-image { border-bottom-left-radius: .25rem; border-bottom-right-radius: .25rem; overflow: visible; }
-        .hero-image .card { border-radius: .5rem; }
-        @media (max-width: 767.98px) {
-            .hero-image { min-height: 260px; }
-            .hero-image .card { margin-bottom: 0; margin-top: 12px; }
-        }
+.hero-image {
+    border-bottom-left-radius: .25rem;
+    border-bottom-right-radius: .25rem;
+    overflow: visible;
+}
+
+.hero-image .card {
+    border-radius: .5rem;
+}
+
+@media (max-width: 767.98px) {
+    .hero-image {
+        min-height: 260px;
+    }
+
+    .hero-image .card {
+        margin-bottom: 0;
+        margin-top: 12px;
+    }
+}
 
 /* Hotel Cards */
 .hotel-card {
@@ -121,9 +142,7 @@ body {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-.hotel-card:hover {
-    
-}
+.hotel-card:hover {}
 
 .hotel-card:hover .card-title a,
 .hotel-card:hover .details-link {
@@ -180,13 +199,17 @@ body {
     box-shadow: none;
     transition: color 0.2s;
 }
+
 .details-link:hover {
-    color: #007bff !important; /* Bootstrap blue */
+    color: #007bff !important;
+    /* Bootstrap blue */
     text-decoration: underline;
 }
+
 .details-link .details-icon {
     transition: transform 0.2s;
 }
+
 .details-link:hover .details-icon {
     transform: translateX(6px);
 }
@@ -199,8 +222,19 @@ body {
 .coming-soon {
     border-left: 5px solid #febb02;
 }
+
+.destination-card {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.destination-badge .badge {
+    font-size: 0.75rem;
+}
+
 /* About Section */
-.bg-light h2, .bg-light h3 {
+.bg-light h2,
+.bg-light h3 {
     color: #1a2a6c;
     font-weight: 700;
 }
@@ -241,7 +275,8 @@ main.container-fluid {
     padding-bottom: 20px;
 }
 
-h2, h3 {
+h2,
+h3 {
     color: #1a2a6c;
     font-weight: 700;
 }
@@ -252,5 +287,192 @@ h2, h3 {
 
 /* Ensure consistency for other pages */
 .page-content {
-    min-height: calc(100vh - 200px); /* Adjust based on navbar/footer height */
+    min-height: calc(100vh - 200px);
+    /* Adjust based on navbar/footer height */
 }
+
+/* index */
+/* -- Khám phá VN -- */
+#multiCardCarousel .card:first-child {
+    margin-left: 10px;
+}
+
+#carouselWrapper {
+    padding-left: calc(3rem + 0.5rem);
+    /* nút + khoảng cách */
+}
+
+
+/* Carousel wrapper hover mới show nút */
+.carousel-wrapper {
+    position: relative;
+}
+
+.carousel-wrapper .carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background-color: rgba(0, 123, 255, 0.7);
+    /* xanh biển nhạt */
+    color: #fff;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.3s, background-color 0.3s;
+    z-index: 10;
+}
+
+.carousel-wrapper:hover .carousel-btn {
+    opacity: 1;
+}
+
+.carousel-btn:hover {
+    background-color: #007bff;
+    /* đậm hơn khi hover */
+}
+
+/* Vị trí prev/next */
+.prev-btn {
+    left: 0.5rem;
+}
+
+.next-btn {
+    right: 0.5rem;
+}
+
+/* Card tối ưu hình ảnh */
+.destination-card {
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+    min-width: 18rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.destination-card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+}
+
+.destination-card .card-body {
+    padding: 10px 15px;
+}
+
+.destination-card .card-title {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #1a2a6c;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .destination-card img {
+        height: 140px;
+    }
+}
+
+@media (max-width: 576px) {
+    .destination-card img {
+        height: 120px;
+    }
+}
+
+/* phân loại lưu trú */
+.accommodation-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.accommodation-card {
+    flex-grow: 1;
+    flex-basis: 0;
+    min-width: 0;
+    text-align: center;
+    background: #f8f9fa;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+    position: relative;
+    overflow: hidden; /* Đảm bảo ảnh không tràn ra ngoài viền khi phóng to */
+}
+
+.accommodation-card:hover img {
+    transform: scale(1.05); /* Phóng to ảnh khi hover */
+    transition: transform 0.2s; /* Hiệu ứng mượt mà cho ảnh */
+}
+
+/* Hàng 1: 3 cột đều nhau */
+.accommodation-card:nth-child(-n+3) {
+    flex: 1 1 calc(33.33% - 0.75rem);
+    max-width: calc(33.33% - 0.75rem);
+}
+
+/* Hàng 2: 4 cột đều nhau */
+.accommodation-card:nth-child(n+4):nth-child(-n+7) {
+    flex: 1 1 calc(25% - 0.75rem);
+    max-width: calc(25% - 0.75rem);
+}
+
+.accommodation-card img {
+    width: 100%;
+    height: 170px;
+    object-fit: cover;
+    display: block;
+    border-radius: 8px;
+    transition: transform 0.2s; /* Thêm transition cho ảnh để mượt mà */
+}
+
+.accommodation-card .title-accommodation {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent 70%);
+    color: #fff;
+    font-size: 1.2rem;
+    font-weight: 500;
+    padding: 0.5rem 0.5rem;
+    text-align: center;
+    z-index: 10;
+    border-radius: 0; 
+    line-height: 1.3; 
+}
+
+
+.accommodation-card .title-accommodation::before {
+    content: "";
+    position: absolute;
+    inset: 0; 
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+    z-index: -1; 
+}
+
+/* Responsive cho màn hình nhỏ */
+@media (max-width: 768px) {
+    .accommodation-card:nth-child(-n+3),
+    .accommodation-card:nth-child(n+4):nth-child(-n+7) {
+        flex: 1 1 100%;
+        max-width: 100%;
+    }
+
+    .accommodation-card img {
+        height: 140px;
+    }
+}
+
+/* end index */

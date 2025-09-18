@@ -1,4 +1,7 @@
-using HotelBooking.webapp.Data;
+
+
+using HotelBooking.webapp.Components;
+using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
+builder.Services.AddMudServices();
 
 // add service http client
 builder.Services.AddHttpClient("HotelBookingAPI", client =>
