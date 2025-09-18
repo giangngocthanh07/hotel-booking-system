@@ -60,7 +60,6 @@ E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.webapp\obj\Debug\net9.0\comp
 E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.webapp\obj\Debug\net9.0\compressed\1dg48l4yeq-wk8x8xm0ah.gz
 E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.webapp\obj\Debug\net9.0\compressed\j08wptf6z9-sjnzgf7e1h.gz
 E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.webapp\obj\Debug\net9.0\compressed\3p4jjn96m1-psxpu4y82n.gz
-E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.webapp\obj\Debug\net9.0\compressed\47a7v2sa3x-nttptvluro.gz
 E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.webapp\obj\Debug\net9.0\compressed\8gyw91xwzn-61n19gt1b8.gz
 E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.webapp\obj\Debug\net9.0\staticwebassets.build.json
 E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.webapp\obj\Debug\net9.0\staticwebassets.build.json.cache
@@ -71,3 +70,7 @@ E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.webapp\obj\Debug\net9.0\refi
 E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.webapp\obj\Debug\net9.0\HotelBooking.webapp.pdb
 E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.webapp\obj\Debug\net9.0\HotelBooking.webapp.genruntimeconfig.cache
 E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.webapp\obj\Debug\net9.0\ref\HotelBooking.webapp.dll
+E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.webapp\bin\Debug\net9.0\Blazored.LocalStorage.dll
+E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.webapp\obj\Debug\net9.0\HotelBooking.webapp.csproj.AssemblyReference.cache
+E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.webapp\obj\Debug\net9.0\compressed\47a7v2sa3x-6qhi6mbqjs.gz
+E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.webapp\obj\Debug\net9.0\HotelBoo.EF84262C.Up2Date

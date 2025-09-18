@@ -1,10 +1,9 @@
-@page "/register"
+@page "/customer-register"
 
 @*Add Service http client*@
 @inject IHttpClientFactory HttpClientFactory;
 @inject NavigationManager _navManager;
 
-@* tạo form đăng ký userRegister giúp mình *@
 @using System.Net.Http.Json
 @using System.Text.Json
 @using HotelBooking.webapp.ViewModels
@@ -68,7 +67,8 @@
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Tạo tài khoản</button>
                         <div class="text-center mt-3">
-                            <small class="text-muted">Bạn đã có tài khoản? <a href="#">Đăng nhập</a></small>
+                            <small class="text-muted">Bạn đã có tài khoản? <a href="/customer-login">Đăng
+                                    nhập</a></small>
                         </div>
                     </EditForm>
                 </div>
