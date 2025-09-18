@@ -13,6 +13,37 @@ var connectionString = builder.Configuration.GetConnectionString("connectionStri
 builder.Services.AddDbContext<HotelBookingContext>(options =>
     options.UseSqlServer(connectionString));
 
+// DI for Repository
+builder.Services.AddScoped<IAmenityRepository, AmenityRepository>();
+builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+builder.Services.AddScoped<ICityRepository, CityRepository>();
+builder.Services.AddScoped<ICountryRepository, CountryRepository>();
+builder.Services.AddScoped<IHotelRepository, HotelRepository>();
+builder.Services.AddScoped<IMessageRepository, MessageRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IPolicyRepository, PolicyRepository>();
+builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+builder.Services.AddScoped<IRoomRepository, RoomRepository>();
+builder.Services.AddScoped<IRoomImageRepository, RoomImageRepository>();
+builder.Services.AddScoped<IRoomTypeRepository, RoomTypeRepository>();
+builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserRoleRepository, UserRoleRepository>();
+builder.Services.AddScoped<IRoomServiceRepository, RoomServiceRepository>();
+builder.Services.AddScoped<IRoomAmenityRepository, RoomAmenityRepository>();
+builder.Services.AddScoped<IHotelPolicyRepository, HotelPolicyRepository>();
+builder.Services.AddScoped<IHotelAmenityRepository, HotelAmenityRepository>();
+builder.Services.AddScoped<IBookingRoomRepository, BookingRoomRepository>();
+
+
+// DI for UnitOfWork
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+// DI for Service
+builder.Services.AddScoped<IRoleService, RoleService>();
+
 //Use map controller
 builder.Services.AddControllers();
 
@@ -93,7 +124,7 @@ builder.Services.AddAuthorization();
 /*  =============== BUILD APP =============== */
 var app = builder.Build();
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 
 //use middleware controller
 app.MapControllers();

@@ -1,0 +1,7 @@
+using HotelBooking.infrastructure.Models;
+
+public interface ICountryRepository : IRepository<Country> { }
+public class CountryRepository : Repository<Country>, ICountryRepository
+{
+    public CountryRepository(HotelBookingContext context) : base(context) { }
+}

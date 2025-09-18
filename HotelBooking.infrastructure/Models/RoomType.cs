@@ -23,9 +23,9 @@ public partial class RoomType
 
     public virtual Hotel Hotel { get; set; } = null!;
 
+    public virtual ICollection<RoomAmenity> RoomAmenities { get; set; } = new List<RoomAmenity>();
+
     public virtual ICollection<RoomImage> RoomImages { get; set; } = new List<RoomImage>();
 
     public virtual ICollection<Room> Rooms { get; set; } = new List<Room>();
-
-    public virtual ICollection<Amenity> Amenities { get; set; } = new List<Amenity>();
 }
