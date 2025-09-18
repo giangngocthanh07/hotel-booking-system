@@ -3,7 +3,6 @@
 using HotelBooking.webapp.Components;
 using MudBlazor.Services;
 using Blazored.LocalStorage;
-using HotelBooking.webapp.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 

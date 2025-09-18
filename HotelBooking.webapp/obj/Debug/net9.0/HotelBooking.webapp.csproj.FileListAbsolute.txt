@@ -5,7 +5,6 @@ D:\DA_Dotnet\DATN\HotelBooking\HotelBooking.webapp\obj\Debug\net9.0\HotelBooking
 D:\DA_Dotnet\DATN\HotelBooking\HotelBooking.webapp\obj\Debug\net9.0\HotelBooking.webapp.MvcApplicationPartsAssemblyInfo.cache
 D:\DA_Dotnet\DATN\HotelBooking\HotelBooking.webapp\obj\Debug\net9.0\HotelBooking.webapp.RazorAssemblyInfo.cache
 D:\DA_Dotnet\DATN\HotelBooking\HotelBooking.webapp\obj\Debug\net9.0\HotelBooking.webapp.RazorAssemblyInfo.cs
-D:\DA_Dotnet\DATN\HotelBooking\HotelBooking.webapp\bin\Debug\net9.0\appsettings.Development.json
 D:\DA_Dotnet\DATN\HotelBooking\HotelBooking.webapp\bin\Debug\net9.0\appsettings.json
 D:\DA_Dotnet\DATN\HotelBooking\HotelBooking.webapp\bin\Debug\net9.0\HotelBooking.webapp.staticwebassets.runtime.json
 D:\DA_Dotnet\DATN\HotelBooking\HotelBooking.webapp\bin\Debug\net9.0\HotelBooking.webapp.staticwebassets.endpoints.json
@@ -51,4 +50,5 @@ D:\DA_Dotnet\DATN\HotelBooking\HotelBooking.webapp\obj\Debug\net9.0\compressed\t
 D:\DA_Dotnet\DATN\HotelBooking\HotelBooking.webapp\obj\Debug\net9.0\compressed\0wz98yz2xy-lftp6ydp6b.gz
 D:\DA_Dotnet\DATN\HotelBooking\HotelBooking.webapp\obj\Debug\net9.0\HotelBoo.EF84262C.Up2Date
 D:\DA_Dotnet\DATN\HotelBooking\HotelBooking.webapp\obj\Debug\net9.0\compressed\7m4ab6ksu1-idfb3w94i8.gz
-D:\DA_Dotnet\DATN\HotelBooking\HotelBooking.webapp\obj\Debug\net9.0\compressed\47a7v2sa3x-3f5wctbqk4.gz
+D:\DA_Dotnet\DATN\HotelBooking\HotelBooking.webapp\bin\Debug\net9.0\Blazored.LocalStorage.dll
+D:\DA_Dotnet\DATN\HotelBooking\HotelBooking.webapp\obj\Debug\net9.0\compressed\47a7v2sa3x-za1frhb1j5.gz
