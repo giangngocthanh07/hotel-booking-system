@@ -1,10 +1,18 @@
 using System.Security.Claims;
 using System.Text;
+using HotelBooking.infrastructure.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Service EF
+var connectionString = builder.Configuration.GetConnectionString("connectionStringHotelBooking");
+builder.Services.AddDbContext<HotelBookingContext>(options =>
+    options.UseSqlServer(connectionString));
+
 //Use map controller
 builder.Services.AddControllers();
 
