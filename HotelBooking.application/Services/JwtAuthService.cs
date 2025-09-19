@@ -28,12 +28,13 @@ public class JwtAuthService
         // Tạo danh sách các claims cho token
         var claims = new List<Claim>
         {
-            new Claim("UserName", userSauKhiVerifyPass.UserName),               // Claim mặc định cho username
-            new Claim("Email", userSauKhiVerifyPass.Email),               // Claim mặc định cho username
-            // new Claim(ClaimTypes.Role, userLogin.Role),                   // Claim mặc định cho Role
-            new Claim(JwtRegisteredClaimNames.Sub, userSauKhiVerifyPass.UserName),   // Subject của token
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()), // Unique ID của token
-            new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString()) // Thời gian tạo token
+            new Claim("UserId", userSauKhiVerifyPass.Id.ToString()),                    // Claim mặc định cho userId
+            new Claim("UserName", userSauKhiVerifyPass.UserName),                       // Claim mặc định cho username
+            new Claim("Email", userSauKhiVerifyPass.Email),                             // Claim mặc định cho username
+            // new Claim(ClaimTypes.Role, userLogin.Role),                              // Claim mặc định cho Role
+            new Claim(JwtRegisteredClaimNames.Sub, userSauKhiVerifyPass.Id.ToString()),      // Subject của token
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),          // Unique ID của token
+            new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString())          // Thời gian tạo token
         };
         //Thêm claim role vào token
         //userSauKhiVerifyPass.Id // 10034

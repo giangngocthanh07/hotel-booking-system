@@ -16,7 +16,7 @@ builder.Services.AddMudServices();
 // add service http client
 builder.Services.AddHttpClient("HotelBookingAPI", client =>
 {
-    client.BaseAddress = new Uri("https://localhost:5083/api/");
+    client.BaseAddress = new Uri("http://localhost:5083/api/");
 });
 
 // add service blazor local storage
@@ -24,7 +24,7 @@ builder.Services.AddBlazoredLocalStorage();
 
 var app = builder.Build();
 
-app.UseHttpsRedirection(); // kích hoạt https
+// app.UseHttpsRedirection(); // kích hoạt https
 app.UseRouting(); // chia các components thành page
 app.UseStaticFiles(); // wwwroot thư mục tài nguyên
 

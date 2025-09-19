@@ -25,23 +25,27 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="username" class="form-label">Username</label>
-                                <input @bind="userRegister.UserName" type="text" class="form-control" id="username"
+                                <input @bind="userRegister.Username" type="text" class="form-control" id="username"
                                     required>
                             </div>
+
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">Email</label>
+                                <input @bind="userRegister.Email" type="email" class="form-control" id="email" required>
+                            </div>
+
                             <div class="col-md-6">
                                 <label for="fullname" class="form-label">Full Name</label>
                                 <input @bind="userRegister.FullName" type="text" class="form-control" id="fullname"
                                     required>
                             </div>
+
                             <div class="col-md-6">
                                 <label for="phone" class="form-label">Phone Number</label>
                                 <input @bind="userRegister.PhoneNumber" type="text" class="form-control" id="phone"
                                     required>
                             </div>
-                            <div class="col-md-6">
-                                <label for="email" class="form-label">Email</label>
-                                <input @bind="userRegister.Email" type="email" class="form-control" id="email" required>
-                            </div>
+
                             <div class="col-md-6">
                                 <label for="password" class="form-label">Password</label>
                                 <input @bind="userRegister.Password" type="password" class="form-control" id="password"
@@ -89,7 +93,6 @@
             var client = HttpClientFactory.CreateClient("HotelBookingApi");
             var response = await client.PostAsJsonAsync("api/auth/register", new
             {
-                UserName = userRegister.UserName,
                 Email = userRegister.Email,
                 Password = userRegister.Password,
                 ConfirmPassword = userRegister.ConfirmPassword,

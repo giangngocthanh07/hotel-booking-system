@@ -14,11 +14,11 @@
 
                         <EditForm Model="userLogin" OnValidSubmit="HandleValidSubmit" class="container mt-5">
                             <div class="mb-3">
-                                <label for="inputEmail" class="form-label">Username or Email:</label>
+                                <label for="inputUsernameEmail" class="form-label">Username Or Email:</label>
                                 <input @bind="userLogin.UsernameOrEmail" type="text" class="form-control"
                                     id="inputEmail" placeholder="name@example.com" required>
                                 <div class="invalid-feedback">
-                                    Vui lòng nhập tên đăng nhập hoặc email hợp lệ.
+                                    Vui lòng nhập username hoặc email hợp lệ.
                                 </div>
                             </div>
 
@@ -66,25 +66,33 @@
     private HttpClient _httpClient;
     protected override void OnInitialized()
     {
-        _httpClient = HttpClientFactory.CreateClient("HotelBookingApi");
+        _httpClient = HttpClientFactory.CreateClient("HotelBookingAPI");
     }
 
     private async Task HandleValidSubmit()
     {
-        // Handle login logic here
-        // Call API Login
-        var response = await _httpClient.PostAsJsonAsync("User/login", userLogin);
+        try
+        {
+            // Handle login logic here
+            // Call API Login
+            var response = await _httpClient.PostAsJsonAsync("Accounts/login", userLogin);
 
-        if (response.IsSuccessStatusCode)
-        {
-            var token = await response.Content.ReadAsStringAsync();
-            // Lưu token vào local storage
-            await localStorage.SetItemAsync("accessToken", token);
-            // Chuyển hướng hoặc cập nhật giao diện người dùng sau khi đăng nhập thành công
+            if (response.IsSuccessStatusCode)
+            {
+                var token = await response.Content.ReadAsStringAsync();
+                // Lưu token vào local storage
+                await localStorage.SetItemAsync("accessToken", token);
+                // Chuyển hướng hoặc cập nhật giao diện người dùng sau khi đăng nhập thành công
+            }
+            else
+            {
+                var errorMessage = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Login failed: {errorMessage}");
+            }
         }
-        else
+        catch (Exception ex)
         {
-            // Xử lý lỗi đăng nhập (ví dụ: hiển thị thông báo lỗi)
+            Console.WriteLine($"Error during login: {ex.Message}");
         }
     }
 }

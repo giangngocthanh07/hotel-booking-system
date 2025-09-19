@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text;
+using HotelBooking.application.Services;
 using HotelBooking.infrastructure.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -30,6 +31,7 @@ builder.Services.AddScoped<IRoomImageRepository, RoomImageRepository>();
 builder.Services.AddScoped<IRoomTypeRepository, RoomTypeRepository>();
 builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUpgradeRequestRepository, UpgradeRequestRepository>();
 builder.Services.AddScoped<IUserRoleRepository, UserRoleRepository>();
 builder.Services.AddScoped<IRoomServiceRepository, RoomServiceRepository>();
 builder.Services.AddScoped<IRoomAmenityRepository, RoomAmenityRepository>();
@@ -41,7 +43,11 @@ builder.Services.AddScoped<IBookingRoomRepository, BookingRoomRepository>();
 // DI for UnitOfWork
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+// DI for JwtAuthService
+builder.Services.AddScoped<JwtAuthService>();
+
 // DI for Service
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 
 //Use map controller

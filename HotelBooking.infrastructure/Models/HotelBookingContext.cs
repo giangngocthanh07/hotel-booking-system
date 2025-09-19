@@ -55,6 +55,8 @@ public partial class HotelBookingContext : DbContext
 
     public virtual DbSet<Service> Services { get; set; }
 
+    public virtual DbSet<UpgradeRequest> UpgradeRequests { get; set; }
+
     public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<UserRole> UserRoles { get; set; }
@@ -430,6 +432,24 @@ public partial class HotelBookingContext : DbContext
             entity.Property(e => e.Description).HasMaxLength(255);
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.Name).HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<UpgradeRequest>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__UpgradeR__3214EC071216498F");
+
+            entity.Property(e => e.ApprovedAt).HasColumnType("datetime");
+            entity.Property(e => e.RequestedAt).HasColumnType("datetime");
+            entity.Property(e => e.Status).HasMaxLength(20);
+
+            entity.HasOne(d => d.ApprovedByNavigation).WithMany(p => p.UpgradeRequestApprovedByNavigations)
+                .HasForeignKey(d => d.ApprovedBy)
+                .HasConstraintName("FK_UpgradeRequests_Admin");
+
+            entity.HasOne(d => d.User).WithMany(p => p.UpgradeRequestUsers)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_UpgradeRequests_Users");
         });
 
         modelBuilder.Entity<User>(entity =>

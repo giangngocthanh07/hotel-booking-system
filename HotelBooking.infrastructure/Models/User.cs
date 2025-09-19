@@ -41,5 +41,9 @@ public partial class User
 
     public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
 
+    public virtual ICollection<UpgradeRequest> UpgradeRequestApprovedByNavigations { get; set; } = new List<UpgradeRequest>();
+
+    public virtual ICollection<UpgradeRequest> UpgradeRequestUsers { get; set; } = new List<UpgradeRequest>();
+
     public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
 }
