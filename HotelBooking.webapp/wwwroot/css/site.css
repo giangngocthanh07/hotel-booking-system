@@ -3,7 +3,7 @@
 body {
   font-family: "Inter", sans-serif;
 }
-
+/* Header */
 /* Navbar */
 .navbar {
   background: #4facfe; /* xanh biển nhạt */
@@ -20,11 +20,13 @@ body {
 }
 
 /* Logo */
+
 .navbar-brand,
 .nav-link {
-  color: white;
+  color: white !important;
   font-weight: 500;
 }
+
 
 .navbar-brand img {
   height: 42px; /* nhỉnh hơn 1 chút cho cân */
@@ -112,6 +114,19 @@ body {
   border-color: #fff;
 }
 
+/* Register Form */
+.form-control {
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  padding: 8px 12px;
+  background-color: #fff;
+  color: #212529;
+}
+.form-control:focus {
+  border-color: #80bdff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
 /* Responsive cho Actions */
 @media (max-width: 991.98px) {
   .navbar-actions {
@@ -134,20 +149,21 @@ body {
   }
 }
 
-
+/* End header */
 
 /* Hero Section */
 .hero-section {
-    background: url('https://images.unsplash.com/photo-1445019980597-93fa8acb246c?q=80&w=2074&auto=format&fit=crop') no-repeat center center fixed;
-    background-size: cover;
-    height: 600px;
-    position: relative;
-    display: flex;
-    align-items: flex-end; /* Align items to the bottom */
-    justify-content: center;
-    color: white;
-    text-align: center;
-    padding-bottom: 30px; /* Add padding to avoid touching the bottom edge */
+  background: url("https://images.unsplash.com/photo-1445019980597-93fa8acb246c?q=80&w=2074&auto=format&fit=crop")
+    no-repeat center center fixed;
+  background-size: cover;
+  height: 600px;
+  position: relative;
+  display: flex;
+  align-items: flex-end; /* Align items to the bottom */
+  justify-content: center;
+  color: white;
+  text-align: center;
+  padding-bottom: 30px; /* Add padding to avoid touching the bottom edge */
 }
 
 .hero-section::before {
@@ -161,15 +177,15 @@ body {
 }
 
 .search-box {
-    background: #fff;
-    border: 3px solid #febb02; /* viền vàng */
-    border-radius: 12px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-    z-index: 1;
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0; /* bỏ padding để khít form */
-    overflow: hidden; /* bo viền khít */
+  background: #fff;
+  border: 3px solid #febb02; /* viền vàng */
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0; /* bỏ padding để khít form */
+  overflow: hidden; /* bo viền khít */
 }
 
 .search-box .input-group,
@@ -190,17 +206,6 @@ body {
   color: #555;
 }
 
-.form-control {
-  border: none;
-  box-shadow: none;
-  font-size: 1rem;
-  padding-left: 5px;
-}
-
-.form-control:focus {
-  outline: none;
-  box-shadow: none;
-}
 
 .btn-search {
   background: #0071c2;
@@ -218,13 +223,25 @@ body {
 }
 
 /* Hero Image Card */
-        .hero-image { border-bottom-left-radius: .25rem; border-bottom-right-radius: .25rem; overflow: visible; }
-        .hero-image .card { border-radius: .5rem; }
 
-        @media (max-width: 767.98px) {
-            .hero-image { min-height: 260px; }
-            .hero-image .card { margin-bottom: 0; margin-top: 12px; }
-        }
+.hero-image {
+  border-bottom-left-radius: 0.25rem;
+  border-bottom-right-radius: 0.25rem;
+  overflow: visible;
+}
+.hero-image .card {
+  border-radius: 0.5rem;
+}
+@media (max-width: 767.98px) {
+  .hero-image {
+    min-height: 260px;
+  }
+  .hero-image .card {
+    margin-bottom: 0;
+    margin-top: 12px;
+  }
+}
+
 
 /* Hotel Cards */
 .hotel-card {
@@ -236,7 +253,6 @@ body {
 }
 
 .hotel-card:hover {
-    
 }
 
 .hotel-card:hover .card-title a,
@@ -295,8 +311,10 @@ body {
 }
 
 .details-link:hover {
-    color: #007bff; /* Bootstrap blue */
-    text-decoration: underline;
+
+  color: #007bff !important; /* Bootstrap blue */
+  text-decoration: underline;
+
 }
 
 .details-link .details-icon {
@@ -316,18 +334,19 @@ body {
 }
 
 .destination-card {
-    border-radius: 12px;
-    overflow: hidden;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 .destination-badge .badge {
-    font-size: 0.75rem;
+  font-size: 0.75rem;
 }
 
 /* About Section */
-.bg-light h2, .bg-light h3 {
-    color: #1a2a6c;
-    font-weight: 700;
+.bg-light h2,
+.bg-light h3 {
+  color: #1a2a6c;
+  font-weight: 700;
 }
 
 .bg-light .lead {
@@ -376,9 +395,10 @@ main.container-fluid {
   padding-bottom: 20px;
 }
 
-h2, h3 {
-    color: #1a2a6c;
-    font-weight: 700;
+h2,
+h3 {
+  color: #1a2a6c;
+  font-weight: 700;
 }
 
 .lead {
@@ -603,4 +623,7 @@ bottom: 0;
   color: red;                    /* trái tim đỏ khi được chọn */
 }
 
+
+
 /* end index */
+

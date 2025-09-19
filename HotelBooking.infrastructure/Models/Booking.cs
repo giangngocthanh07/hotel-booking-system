@@ -27,6 +27,8 @@ public partial class Booking
 
     public string? Additional { get; set; }
 
+    public virtual ICollection<BookingRoom> BookingRooms { get; set; } = new List<BookingRoom>();
+
     public virtual User Customer { get; set; } = null!;
 
     public virtual Hotel Hotel { get; set; } = null!;
@@ -36,6 +38,4 @@ public partial class Booking
     public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
 
     public virtual RoomType RoomType { get; set; } = null!;
-
-    public virtual ICollection<Room> Rooms { get; set; } = new List<Room>();
 }

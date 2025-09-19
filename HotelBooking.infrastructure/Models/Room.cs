@@ -17,9 +17,9 @@ public partial class Room
 
     public string? Additional { get; set; }
 
+    public virtual ICollection<BookingRoom> BookingRooms { get; set; } = new List<BookingRoom>();
+
+    public virtual ICollection<RoomService> RoomServices { get; set; } = new List<RoomService>();
+
     public virtual RoomType RoomType { get; set; } = null!;
-
-    public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
-
-    public virtual ICollection<Service> Services { get; set; } = new List<Service>();
 }

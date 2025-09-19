@@ -13,7 +13,7 @@ public partial class Amenity
 
     public string? Additional { get; set; }
 
-    public virtual ICollection<Hotel> Hotels { get; set; } = new List<Hotel>();
+    public virtual ICollection<HotelAmenity> HotelAmenities { get; set; } = new List<HotelAmenity>();
 
-    public virtual ICollection<RoomType> RoomTypes { get; set; } = new List<RoomType>();
+    public virtual ICollection<RoomAmenity> RoomAmenities { get; set; } = new List<RoomAmenity>();
 }

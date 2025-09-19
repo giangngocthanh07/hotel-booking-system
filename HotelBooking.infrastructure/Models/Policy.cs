@@ -15,5 +15,5 @@ public partial class Policy
 
     public string? Additional { get; set; }
 
-    public virtual ICollection<Hotel> Hotels { get; set; } = new List<Hotel>();
+    public virtual ICollection<HotelPolicy> HotelPolicies { get; set; } = new List<HotelPolicy>();
 }
