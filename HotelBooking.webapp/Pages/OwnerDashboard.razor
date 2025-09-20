@@ -1,3 +1,5 @@
 @page "/owner-dashboard"
-
+@attribute [Authorize(Roles = "Owner")]
 @layout OwnerLayout
+<h1>Owner Dashboard</h1>
+<p>Chỉ owner mới xem được.</p>

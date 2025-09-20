@@ -1,3 +1,5 @@
+@layout MainLayout
+
 @page "/Hotels"
 <!-- Hero Section -->
 <section class="hero-section position-relative min-vh-100">
@@ -19,44 +21,7 @@
     </div>
 
     <!-- Search Form -->
-    <div class="hero-search position-absolute bottom-0 start-50 translate-middle-x w-100 mb-4" style="max-width: 960px;">
-        <div class="card shadow-sm mx-auto">
-            <div class="card-body">
-                <form class="row g-2 align-items-end">
-                    <div class="col-12 col-md-4">
-                        <label for="destination" class="form-label small mb-1">Điểm đến</label>
-                        <input type="text" id="destination" name="destination"
-                               class="form-control form-control-sm"
-                               placeholder="Thành phố, khách sạn hoặc địa điểm" />
-                    </div>
-                    <div class="col-6 col-md-2">
-                        <label for="checkin" class="form-label small mb-1">Nhận</label>
-                        <input type="date" id="checkin" name="checkin"
-                               class="form-control form-control-sm" />
-                    </div>
-                    <div class="col-6 col-md-2">
-                        <label for="checkout" class="form-label small mb-1">Trả</label>
-                        <input type="date" id="checkout" name="checkout"
-                               class="form-control form-control-sm" />
-                    </div>
-                    <div class="col-6 col-md-2">
-                        <label for="guests" class="form-label small mb-1">Người</label>
-                        <select id="guests" name="guests" class="form-select form-select-sm">
-                            <option selected>2</option>
-                            <option>1</option>
-                            <option>3</option>
-                            <option>4+</option>
-                        </select>
-                    </div>
-                    <div class="col-6 col-md-2 d-grid">
-                        <button type="button" class="btn btn-primary btn-sm">
-                            <i class="bi bi-search me-1"></i> Tìm
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+    <SearchForm />
 </section>
 
 <!-- Featured Hotels -->
