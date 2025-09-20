@@ -11,10 +11,10 @@ namespace HotelBooking.api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AccountsController : ControllerBase
+    public class AccountController : ControllerBase
     {
         IUserService _userService;
-        public AccountsController(IUserService userService)
+        public AccountController(IUserService userService)
         {
             _userService = userService;
         }

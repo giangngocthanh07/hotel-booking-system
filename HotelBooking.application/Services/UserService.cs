@@ -188,27 +188,32 @@ public class UserService : IUserService
         if (user == null)
             return false;
 
-        // Tìm bản ghi UserRole và cập nhật RoleId
-        var existingUserRole = await _context.UserRoles
-        .FirstOrDefaultAsync(ur => ur.UserId == user.Id);
-        if (existingUserRole != null)
+        // Kiểm tra xem user đã có role Owner chưa
+        var hasOwnerRole = await _userRoleRepository
+            .AnyAsync(ur => ur.UserId == user.Id && ur.RoleId == RoleTypeConstDTO.Owner);
+
+        if (!hasOwnerRole)
         {
-            _context.UserRoles.Remove(existingUserRole);
+            // Thêm role Owner cho user
+            var newUserRole = new UserRole
+            {
+                UserId = user.Id,
+                RoleId = RoleTypeConstDTO.Owner
+            };
+            _context.UserRoles.Add(newUserRole);
+
+            // Cập nhật trạng thái yêu cầu
+            request.Status = "Approved";
+            request.ApprovedAt = DateTime.Now;
+            request.ApprovedBy = adminId;
+
+            _upgradeRequestRepository.Update(request);
+
+
+            await _dbu.SaveChangesAsync();
+            return true;
         }
 
-        var newUserRole = new UserRole
-        {
-            UserId = user.Id,
-            RoleId = RoleTypeConstDTO.Owner
-        };
-        _context.UserRoles.Add(newUserRole);
-
-        // Cập nhật trạng thái yêu cầu
-        request.Status = "Approved";
-        request.ApprovedAt = DateTime.Now;
-        request.ApprovedBy = adminId;
-
-        await _dbu.SaveChangesAsync();
-        return true;
+        return false;
     }
 }
