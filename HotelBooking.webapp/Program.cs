@@ -3,6 +3,7 @@
 using HotelBooking.webapp.Components;
 using MudBlazor.Services;
 using Blazored.LocalStorage;
+using Microsoft.AspNetCore.Components.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,15 +23,23 @@ builder.Services.AddHttpClient("HotelBookingAPI", client =>
 // add service blazor local storage
 builder.Services.AddBlazoredLocalStorage();
 
+// Add Authentication & Authorization services
+builder.Services.AddAuthentication();
+builder.Services.AddAuthorization();
+builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
+builder.Services.AddAuthorizationCore();
+
+
 var app = builder.Build();
 
 // app.UseHttpsRedirection(); // kích hoạt https
 app.UseRouting(); // chia các components thành page
 app.UseStaticFiles(); // wwwroot thư mục tài nguyên
 
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
 
 app.UseRouting();
 

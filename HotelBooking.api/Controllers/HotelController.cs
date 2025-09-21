@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 //using HotelBooking.api.Models;
 
@@ -11,38 +13,22 @@ namespace HotelBooking.api.Controllers
     [ApiController]
     public class HotelController : ControllerBase
     {
-        public HotelController()
+        IHotelService _hotelService;
+        public HotelController(IHotelService hotelService)
         {
+            _hotelService = hotelService;
         }
 
-        [HttpGet("")]
-        public ActionResult<IEnumerable<TModel>> GetTModels()
+        [Authorize(Roles = "Owner")]
+        [HttpGet("get-owner-dashboard")]
+        public async Task<IActionResult> GetOwnerDashboardAsync()
         {
-            return new List<TModel> { };
+            var ownerId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var response = await _hotelService.GetOwnerDashBoard(ownerId);
+            return Ok(response);
         }
 
-        [HttpGet("{id}")]
-        public ActionResult<TModel> GetTModelById(int id)
-        {
-            return null;
-        }
 
-        [HttpPost("")]
-        public ActionResult<TModel> PostTModel(TModel model)
-        {
-            return null;
-        }
-
-        [HttpPut("{id}")]
-        public IActionResult PutTModel(int id, TModel model)
-        {
-            return NoContent();
-        }
-
-        [HttpDelete("{id}")]
-        public ActionResult<TModel> DeleteTModelById(int id)
-        {
-            return null;
-        }
     }
 }

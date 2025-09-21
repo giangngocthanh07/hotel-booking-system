@@ -94,3 +94,12 @@ window.initMultiCardCarousel = function () {
         updateCarousel(false);
     });
 };
+
+document.addEventListener("DOMContentLoaded", function () {
+    flatpickr("#dateRange", {
+      mode: "range",
+      minDate: "today",
+      dateFormat: "D, d \\t\\há\\ng m", // hiển thị T5, 18 tháng 9
+      locale: "vn",
+    });
+  });

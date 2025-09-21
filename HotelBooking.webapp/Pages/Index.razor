@@ -32,41 +32,10 @@
   </div>
 
   <!-- Search Form -->
-  <div class="hero-search position-absolute bottom-0 start-50 translate-middle-x w-100 mb-4"
-    style="z-index: 3; max-width: 960px;">
-    <div class="card shadow-sm mx-auto">
-      <div class="card-body">
-        <form class="row g-2 align-items-end">
-          <div class="col-12 col-md-4">
-            <label class="form-label small mb-1">Điểm đến</label>
-            <input type="text" class="form-control form-control-sm" placeholder="Thành phố, khách sạn hoặc địa điểm" />
-          </div>
-          <div class="col-6 col-md-2">
-            <label class="form-label small mb-1">Nhận</label>
-            <input type="date" class="form-control form-control-sm" />
-          </div>
-          <div class="col-6 col-md-2">
-            <label class="form-label small mb-1">Trả</label>
-            <input type="date" class="form-control form-control-sm" />
-          </div>
-          <div class="col-6 col-md-2">
-            <label class="form-label small mb-1">Người</label>
-            <select class="form-select form-select-sm">
-              <option>2</option>
-              <option>1</option>
-              <option>3</option>
-            </select>
-          </div>
-          <div class="col-6 col-md-2 d-grid">
-            <button type="button" class="btn btn-primary btn-sm w-100">
-              <i class="bi bi-search me-1"></i> Tìm
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+  <SearchForm />
+
 </div>
+
 
 <!-- địa điểm du lịch để booking-->
 <div class="container mt-5">
@@ -181,7 +150,154 @@
 </div>
 
 
-@* thêm ý tưởng cho web hotel booking *@
+<!-- Chỗ ở được đánh giá cao -->
+<div class="container mt-5">
+  <h2 class="mb-4 text-center">Chỗ ở được đánh giá cao</h2>
+  <div class="row">
+    @foreach (var hotel in Hotels)
+    {
+      <div class="col-sm-6 col-md-3 mb-4">
+        <div class="card h-100 shadow-sm position-relative">
+
+          <!-- Carousel -->
+          <div id="@($"hotelCarousel{hotel.Id}")" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
+              @for (int i = 0; i < hotel.Images.Count; i++)
+              {
+                <div class="carousel-item @(i == 0 ? "active" : "")">
+                  <img src="@hotel.Images[i]" class="d-block w-100" style="height: 200px; object-fit: cover;"
+                    alt="Hotel Image">
+                </div>
+              }
+            </div>
+
+            <!-- Prev -->
+            <button class="carousel-control-prev" type="button" data-bs-target="@($"#hotelCarousel{hotel.Id}")"
+              data-bs-slide="prev" @onclick:stopPropagation="true"
+              style="position: absolute; top: 50%; transform: translateY(-50%);">
+              <span class="carousel-control-prev-icon"></span>
+            </button>
+
+            <!-- Next -->
+            <button class="carousel-control-next" type="button" data-bs-target="@($"#hotelCarousel{hotel.Id}")"
+              data-bs-slide="next" @onclick:stopPropagation="true"
+              style="position: absolute; top: 50%; transform: translateY(-50%);">
+              <span class="carousel-control-next-icon"></span>
+            </button>
+          </div>
+          <!-- Wishlist Button (đặt sau cùng để luôn nằm trên) -->
+          <button class="wishlist-btn position-absolute top-0 end-0 m-2 btn btn-sm" style="z-index: 5;"
+            @onclick:stopPropagation="true" @onclick="() => ToggleWishlist(hotel.Id)">
+            <i class="bi @(hotel.IsWishlist ? "bi-heart-fill text-danger" : "bi-heart text-dark")"></i>
+          </button>
+
+          <!-- Card body -->
+          <div class="card-body d-flex flex-column justify-content-between">
+            <div>
+              <h5 class="card-title">@hotel.Name</h5>
+              <small class="text-muted">Địa điểm: @hotel.Location</small>
+              <p class="card-text">
+                @hotel.ReviewText, <span class="text-success">@hotel.Score</span>
+              </p>
+            </div>
+            <div class="mt-2 d-flex justify-content-end">
+              Giá từ: <span class="text-warning">@hotel.Price VNĐ</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+
+@code {
+  private List<Hotel> Hotels { get; set; } = new()
+{
+new Hotel
+{
+Id = 1,
+Name = "Khách sạn sang trọng",
+Location = "Phan Thiết",
+Score = 9.5,
+ReviewText = "Tuyệt vời",
+Price = "1.200.000",
+Images = new List<string>
+{
+"https://picsum.photos/400/300/?random=7",
+"https://picsum.photos/400/300/?random=8",
+"https://picsum.photos/400/300/?random=9",
+"https://picsum.photos/400/300/?random=10"
+}
+},
+new Hotel
+{
+Id = 2,
+Name = "Căn hộ dịch vụ",
+Location = "Hồ Chí Minh",
+Score = 8.9,
+ReviewText = "Rất tốt",
+Price = "950.000",
+Images = new List<string>
+{
+"https://source.unsplash.com/400x300/?apartment,city",
+"https://picsum.photos/400/300/?random=11",
+"https://picsum.photos/400/300/?random=12"
+}
+},
+new Hotel
+{
+Id = 3,
+Name = "Resort biển",
+Location = "Nha Trang",
+Score = 9.2,
+ReviewText = "Xuất sắc",
+Price = "1.500.000",
+Images = new List<string>
+{
+"https://source.unsplash.com/400x300/?resort,beach",
+"https://picsum.photos/400/300/?random=14",
+"https://picsum.photos/400/300/?random=15"
+}
+},
+new Hotel
+{
+Id = 4,
+Name = "Khách sạn đẹp",
+Location = "Đà Nẵng",
+Score = 9.7,
+ReviewText = "Trên cả tuyệt vời",
+Price = "1.800.000",
+Images = new List<string>
+{
+"https://picsum.photos/400/300/?random=17",
+"https://picsum.photos/400/300/?random=18"
+}
+}
+};
+
+  private void ToggleWishlist(int id)
+  {
+    var hotel = Hotels.FirstOrDefault(h => h.Id == id);
+    if (hotel != null)
+    {
+      hotel.IsWishlist = !hotel.IsWishlist;
+    }
+  }
+
+  private class Hotel
+  {
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Location { get; set; }
+    public double Score { get; set; }
+    public string ReviewText { get; set; }
+    public string Price { get; set; }
+    public List<string> Images { get; set; } = new();
+    public bool IsWishlist { get; set; }
+  }
+}
+
 <!-- Các tính năng khác -->
 <div class="container mt-5">
   <h2 class="mb-4 text-center">Tại sao chọn chúng tôi?</h2>
@@ -228,15 +344,12 @@
 </div>
 
 @code {
-    
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
-    <!-- địa điểm du lịch -->
     if (firstRender)
     {
+      // Gọi JS init carousel sau khi render xong lần đầu
       await JS.InvokeVoidAsync("initMultiCardCarousel");
     }
   }
-
-
 }

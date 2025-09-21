@@ -4,11 +4,25 @@ body {
   font-family: "Inter", sans-serif;
 }
 
+/* Header */
 /* Navbar */
 .navbar {
-  background: linear-gradient(90deg, #1a2a6c, #b21f1f);
+  background: #4facfe;
+  /* xanh biển nhạt */
   transition: all 0.3s;
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
 }
+
+/* Container */
+.navbar .container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  
+}
+
+/* Logo */
 
 .navbar-brand,
 .nav-link {
@@ -16,28 +30,151 @@ body {
   font-weight: 500;
 }
 
-.nav-link:hover,
-.nav-link.active {
-  color: #ffd700 !important;
-}
 
 .navbar-brand img {
-  height: 40px;
+  height: 42px;
 }
 
+/* Nav links */
+.navbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.nav-link {
+  position: relative;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  padding-top: 0.25rem;
+  padding-bottom: 0rem;
+  transition: color 0.3s ease;
+}
+
+/* Hover & Active */
+.nav-link:hover,
+.nav-link.active {
+  color: white;
+}
+
+/* Underline hover animation */
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -3px;
+  /* cách chữ 3px */
+  width: 0%;
+  height: 2px;
+  background: white;
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+  width: 100%;
+}
+
+.navbar .nav-link.active {
+  color: #fff;
+  font-weight: 500;
+  text-shadow: 0 0 1px #fff, 0 0 1px #fff;
+}
+
+/* Actions */
+.navbar .d-flex {
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Nút chung */
+.navbar .btn {
+  border-radius: 25px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  padding: 0.45rem 1.2rem;
+}
+
+/* Nút Đăng nơi lưu trú (outline trắng) */
+.navbar .btn-outline-light {
+  background: transparent;
+  border: 2px solid #fff;
+  color: #fff;
+}
+
+.navbar .btn-outline-light:hover {
+  background: #fff;
+  color: #4facfe;
+}
+
+/* Nút Đăng nhập */
+.navbar .btn-light {
+  background: #fff;
+  color: #4facfe;
+  border: 2px solid #fff;
+}
+
+.navbar .btn-light:hover {
+  background: transparent;
+  color: #fff;
+  border-color: #fff;
+}
+
+/* Register Form */
+.form-control {
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  padding: 8px 12px;
+  background-color: #fff;
+  color: #212529;
+}
+
+.form-control:focus {
+  border-color: #80bdff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+/* Responsive cho Actions */
+@media (max-width: 991.98px) {
+  .navbar-actions {
+    flex-direction: column;
+    width: 100%;
+    margin-top: 1rem;
+    gap: 0.5rem;
+    align-items: center;
+    /* căn giữa */
+    justify-content: center;
+    /* căn giữa ngang */
+  }
+
+  .navbar-actions .btn {
+    width: 80%;
+    text-align: center;
+  }
+
+  .navbar-nav {
+    text-align: center;
+    gap: 1rem;
+  }
+}
+
+/* End header */
+
+/* Body */
 /* Hero Section */
 .hero-section {
-  background: url("https://images.unsplash.com/photo-1445019980597-93fa8acb246c?q=80&w=2074&auto=format&fit=crop")
-    no-repeat center center fixed;
+  background: url("https://images.unsplash.com/photo-1445019980597-93fa8acb246c?q=80&w=2074&auto=format&fit=crop") no-repeat center center fixed;
   background-size: cover;
   height: 600px;
   position: relative;
   display: flex;
-  align-items: flex-end; /* Align items to the bottom */
+  align-items: flex-end;
+  /* Align items to the bottom */
   justify-content: center;
   color: white;
   text-align: center;
-  padding-bottom: 30px; /* Add padding to avoid touching the bottom edge */
+  padding-bottom: 30px;
+  /* Add padding to avoid touching the bottom edge */
 }
 
 .hero-section::before {
@@ -50,81 +187,130 @@ body {
   background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7));
 }
 
-.search-box {
-  background: #fff;
-  border: 3px solid #febb02; /* viền vàng */
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  z-index: 1;
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 0; /* bỏ padding để khít form */
-  overflow: hidden; /* bo viền khít */
+/* search-form */
+.location-input .mud-input-root, 
+.guest-room-input .mud-input-root {
+    padding: 14px 12px 14px 36px !important;
+    height: 56px;
 }
 
-.search-box .input-group,
-.search-box .btn-search {
-  height: 60px;
+.custom-date-range .mud-input-root {
+    padding: 14px 12px 14px 10px !important; 
+    height: 56px;
 }
 
-.search-box h1 {
-  color: #1a2a6c;
-  font-weight: 700;
-  margin-bottom: 20px;
+.location-input .mud-input-adornment-start, 
+.custom-date-range .mud-input-adornment-start, 
+.guest-room-input .mud-input-adornment-start {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(0, 0, 0, 0.54);
+    font-size: 20px;
 }
 
-.input-group-text {
-  background-color: transparent;
-  border: none;
-  font-size: 1.2rem;
-  color: #555;
+.suggestion-list {
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    background-color: #fff;
+    z-index: 1000;
 }
 
-.form-control {
-  border: none;
-  box-shadow: none;
-  font-size: 1rem;
-  padding-left: 5px;
+.suggestion-list .list-group-item {
+    border: none;
+    cursor: pointer;
 }
 
-.form-control:focus {
-  outline: none;
-  box-shadow: none;
+.suggestion-list .list-group-item:hover {
+    background-color: #f5f5f5;
 }
 
-.btn-search {
-  background: #0071c2;
-  color: white;
-  font-weight: 600;
-  border: none;
-  border-radius: 6px;
-  height: 100%;
-  transition: all 0.3s;
+/* Input stepper buttons */
+.input-stepper .mud-button-root {
+    min-width: 32px;
+    height: 32px;
+    padding: 0;
+    line-height: 1;
 }
 
-.btn-search:hover {
-  background: #ffd700;
-  color: #1a2a6c;
+/* Start date */
+.custom-date-range input:first-of-type {
+    font-size: 16px;   /* Ví dụ: đổi size chữ */
+    padding-left: 36px;
+    padding-right: 4px !important;
+    margin-left: 20px;
 }
 
-/* Hero Image Card */
-.hero-image {
-  border-bottom-left-radius: 0.25rem;
-  border-bottom-right-radius: 0.25rem;
-  overflow: visible;
+/* Ô "Trả" (End date */
+.custom-date-range input:last-of-type {
+    font-size: 16px;
+    padding-right: 6px !important;
 }
-.hero-image .card {
-  border-radius: 0.5rem;
+
+/* Nút tìm */
+.search-btn {
+    height: 46px;
+    font-size: 15px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 8px;
+    border-radius: 8px;        /* bo góc nhẹ hơn */
+    background: transparent;   /* giống navbar */
+    border: 2px solid #4facfe ; /* màu border chủ đạo */
+    color: #4facfe;            /* chữ màu xanh */
+    transition: all 0.3s ease; /* hiệu ứng hover */
 }
-@media (max-width: 767.98px) {
-  .hero-image {
-    min-height: 260px;
-  }
-  .hero-image .card {
-    margin-bottom: 0;
-    margin-top: 12px;
-  }
+
+.search-btn:hover {
+    background: #4facfe ;
+    color: #fff ;               /* hover đổi ngược */
 }
+
+.search-btn .mud-icon-root {
+    font-size: 20px;
+}
+
+/* Ensure ellipsis for long text */
+.mud-input-root .mud-input-slot {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.position-relative .suggestion-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    margin-top: 4px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    background-color: #fff;
+    z-index: 1000;
+}
+
+/* Khách dropdown rộng hơn */
+.guest-dropdown {
+    min-width: 260px;
+}
+
+/* List item hover */
+.suggestion-list .list-group-item:hover {
+    background-color: #f5f5f5;
+    cursor: pointer;
+}
+
+/* Stepper button size */
+.input-stepper .mud-button-root {
+    min-width: 32px;
+    height: 32px;
+    padding: 0;
+}
+
+/* hotels  */
 
 /* Hotel Cards */
 .hotel-card {
@@ -135,12 +321,11 @@ body {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-.hotel-card:hover {
-}
+.hotel-card:hover {}
 
 .hotel-card:hover .card-title a,
 .hotel-card:hover .details-link {
-  color: #007bff !important;
+  color: #007bff;
   text-decoration: underline;
 }
 
@@ -184,7 +369,7 @@ body {
 }
 
 .details-link {
-  color: #222 !important;
+  color: #222;
   background: none;
   border: none;
   padding: 0;
@@ -194,8 +379,11 @@ body {
 }
 
 .details-link:hover {
-  color: #007bff !important; /* Bootstrap blue */
+
+  color: #007bff !important;
+  /* Bootstrap blue */
   text-decoration: underline;
+
 }
 
 .details-link .details-icon {
@@ -236,28 +424,40 @@ body {
 
 /* Footer */
 .footer {
-  background: linear-gradient(90deg, #1a2a6c, #b21f1f);
+  background: linear-gradient(90deg, #0071c2, #005a99);
+  /* xanh biển nhạt -> đậm */
   color: white;
   padding: 40px 0;
 }
 
 .footer a {
   color: #ffd700;
+  /* vàng nổi bật */
   text-decoration: none;
-}
-
-.footer a:hover {
-  color: white;
-}
-
-.social-icons i {
-  font-size: 1.5rem;
-  margin: 0 10px;
   transition: color 0.3s;
 }
 
-.social-icons i:hover {
-  color: #ffd700;
+.footer a:hover {
+  color: #fff;
+}
+
+/* Icon mạng xã hội */
+.social-icons a {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  line-height: 40px;
+  margin-right: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.social-icons a:hover {
+  background: #ffd700;
+  color: white;
 }
 
 /* General Page Styles */
@@ -278,18 +478,235 @@ h3 {
 
 /* Ensure consistency for other pages */
 .page-content {
-  min-height: calc(100vh - 200px); /* Adjust based on navbar/footer height */
+  min-height: calc(100vh - 200px);
 }
 
-/* Register Form */
-.form-control {
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  padding: 8px 12px;
+/* index */
+/* -- Khám phá VN -- */
+#multiCardCarousel .card:first-child {
+  margin-left: 10px;
+}
+
+#carouselWrapper {
+  padding-left: calc(3rem + 0.5rem);
+  /* nút + khoảng cách */
+}
+
+
+/* Carousel wrapper hover mới show nút */
+.carousel-wrapper {
+  position: relative;
+}
+
+.carousel-wrapper .carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background-color: rgba(0, 123, 255, 0.7);
+  /* xanh biển nhạt */
+  color: #fff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.3s, background-color 0.3s;
+  z-index: 10;
+}
+
+.carousel-wrapper:hover .carousel-btn {
+  opacity: 1;
+}
+
+.carousel-btn:hover {
+  background-color: #007bff;
+  /* đậm hơn khi hover */
+}
+
+/* Vị trí prev/next */
+.prev-btn {
+  left: 0.5rem;
+}
+
+.next-btn {
+  right: 0.5rem;
+}
+
+/* Card tối ưu hình ảnh */
+.destination-card {
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+  min-width: 18rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.destination-card img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.destination-card .card-body {
+  padding: 10px 15px;
+}
+
+.destination-card .card-title {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #1a2a6c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .destination-card img {
+    height: 140px;
+  }
+}
+
+@media (max-width: 576px) {
+  .destination-card img {
+    height: 120px;
+  }
+}
+
+/* phân loại lưu trú */
+.accommodation-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.accommodation-card {
+  flex-grow: 1;
+  flex-basis: 0;
+  min-width: 0;
+  text-align: center;
+  background: #f8f9fa;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+  position: relative;
+  overflow: hidden;
+  /* Đảm bảo ảnh không tràn ra ngoài viền khi phóng to */
+}
+
+.accommodation-card:hover img {
+  transform: scale(1.05);
+  /* Phóng to ảnh khi hover */
+  transition: transform 0.2s;
+  /* Hiệu ứng mượt mà cho ảnh */
+}
+
+/* Hàng 1: 3 cột đều nhau */
+.accommodation-card:nth-child(-n+3) {
+  flex: 1 1 calc(33.33% - 0.75rem);
+  max-width: calc(33.33% - 0.75rem);
+}
+
+/* Hàng 2: 4 cột đều nhau */
+.accommodation-card:nth-child(n+4):nth-child(-n+7) {
+  flex: 1 1 calc(25% - 0.75rem);
+  max-width: calc(25% - 0.75rem);
+}
+
+.accommodation-card img {
+  width: 100%;
+  height: 170px;
+  object-fit: cover;
+  display: block;
+  border-radius: 8px;
+  transition: transform 0.2s;
+  /* Thêm transition cho ảnh để mượt mà */
+}
+
+.accommodation-card .title-accommodation {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent 70%);
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 500;
+  padding: 0.5rem 0.5rem;
+  text-align: center;
+  z-index: 10;
+  border-radius: 0;
+  line-height: 1.3;
+}
+
+
+.accommodation-card .title-accommodation::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+  z-index: -1;
+}
+
+/* Responsive cho màn hình nhỏ */
+@media (max-width: 768px) {
+
+  .accommodation-card:nth-child(-n+3),
+  .accommodation-card:nth-child(n+4):nth-child(-n+7) {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+
+  .accommodation-card img {
+    height: 140px;
+  }
+}
+
+/* <!-- Chỗ ở được đánh giá cao --> */
+.wishlist-btn {
   background-color: #fff;
-  color: #212529;
+  /* nền trắng */
+  border: none;
+  /* bỏ viền mặc định */
+  width: 36px;
+  /* kích thước nút */
+  height: 36px;
+  border-radius: 50%;
+  /* bo tròn */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  /* đổ bóng nhẹ */
+  cursor: pointer;
+  transition: all 0.3s;
 }
-.form-control:focus {
-  border-color: #80bdff;
-  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+
+.wishlist-btn i {
+  font-size: 18px;
+  color: #ccc;
+  /* trái tim rỗng mặc định xám */
+  transition: color 0.3s;
 }
+
+.wishlist-btn:hover {
+  background-color: #f8f9fa;
+  /* nền xám nhạt khi hover */
+}
+
+.wishlist-btn i.bi-heart-fill {
+  color: red;
+  /* trái tim đỏ khi được chọn */
+}
+
+
+
+/* end index */

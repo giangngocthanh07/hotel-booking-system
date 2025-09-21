@@ -1,4 +1,6 @@
 @page "/customer-login"
+@inject NavigationManager _nav
+@inject AuthenticationStateProvider _authStateProvider
 
 @inject IHttpClientFactory HttpClientFactory
 @inject Blazored.LocalStorage.ILocalStorageService localStorage
@@ -75,14 +77,17 @@
         {
             // Handle login logic here
             // Call API Login
-            var response = await _httpClient.PostAsJsonAsync("Accounts/login", userLogin);
+            var response = await _httpClient.PostAsJsonAsync("Account/login", userLogin);
 
             if (response.IsSuccessStatusCode)
             {
                 var token = await response.Content.ReadAsStringAsync();
                 // Lưu token vào local storage
-                await localStorage.SetItemAsync("accessToken", token);
+                // gọi MarkUserAsAuthenticated
+                await ((CustomAuthStateProvider)_authStateProvider).MarkUserAsAuthenticated(token);
+
                 // Chuyển hướng hoặc cập nhật giao diện người dùng sau khi đăng nhập thành công
+
             }
             else
             {
