@@ -31,7 +31,10 @@ builder.Services.AddScoped<IRoomImageRepository, RoomImageRepository>();
 builder.Services.AddScoped<IRoomTypeRepository, RoomTypeRepository>();
 builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+<<<<<<< HEAD
 builder.Services.AddScoped<IUpgradeRequestRepository, UpgradeRequestRepository>();
+=======
+>>>>>>> origin/pin
 builder.Services.AddScoped<IUserRoleRepository, UserRoleRepository>();
 builder.Services.AddScoped<IRoomServiceRepository, RoomServiceRepository>();
 builder.Services.AddScoped<IRoomAmenityRepository, RoomAmenityRepository>();
@@ -43,11 +46,15 @@ builder.Services.AddScoped<IBookingRoomRepository, BookingRoomRepository>();
 // DI for UnitOfWork
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+<<<<<<< HEAD
 // DI for JwtAuthService
 builder.Services.AddScoped<JwtAuthService>();
 
 // DI for Service
 builder.Services.AddScoped<IUserService, UserService>();
+=======
+// DI for Service
+>>>>>>> origin/pin
 builder.Services.AddScoped<IRoleService, RoleService>();
 
 //Use map controller
