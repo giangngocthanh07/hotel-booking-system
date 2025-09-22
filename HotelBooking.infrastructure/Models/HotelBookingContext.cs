@@ -438,9 +438,11 @@ public partial class HotelBookingContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK__UpgradeR__3214EC071216498F");
 
+            entity.Property(e => e.Address).HasMaxLength(255);
             entity.Property(e => e.ApprovedAt).HasColumnType("datetime");
             entity.Property(e => e.RequestedAt).HasColumnType("datetime");
             entity.Property(e => e.Status).HasMaxLength(20);
+            entity.Property(e => e.TaxCode).HasMaxLength(50);
 
             entity.HasOne(d => d.ApprovedByNavigation).WithMany(p => p.UpgradeRequestApprovedByNavigations)
                 .HasForeignKey(d => d.ApprovedBy)
@@ -460,6 +462,7 @@ public partial class HotelBookingContext : DbContext
 
             entity.HasIndex(e => e.UserName, "UQ__Users__C9F284569817A4FB").IsUnique();
 
+            entity.Property(e => e.Address).HasMaxLength(255);
             entity.Property(e => e.AvatarUrl).HasMaxLength(500);
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
@@ -470,6 +473,7 @@ public partial class HotelBookingContext : DbContext
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.PasswordHash).HasMaxLength(255);
             entity.Property(e => e.PhoneNumber).HasMaxLength(20);
+            entity.Property(e => e.TaxCode).HasMaxLength(50);
             entity.Property(e => e.UserName).HasMaxLength(100);
         });
 

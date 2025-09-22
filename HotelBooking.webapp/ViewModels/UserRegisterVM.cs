@@ -35,6 +35,9 @@ namespace HotelBooking.webapp.ViewModels
 
         [DataType(DataType.Date)]
         public DateTime? DateOfBirth { get; set; }
+
+        [Required(ErrorMessage = "Bạn phải đồng ý điều khoản.")]
+        public bool AgreeTerm { get; set; }
     }
 }
 

@@ -7,7 +7,7 @@ public interface IRepository<T> where T : class
     Task<IEnumerable<T>> GetAllAsync();
     Task<T?> GetByIdAsync(int id);
     Task AddAsync(T entity);
-    void Update(T entity);
+    Task UpdateAsync(T entity);
     Task DeleteAsync(int id);
     Task<T?> SingleOrDefaultAsync(Expression<Func<T, bool>> predicate);
     Task<IEnumerable<T>> WhereAsync(Expression<Func<T, bool>> predicate);
@@ -33,10 +33,18 @@ public class Repository<T> : IRepository<T> where T : class
 
     public async Task AddAsync(T entity)
     {
+        // Kiểm tra nếu có property "Id" và kiểu là int
+        var prop = typeof(T).GetProperty("Id");
+        if (prop != null && prop.PropertyType == typeof(int))
+        {
+            // Reset về 0 để tránh insert thủ công
+            prop.SetValue(entity, 0);
+        }
+
         await _dbSet.AddAsync(entity);
     }
 
-    public void Update(T entity)
+    public async Task UpdateAsync(T entity)
     {
         _dbSet.Update(entity);
     }

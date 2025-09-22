@@ -19,8 +19,16 @@ namespace HotelBooking.api.Controllers
             _userService = userService;
         }
 
+        [HttpGet("get-user-by-id")]
+        public async Task<ActionResult> GetUserByIdAsync(int userId)
+        {
+            var user = await _userService.GetByIdAsync(userId);
+            if (user == null) return NotFound("User not found.");
+            return Ok(user);
+        }
+
         [HttpPost("register-admin")]
-        public async Task<ActionResult> RegisterAdminAsync([FromBody] RegisterAdminDTO newAdmin)
+        public async Task<IActionResult> RegisterAdminAsync([FromBody] RegisterAdminDTO newAdmin)
         {
 
             var res = await _userService.RegisterAdmin(newAdmin);
@@ -35,7 +43,7 @@ namespace HotelBooking.api.Controllers
         }
 
         [HttpPost("register-customer")]
-        public async Task<ActionResult> RegisterCustomerAsync([FromBody] RegisterCustomerDTO newCustomer)
+        public async Task<IActionResult> RegisterCustomerAsync([FromBody] RegisterCustomerDTO newCustomer)
         {
 
             var res = await _userService.RegisterCustomer(newCustomer);
@@ -72,22 +80,22 @@ namespace HotelBooking.api.Controllers
             }
         }
 
-        [HttpPost("upgrade-request")]
-        [Authorize(Roles = "Customer")]
-        public async Task<ActionResult> RequestUpgradeAsync()
-        {
-            var claim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (claim == null || string.IsNullOrEmpty(claim.Value))
-            {
-                return BadRequest("User identifier claim is missing.");
-            }
+        // [HttpPost("upgrade-request")]
+        // [Authorize(Roles = "Customer")]
+        // public async Task<ActionResult> RequestUpgradeAsync()
+        // {
+        //     var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+        //     if (claim == null || string.IsNullOrEmpty(claim.Value))
+        //     {
+        //         return BadRequest("User identifier claim is missing.");
+        //     }
 
-            var userId = int.Parse(claim.Value);
-            var success = await _userService.RequestUpgradeToOwnerAsync(userId);
-            if (!success) return BadRequest("Cannot process upgrade request.");
-            else
-                return Ok("Sent upgrade request successfully. Please wait for admin approval.");
-        }
+        //     var userId = int.Parse(claim.Value);
+        //     var success = await _userService.RequestUpgradeToOwnerAsync(userId);
+        //     if (!success) return BadRequest("Cannot process upgrade request.");
+        //     else
+        //         return Ok("Sent upgrade request successfully. Please wait for admin approval.");
+        // }
 
         [HttpPost("upgrade-approve")]
         [Authorize(Roles = "Admin")]

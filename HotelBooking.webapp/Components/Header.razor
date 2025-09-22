@@ -1,3 +1,4 @@
+@using System.IdentityModel.Tokens.Jwt
 <header class="navbar navbar-expand-lg position-fixed top-0 start-0 w-100 shadow-sm" style="z-index: 1000;">
     <div class="container">
         <!-- Logo -->
@@ -29,11 +30,76 @@
             </ul>
 
             <!-- Actions -->
+            <!-- Actions -->
             <div class="d-flex navbar-actions">
-                <a class="btn btn-outline-light" href="/owner-login">Đăng nơi lưu trú</a>
-                <a class="btn btn-light" href="/customer-login">Đăng nhập</a>
+                @if (isAuthenticated)
+                {
+                    @if (userRole == "Owner")
+                    {
+                        <a class="btn btn-outline-light" href="/owner-dashboard">Quản lý khách sạn</a>
+                    }
+                    else if (userRole == "Customer")
+                    {
+                        <a class="btn btn-outline-light" href="/upgrade-owner">Đăng ký đối tác</a>
+                    }
+                    else if (userRole == "Admin")
+                    {
+                        <a class="btn btn-outline-light" href="/admin">Quản lý</a>
+                    }
+                    <a class="btn btn-light" @onclick="Logout">Đăng xuất</a>
+                }
+                else
+                {
+                    <a class="btn btn-outline-light" href="/customer-register">Đăng ký</a>
+                    <a class="btn btn-light" href="/customer-login">Đăng nhập</a>
+                }
             </div>
 
         </div>
     </div>
 </header>
+
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+@inject NavigationManager NavigationManager
+
+@code {
+    private bool isAuthenticated = false;
+    private string userRole = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var token = await _localStorage.GetItemAsync<string>("accessToken");
+        if (!string.IsNullOrEmpty(token))
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadJwtToken(token);
+
+            // Kiểm tra tất cả các role claims
+            var rolesClaims = jwtToken.Claims.Where(c => c.Type == "role").ToList();
+            if (rolesClaims.Any())
+            {
+                isAuthenticated = true;
+                // Ưu tiên role Owner nếu có
+                if (rolesClaims.Any(r => r.Value == "Owner"))
+                {
+                    userRole = "Owner";
+                }
+                else if (rolesClaims.Any(r => r.Value == "Customer"))
+                {
+                    userRole = "Customer";
+                }
+                else if (rolesClaims.Any(r => r.Value == "Admin"))
+                {
+                    userRole = "Admin";
+                }
+            }
+        }
+    }
+    private async Task Logout()
+    {
+        await _localStorage.RemoveItemAsync("accessToken");
+        isAuthenticated = false;
+        userRole = string.Empty;
+        NavigationManager.NavigateTo("/", true);
+    }
+}

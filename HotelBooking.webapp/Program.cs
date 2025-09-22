@@ -4,6 +4,7 @@ using HotelBooking.webapp.Components;
 using MudBlazor.Services;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.Authorization;
+using System.Net.Http.Headers;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -8,8 +8,6 @@
 @using System.Text.Json
 @using HotelBooking.webapp.ViewModels
 
-
-
 <div class="d-flex justify-content-center align-items-center min-vh-100">
     <div class="container mt-5">
         <div class="row justify-content-center">
@@ -25,36 +23,40 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="username" class="form-label">Username</label>
-                                <input @bind="userRegister.Username" type="text" class="form-control" id="username"
-                                    required>
+                                <InputText @bind-Value="userRegister.Username" class="form-control" id="username" />
+                                <ValidationMessage For="@(() => userRegister.Username)" />
                             </div>
 
                             <div class="col-md-6">
                                 <label for="email" class="form-label">Email</label>
-                                <input @bind="userRegister.Email" type="email" class="form-control" id="email" required>
+                                <InputText @bind-Value="userRegister.Email" type="email" class="form-control"
+                                    id="email" />
+                                <ValidationMessage For="@(() => userRegister.Email)" />
                             </div>
 
                             <div class="col-md-6">
                                 <label for="fullname" class="form-label">Full Name</label>
-                                <input @bind="userRegister.FullName" type="text" class="form-control" id="fullname"
-                                    required>
+                                <InputText @bind-Value="userRegister.FullName" class="form-control" id="fullname" />
+                                <ValidationMessage For="@(() => userRegister.FullName)" />
                             </div>
 
                             <div class="col-md-6">
                                 <label for="phone" class="form-label">Phone Number</label>
-                                <input @bind="userRegister.PhoneNumber" type="text" class="form-control" id="phone"
-                                    required>
+                                <InputText @bind-Value="userRegister.PhoneNumber" class="form-control" id="phone" />
+                                <ValidationMessage For="@(() => userRegister.PhoneNumber)" />
                             </div>
 
                             <div class="col-md-6">
                                 <label for="password" class="form-label">Password</label>
-                                <input @bind="userRegister.Password" type="password" class="form-control" id="password"
-                                    required>
+                                <InputText @bind-Value="userRegister.Password" type="password" class="form-control"
+                                    id="password" />
+                                <ValidationMessage For="@(() => userRegister.Password)" />
                             </div>
                             <div class="col-md-6">
                                 <label for="confirmPassword" class="form-label">Confirm Password</label>
-                                <input @bind="userRegister.ConfirmPassword" type="password" class="form-control"
-                                    id="confirmPassword" required>
+                                <InputText @bind-Value="userRegister.ConfirmPassword" type="password"
+                                    class="form-control" id="confirmPassword" />
+                                <ValidationMessage For="@(() => userRegister.ConfirmPassword)" />
                             </div>
                         </div>
                         <div class="form-check mt-4">
@@ -63,13 +65,18 @@
                                 Vâng, tôi muốn nhận email từ Hotel Booking
                             </label>
                         </div>
+
                         <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="agreeTerm" required>
+                            <InputCheckbox @bind-Value="userRegister.AgreeTerm" class="form-check-input"
+                                id="agreeTerm" />
                             <label class="form-check-label" for="agreeTerm">
                                 Tôi đồng ý với <a href="#">Điều khoản, Chính sách bảo mật và Phí dịch vụ</a>
                             </label>
+                            <ValidationMessage For="@(() => userRegister.AgreeTerm)" />
                         </div>
+
                         <button type="submit" class="btn btn-primary w-100">Tạo tài khoản</button>
+
                         <div class="text-center mt-3">
                             <small class="text-muted">Bạn đã có tài khoản? <a href="/customer-login">Đăng
                                     nhập</a></small>
@@ -90,16 +97,14 @@
     {
         try
         {
-            var client = HttpClientFactory.CreateClient("HotelBookingApi");
-            var response = await client.PostAsJsonAsync("api/auth/register", new
+            var client = HttpClientFactory.CreateClient("HotelBookingAPI");
+            var response = await client.PostAsJsonAsync("Account/register-customer", new
             {
+                Username = userRegister.Username,
                 Email = userRegister.Email,
                 Password = userRegister.Password,
-                ConfirmPassword = userRegister.ConfirmPassword,
                 FullName = userRegister.FullName,
-                Phone = userRegister.PhoneNumber,
-                Avatar = userRegister.AvatarUrl,
-                DateOfBirth = userRegister.DateOfBirth,
+                PhoneNumber = userRegister.PhoneNumber,
             });
 
             if (response.IsSuccessStatusCode)
@@ -107,7 +112,7 @@
                 messageAlert = "Registration successful! Redirecting to login...";
                 // Redirect to login page after a short delay
                 await Task.Delay(2000);
-                _navManager.NavigateTo("/login");
+                _navManager.NavigateTo("/customer-login");
             }
             else
             {

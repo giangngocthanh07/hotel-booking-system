@@ -48,6 +48,7 @@ builder.Services.AddScoped<JwtAuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IHotelService, HotelService>();
+builder.Services.AddScoped<IUpgradeRequestService, UpgradeRequestService>();
 
 //Use map controller
 builder.Services.AddControllers();
@@ -125,6 +126,17 @@ builder.Services.AddAuthorization();
 
 // Khai báo JWT AUTH SERVICE
 // builder.Services.AddScoped<JwtAuthService>();
+
+// Thêm CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
 
 /*  =============== BUILD APP =============== */
 var app = builder.Build();

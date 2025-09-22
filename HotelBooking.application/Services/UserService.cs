@@ -6,11 +6,10 @@ using Microsoft.EntityFrameworkCore;
 
 public interface IUserService
 {
+    public Task<User?> GetByIdAsync(int id);
     public Task<bool> RegisterAdmin(RegisterAdminDTO newAdmin);
     public Task<bool> RegisterCustomer(RegisterCustomerDTO newCustomer);
-    public Task<bool> RequestUpgradeToOwnerAsync(int userId);
     public Task<string> LoginUser(LoginUserDTO userLogin);
-
     public Task<bool> ApproveUpgradeToOwnerAsync(int requestId, int adminId);
     // public Task<bool> RejectUpgradeToOwnerAsync(int requestId, int adminId);
 }
@@ -32,6 +31,13 @@ public class UserService : IUserService
         _upgradeRequestRepository = upgradeRequestRepository;
         _jwtAuthService = jwtAuthService;
         _dbu = dbu;
+    }
+
+    public async Task<User?> GetByIdAsync(int id)
+    {
+        return await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == id && (u.IsDeleted == false));
+        // lọc IsDeleted = false nếu bạn đang dùng soft delete
     }
 
     public async Task<bool> RegisterAdmin(RegisterAdminDTO newAdmin)
@@ -122,35 +128,6 @@ public class UserService : IUserService
         }
     }
 
-    public async Task<bool> RequestUpgradeToOwnerAsync(int userId)
-    {
-        var user = await _userRepository.SingleOrDefaultAsync(u => u.Id == userId);
-        if (user == null)
-            return false;
-
-        // Check role qua UserRoles
-        var hasCustomerRole = await _userRoleRepository
-            .AnyAsync(ur => ur.UserId == userId && ur.RoleId == RoleTypeConstDTO.Customer);
-
-        if (!hasCustomerRole)
-            return false;
-
-        // Nếu đã có request pending thì không tạo thêm
-        var exists = await _upgradeRequestRepository.AnyAsync(r => r.UserId == userId && r.Status == "Pending");
-        if (exists) return false;
-
-        UpgradeRequest request = new UpgradeRequest
-        {
-            UserId = userId,
-            Status = "Pending",
-            RequestedAt = DateTime.Now
-        };
-
-        await _upgradeRequestRepository.AddAsync(request);
-        await _dbu.SaveChangesAsync();
-        return true;
-    }
-
     public async Task<string> LoginUser(LoginUserDTO userLogin)
     {
         try
@@ -207,7 +184,7 @@ public class UserService : IUserService
             request.ApprovedAt = DateTime.Now;
             request.ApprovedBy = adminId;
 
-            _upgradeRequestRepository.Update(request);
+            _upgradeRequestRepository.UpdateAsync(request);
 
 
             await _dbu.SaveChangesAsync();
@@ -217,5 +194,5 @@ public class UserService : IUserService
         return false;
     }
 
-    
+
 }

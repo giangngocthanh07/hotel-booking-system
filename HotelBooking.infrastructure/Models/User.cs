@@ -29,6 +29,10 @@ public partial class User
 
     public string? Additional { get; set; }
 
+    public string? Address { get; set; }
+
+    public string? TaxCode { get; set; }
+
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 
     public virtual ICollection<Hotel> Hotels { get; set; } = new List<Hotel>();

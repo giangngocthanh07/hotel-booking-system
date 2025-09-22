@@ -1,0 +1,119 @@
+@using HotelBooking.webapp.ViewModels
+@inject NavigationManager NavigationManager
+@inject IHttpClientFactory _httpClientFactory
+
+<div class="card shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Recent Requests</h5>
+        <div class="d-flex gap-2">
+            <input type="text" class="form-control" placeholder="Search..." @bind="searchTerm" @bind:event="oninput" />
+            <select class="form-select" @bind="selectedStatus">
+                <option value="">All Status</option>
+                <option value="Pending">Pending</option>
+                <option value="Approved">Approved</option>
+                <option value="Rejected">Rejected</option>
+            </select>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Request ID</th>
+                    <th>Username</th>
+                    <th>Full Name</th>
+                    @* <th>Phone Number</th> *@
+                    <th>Status</th>
+                    <th>Requested At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (FilteredRequests.Any())
+                {
+                    @foreach (var req in FilteredRequests)
+                    {
+                        <tr>
+                            <td>@req.RequestId</td>
+                            <td>@req.UserName</td>
+                            <td>@req.FullName</td>
+                            @* <td>@req.PhoneNumber</td> *@
+
+                            <td>
+                                <span class="badge @GetStatusBadgeClass(req.Status)">
+                                    @req.Status
+                                </span>
+                            </td>
+
+                            <td>@req.RequestedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <button class="btn btn-sm btn-info" @onclick="() => ViewDetails(req.RequestId)">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center">No requests found</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<UpgradeRequestVM> Requests { get; set; } = new();
+    private string searchTerm = "";
+    private string selectedStatus = "";
+
+    private HttpClient _httpClient;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _httpClient = _httpClientFactory.CreateClient("HotelBookingAPI");
+    }
+    private IEnumerable<UpgradeRequestVM> FilteredRequests => Requests
+    .Where(r => (string.IsNullOrEmpty(searchTerm) ||
+    r.UserName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+    r.FullName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)))
+    .Where(r => string.IsNullOrEmpty(selectedStatus) || r.Status == selectedStatus)
+    .ToList();
+
+    private string GetStatusBadgeClass(string status) => status switch
+    {
+        "Pending" => "bg-primary",
+        "Approved" => "bg-success",
+        "Rejected" => "bg-danger",
+        _ => "bg-secondary"
+    };
+
+    private void ViewDetails(int requestId)
+    {
+        var request = Requests.FirstOrDefault(r => r.RequestId == requestId);
+        if (request != null)
+        {
+            NavigationManager.NavigateTo($"/admin/requests/details/{requestId}");
+        }
+    }
+
+    private async Task ApproveRequest(int requestId)
+    {
+        // TODO: Implement API call to approve request
+        // await HttpClient.PutAsync(...);
+    }
+
+    private async Task RejectRequest(int requestId)
+    {
+        // TODO: Implement API call to reject request
+        // await HttpClient.PutAsync(...);
+    }
+
+
+
+}

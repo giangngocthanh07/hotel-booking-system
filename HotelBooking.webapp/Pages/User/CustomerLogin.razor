@@ -87,7 +87,7 @@
                 await ((CustomAuthStateProvider)_authStateProvider).MarkUserAsAuthenticated(token);
 
                 // Chuyển hướng hoặc cập nhật giao diện người dùng sau khi đăng nhập thành công
-
+                _nav.NavigateTo("/");
             }
             else
             {
