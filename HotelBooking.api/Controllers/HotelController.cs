@@ -29,6 +29,17 @@ namespace HotelBooking.api.Controllers
             return Ok(response);
         }
 
+        [HttpGet("get-search-options")]
+        public async Task<IActionResult> GetSearchOptionsAsync([FromQuery] string cityName,
+        [FromQuery] DateTime? checkIn,
+        [FromQuery] DateTime? checkOut,
+        [FromQuery] int? adults,
+        [FromQuery] int? children,
+        [FromQuery] int? rooms)
+        {
+            var response = await _hotelService.GetSearchOptionsAsync(cityName, checkIn, checkOut, adults, children, rooms);
+            return Ok(response);
+        }
 
     }
 }

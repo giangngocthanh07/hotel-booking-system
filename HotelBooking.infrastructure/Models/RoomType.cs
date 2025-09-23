@@ -15,9 +15,13 @@ public partial class RoomType
 
     public decimal PricePerNight { get; set; }
 
-    public int Capacity { get; set; }
+    public int? Capacity { get; set; }
 
     public bool? IsDeleted { get; set; }
+
+    public int? AdultCapacity { get; set; }
+
+    public int? ChildCapacity { get; set; }
 
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 

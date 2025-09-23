@@ -1,0 +1,56 @@
+@page "/searchresult"
+
+@using HotelBooking.webapp.ViewModels.Hotel
+@using System.Net.Http
+@using Microsoft.AspNetCore.WebUtilities
+@inject NavigationManager NavManager
+@inject IHttpClientFactory _httpClientFactory
+
+<h3>Kết quả tìm kiếm</h3>
+
+@if (Hotels == null)
+{
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+}
+else if (Hotels.Count == 0)
+{
+    <p>Không tìm thấy khách sạn nào phù hợp.</p>
+}
+else
+{
+    @foreach (var hotel in Hotels)
+    {
+        <HotelCard Hotel="hotel" />
+    }
+}
+
+
+@code {
+    public List<SearchHotelResultDTO> Hotels;
+    HttpClient _httpClient;
+    protected override async Task OnInitializedAsync()
+    {
+        _httpClient = _httpClientFactory.CreateClient("HotelBookingAPI");
+
+        // Lấy query string từ URL
+        var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+        // Lấy giá trị từ query string
+        var destination = query["destination"];
+        var checkin = query["checkin"];
+        var checkout = query["checkout"];
+        var adults = query["adults"];
+        var children = query["children"];
+        var rooms = query["rooms"];
+
+
+        var apiUrl =
+        $"hotel/get-search-options?cityName={destination}&checkin={checkin}&checkout={checkout}&adults={adults}&children={children}&rooms={rooms}";
+
+        Hotels = await _httpClient.GetFromJsonAsync<List<SearchHotelResultDTO>>(apiUrl);
+
+        Console.WriteLine($"Fetched {Hotels.Count} hotels from API.");
+
+    }
+}

@@ -1,0 +1,55 @@
+@using HotelBooking.webapp.ViewModels.Hotel
+@using MudBlazor
+
+<MudPaper Class="d-flex p-3 mb-3 rounded shadow-sm" Style="align-items: stretch;">
+
+    <!-- Ảnh khách sạn -->
+    <MudImage Src="@Hotel.CoverImageUrl" Alt="@Hotel.Name" Width="200" Height="150" Class="rounded me-3" />
+
+    <!-- Nội dung chính -->
+    <div class="flex-grow-1 d-flex flex-column justify-content-between">
+        <!-- Tên & Địa chỉ -->
+        <div>
+            <MudText Typo="Typo.h6" Class="fw-bold">@Hotel.Name</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">@Hotel.Address</MudText>
+            <MudText Typo="Typo.body2">@Hotel.CityName, @Hotel.CountryName</MudText>
+        </div>
+
+        <!-- Thông tin sức chứa -->
+        <div class="mt-2">
+            <MudText Typo="Typo.body2">
+                <b>Sức chứa tối đa:</b> @Hotel.MaxAdultCapacity người lớn · @Hotel.MaxChildCapacity trẻ em
+            </MudText>
+            <MudText Typo="Typo.body2">
+                <b>Phòng trống:</b> @Hotel.AvailableRooms
+            </MudText>
+        </div>
+    </div>
+
+    <!-- Giá & Rating -->
+    <div class="d-flex flex-column align-items-end justify-content-between ms-3">
+        <div class="d-flex align-items-center">
+            <MudText Typo="Typo.subtitle1" Color="Color.Success" Class="fw-bold me-2">
+                @(Hotel.AvgRating >= 8 ? "Excellent" : Hotel.AvgRating >= 6 ? "Good" : "Average")
+            </MudText>
+            <MudPaper Class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center"
+                Width="40px" Height="40px">
+                <span>@Hotel.AvgRating.ToString("0.0")</span>
+            </MudPaper>
+        </div>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">@Hotel.ReviewCount reviews</MudText>
+
+        <div class="text-end mt-2">
+            <MudText Typo="Typo.h6" Class="fw-bold text-dark">
+                @Hotel.PriceFrom.ToString("C0")
+            </MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-2">
+                Xem chi tiết
+            </MudButton>
+        </div>
+    </div>
+</MudPaper>
+
+@code {
+    [Parameter] public SearchHotelResultDTO Hotel { get; set; }
+}

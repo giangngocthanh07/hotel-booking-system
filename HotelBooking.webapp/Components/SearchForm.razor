@@ -1,99 +1,95 @@
 @using MudBlazor
+@using System.ComponentModel.DataAnnotations
 @inject NavigationManager _navManager
 
 <div class="hero-search position-absolute bottom-0 start-50 translate-middle-x w-100 mb-5"
-   style="z-index: 3; max-width: 1000px;">
+    style="z-index: 3; max-width: 1000px;">
     <div class="search-form container p-3 bg-white rounded-3">
-      <EditForm FormName="SearchForm" Model="this" OnValidSubmit="SearchHotels" class="row g-2 align-items-stretch">
-        <DataAnnotationsValidator />
-        <!-- Điểm đến -->
-<div class="col-12 col-md-4 position-relative">
-    <MudTextField T="string"
-                  Label="Địa điểm đến"
-                  @bind-Value="Destination"
-                  Variant="Variant.Outlined"
-                  Adornment="Adornment.Start"
-                  AdornmentIcon="@Icons.Material.Filled.LocationOn"
-                  Class="w-100 location-input"
-                  @onclick="() => ShowPopularDestinations = true" />
+        <EditForm Model="this" OnValidSubmit="SearchHotels" class="row g-2 align-items-stretch">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
 
-    @if (ShowPopularDestinations)
-    {
-        <ul class="list-group suggestion-list">
-            @foreach (var dest in PopularDestinations)
-            {
-                <li class="list-group-item" @onclick="() => SelectDestination(dest)">
-                    @dest
-                </li>
-            }
-        </ul>
-    }
-</div>
+            <!-- Điểm đến -->
+            <div class="col-12 col-md-4 position-relative">
+                <MudTextField T="string" Label="Địa điểm đến" @bind-Value="Destination" For="@(() => Destination)"
+                    Variant="Variant.Outlined" Adornment="Adornment.Start"
+                    AdornmentIcon="@Icons.Material.Filled.LocationOn" Class="w-100 location-input" Required="true"
+                    Immediate="true" Validation="@(new Func<string, string>(ValidateDestination))"
+                    @onclick="() => ShowPopularDestinations = true" />
 
-        <!-- Ngày nhận - trả -->
-        <div class="col-12 col-md-4">
-            <MudDateRangePicker @bind-DateRange="SelectedRange"
-                               DisablePastDates="true"
-                               Label="Ngày nhận - trả phòng"
-                               Variant="Variant.Outlined"
-                               DateFormat="dd/MM/yyyy"
-                               Adornment="Adornment.Start"
-                               AdornmentIcon="@Icons.Material.Filled.CalendarToday"
-                               Class="w-100 custom-date-range" />
-        </div>
+                @if (ShowPopularDestinations)
+                {
+                    <ul class="list-group suggestion-list">
+                        @foreach (var dest in PopularDestinations)
+                        {
+                            <li class="list-group-item" @onclick="() => SelectDestination(dest)">
+                                @dest
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
 
-        <!-- Khách & phòng -->
-<div class="col-12 col-md-3 position-relative">
-    <MudTextField T="string"
-                  Label="Khách & Phòng"
-                  Value="@($"{Adults} Người lớn · {Children} Trẻ em · {Rooms} Phòng")"
-                  Variant="Variant.Outlined"
-                  Adornment="Adornment.Start"
-                  AdornmentIcon="@Icons.Material.Filled.Person"
-                  Class="w-100 guest-room-input"
-                  ReadOnly="true"
-                  @onclick="() => ShowGuestDropdown = !ShowGuestDropdown" />
+            <!-- Ngày nhận - trả -->
+            <div class="col-12 col-md-4">
+                <MudDateRangePicker @bind-DateRange="SelectedRange" DisablePastDates="true"
+                    Label="Ngày nhận - trả phòng" Variant="Variant.Outlined" DateFormat="dd/MM/yyyy"
+                    Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.CalendarToday"
+                    PickerClosed="OnDateRangeClosed" Class="w-100 custom-date-range" />
+            </div>
 
-    @if (ShowGuestDropdown)
-    {
-        <ul class="list-group suggestion-list guest-dropdown">
-            <li class="d-flex justify-content-between align-items-center p-2">
-                <span>Người lớn</span>
-                <div class="input-stepper">
-                    <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="() => ChangeAdults(-1)">-</MudButton>
-                    <span class="mx-2">@Adults</span>
-                    <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="() => ChangeAdults(1)">+</MudButton>
-                </div>
-            </li>
-            <li class="d-flex justify-content-between align-items-center p-2">
-                <span>Trẻ em</span>
-                <div class="input-stepper">
-                    <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="() => ChangeChildren(-1)">-</MudButton>
-                    <span class="mx-2">@Children</span>
-                    <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="() => ChangeChildren(1)">+</MudButton>
-                </div>
-            </li>
-            <li class="d-flex justify-content-between align-items-center p-2">
-                <span>Phòng</span>
-                <div class="input-stepper">
-                    <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="() => ChangeRooms(-1)">-</MudButton>
-                    <span class="mx-2">@Rooms</span>
-                    <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="() => ChangeRooms(1)">+</MudButton>
-                </div>
-            </li>
-        </ul>
-    }
-</div>
+            <!-- Khách & phòng -->
+            <div class="col-12 col-md-3 position-relative">
+                <MudTextField T="string" Label="Khách & Phòng"
+                    Value="@($"{Adults} Người lớn · {Children} Trẻ em · {Rooms} Phòng")" Variant="Variant.Outlined"
+                    Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person"
+                    Class="w-100 guest-room-input" ReadOnly="true"
+                    @onclick="() => ShowGuestDropdown = !ShowGuestDropdown" />
 
-        <!-- Nút tìm -->
-        <div class="col-12 col-md-1 grid">
-    <MudButton Variant="Variant.Filled"
-               Class="w-100 search-btn"
-               ButtonType="ButtonType.Submit">
-        <MudIcon Icon="@Icons.Material.Filled.Search" Class="me-1" /> Tìm
-    </MudButton>
-</div>
-      </EditForm>
+                @if (ShowGuestDropdown)
+                {
+                    <ul class="list-group suggestion-list guest-dropdown">
+                        <li class="d-flex justify-content-between align-items-center p-2">
+                            <span>Người lớn</span>
+                            <div class="input-stepper">
+                                <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="() => ChangeAdults(-1)">-
+                                </MudButton>
+                                <span class="mx-2">@Adults</span>
+                                <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="() => ChangeAdults(1)">+
+                                </MudButton>
+                            </div>
+                        </li>
+                        <li class="d-flex justify-content-between align-items-center p-2">
+                            <span>Trẻ em</span>
+                            <div class="input-stepper">
+                                <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="() => ChangeChildren(-1)">-
+                                </MudButton>
+                                <span class="mx-2">@Children</span>
+                                <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="() => ChangeChildren(1)">+
+                                </MudButton>
+                            </div>
+                        </li>
+                        <li class="d-flex justify-content-between align-items-center p-2">
+                            <span>Phòng</span>
+                            <div class="input-stepper">
+                                <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="() => ChangeRooms(-1)">-
+                                </MudButton>
+                                <span class="mx-2">@Rooms</span>
+                                <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="() => ChangeRooms(1)">+
+                                </MudButton>
+                            </div>
+                        </li>
+                    </ul>
+                }
+            </div>
+
+            <!-- Nút tìm -->
+            <div class="col-12 col-md-1 grid">
+                <MudButton Variant="Variant.Filled" Class="w-100 search-btn" ButtonType="ButtonType.Submit">
+                    <MudIcon Icon="@Icons.Material.Filled.Search" Class="me-1" /> Tìm
+                </MudButton>
+            </div>
+        </EditForm>
     </div>
 </div>
 
@@ -102,43 +98,59 @@
     [Required(ErrorMessage = "Vui lòng nhập điểm đến")]
     private string Destination { get; set; } = "";
     private bool ShowPopularDestinations { get; set; } = false;
-    private List<string> PopularDestinations { get; set; } = new List<string>() { "Hà Nội", "Đà Nẵng", "Hồ Chí Minh", "Nha Trang" };
+    private List<string> PopularDestinations { get; set; } = new() { "Hà Nội", "Đà Nẵng", "Hồ Chí Minh", "Nha Trang" };
 
-    private void TogglePopularDestinations() => ShowPopularDestinations = !ShowPopularDestinations;
     private void SelectDestination(string destination)
     {
         Destination = destination;
         ShowPopularDestinations = false;
     }
 
-    // Ngày nhận - trả phòng
-    private MudBlazor.DateRange SelectedRange { get; set; } = new DateRange();
+    private string ValidateDestination(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return "Vui lòng nhập điểm đến";
+        return null;
+    }
 
-    // Khách & phòng
+    // 2. Ngày nhận - trả
+    private MudBlazor.DateRange SelectedRange { get; set; } = new DateRange(DateTime.Today, DateTime.Today.AddDays(1));
+
+    private void OnDateRangeClosed()
+    {
+        if (SelectedRange.Start == null)
+        {
+            SelectedRange = new DateRange(DateTime.Today, DateTime.Today.AddDays(1));
+        }
+        else if (SelectedRange.Start != null && SelectedRange.End == null)
+        {
+            SelectedRange = new DateRange(SelectedRange.Start.Value, SelectedRange.Start.Value.AddDays(1));
+        }
+    }
+
+    // 3. Khách & phòng
     private int Adults { get; set; } = 1;
     private int Children { get; set; } = 0;
     private int Rooms { get; set; } = 1;
     private bool ShowGuestDropdown { get; set; } = false;
 
-    private void ToggleGuestDropdown() => ShowGuestDropdown = !ShowGuestDropdown;
-
     private void ChangeAdults(int value) => Adults = Math.Max(1, Adults + value);
     private void ChangeChildren(int value) => Children = Math.Max(0, Children + value);
     private void ChangeRooms(int value) => Rooms = Math.Max(1, Rooms + value);
 
-    // Xử lý tìm kiếm
+    // 4. Xử lý tìm kiếm
     private void SearchHotels()
     {
-        var checkin = SelectedRange?.Start?.ToString("yyyy-MM-dd") ?? "";
-        var checkout = SelectedRange?.End?.ToString("yyyy-MM-dd") ?? "";
+        var checkin = SelectedRange?.Start?.ToString("yyyy-MM-dd") ?? DateTime.Today.ToString("yyyy-MM-dd");
+        var checkout = SelectedRange?.End?.ToString("yyyy-MM-dd") ?? DateTime.Today.AddDays(1).ToString("yyyy-MM-dd");
 
         var url = $"/searchresult" +
-                  $"?destination={Uri.EscapeDataString(Destination)}" +
-                  $"&checkin={checkin}" +
-                  $"&checkout={checkout}" +
-                  $"&adults={Adults}" +
-                  $"&children={Children}" +
-                  $"&rooms={Rooms}";
+        $"?destination={Uri.EscapeDataString(Destination)}" +
+        $"&checkin={checkin}" +
+        $"&checkout={checkout}" +
+        $"&adults={Adults}" +
+        $"&children={Children}" +
+        $"&rooms={Rooms}";
 
         _navManager.NavigateTo(url);
     }
