@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;                              // Xử lý tác vụ bất đồng bộ
+namespace HotelBooking.Client;
 
 public class CustomAuthStateProvider : AuthenticationStateProvider
 {
@@ -24,46 +25,38 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
-        // Lấy token từ localStorage
-        var token = await _localStorage.GetItemAsync<string>("accessToken");
-        // Trường hợp không có token => Không đăng nhập
-        if (string.IsNullOrWhiteSpace(token))
-        {
-            return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
-        }
         try
         {
+            // Lấy token từ localStorage
+            var token = await _localStorage.GetItemAsync<string>("accessToken");
+            // Trường hợp không có token => Không đăng nhập
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
+            }
+
             // Cấu hình kiểm tra token
             var tokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["jwt:Serect-Key"])),
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["jwt:Serect-Key"] ?? string.Empty)),
                 ValidateIssuer = true,
                 ValidIssuer = _config["jwt:Issuer"],
                 ValidateAudience = true,
                 ValidAudience = _config["jwt:Audience"],
                 ValidateLifetime = true,
                 ClockSkew = TimeSpan.Zero,
-                // Chỉ định RoleClaimType và NameClaimType khớp với cấu hình
                 RoleClaimType = ClaimTypes.Role,
-                // NameClaimType = ClaimTypes.Name
+                NameClaimType = ClaimTypes.Name
             };
             // Giải mã token để xác thực
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out _);
-            // Debug claims để kiểm tra thông tin
-            foreach (var claim in principal.Claims)
-            {
-                Console.WriteLine($"{claim.Type}: {claim.Value}");
-            }
-            // Trả về trạng thái xác thực
+            var principal = _tokenHandler.ValidateToken(token, tokenValidationParameters, out _);
             return new AuthenticationState(principal);
+
         }
         catch (Exception ex)
         {
-            // Console.WriteLine($"Token validation failed: {ex.Message}");
-            // Nếu token không hợp lệ => Đăng xuất
-            // await _localStorage.RemoveItemAsync("token");
+            Console.WriteLine($"Token validation failed: {ex.Message}");
             return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
         }
     }

@@ -7,9 +7,9 @@ using Microsoft.EntityFrameworkCore;
 public interface IUserService
 {
     public Task<User?> GetByIdAsync(int id);
-    public Task<bool> RegisterAdmin(RegisterAdminDTO newAdmin);
-    public Task<bool> RegisterCustomer(RegisterCustomerDTO newCustomer);
-    public Task<string> LoginUser(LoginUserDTO userLogin);
+    public Task<RegisterResponseDTO> RegisterAdmin(RegisterAdminDTO newAdmin);
+    public Task<RegisterResponseDTO> RegisterCustomer(RegisterCustomerDTO newCustomer);
+    public Task<LoginResponseDTO> LoginUser(LoginUserDTO userLogin);
     public Task<bool> ApproveUpgradeToOwnerAsync(int requestId, int adminId);
     // public Task<bool> RejectUpgradeToOwnerAsync(int requestId, int adminId);
 }
@@ -40,117 +40,157 @@ public class UserService : IUserService
         // lọc IsDeleted = false nếu bạn đang dùng soft delete
     }
 
-    public async Task<bool> RegisterAdmin(RegisterAdminDTO newAdmin)
+    public async Task<RegisterResponseDTO> RegisterAdmin(RegisterAdminDTO newAdmin)
     {
         try
         {
             var checkAdmin = await _userRepository.SingleOrDefaultAsync(admin => admin.Email == newAdmin.Email || admin.UserName == newAdmin.Username);
             if (checkAdmin != null)
             {
-                return false;
+                return new RegisterResponseDTO
+                {
+                    IsSuccess = false,
+                    Message = checkAdmin.UserName == newAdmin.Username ? MessageRegister.USERNAME_EXIST : MessageRegister.EMAIL_EXIST
+                };
             }
+            ;
 
-            User user = new User();
-            user.UserName = newAdmin.Username;
-            user.FullName = newAdmin.FullName;
-            user.Email = newAdmin.Email;
-            user.PhoneNumber = newAdmin.PhoneNumber;
-            user.PasswordHash = PasswordHelper.HashPassword(newAdmin.Password);
-            user.IsDeleted = false;
-            user.CreatedAt = DateTime.Now;
-            user.DateOfBirth = null;
-            user.IsActive = true;
-
-            // Thêm Role vào bảng UserRoles
-            UserRole userRole = new UserRole();
-            userRole.UserId = user.Id;
-            userRole.RoleId = newAdmin.GetRoleId();
-
-            // Thêm bảng tham chiếu
-            user.UserRoles.Add(userRole);
+            var user = new User
+            {
+                UserName = newAdmin.Username,
+                FullName = newAdmin.FullName,
+                Email = newAdmin.Email,
+                PhoneNumber = newAdmin.PhoneNumber,
+                PasswordHash = PasswordHelper.HashPassword(newAdmin.Password),
+                IsDeleted = false,
+                CreatedAt = DateTime.Now,
+                DateOfBirth = null,
+                IsActive = true
+            };
 
             // Thêm newUser vào User
             await _userRepository.AddAsync(user);
-
             // Lưu thay đổi vào database
-            await _dbu.SaveChangesAsync();
+            await _dbu.SaveChangesAsync(); // Save to generate user.Id
+            // Thêm Role vào bảng UserRoles
+            var userRole = new UserRole
+            {
+                UserId = user.Id,
+                RoleId = newAdmin.GetRoleId()
+            };
 
-            return true;
+            // Thêm bảng tham chiếu
+            user.UserRoles.Add(userRole);
+            await _dbu.SaveChangesAsync(); // Save again to save UserRole
+
+            return new RegisterResponseDTO
+            {
+                IsSuccess = true,
+                Message = MessageRegister.REGISTER_SUCCESS,
+                FullName = user.FullName,
+                Email = user.Email
+            };
         }
         catch (Exception error)
         {
             Console.Write($@"n{error.Message}");
-            return false;
+            return new RegisterResponseDTO
+            {
+                IsSuccess = false,
+                Message = MessageRegister.REGISTER_FAIL
+            };
         }
     }
 
-    public async Task<bool> RegisterCustomer(RegisterCustomerDTO newCustomer)
+    public async Task<RegisterResponseDTO> RegisterCustomer(RegisterCustomerDTO newCustomer)
     {
         try
         {
             var checkCustomer = await _userRepository.SingleOrDefaultAsync(customer => customer.Email == newCustomer.Email || customer.UserName == newCustomer.Username);
             if (checkCustomer != null)
             {
-                return false;
+                return new RegisterResponseDTO
+                {
+                    IsSuccess = false,
+                    Message = checkCustomer.UserName == newCustomer.Username ? MessageRegister.USERNAME_EXIST : MessageRegister.EMAIL_EXIST
+                };
             }
 
-            User user = new User();
-            user.UserName = newCustomer.Username;
-            user.FullName = newCustomer.FullName;
-            user.Email = newCustomer.Email;
-            user.PhoneNumber = newCustomer.PhoneNumber;
-            user.PasswordHash = PasswordHelper.HashPassword(newCustomer.Password);
-            user.IsDeleted = false;
-            user.CreatedAt = DateTime.Now;
-            user.DateOfBirth = null;
-            user.IsActive = true;
+            var user = new User
+            {
+                UserName = newCustomer.Username,
+                FullName = newCustomer.FullName,
+                Email = newCustomer.Email,
+                PhoneNumber = newCustomer.PhoneNumber,
+                PasswordHash = PasswordHelper.HashPassword(newCustomer.Password),
+                IsDeleted = false,
+                CreatedAt = DateTime.Now,
+                DateOfBirth = null,
+                IsActive = true
+            };
+            // Thêm newUser vào User
+            await _userRepository.AddAsync(user);
+            await _dbu.SaveChangesAsync(); // Save to generate user.Id
 
             // Thêm Role vào bảng UserRoles
-            UserRole userRole = new UserRole();
-            userRole.UserId = user.Id;
-            userRole.RoleId = newCustomer.GetRoleId();
+            var userRole = new UserRole
+            {
+                UserId = user.Id,
+                RoleId = newCustomer.GetRoleId()
+            };
 
             // Thêm bảng tham chiếu
             user.UserRoles.Add(userRole);
-
-            // Thêm newUser vào User
-            await _userRepository.AddAsync(user);
-
             // Lưu thay đổi vào database
             await _dbu.SaveChangesAsync();
 
-            return true;
+            return new RegisterResponseDTO
+            {
+                IsSuccess = true,
+                Message = MessageRegister.REGISTER_SUCCESS,
+                FullName = user.FullName,
+                Email = user.Email
+            };
         }
         catch (Exception error)
         {
-            Console.Write($@"n{error.Message}");
-            return false;
+            return new RegisterResponseDTO
+            {
+                IsSuccess = false,
+                Message = MessageRegister.REGISTER_FAIL
+            };
         }
     }
 
-    public async Task<string> LoginUser(LoginUserDTO userLogin)
+    public async Task<LoginResponseDTO> LoginUser(LoginUserDTO userLogin)
     {
         try
         {
-            var user = await _userRepository.SingleOrDefaultAsync(user => user.UserName == userLogin.UsernameOrEmail || user.Email == userLogin.UsernameOrEmail);
+            var user = await _userRepository.SingleOrDefaultAsync(u => u.UserName == userLogin.UsernameOrEmail || u.Email == userLogin.UsernameOrEmail);
             if (user == null)
             {
-                return MessageLogin.USER_NOT_FOUND;
+                return new LoginResponseDTO { Message = MessageLogin.USER_NOT_FOUND };
             }
 
             // Kiểm tra mật khẩu
-            if (PasswordHelper.VerifyPassword(userLogin.Password, user.PasswordHash))
+            if (!PasswordHelper.VerifyPassword(userLogin.Password, user.PasswordHash))
             {
-                return _jwtAuthService.GenerateToken(user);
+                return new LoginResponseDTO { Message = MessageLogin.PASSWORD_INCORRECT };
             }
-            else
+            var token = _jwtAuthService.GenerateToken(user);
+            var roles = user.UserRoles.Select(ur => ur.Role.Name).ToList();
+            return new LoginResponseDTO
             {
-                return MessageLogin.PASSWORD_INCORRECT;
-            }
+                AccessToken = token,
+                FullName = user.FullName,
+                AvatarUrl = user.AvatarUrl,
+                Roles = roles,
+                Message = MessageLogin.LOGIN_SUCCESS
+            };
         }
         catch (Exception error)
         {
-            return MessageLogin.ERROR_IN_SERVER;
+            return new LoginResponseDTO { Message = MessageLogin.ERROR_IN_SERVER };
         }
     }
 

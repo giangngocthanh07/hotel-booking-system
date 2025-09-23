@@ -142,7 +142,7 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // app.UseHttpsRedirection();
-// app.UseHttpsRedirection();
+app.UseCors("AllowAll");
 
 //use middleware controller
 app.MapControllers();

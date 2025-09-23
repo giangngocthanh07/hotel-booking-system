@@ -29,26 +29,24 @@ public class JwtAuthService
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, userSauKhiVerifyPass.Id.ToString()), // Claim mặc định cho userId
-            new Claim("UserName", userSauKhiVerifyPass.UserName),               // Claim mặc định cho username
+            new Claim(ClaimTypes.Name, userSauKhiVerifyPass.UserName),               // Claim mặc định cho username
             new Claim("Email", userSauKhiVerifyPass.Email),               // Claim mặc định cho username
+            new Claim("FullName", userSauKhiVerifyPass.FullName),               // Claim tùy chỉnh cho fullName
+            new Claim("Avatar", userSauKhiVerifyPass.AvatarUrl ?? string.Empty),               // Claim tùy chỉnh cho avatar
             // new Claim(ClaimTypes.Role, userLogin.Role),                   // Claim mặc định cho Role
             new Claim(JwtRegisteredClaimNames.Sub, userSauKhiVerifyPass.UserName),   // Subject của token
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()), // Unique ID của token
-            new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString()) // Thời gian tạo token
+            new Claim(JwtRegisteredClaimNames.Iat, new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64) // Thời gian tạo token
         };
-        //Thêm claim role vào token
-        //userSauKhiVerifyPass.Id // 10034
-
-        //select * from userole,role where userole.roleid == role.id
-        var lstRole = _context.UserRoles.Include(n => n.Role).Where(item => item.UserId == userSauKhiVerifyPass.Id);
-        if (lstRole.Count() > 0)
+        var userRoles = _context.UserRoles
+            .Include(ur => ur.Role)
+            .Where(ur => ur.UserId == userSauKhiVerifyPass.Id)
+            .ToList();
+        foreach (var ur in userRoles)
         {
-            foreach (UserRole item in lstRole)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, item.Role.Name.ToString()));
-            }
+            claims.Add(new Claim(ClaimTypes.Role, ur.Role.Name));
         }
-
+        
         // Tạo khóa bí mật để ký token
         var credentials = new SigningCredentials(
             new SymmetricSecurityKey(key),
@@ -58,7 +56,7 @@ public class JwtAuthService
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddDays(1), // Token hết hạn sau 1 giờ
+            Expires = DateTime.UtcNow.AddDays(1), // Token hết hạn sau 1 ngày
             SigningCredentials = credentials,
             Issuer = _issuer,                 // Thêm Issuer vào token
             Audience = _audience,              // Thêm Audience vào token
@@ -70,35 +68,23 @@ public class JwtAuthService
         return tokenHandler.WriteToken(token);
     }
 
-    public string DecodePayloadToken(string token)
+    public (string UserName, List<string> Roles) DecodePayloadToken(string token)
     {
-        try
+        // Kiểm tra token có null hoặc rỗng không
+        if (string.IsNullOrEmpty(token))
         {
-            // Kiểm tra token có null hoặc rỗng không
-            if (string.IsNullOrEmpty(token))
-            {
-                throw new ArgumentException("Token không được để trống", nameof(token));
-            }
-
-            // Tạo handler và đọc token
-            var handler = new JwtSecurityTokenHandler();
-            var jwtToken = handler.ReadJwtToken(token);
-
-            // Lấy username từ claims (thường nằm trong claim "sub" hoặc "name")
-            var usernameClaim = jwtToken.Claims.FirstOrDefault(x => x.Type == "UserName"); // Common in some identity providers
-
-            if (usernameClaim == null)
-            {
-                throw new InvalidOperationException("Không tìm thấy username trong payload");
-            }
-
-            return usernameClaim.Value;
+            throw new ArgumentException("Token không được để trống");
         }
-        catch (Exception ex)
-        {
-            // Xử lý lỗi (có thể log lỗi ở đây)
-            throw new InvalidOperationException($"Lỗi khi decode token: {ex.Message}", ex);
-        }
+        // Tạo handler và đọc token
+        var handler = new JwtSecurityTokenHandler();
+        var jwtToken = handler.ReadJwtToken(token);
+        var userName = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value
+                       ?? jwtToken.Claims.FirstOrDefault(c => c.Type == "UserName")?.Value
+                       ?? throw new InvalidOperationException("Username not found in token.");
+
+        var roles = jwtToken.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList();
+
+        return (userName, roles);
     }
 
 }

@@ -13,7 +13,7 @@ namespace HotelBooking.api.Controllers
     [ApiController]
     public class AccountController : ControllerBase
     {
-        IUserService _userService;
+        private readonly IUserService _userService;
         public AccountController(IUserService userService)
         {
             _userService = userService;
@@ -30,30 +30,28 @@ namespace HotelBooking.api.Controllers
         [HttpPost("register-admin")]
         public async Task<IActionResult> RegisterAdminAsync([FromBody] RegisterAdminDTO newAdmin)
         {
-
             var res = await _userService.RegisterAdmin(newAdmin);
-            if (res)
+            if (res.IsSuccess)
             {
-                return Ok(MessageRegister.REGISTER_SUCCESS);
+                return Ok(res);
             }
             else
             {
-                return BadRequest(MessageRegister.REGISTER_FAIL);
+                return BadRequest(res.Message ?? MessageRegister.REGISTER_FAIL);
             }
         }
 
         [HttpPost("register-customer")]
         public async Task<IActionResult> RegisterCustomerAsync([FromBody] RegisterCustomerDTO newCustomer)
         {
-
             var res = await _userService.RegisterCustomer(newCustomer);
-            if (res)
+            if (res.IsSuccess)
             {
-                return Ok(MessageRegister.REGISTER_SUCCESS);
+                return Ok(res);
             }
             else
             {
-                return BadRequest(MessageRegister.REGISTER_FAIL);
+                return BadRequest(res.Message ?? MessageRegister.REGISTER_FAIL);
             }
         }
 
@@ -62,21 +60,26 @@ namespace HotelBooking.api.Controllers
         {
             var res = await _userService.LoginUser(userLogin);
 
-            if (res == MessageLogin.USER_NOT_FOUND)
+            if (res == null)
             {
-                return NotFound(res);
+                return StatusCode(500, MessageLogin.ERROR_IN_SERVER);
             }
-            else if (res == MessageLogin.PASSWORD_INCORRECT)
+
+            if (res.Message == MessageLogin.USER_NOT_FOUND)
             {
-                return BadRequest(res);
+                return NotFound(res.Message);
             }
-            else if (res == MessageLogin.ERROR_IN_SERVER)
+            else if (res.Message == MessageLogin.PASSWORD_INCORRECT)
             {
-                return StatusCode(500, res);
+                return BadRequest(res.Message);
+            }
+            else if (res.Message == MessageLogin.ERROR_IN_SERVER)
+            {
+                return StatusCode(500, res.Message);
             }
             else
             {
-                return Ok(res);
+                return Ok(res); // lúc này res chứa cả Token, UserInfo, Roles, Message
             }
         }
 

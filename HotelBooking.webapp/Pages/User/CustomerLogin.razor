@@ -1,6 +1,7 @@
 @page "/customer-login"
+@using HotelBooking.Client
 @inject NavigationManager _nav
-@inject AuthenticationStateProvider _authStateProvider
+@inject AuthenticationStateProvider AuthStateProvider
 
 @inject IHttpClientFactory HttpClientFactory
 @inject Blazored.LocalStorage.ILocalStorageService localStorage
@@ -65,6 +66,7 @@
 
 @code {
     private UserLoginVM userLogin = new UserLoginVM();
+    private string? errorMessage;
     private HttpClient _httpClient;
     protected override void OnInitialized()
     {
@@ -75,29 +77,46 @@
     {
         try
         {
-            // Handle login logic here
-            // Call API Login
             var response = await _httpClient.PostAsJsonAsync("Account/login", userLogin);
-
             if (response.IsSuccessStatusCode)
             {
-                var token = await response.Content.ReadAsStringAsync();
-                // Lưu token vào local storage
-                // gọi MarkUserAsAuthenticated
-                await ((CustomAuthStateProvider)_authStateProvider).MarkUserAsAuthenticated(token);
-
-                // Chuyển hướng hoặc cập nhật giao diện người dùng sau khi đăng nhập thành công
-                _nav.NavigateTo("/");
+                var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponseDTO>();
+                if (loginResponse?.AccessToken != null)
+                {
+                    await ((CustomAuthStateProvider)AuthStateProvider).MarkUserAsAuthenticated(loginResponse.AccessToken);
+                    errorMessage = null;
+                    _nav.NavigateTo("/", forceLoad: true);
+                }
+                else
+                {
+                    errorMessage = "Không nhận được token đăng nhập.";
+                }
             }
             else
             {
-                var errorMessage = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Login failed: {errorMessage}");
+                var errorContent = await response.Content.ReadAsStringAsync();
+                errorMessage = string.IsNullOrEmpty(errorContent) ? "Đăng nhập thất bại." : errorContent;
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error during login: {ex.Message}");
+            errorMessage = $"Lỗi khi đăng nhập: {ex.Message}";
         }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private class UserLoginVM
+    {
+        public string UsernameOrEmail { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+
+    private class LoginResponseDTO
+    {
+        public string AccessToken { get; set; } = string.Empty;
+        public string FullName { get; set; } = string.Empty;
+        public string? AvatarUrl { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public List<string> Roles { get; set; } = new();
     }
 }
