@@ -1,0 +1,56 @@
+## ===== Build outputs =====
+bin/
+obj/
+[Bb]uild/
+[Ll]og/
+[Ll]ogs/
+
+## ===== Visual Studio / VS Code =====
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## ===== JetBrains Rider =====
+.idea/
+*.iml
+
+## ===== ASP.NET Core specific =====
+appsettings.Development.json
+appsettings.*.json
+
+## ===== Entity Framework Core (Database First) =====
+# Không cần migrations khi DB First
+migrations/
+
+## ===== NuGet =====
+*.nupkg
+*.snupkg
+*.nuspec
+packages/
+project.lock.json
+project.fragment.lock.json
+project.assets.json
+*.nuget.props
+*.nuget.targets
+*.nuget.cache
+
+## ===== Cache & temporary =====
+*.dbmdl
+*.bak
+*.log
+*.tlog
+*.tmp
+*.temp
+*.cache
+*.vspscc
+*.vssscc
+*.vshost.exe*
+*.pdb
+*.mdb
+
+## ===== Others =====
+*.DS_Store
+Thumbs.db

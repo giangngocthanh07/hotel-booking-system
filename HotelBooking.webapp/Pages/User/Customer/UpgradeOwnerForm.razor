@@ -1,0 +1,136 @@
+@page "/upgrade-owner"
+@attribute [Authorize(Roles = "Customer")]
+@inject IHttpClientFactory HttpClientFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+
+<h3>Upgrade to Owner Request</h3>
+
+@if (userInfo == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="d-flex justify-content-center align-items-center min-vh-100">
+        <div class="container mt-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="bg-white border rounded shadow-sm p-4">
+                        <h2 class="mb-2">Đăng ký tài khoản đối tác</h2>
+                        <h6 class="mb-3 fw-normal">Trở thành đối tác và bắt đầu đăng tải dịch vụ</h6>
+                        <p class="text-muted mb-4">Vui lòng kiểm tra thông tin tài khoản của bạn và bổ sung địa chỉ, mã số
+                            thuế để gửi yêu cầu nâng cấp.</p>
+
+                        @if (userInfo == null)
+                        {
+                            <p><em>Đang tải thông tin người dùng...</em></p>
+                        }
+                        else
+                        {
+                            <EditForm Model="@requestModel" OnValidSubmit="HandleValidSubmit">
+                                <DataAnnotationsValidator />
+                                <ValidationSummary />
+
+                                <!-- Thông tin readonly -->
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">UserName</label>
+                                        <input class="form-control" value="@userInfo.UserName" readonly />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Full Name</label>
+                                        <input class="form-control" value="@userInfo.FullName" readonly />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Email</label>
+                                        <input class="form-control" value="@userInfo.Email" readonly />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Phone Number</label>
+                                        <input class="form-control" value="@userInfo.PhoneNumber" readonly />
+                                    </div>
+                                </div>
+
+                                <!-- Các field bổ sung -->
+                                <div class="row g-3 mt-2">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Địa chỉ</label>
+                                        <InputText class="form-control" @bind-Value="requestModel.Address" />
+                                        <ValidationMessage For="@(() => requestModel.Address)" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Mã số thuế</label>
+                                        <InputText class="form-control" @bind-Value="requestModel.TaxCode" />
+                                        <ValidationMessage For="@(() => requestModel.TaxCode)" />
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary w-100 mt-4">Gửi yêu cầu nâng cấp</button>
+                            </EditForm>
+                        }
+
+                        @if (!string.IsNullOrEmpty(message))
+                        {
+                            <div class="alert @alertClass mt-3">@message</div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <div class="alert @alertClass mt-3">@message</div>
+}
+
+@code {
+    private UserForUpgradeVM? userInfo;
+    private CreateUpgradeRequestVM requestModel = new();
+    private string message = "";
+    private string alertClass = "alert-success";
+    private HttpClient? _httpClient;
+    protected override async Task OnInitializedAsync()
+    {
+        _httpClient = HttpClientFactory.CreateClient("HotelBookingAPI");
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        var userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (!string.IsNullOrEmpty(userId))
+        {
+            userInfo = await _httpClient.GetFromJsonAsync<UserForUpgradeVM>(
+            $"Account/get-user-by-id?userId={userId}");
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        var token = await _localStorage.GetItemAsync<string>("accessToken");
+        if (string.IsNullOrEmpty(token))
+        {
+            message = "Bạn chưa đăng nhập.";
+            alertClass = "alert-danger";
+            return;
+        }
+
+        _httpClient.DefaultRequestHeaders.Authorization =
+        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        var response = await _httpClient.PostAsJsonAsync("Request/create-request", requestModel);
+        if (response.IsSuccessStatusCode)
+        {
+            message = "Request created successfully. Please wait for admin approval.";
+            alertClass = "alert-success";
+        }
+        else
+        {
+            message = "Failed to create request.";
+            alertClass = "alert-danger";
+        }
+    }
+}

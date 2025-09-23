@@ -1,0 +1,25 @@
+@using HotelBooking.webapp.ViewModels
+@code {
+    [Parameter] public RequestStatsVM Stats { get; set; } = new();
+}
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-light border-0 shadow-sm p-3 text-center">
+            <h5>Pending Requests</h5>
+            <h2 class="text-primary">@Stats.Pending</h2>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-light border-0 shadow-sm p-3 text-center">
+            <h5>Approved Requests</h5>
+            <h2 class="text-success">@Stats.Approved</h2>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-light border-0 shadow-sm p-3 text-center">
+            <h5>Rejected Requests</h5>
+            <h2 class="text-danger">@Stats.Rejected</h2>
+        </div>
+    </div>
+</div>

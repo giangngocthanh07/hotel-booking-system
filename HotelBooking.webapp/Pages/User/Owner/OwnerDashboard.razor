@@ -1,0 +1,72 @@
+@page "/owner-dashboard"
+@attribute [Authorize(Roles = "Owner")]
+@layout OwnerLayout
+@inject IHttpClientFactory HttpClientFactory
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+
+<h3>Owner Dashboard</h3>
+
+@if (message == null)
+{
+    <p>Đang tải...</p>
+}
+else
+{
+    <p>@message</p>
+}
+
+@code {
+    private string? message;
+    private HttpClient? _httpClient;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                _httpClient = HttpClientFactory.CreateClient("HotelBookingAPI");
+
+                // Lấy token từ LocalStorage (lưu sau khi login thành công)
+                var token = await localStorage.GetItemAsync<string>("accessToken");
+
+                if (string.IsNullOrEmpty(token))
+                {
+                    message = "⚠️ Chưa có token, vui lòng đăng nhập lại.";
+                    StateHasChanged();
+                    return;
+                }
+
+                // Gắn Authorization Header: Bearer <token>
+                _httpClient.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+                // Gọi API OwnerDashboard
+                var response = await _httpClient.GetAsync("Hotel/get-owner-dashboard");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    message = await response.Content.ReadAsStringAsync();
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    message = "⚠️ Token hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại.";
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                {
+                    message = "❌ Bạn không có quyền truy cập trang này.";
+                }
+                else
+                {
+                    message = $"Lỗi: {response.StatusCode}";
+                }
+            }
+            catch (Exception ex)
+            {
+                message = $"Lỗi hệ thống: {ex.Message}";
+            }
+
+            StateHasChanged();
+        }
+    }
+}

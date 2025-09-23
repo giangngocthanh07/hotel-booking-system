@@ -1,0 +1,191 @@
+@page "/admin/requests/details/{RequestId:int}"
+@using System.Net.Http.Headers
+
+@attribute [Authorize(Roles = "Admin")]
+@layout AdminLayout
+@inject NavigationManager NavigationManager
+@inject IHttpClientFactory _httpClientFactory
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+
+<div class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Request Details #@RequestId</h4>
+            <button class="btn btn-secondary" @onclick="NavigateBack">
+                <i class="fas fa-arrow-left"></i> Back
+            </button>
+        </div>
+        <div class="card-body">
+            @if (request != null)
+            {
+                <form class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-control" value="@request.UserName" readonly />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-control" value="@request.FullName" readonly />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Phone Number</label>
+                        <input type="text" class="form-control" value="@request.PhoneNumber" readonly />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Tax Code</label>
+                        <input type="text" class="form-control" value="@request.TaxCode" readonly />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Status</label><br />
+                        <input type="text"
+                            class="form-control text-white bg-primary fw-bold @GetStatusBadgeClass(request.Status)"
+                            value="@request.Status" readonly />
+                        @*<span class="badge /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/">
+                            /*~~~~~~~~~~~*/
+                            @request.Status
+                        </span>*@
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Requested At</label>
+                        <input type="text" class="form-control" value="@request.RequestedAt.ToString("dd/MM/yyyy HH:mm")"
+                            readonly />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Address</label>
+                        <textarea class="form-control" rows="2" readonly>@request.Address</textarea>
+                    </div>
+                </form>
+
+                @* Nút action khi status = Pending *@
+                @if (request.Status == "Pending")
+                {
+                    <div class="mt-4 row">
+                        <div class="col-md-6">
+                            <button class="btn btn-success btn-lg w-100" @onclick="ApproveRequest">
+                                <i class="fas fa-check"></i> Approve
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <button class="btn btn-danger btn-lg w-100" @onclick="RejectRequest">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@* Toast notification *@
+@if (!string.IsNullOrEmpty(toastMessage))
+{
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div class="toast show align-items-center text-white @toastClass border-0">
+            <div class="d-flex">
+                <div class="toast-body">
+                    @toastMessage
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                    @onclick="() => toastMessage = null"></button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int RequestId { get; set; }
+    private UpgradeRequestVM? request;
+    HttpClient? _httpClient;
+
+    // Toast state
+    private string? toastMessage;
+    private string toastClass = "bg-success";
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        _httpClient = _httpClientFactory.CreateClient("HotelBookingAPI");
+
+        // Lấy token từ localStorage
+        var token = await _localStorage.GetItemAsync<string>("accessToken");
+        if (!string.IsNullOrEmpty(token))
+        {
+            // Thêm token vào header
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        }
+
+        try
+        {
+            request = await _httpClient.GetFromJsonAsync<UpgradeRequestVM>($"Request/request-detail/{RequestId}");
+
+            if (request == null)
+            {
+                toastClass = "bg-danger";
+                toastMessage = "Request not found.";
+            }
+            else
+            {
+                toastMessage = null; // Clear any previous messages
+            }
+        }
+        catch (Exception ex)
+        {
+            toastClass = "bg-danger";
+            toastMessage = "Error loading request details.";
+        }
+    }
+
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo("/admin/requests/requests-overview");
+    }
+
+    private string GetStatusBadgeClass(string status) => status switch
+    {
+        "Pending" => "bg-primary",
+        "Approved" => "bg-success",
+        "Rejected" => "bg-danger",
+        _ => "bg-secondary"
+    };
+
+    private async Task ApproveRequest()
+    {
+        var response = await _httpClient.PostAsync($"Request/approve/{RequestId}", null);
+        if (response.IsSuccessStatusCode)
+        {
+            request.Status = "Approved";
+            toastClass = "bg-success";
+            toastMessage = "Request approved successfully!";
+        }
+        else
+        {
+            toastClass = "bg-danger";
+            toastMessage = "Failed to approve request.";
+        }
+    }
+
+    private async Task RejectRequest()
+    {
+        var response = await _httpClient.PostAsync($"Request/reject/{RequestId}", null);
+        if (response.IsSuccessStatusCode)
+        {
+            request.Status = "Rejected";
+            toastClass = "bg-success";
+            toastMessage = "Request rejected successfully!";
+        }
+        else
+        {
+            toastClass = "bg-danger";
+            toastMessage = "Failed to reject request.";
+        }
+    }
+}
