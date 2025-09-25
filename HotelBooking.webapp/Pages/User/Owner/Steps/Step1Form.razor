@@ -1,0 +1,39 @@
+<div class="card p-3">
+    <h5>Step 1: Hotel Info</h5>
+    <input type="text" class="form-control mb-2" placeholder="Hotel Name" @bind="hotel.Name" />
+    <input type="text" class="form-control mb-2" placeholder="Address" @bind="hotel.Address" />
+    <input type="text" class="form-control mb-2" placeholder="City" @bind="hotel.City" />
+
+    <div class="d-flex justify-content-between">
+        @if (OnPrev.HasDelegate)
+        {
+            <button class="btn btn-secondary" @onclick="GoPrev">← Back</button>
+        }
+        <button class="btn btn-primary" @onclick="Save">Next →</button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public EventCallback OnNext { get; set; }
+    [Parameter] public EventCallback OnPrev { get; set; }
+
+    HotelDto hotel = new();
+
+    async Task Save()
+    {
+        await OnNext.InvokeAsync();
+    }
+
+    async Task GoPrev()
+    {
+        if (OnPrev.HasDelegate)
+            await OnPrev.InvokeAsync();
+    }
+
+    public class HotelDto
+    {
+        public string Name { get; set; } = "";
+        public string Address { get; set; } = "";
+        public string City { get; set; } = "";
+    }
+}

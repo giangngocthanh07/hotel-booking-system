@@ -1,0 +1,39 @@
+@page "/hotel/rooms-wizard"
+@inject NavigationManager NavigationManager
+
+<div class="container mt-4">
+    <h3>Rooms Wizard (Step @currentStep of 4)</h3>
+
+    @if (currentStep == 5)
+    {
+        <Step5Form OnNext="@OnNextCallback" />
+    }
+    else if (currentStep == 6)
+    {
+        <Step6Form OnNext="@OnNextCallback" OnPrev="@OnPrevCallback" />
+    }
+    else if (currentStep == 7)
+    {
+        <Step7Form OnNext="@OnNextCallback" OnPrev="@OnPrevCallback" />
+    }
+    else if (currentStep == 8)
+    {
+        <Step8Form OnNext="@OnFinishCallback" OnPrev="@OnPrevCallback" />
+    }
+</div>
+
+@code {
+    int currentStep = 5;
+
+    void NextStep() => currentStep++;
+    void PrevStep() => currentStep--;
+    void Finish()
+    {
+        // TODO: set RoomsCompleted = true (gọi API hoặc state)
+        NavigationManager.NavigateTo("/hotel/register");
+    }
+
+    EventCallback OnNextCallback => EventCallback.Factory.Create(this, NextStep);
+    EventCallback OnPrevCallback => EventCallback.Factory.Create(this, PrevStep);
+    EventCallback OnFinishCallback => EventCallback.Factory.Create(this, Finish);
+}

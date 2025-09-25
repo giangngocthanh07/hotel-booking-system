@@ -1,0 +1,61 @@
+<div class="col-md-8">
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Amenities List</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:60px;">Id</th>
+                        <th style="width:80px;">Icon</th>
+                        <th>Name</th>
+                        <th>Icon Css Class</th>
+                        <th style="width:160px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (AmenitiesList.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">
+                                No amenities found
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var amenity in AmenitiesList)
+                        {
+                            <tr>
+                                <td>@amenity.Id</td>
+                                <td><i class="@amenity.IconClass fa-lg" style="color:@amenity.IconColor"></i></td>
+                                <td>@amenity.Name</td>
+                                <td>@amenity.IconClass</td>
+                                <td>
+                                    <button class="btn btn-warning btn-sm me-2" @onclick="() => OnEdit.InvokeAsync(amenity)">
+                                        EDIT
+                                    </button>
+                                    <button class="btn btn-danger btn-sm" @onclick="() => OnDelete.InvokeAsync(amenity.Id)">
+                                        DELETE
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public List<AmenityVM> AmenitiesList { get; set; } = new List<AmenityVM>();
+
+    [Parameter]
+    public EventCallback<AmenityVM> OnEdit { get; set; }
+    [Parameter]
+    public EventCallback<int> OnDelete { get; set; }
+
+}

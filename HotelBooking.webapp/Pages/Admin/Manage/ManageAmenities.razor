@@ -10,7 +10,7 @@
 
     <div class="row">
         <!-- Form thêm/sửa bên trái -->
-        <div class="col-md-4">
+        @* <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">
@@ -22,7 +22,7 @@
                         <DataAnnotationsValidator />
                         @* <ValidationSummary /> *@
 
-                        <div class="mb-3">
+        @* <div class="mb-3">
                             <label class="form-label">Name</label>
                             <InputText class="form-control" @bind-Value="SelectedAmenity.Name" />
                             <ValidationMessage For="@(() => SelectedAmenity.Name)" class="text-danger"/>
@@ -49,59 +49,12 @@
                     </EditForm>
                 </div>
             </div>
-        </div>
+        </div>  *@
+        <AmenityCreateOrUpdateCard AmenityParam="@SelectedAmenity" OnSaveUpdate="@SaveOrUpdateAmenity" />
 
         <!-- Bảng danh sách bên phải -->
-        <div class="col-md-8">
-            <div class="card shadow-sm">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0">Amenities List</h5>
-                </div>
-                <div class="card-body">
-                    <table class="table table-hover align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th style="width:60px;">Id</th>
-                                <th style="width:80px;">Icon</th>
-                                <th>Name</th>
-                                <th>Icon Css Class</th>
-                                <th style="width:160px;">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if (Amenities.Count == 0)
-                            {
-                                <tr>
-                                    <td colspan="5" class="text-center text-muted">
-                                        No amenities found
-                                    </td>
-                                </tr>
-                            }
-                            else
-                            {
-                                @foreach (var amenity in Amenities)
-                                {
-                                    <tr>
-                                        <td>@amenity.Id</td>
-                                        <td><i class="@amenity.IconClass fa-lg" style="color:@amenity.IconColor"></i></td>
-                                        <td>@amenity.Name</td>
-                                        <td>@amenity.IconClass</td>
-                                        <td>
-                                            <button class="btn btn-warning btn-sm me-2" @onclick="() => EditAmenity(amenity)">
-                                                EDIT
-                                            </button>
-                                            <button class="btn btn-danger btn-sm" @onclick="() => DeleteAmenity(amenity.Id)">
-                                                DELETE
-                                            </button>
-                                        </td>
-                                    </tr>
-                                }
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+        <ListAmenitiesCard AmenitiesList="@Amenities" OnEdit="@EditAmenity" OnDelete="@DeleteAmenity" />
+
     </div>
 </div>
 
@@ -119,6 +72,7 @@
 
     private async Task GetAllAmenities()
     {
+
         // TODO: gọi API GET /hotel/amenities
         var apiResponse = await _httpClient.GetFromJsonAsync<ApiResponse<List<AmenityVM>>>("hotel/get-all-amenities");
 
@@ -129,7 +83,7 @@
         else
         {
             Amenities = new List<AmenityVM>();
-            SnackbarHelper.Show(Snackbar, apiResponse?.StatusCode ?? "Error", apiResponse?.Message);
+            SnackbarHelper.Show(Snackbar, apiResponse.StatusCode, apiResponse.Message);
         }
     }
 
@@ -144,13 +98,13 @@
         };
     }
 
-    private async Task SaveOrUpdateAmenity()
+    private async Task SaveOrUpdateAmenity(AmenityVM amenity)
     {
-        if (SelectedAmenity.Id == 0)
+        if (amenity.Id == 0)
         {
             // TODO: gọi API POST tạo mới
-            var response = await _httpClient.PostAsJsonAsync("hotel/create-amenity", SelectedAmenity);
-            
+            var response = await _httpClient.PostAsJsonAsync("hotel/create-amenity", amenity);
+
             var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<AmenityVM>>();
 
             SnackbarHelper.Show(Snackbar, apiResponse.StatusCode, apiResponse.Message);
@@ -159,7 +113,7 @@
         else
         {
             // TODO: gọi API PUT cập nhật
-            var response = await _httpClient.PutAsJsonAsync($"hotel/update-amenity/{SelectedAmenity.Id}", SelectedAmenity);
+            var response = await _httpClient.PutAsJsonAsync($"hotel/update-amenity/{amenity.Id}", amenity);
 
             var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<AmenityVM>>();
 
@@ -174,7 +128,7 @@
     {
         // TODO: gọi API DELETE /hotel/amenities/{id}
         var response = await _httpClient.DeleteAsync($"hotel/delete-amenity/{id}");
-        
+
         var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
         SnackbarHelper.Show(Snackbar, apiResponse?.StatusCode ?? "Error", apiResponse?.Message);
 

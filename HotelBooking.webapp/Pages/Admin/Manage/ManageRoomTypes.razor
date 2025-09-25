@@ -1,0 +1,72 @@
+@page "/admin/roomtypes/create"
+@layout AdminLayout
+
+<div class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <h4 class="mb-0">Create Room Type</h4>
+        </div>
+        <div class="card-body">
+            <EditForm Model="@roomType" OnValidSubmit="HandleValidSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="row g-3">
+                    <!-- Name -->
+                    <div class="col-md-6">
+                        <label class="form-label">Room Type Name</label>
+                        <InputText class="form-control" @bind-Value="roomType.Name" />
+                        <ValidationMessage For="@(() => roomType.Name)" />
+                    </div>
+
+                    <!-- Default Adult Capacity -->
+                    <div class="col-md-3">
+                        <label class="form-label">Default Adults</label>
+                        <InputNumber class="form-control" @bind-Value="roomType.DefaultAdultCapacity" />
+                    </div>
+
+                    <!-- Default Child Capacity -->
+                    <div class="col-md-3">
+                        <label class="form-label">Default Children</label>
+                        <InputNumber class="form-control" @bind-Value="roomType.DefaultChildCapacity" />
+                    </div>
+
+                    <!-- Default Description -->
+                    <div class="col-12">
+                        <label class="form-label">Default Description</label>
+                        <InputTextArea class="form-control" rows="3" @bind-Value="roomType.DefaultDescription" />
+                    </div>
+                </div>
+
+                <!-- Save button -->
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary w-100">SAVE</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    private RoomTypeDTO roomType = new();
+
+    private async Task HandleValidSubmit()
+    {
+        // Call API tạo room type
+        Console.WriteLine($"Save RoomType: {roomType.Name}");
+    }
+
+    public class RoomTypeDTO
+    {
+        [Required(ErrorMessage = "Room type name is required")]
+        public string Name { get; set; }
+
+        [Range(1, 10, ErrorMessage = "Adults must be between 1 and 10")]
+        public int DefaultAdultCapacity { get; set; } = 2;
+
+        [Range(0, 10, ErrorMessage = "Children must be between 0 and 10")]
+        public int DefaultChildCapacity { get; set; } = 0;
+
+        public string DefaultDescription { get; set; }
+    }
+}

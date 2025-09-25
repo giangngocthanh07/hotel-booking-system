@@ -1,0 +1,39 @@
+@page "/hotel/property-wizard"
+@inject NavigationManager NavigationManager
+
+<div class="container mt-4">
+    <h3>Property Wizard (Step @currentStep of 4)</h3>
+
+    @if (currentStep == 1)
+    {
+        <Step1Form OnNext="@OnNextCallback" />
+    }
+    else if (currentStep == 2)
+    {
+        <Step2Form OnNext="@OnNextCallback" OnPrev="@OnPrevCallback" />
+    }
+    else if (currentStep == 3)
+    {
+        <Step3Form OnNext="@OnNextCallback" OnPrev="@OnPrevCallback" />
+    }
+    else if (currentStep == 4)
+    {
+        <Step4Form OnNext="@OnFinishCallback" OnPrev="@OnPrevCallback" />
+    }
+</div>
+
+@code {
+    int currentStep = 1;
+
+    void NextStep() => currentStep++;
+    void PrevStep() => currentStep--;
+    void Finish()
+    {
+        // TODO: Save flag Completed
+        NavigationManager.NavigateTo("/hotel/register");
+    }
+
+    EventCallback OnNextCallback => EventCallback.Factory.Create(this, NextStep);
+    EventCallback OnPrevCallback => EventCallback.Factory.Create(this, PrevStep);
+    EventCallback OnFinishCallback => EventCallback.Factory.Create(this, Finish);
+}

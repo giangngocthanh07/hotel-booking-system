@@ -1,0 +1,53 @@
+<div class="col-md-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                @(AmenityParam.Id == 0 ? "Add New Amenity" : "Edit Amenity")
+            </h5>
+        </div>
+        <div class="card-body">
+            <EditForm Model="@AmenityParam" OnValidSubmit="HandleValidSubmit">
+                <DataAnnotationsValidator />
+                @* <ValidationSummary /> *@
+
+                <div class="mb-3">
+                    <label class="form-label">Name</label>
+                    <InputText class="form-control" @bind-Value="AmenityParam.Name" />
+                    <ValidationMessage For="@(() => AmenityParam.Name)" class="text-danger" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Icon CSS (FontAwesome class)</label>
+                    <input type="text" class="form-control" @bind-Value="AmenityParam.IconClass"
+                        @bind-Value:event="oninput" placeholder="fa fa-wifi" />
+                    <ValidationMessage For="@(() => AmenityParam.IconClass)" class="text-danger" />
+                    @if (!string.IsNullOrWhiteSpace(AmenityParam.IconClass))
+                    {
+                        <div class="mt-2">
+                            Preview: <i class="@AmenityParam.IconClass fa-2x text-primary"></i>
+                        </div>
+                    }
+                </div>
+
+                <div class="d-flex">
+                    <button type="submit" class="btn btn-success me-2 w-100">
+                        @(AmenityParam.Id == 0 ? "SAVE" : "UPDATE")
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public AmenityVM AmenityParam { get; set; } = new AmenityVM();
+
+    [Parameter]
+    public EventCallback<AmenityVM> OnSaveUpdate { get; set; }
+
+    private async Task HandleValidSubmit()
+    {
+        await OnSaveUpdate.InvokeAsync(AmenityParam);
+    }
+}

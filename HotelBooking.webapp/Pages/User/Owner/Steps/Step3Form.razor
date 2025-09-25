@@ -1,0 +1,31 @@
+
+<div class="card p-3">
+    <h5>Step 3: Hotel Policies</h5>
+
+    <input type="text" class="form-control mb-2" placeholder="Check-in Time" @bind="policy.CheckIn" />
+    <input type="text" class="form-control mb-2" placeholder="Check-out Time" @bind="policy.CheckOut" />
+    <textarea class="form-control mb-2" placeholder="Cancellation Policy" @bind="policy.CancelPolicy"></textarea>
+
+    <div class="d-flex justify-content-between">
+        @if (OnPrev.HasDelegate)
+        {
+            <button class="btn btn-secondary" @onclick="OnPrev">← Back</button>
+        }
+        <button class="btn btn-primary" @onclick="Save">Next →</button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public EventCallback OnNext { get; set; }
+    [Parameter] public EventCallback OnPrev { get; set; }
+
+    PolicyDto policy = new();
+    void Save() => OnNext.InvokeAsync();
+
+    public class PolicyDto
+    {
+        public string CheckIn { get; set; } = "";
+        public string CheckOut { get; set; } = "";
+        public string CancelPolicy { get; set; } = "";
+    }
+}
