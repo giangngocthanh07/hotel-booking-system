@@ -1,5 +1,7 @@
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
+using AutoMapper;
 using HotelBooking.application.Services;
 using HotelBooking.infrastructure.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -52,6 +54,9 @@ builder.Services.AddScoped<IUpgradeRequestService, UpgradeRequestService>();
 
 //Use map controller
 builder.Services.AddControllers();
+
+// Cài đặt auto-mapper
+// builder.Services.AddAutoMapper(typeof(Program));
 
 // ============== Swagger =============== //
 //Swagger cấu hình có điền Authentication

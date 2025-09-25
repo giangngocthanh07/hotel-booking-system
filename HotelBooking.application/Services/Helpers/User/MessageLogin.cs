@@ -1,4 +1,4 @@
-public class MessageLogin
+public static class MessageLogin
 {
     public static string LOGIN_FAIL = "Login failed!";
     public static string LOGIN_SUCCESS = "Login successful!";

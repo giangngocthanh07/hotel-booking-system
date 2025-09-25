@@ -6,6 +6,8 @@ using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.Authorization;
 using System.Net.Http.Headers;
 using HotelBooking.Client;
+using Blazored.Toast;
+using MudBlazor;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,7 +16,18 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddMudServices();
+
+// add service mudblazor
+builder.Services.AddMudServices(config =>
+{
+    config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.TopRight;
+    config.SnackbarConfiguration.PreventDuplicates = true;
+    config.SnackbarConfiguration.NewestOnTop = false;
+    config.SnackbarConfiguration.ShowCloseIcon = true;
+    config.SnackbarConfiguration.VisibleStateDuration = 5000;
+    config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
+});
+
 
 // add service http client
 builder.Services.AddHttpClient("HotelBookingAPI", client =>

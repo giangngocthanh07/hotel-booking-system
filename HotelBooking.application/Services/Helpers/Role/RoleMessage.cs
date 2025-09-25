@@ -1,4 +1,4 @@
-public class RoleMessage
+public static class RoleMessage
 {
     public const string ROLE_NOT_FOUND = "Role not found.";
     public const string ROLE_ALREADY_EXISTS = "Role already exists.";
