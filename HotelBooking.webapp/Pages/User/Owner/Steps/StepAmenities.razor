@@ -1,0 +1,31 @@
+@foreach (var amenity in _amenities)
+{
+    <MudCheckBox T="bool" @bind-Value="amenity.IsSelected" Label="@amenity.Name" />
+}
+@if (!Validate())
+{
+    <MudText Color="Color.Error">Vui lòng chọn ít nhất 1 tiện ích</MudText>
+}
+
+@code {
+    private List<AmenityDto> _amenities = new()
+{
+new() { Id = 1, Name = "Wifi" },
+new() { Id = 2, Name = "Swimming Pool" },
+new() { Id = 3, Name = "Gym" }
+};
+
+    public bool Validate()
+    {
+        // Ít nhất 1 tiện ích được chọn
+        return _amenities.Any(a => a.IsSelected);
+    }
+
+    public class AmenityDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+
+        public bool IsSelected { get; set; }
+    }
+}

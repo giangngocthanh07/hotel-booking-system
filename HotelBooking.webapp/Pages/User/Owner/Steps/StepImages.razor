@@ -1,0 +1,118 @@
+<InputFile OnChange="HandleFiles" multiple accept="image/*" />
+
+<MudText Class="mt-2">Uploaded: @Uploaded.Count / 5 ảnh</MudText>
+
+@if (Uploaded.Count != 5)
+{
+    <MudText Color="Color.Error">Vui lòng upload đúng 5 ảnh</MudText>
+}
+
+@if (UploadedBase64.Count > 0)
+{
+    <MudGrid Class="mt-3">
+        <!-- Main photo -->
+        <MudItem xs="12" md="7">
+            <div style="position:relative;max-width:500px;">
+                <img src="@UploadedBase64[MainIndex]"
+                    style="width:100%;height:250px;object-fit:cover; border-radius:8px;border:3px solid blue;" />
+
+                <!-- Label Main -->
+                <span
+                    style="position:absolute;bottom:6px;left:6px; background:blue;color:#fff;padding:3px 8px; border-radius:4px;font-size:12px;">
+                    Main Photo
+                </span>
+
+                <!-- Nút Xoá -->
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Error" Size="Size.Small"
+                    Style="position:absolute;top:6px;right:6px; background:#fff;border-radius:50%;z-index:10;"
+                    OnClick="@(() => RemoveImage(MainIndex))" />
+            </div>
+        </MudItem>
+
+        <!-- Sub photos -->
+        <MudItem xs="12" md="5">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                @for (int i = 0; i < UploadedBase64.Count; i++)
+                {
+                    if (i == MainIndex) continue; // bỏ qua ảnh main
+
+                    var idx = i;
+                    <div style="position:relative;cursor:pointer;">
+                        <img src="@UploadedBase64[idx]"
+                            style="width:100%;height:120px;object-fit:cover; border-radius:6px;border:2px solid #ddd;" />
+
+                        <!-- Nút Xoá -->
+                        <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Error" Size="Size.Small"
+                            Style="position:absolute;top:4px;right:4px; background:#fff;border-radius:50%;z-index:10;"
+                            OnClick="@(() => RemoveImage(idx))" />
+
+                        <!-- Nút Set Main -->
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                            Style="position:absolute;bottom:6px;left:6px;z-index:10;" OnClick="@(() => SetMainPhoto(idx))">
+                            Set Main
+                        </MudButton>
+                    </div>
+                }
+            </div>
+        </MudItem>
+    </MudGrid>
+}
+
+@code {
+    private List<IBrowserFile> Uploaded { get; set; } = new();
+    private List<string> UploadedBase64 { get; set; } = new();
+    private int MainIndex { get; set; } = -1;
+
+    private async Task HandleFiles(InputFileChangeEventArgs e)
+    {
+        // Không clear nữa → giữ ảnh đã upload trước đó
+        var files = e.GetMultipleFiles(5 - Uploaded.Count); // chỉ lấy đủ để không vượt quá 5 ảnh
+
+        foreach (var file in files)
+        {
+            if (Uploaded.Count >= 5) break;
+
+            Uploaded.Add(file);
+
+            using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024); // 5MB mỗi ảnh
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+
+            var base64 = $"data:{file.ContentType};base64,{Convert.ToBase64String(ms.ToArray())}";
+            UploadedBase64.Add(base64);
+        }
+
+        if (UploadedBase64.Count > 0 && MainIndex == -1)
+            MainIndex = 0; // mặc định ảnh đầu tiên làm main
+    }
+
+    private void SetMainPhoto(int index)
+    {
+        if (index == MainIndex) return;
+
+        // Hoán đổi main <-> ảnh phụ
+        var tmpImg = UploadedBase64[MainIndex];
+        UploadedBase64[MainIndex] = UploadedBase64[index];
+        UploadedBase64[index] = tmpImg;
+
+        var tmpFile = Uploaded[MainIndex];
+        Uploaded[MainIndex] = Uploaded[index];
+        Uploaded[index] = tmpFile;
+    }
+
+    private void RemoveImage(int index)
+    {
+        if (index < 0 || index >= Uploaded.Count) return;
+
+        Uploaded.RemoveAt(index);
+        UploadedBase64.RemoveAt(index);
+
+        // Nếu xoá ảnh main → reset main về 0
+        if (MainIndex == index)
+            MainIndex = UploadedBase64.Count > 0 ? 0 : -1;
+        else if (index < MainIndex)
+            MainIndex--; // dịch index main nếu xoá ảnh trước nó
+    }
+
+    public bool Validate() => Uploaded.Count == 5;
+}

@@ -1,0 +1,25 @@
+<MudForm @ref="_form" Model="_hotel">
+    <MudTextField @bind-Value="_hotel.Name" Label="Hotel Name" Required="true" />
+    <MudTextField @bind-Value="_hotel.Address" Label="Address" Required="true" />
+    <MudTextField @bind-Value="_hotel.City" Label="City" Required="true" />
+    <MudTextField @bind-Value="_hotel.Description" Label="Description" Lines="3" />
+</MudForm>
+
+@code {
+    private MudForm? _form;
+    private HotelDto _hotel = new();
+
+    public bool Validate()
+    {
+        _form?.Validate();
+        return _form?.IsValid ?? false;
+    }
+
+    public class HotelDto
+    {
+        public string Name { get; set; } = "";
+        public string Address { get; set; } = "";
+        public string City { get; set; } = "";
+        public string Description { get; set; } = "";
+    }
+}

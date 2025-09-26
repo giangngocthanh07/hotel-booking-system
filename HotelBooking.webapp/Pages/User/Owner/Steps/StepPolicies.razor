@@ -1,0 +1,27 @@
+<MudForm @ref="_form" Model="_policy">
+    <MudTextField @bind-Value="_policy.CheckIn" Label="Check-in Time" Required="true" />
+    <MudTextField @bind-Value="_policy.CheckOut" Label="Check-out Time" Required="true" />
+    <MudSelect @bind-Value="_policy.CancellationPolicy" Label="Cancellation Policy" Required="true">
+        <MudSelectItem Value="@("Flexible")">Flexible</MudSelectItem>
+        <MudSelectItem Value="@("Moderate")">Moderate</MudSelectItem>
+        <MudSelectItem Value="@("Strict")">Strict</MudSelectItem>
+    </MudSelect>
+</MudForm>
+
+@code {
+    private MudForm? _form;
+    private PolicyDto _policy = new();
+
+    public bool Validate()
+    {
+        _form?.Validate();
+        return _form?.IsValid ?? false;
+    }
+
+    public class PolicyDto
+    {
+        public string CheckIn { get; set; } = "";
+        public string CheckOut { get; set; } = "";
+        public string CancellationPolicy { get; set; } = "";
+    }
+}

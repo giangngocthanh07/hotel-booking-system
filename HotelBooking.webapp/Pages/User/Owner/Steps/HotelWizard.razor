@@ -1,39 +1,61 @@
-@page "/hotel/property-wizard"
-@inject NavigationManager NavigationManager
+@page "/hotel-wizard"
+@layout OwnerLayout
 
-<div class="container mt-4">
-    <h3>Property Wizard (Step @currentStep of 4)</h3>
+<div class="d-flex justify-content-center mt-4">
 
-    @if (currentStep == 1)
-    {
-        <Step1Form OnNext="@OnNextCallback" />
-    }
-    else if (currentStep == 2)
-    {
-        <Step2Form OnNext="@OnNextCallback" OnPrev="@OnPrevCallback" />
-    }
-    else if (currentStep == 3)
-    {
-        <Step3Form OnNext="@OnNextCallback" OnPrev="@OnPrevCallback" />
-    }
-    else if (currentStep == 4)
-    {
-        <Step4Form OnNext="@OnFinishCallback" OnPrev="@OnPrevCallback" />
-    }
+
+    <MudPaper Style="width:900px" Class="pa-4">
+        <MudStepper NonLinear ShowResetButton OnPreviewInteraction="OnPreviewInteraction">
+            <MudStep Title="Basic Info" SecondaryText="Thông tin cơ bản">
+                <StepBasicInfo @ref="_stepBasic" />
+            </MudStep>
+
+            <MudStep Title="Amenities" SecondaryText="Tiện ích">
+                <StepAmenities @ref="_stepAmenities" />
+            </MudStep>
+
+            <MudStep Title="Policies" SecondaryText="Chính sách">
+                <StepPolicies @ref="_stepPolicy" />
+            </MudStep>
+
+            <MudStep Title="Images" SecondaryText="Ảnh khách sạn">
+                <StepImages @ref="_stepImages" />
+            </MudStep>
+        </MudStepper>
+    </MudPaper>
 </div>
 
 @code {
-    int currentStep = 1;
+    private StepBasicInfo? _stepBasic;
+    private StepAmenities? _stepAmenities;
+    private StepPolicies? _stepPolicy;
+    private StepImages? _stepImages;
 
-    void NextStep() => currentStep++;
-    void PrevStep() => currentStep--;
-    void Finish()
+    private async Task OnPreviewInteraction(StepperInteractionEventArgs arg)
     {
-        // TODO: Save flag Completed
-        NavigationManager.NavigateTo("/hotel/register");
+        if (arg.Action == StepAction.Complete)
+        {
+            switch (arg.StepIndex)
+            {
+                case 0:
+                    if (!(_stepBasic?.Validate() ?? false))
+                        arg.Cancel = true;
+                    break;
+                case 1:
+                    if (!(_stepAmenities?.Validate() ?? false))
+                        arg.Cancel = true;
+                    break;
+                case 2:
+                    if (!(_stepPolicy?.Validate() ?? false))
+                        arg.Cancel = true;
+                    break;
+                case 3:
+                    if (!(_stepImages?.Validate() ?? false))
+                        arg.Cancel = true;
+                    break;
+            }
+        }
+        await Task.CompletedTask;
     }
 
-    EventCallback OnNextCallback => EventCallback.Factory.Create(this, NextStep);
-    EventCallback OnPrevCallback => EventCallback.Factory.Create(this, PrevStep);
-    EventCallback OnFinishCallback => EventCallback.Factory.Create(this, Finish);
 }
