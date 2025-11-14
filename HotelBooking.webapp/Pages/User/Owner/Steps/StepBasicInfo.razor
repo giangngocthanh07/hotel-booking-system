@@ -59,6 +59,16 @@
 
     public MudForm? _form;
 
+    protected override async Task OnInitializedAsync()
+    {
+        // Chỉ gọi API nếu danh sách thành phố đang rỗng
+        if (FormState.BasicInfo.Cities == null || !FormState.BasicInfo.Cities.Any())
+        {
+            // Gọi hàm trong FormState để lấy dữ liệu
+            await FormState.LoadCitiesAsync();
+        }
+    }
+
     private async Task HandleFileSelected(InputFileChangeEventArgs e)
     {
         var file = e.File;
@@ -76,7 +86,7 @@
                 ContentType = file.ContentType
             };
 
-            using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024); 
+            using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
             var ms = new MemoryStream();
 
             await stream.CopyToAsync(ms);

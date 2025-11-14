@@ -125,20 +125,19 @@ namespace HotelBooking.api.Controllers
 
 
         // ================= ĐỌC, THÊM, SỬA, XÓA CHÍNH SÁCH CHO KHÁCH SẠN ================
-
-        [HttpGet("get-all-policytypes-with-policies")]
-        public async Task<IActionResult> GetAllPolicyTypesWithPoliciesAsync()
+        [HttpGet("get-all-policy-types")]
+        public async Task<IActionResult> GetAllPolicyTypesAsync()
         {
-            var response = await _hotelService.GetAllPolicyTypesWithPoliciesAsync();
+            var response = await _hotelService.GetAllPolicyTypesAsync();
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
-        // [HttpGet("get-all-policy-by-type")]
-        // public async Task<IActionResult> GetPoliciesByTypeAsync([FromQuery] int policyTypeId)
-        // {
-        //     var response = await _hotelService.GetAllPoliciesByTypeAsync(policyTypeId);
-        //     return ApiResponseHandlerHelper.HandleResponse(response);
-        // }
+        [HttpGet("get-all-policy-by-type/{policyTypeId}")]
+        public async Task<IActionResult> GetAllPoliciesByTypeAsync(int policyTypeId)
+        {
+            var response = await _hotelService.GetAllPoliciesByTypeAsync(policyTypeId);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
 
         [Authorize(Roles = "Owner")]
         [HttpPost("test-upload-photo-cloudinary")]

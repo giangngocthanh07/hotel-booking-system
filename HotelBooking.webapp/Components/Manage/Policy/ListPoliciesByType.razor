@@ -1,0 +1,66 @@
+<div class="col-md-8">
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Danh sách @SelectedPolicyType</h5>
+        </div>
+        <div class="card-body">
+            @if (PoliciesByType == null)
+            {
+                <div class="text-center text-muted">
+                    <p><em>Đang tải dữ liệu...</em></p>
+                </div>
+            }
+            else
+            {
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:60px;">Id</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th style="width:160px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (PoliciesByType.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">
+                                    No policies found
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var policy in PoliciesByType)
+                            {
+                                <tr>
+                                    <td>@policy.Id</td>
+
+                                    <td>@policy.Name</td>
+                                    <td>@policy.Description</td>
+                                    @* <td>
+                                    <button class="btn btn-warning btn-sm me-2" @onclick="() => OnEdit(policy)">
+                                        EDIT
+                                    </button>
+                                    <button class="btn btn-danger btn-sm" @onclick="() => OnDelete(policy.Id)">
+                                        DELETE
+                                    </button>
+                                </td> *@
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int SelectedPolicyType { get; set; }
+
+    [Parameter]
+    public List<PolicyVM>? PoliciesByType { get; set; } = new();
+}

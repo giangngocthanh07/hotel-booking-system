@@ -1,0 +1,53 @@
+<div class="col-md-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h3>Chọn loại chính sách</h3>
+
+
+        </div>
+        <div class="card-body">
+            @if (PolicyTypeList == null)
+            {
+                <p><em>Đang tải danh sách...</em></p>
+            }
+            else
+            {
+                <div class="form-group">
+                    <label class="mb-3">Loại chính sách:</label>
+
+                    <select class="form-control" value="@SelectedPolicyType" @onchange="OnPolicyTypeChanged">
+
+                        <option value="0">-- Vui lòng chọn --</option>
+                        @foreach (var type in PolicyTypeList)
+                        {
+                            <option value="@type.Id">@type.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <hr />
+
+                @if (SelectedPolicyType > 0)
+                {
+                    <p><strong>Bạn chọn:</strong> @SelectedPolicyType</p>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+
+@code {
+    //
+    [Parameter]
+    public int SelectedPolicyType { get; set; }
+    //
+    [Parameter]
+    public List<PolicyTypeVM> PolicyTypeList { get; set; }
+    // Biến này sẽ tự động cập nhật khi người dùng chọn
+    // Đây chính là "data type mà được chọn" mà bạn muốn lưu lại
+
+    [Parameter]
+    public EventCallback<ChangeEventArgs> OnPolicyTypeChanged { get; set; }
+
+}

@@ -12,11 +12,10 @@ public interface IHotelService
     public Task<ApiResponse<AmenityDTO>> CreateAmenityAsync(AmenityCreateOrUpdateDTO newAmenity);
     public Task<ApiResponse<AmenityDTO>> UpdateAmenityAsync(int id, AmenityCreateOrUpdateDTO amenity);
     public Task<ApiResponse<bool>> DeleteAmenityAsync(int id);
+    public Task<ApiResponse<List<PolicyTypeDTO>>> GetAllPolicyTypesAsync();
+    public Task<ApiResponse<List<PolicyDTO>>> GetAllPoliciesByTypeAsync(int typeId);
     public Task<ApiResponse<List<CityDTO>>> GetAllCitiesAsync();
     public Task<ApiResponse<CreateHotelResponseDTO>> PostHotelAsync(CreateHotelDTO newHotel, int ownerId);
-
-    public Task<ApiResponse<List<PolicyTypeWithPoliciesDTO>>> GetAllPolicyTypesWithPoliciesAsync();
-    // public Task<ApiResponse<List<PolicyDTO>>> GetAllPoliciesByTypeAsync(int policyTypeId);
 
     public Task<ApiResponse<UploadResultDTO>> TestUploadImageToCloudinaryAsync(UploadFileDTO file, int userId);
 }
@@ -415,96 +414,90 @@ public class HotelService : IHotelService
     #region MANAGE POLICIES
     // =============== ĐỌC, THÊM, SỬA, XÓA CHÍNH SÁCH CHO KHÁCH SẠN ================
 
-    // public async Task<int> GetPolicyTypeId
-
-    // public async Task<PolicyTypeDTO> GetPolicyTypeByIdAsync(int id)
-    // {
-    //    var policyType = await _context.policyTypesRepo.GetByIdAsync(id);
-    //    if (policyType == null) return null;
-    //    return new PolicyTypeDTO
-    //    {
-    //        Id = policyType.Id,
-    //        Name = policyType.Name,
-    //        IsDeleted = false
-    //    };
-    // }
-
-    public async Task<ApiResponse<List<PolicyTypeWithPoliciesDTO>>> GetAllPolicyTypesWithPoliciesAsync()
+    public async Task<ApiResponse<List<PolicyTypeDTO>>> GetAllPolicyTypesAsync()
     {
-        var types = await _context.PolicyTypes
-            .Include(pt => pt.Policies.Where(p => p.IsDeleted == false)) // lấy luôn policies còn hiệu lực
-            .ToListAsync();
-
-        if (!types.Any())
+        try
         {
-            return new ApiResponse<List<PolicyTypeWithPoliciesDTO>>
+            var policyTypes = await _policyTypeRepository.WhereAsync(pt => pt.IsDeleted == false);
+
+            if (policyTypes == null || !policyTypes.Any())
             {
-                StatusCode = StatusCodeResponse.NotFound,
-                Message = MessageResponse.EMPTY_LIST,
+                return new ApiResponse<List<PolicyTypeDTO>>
+                {
+                    StatusCode = StatusCodeResponse.NotFound,
+                    Message = MessageResponse.EMPTY_LIST,
+                    Content = null
+                };
+            }
+
+            var result = policyTypes.Select(pt => new PolicyTypeDTO
+            {
+                Id = pt.Id,
+                Name = pt.TypeName,
+                IsDeleted = pt.IsDeleted
+            }).ToList();
+
+            return new ApiResponse<List<PolicyTypeDTO>>
+            {
+                StatusCode = StatusCodeResponse.Success,
+                Message = MessageResponse.UPDATE_SUCCESSFULLY,
+                Content = result
+            };
+
+        }
+        catch (Exception)
+        {
+            return new ApiResponse<List<PolicyTypeDTO>>
+            {
+                StatusCode = StatusCodeResponse.Error,
+                Message = MessageResponse.ERROR_IN_SERVER,
                 Content = null
             };
         }
-
-        var result = types.Select(t => new PolicyTypeWithPoliciesDTO
-        {
-            Id = t.Id,
-            Name = t.TypeName,
-            Policies = t.Policies.Select(p => new PolicyDTO
-            {
-                Name = p.Name,
-                Description = p.Description ?? "",
-                PolicyTypeId = p.PolicyTypeId,
-            }).ToList()
-        }).ToList();
-
-        return new ApiResponse<List<PolicyTypeWithPoliciesDTO>>
-        {
-            StatusCode = StatusCodeResponse.Success,
-            Content = result
-        };
     }
 
-    // public async Task<ApiResponse<List<PolicyDTO>>> GetAllPoliciesByTypeAsync(int policyTypeId)
-    // {
+    public async Task<ApiResponse<List<PolicyDTO>>> GetAllPoliciesByTypeAsync(int typeId)
+    {
+        try
+        {
+            var policies = await _policyRepository.WhereAsync(p => p.PolicyTypeId == typeId && p.IsDeleted == false);
 
-    //     if (policyTypeId <= 0)
-    //     {
-    //         return new ApiResponse<List<PolicyDTO>>
-    //         {
-    //             StatusCode = StatusCodeResponse.BadRequest,
-    //             Message = MessageResponse.NOT_FOUND,
-    //             Content = null
-    //         };
-    //     }
+            if (policies == null || !policies.Any())
+            {
+                return new ApiResponse<List<PolicyDTO>>
+                {
+                    StatusCode = StatusCodeResponse.NotFound,
+                    Message = MessageResponse.EMPTY_LIST,
+                    Content = null
+                };
+            }
 
-    //     // Query luôn join PolicyType
-    //     var policies = await _context.Policies
-    //         .Include(p => p.PolicyType)
-    //         .Where(p => p.PolicyTypeId == policyTypeId && p.IsDeleted == false)
-    //         .ToListAsync();
+            var result = policies.Select(p => new PolicyDTO
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Description = p.Description,
+                IsDeleted = p.IsDeleted,
+                PolicyTypeId = p.PolicyTypeId
+            }).ToList();
 
-    //     if (!policies.Any())
-    //     {
-    //         return new ApiResponse<List<PolicyDTO>>
-    //         {
-    //             StatusCode = StatusCodeResponse.NotFound,
-    //             Message = MessageResponse.EMPTY_LIST,
-    //             Content = null
-    //         };
-    //     }
-
-    //     var result = policies.Select(policy => new PolicyDTO
-    //     {
-    //         Name = policy.Name,
-    //         Description = policy.Description ?? "",
-    //         PolicyTypeId = policy.PolicyTypeId,
-    //     }).ToList();
-
-    //     return new ApiResponse<List<PolicyDTO>>
-    //     {
-    //         StatusCode = StatusCodeResponse.Success,
-    //         Content = result
-    //     };
+            return new ApiResponse<List<PolicyDTO>>
+            {
+                StatusCode = StatusCodeResponse.Success,
+                Message = MessageResponse.UPDATE_SUCCESSFULLY,
+                Content = result
+            };
+        }
+        catch (Exception)
+        {
+            return new ApiResponse<List<PolicyDTO>>
+            {
+                StatusCode = StatusCodeResponse.Error,
+                Message = MessageResponse.ERROR_IN_SERVER,
+                Content = null
+            };
+        }
+    }
 
     // Test: Up ảnh lên Cloudinary vào folder có mã userId
     public async Task<ApiResponse<UploadResultDTO>> TestUploadImageToCloudinaryAsync(UploadFileDTO file, int userId)

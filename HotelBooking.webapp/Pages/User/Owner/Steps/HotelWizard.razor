@@ -88,11 +88,7 @@
         // Gọi API để lấy danh sách amenities
         await FormState.LoadAmenitiesAsync();
         // Chỉ gọi API nếu danh sách thành phố đang rỗng
-        if (FormState.BasicInfo.Cities == null || !FormState.BasicInfo.Cities.Any())
-        {
-            // Gọi hàm trong FormState để lấy dữ liệu
-            await FormState.LoadCitiesAsync();
-        }
+        
 
 
         // Gọi API lấy toàn bộ PolicyType (Hủy phòng, Nhận phòng, Trả phòng)

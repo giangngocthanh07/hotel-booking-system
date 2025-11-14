@@ -1,4 +1,4 @@
-public class PolicyDTO
+public class PolicyVM
 {
     public int Id { get; set; }
     public string Name { get; set; }
