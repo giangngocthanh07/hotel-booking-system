@@ -4,7 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Threading.Tasks;
-using HotelBooking.api.Helpers;
+using HotelBooking.application.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 //using HotelBooking.api.Models;
@@ -16,9 +16,11 @@ namespace HotelBooking.api.Controllers
     public class HotelController : ControllerBase
     {
         IHotelService _hotelService;
-        public HotelController(IHotelService hotelService)
+        IFileHelper _fileHelper;
+        public HotelController(IHotelService hotelService, IFileHelper fileHelper)
         {
             _hotelService = hotelService;
+            _fileHelper = fileHelper;
         }
 
         [Authorize(Roles = "Owner")]
@@ -79,6 +81,87 @@ namespace HotelBooking.api.Controllers
             var response = await _hotelService.DeleteAmenityAsync(id);
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
+
+        [HttpGet("get-all-cities")]
+        public async Task<IActionResult> GetAllCitiesAsync()
+        {
+            var response = await _hotelService.GetAllCitiesAsync();
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
+        // ================= ĐĂNG KHÁCH SẠN MỚI ================
+        [Authorize(Roles = "Owner")]
+        [HttpPost("post-new-hotel")]
+        public async Task<IActionResult> PostNewHotelAsync([FromForm] CreateHotelRequestDTO newHotelRequest)
+        {
+            var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (claim == null || string.IsNullOrEmpty(claim.Value))
+            {
+                return BadRequest("User identifier claim is missing.");
+            }
+            var ownerId = int.Parse(claim.Value);
+
+            // Map CreateHotelRequestDTO to CreateHotelDTO
+            var newHotelDTO = new CreateHotelDTO
+            {
+                Name = newHotelRequest.Name,
+                Address = newHotelRequest.Address,
+                Description = newHotelRequest.Description,
+                CityId = newHotelRequest.CityId,
+                AmenityIds = newHotelRequest.AmenityIds,
+                CoverFile = await _fileHelper.ConvertToUploadFileVM(newHotelRequest.CoverFile),
+                MainFile = await _fileHelper.ConvertToUploadFileVM(newHotelRequest.MainFile),
+                SubFiles = new List<UploadFileDTO>()
+            };
+
+            foreach (var subFile in newHotelRequest.SubFiles)
+            {
+                newHotelDTO.SubFiles!.Add(await _fileHelper.ConvertToUploadFileVM(subFile));
+            }
+
+            var result = await _hotelService.PostHotelAsync(newHotelDTO, ownerId);
+            return ApiResponseHandlerHelper.HandleResponse(result);
+        }
+
+
+        // ================= ĐỌC, THÊM, SỬA, XÓA CHÍNH SÁCH CHO KHÁCH SẠN ================
+
+        [HttpGet("get-all-policytypes-with-policies")]
+        public async Task<IActionResult> GetAllPolicyTypesWithPoliciesAsync()
+        {
+            var response = await _hotelService.GetAllPolicyTypesWithPoliciesAsync();
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
+        // [HttpGet("get-all-policy-by-type")]
+        // public async Task<IActionResult> GetPoliciesByTypeAsync([FromQuery] int policyTypeId)
+        // {
+        //     var response = await _hotelService.GetAllPoliciesByTypeAsync(policyTypeId);
+        //     return ApiResponseHandlerHelper.HandleResponse(response);
+        // }
+
+        [Authorize(Roles = "Owner")]
+        [HttpPost("test-upload-photo-cloudinary")]
+        public async Task<IActionResult> TestUploadPhotoCloudinaryAsync(IFormFile file)
+        {
+            var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (claim == null || string.IsNullOrEmpty(claim.Value))
+            {
+                return BadRequest("User identifier claim is missing.");
+            }
+            var userId = int.Parse(claim.Value);
+
+            var result = new UploadFileDTO
+            {
+                FileName = file.FileName,
+                Size = file.Length,
+                Content = file.OpenReadStream()
+            };
+
+            var response = await _hotelService.TestUploadImageToCloudinaryAsync(result, userId);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
 
     }
 }

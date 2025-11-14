@@ -8,6 +8,7 @@ using System.Net.Http.Headers;
 using HotelBooking.Client;
 using Blazored.Toast;
 using MudBlazor;
+using HotelBooking.webapp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,6 +44,11 @@ builder.Services.AddAuthentication();
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 builder.Services.AddAuthorizationCore();
+
+builder.Services.AddHttpContextAccessor();
+
+// DI service
+builder.Services.AddScoped<HotelFormState>();
 
 
 var app = builder.Build();

@@ -7,7 +7,7 @@ public interface IHotelAmenityRepository : IRepository<HotelAmenity>
 
 public class HotelAmenityRepository : Repository<HotelAmenity>, IHotelAmenityRepository
 {
-    public HotelAmenityRepository(HotelBookingContext context) : base(context)
+    public HotelAmenityRepository(HotelBookingDBContext context) : base(context)
     {
     }
 }

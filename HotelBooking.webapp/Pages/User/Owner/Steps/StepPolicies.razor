@@ -1,27 +1,94 @@
-<MudForm @ref="_form" Model="_policy">
-    <MudTextField @bind-Value="_policy.CheckIn" Label="Check-in Time" Required="true" />
-    <MudTextField @bind-Value="_policy.CheckOut" Label="Check-out Time" Required="true" />
-    <MudSelect @bind-Value="_policy.CancellationPolicy" Label="Cancellation Policy" Required="true">
-        <MudSelectItem Value="@("Flexible")">Flexible</MudSelectItem>
-        <MudSelectItem Value="@("Moderate")">Moderate</MudSelectItem>
-        <MudSelectItem Value="@("Strict")">Strict</MudSelectItem>
-    </MudSelect>
+@* @using HotelBooking.webapp.Services
+@inject HotelFormState FormState
+
+<MudForm @ref="_form" Class="pa-2">
+
+    <!-- Check-in Policy -->
+
+    <InputSelect @bind-Value="FormState.SelectedCheckInId" class="form-select">
+
+        <option value="">-- Chọn Check-in Policy --</option>
+        @foreach (var policy in CheckInPolicies)
+        {
+            <option value="@policy.Id">@policy.Name</option>
+        }
+    </InputSelect>
+
+    <!-- Check-out Policy -->
+
+    <InputSelect @bind-Value="FormState.SelectedCheckOutId" class="form-select">
+        <option value="">-- Chọn Check-out Policy --</option>
+        @foreach (var policy in CheckOutPolicies)
+        {
+            <option value="@policy.Id">@policy.Name</option>
+        }
+    </InputSelect>
+
+    <!-- Cancellation Policy -->
+
+    <InputSelect @bind-Value="FormState.SelectedCancellationId" class="form-select">
+        <option value="">-- Chọn Cancellation Policy --</option>
+        @foreach (var policy in CancellationPolicies)
+        {
+            <option value="@policy.Id">@policy.Name</option>
+        }
+    </InputSelect>
+
+    @if (!FormState.SelectedPolicyIds.Any())
+    {
+        <MudText Color="Color.Error">Vui lòng chọn ít nhất 1 policy</MudText>
+    }
 </MudForm>
 
+
 @code {
-    private MudForm? _form;
-    private PolicyDto _policy = new();
+    public MudForm? _form;
+    public List<PolicyVM> CheckInPolicies { get; set; } = new();
+    public List<PolicyVM> CheckOutPolicies { get; set; } = new();
+    public List<PolicyVM> CancellationPolicies { get; set; } = new();
 
-    public bool Validate()
+    protected override async Task OnInitializedAsync()
     {
-        _form?.Validate();
-        return _form?.IsValid ?? false;
+        var allTypes = await FormState.LoadAllPolicyTypesWithPoliciesAsync();
+
+        var checkInType = allTypes.FirstOrDefault(t => t.Id == 2);
+        if (checkInType != null)
+            CheckInPolicies = checkInType.Policies;
+            Console.WriteLine($"CheckInPolicies count={CheckInPolicies.Count}, first={CheckInPolicies.FirstOrDefault()?.Name}, id={CheckInPolicies.FirstOrDefault()?.Id}");
+
+        var checkOutType = allTypes.FirstOrDefault(t => t.Id == 3);
+        if (checkOutType != null)
+            CheckOutPolicies = checkOutType.Policies;
+            Console.WriteLine($"CheckOutPolicies count={CheckOutPolicies.Count}, first={CheckOutPolicies.FirstOrDefault()?.Name}, id={CheckOutPolicies.FirstOrDefault()?.Id}");
+
+        var cancellationType = allTypes.FirstOrDefault(t => t.Id == 1);
+        if (cancellationType != null)
+            CancellationPolicies = cancellationType.Policies;
+            Console.WriteLine($"CancellationPolicies count={CancellationPolicies.Count}, first={CancellationPolicies.FirstOrDefault()?.Name}, id={CancellationPolicies.FirstOrDefault()?.Id}");
+
+        FormState.OnChange += StateHasChanged;
+    } 
+
+    public void OnStateChange()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+    public void Dispose()
+    {
+        FormState.OnChange -= StateHasChanged;
     }
 
-    public class PolicyDto
+
+    public class PolicyTypeWithPoliciesVM
     {
-        public string CheckIn { get; set; } = "";
-        public string CheckOut { get; set; } = "";
-        public string CancellationPolicy { get; set; } = "";
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+        public List<PolicyVM> Policies { get; set; } = new();
     }
-}
+
+    public class PolicyVM
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+    }
+} *@

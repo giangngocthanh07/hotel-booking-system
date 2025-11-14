@@ -12,9 +12,9 @@ public interface IUnitOfWork : IAsyncDisposable
 public class UnitOfWork : IUnitOfWork
 {
 
-    private readonly HotelBookingContext _HBcontext;
+    private readonly HotelBookingDBContext _HBcontext;
 
-    public UnitOfWork(HotelBookingContext HBcontext)
+    public UnitOfWork(HotelBookingDBContext HBcontext)
     {
         _HBcontext = HBcontext;
 

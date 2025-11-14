@@ -8,12 +8,13 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using HotelBooking.application.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Service EF
 var connectionString = builder.Configuration.GetConnectionString("connectionStringHotelBooking");
-builder.Services.AddDbContext<HotelBookingContext>(options =>
+builder.Services.AddDbContext<HotelBookingDBContext>(options =>
     options.UseSqlServer(connectionString));
 
 // DI for Repository
@@ -40,6 +41,7 @@ builder.Services.AddScoped<IRoomAmenityRepository, RoomAmenityRepository>();
 builder.Services.AddScoped<IHotelPolicyRepository, HotelPolicyRepository>();
 builder.Services.AddScoped<IHotelAmenityRepository, HotelAmenityRepository>();
 builder.Services.AddScoped<IBookingRoomRepository, BookingRoomRepository>();
+builder.Services.AddScoped<IPolicyTypeRepository, PolicyTypeRepository>();
 
 
 // DI for UnitOfWork
@@ -51,6 +53,11 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IHotelService, HotelService>();
 builder.Services.AddScoped<IUpgradeRequestService, UpgradeRequestService>();
+builder.Services.AddScoped<IPhotoService, PhotoService>();
+
+// DI for Helpers
+builder.Services.AddSingleton<IImageHelper, ImageHelper>();
+builder.Services.AddScoped<IFileHelper, FileHelper>();
 
 //Use map controller
 builder.Services.AddControllers();

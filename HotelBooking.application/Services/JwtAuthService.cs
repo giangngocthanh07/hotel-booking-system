@@ -12,8 +12,8 @@ public class JwtAuthService
     private readonly string? _key;
     private readonly string? _issuer;
     private readonly string? _audience;
-    private readonly HotelBookingContext _context;
-    public JwtAuthService(IConfiguration Configuration, HotelBookingContext db)
+    private readonly HotelBookingDBContext _context;
+    public JwtAuthService(IConfiguration Configuration, HotelBookingDBContext db)
     {
         _key = Configuration["jwt:Serect-Key"];
         _issuer = Configuration["jwt:Issuer"];

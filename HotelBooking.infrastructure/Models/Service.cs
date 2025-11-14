@@ -15,5 +15,7 @@ public partial class Service
 
     public string? Additional { get; set; }
 
-    public virtual ICollection<RoomService> RoomServices { get; set; } = new List<RoomService>();
+    public decimal Price { get; set; }
+
+    public virtual ICollection<BookingService> BookingServices { get; set; } = new List<BookingService>();
 }

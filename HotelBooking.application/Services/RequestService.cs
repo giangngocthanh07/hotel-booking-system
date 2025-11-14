@@ -12,13 +12,13 @@ public interface IUpgradeRequestService
 
 public class UpgradeRequestService : IUpgradeRequestService
 {
-    HotelBookingContext _context;
+    HotelBookingDBContext _context;
     private readonly IUpgradeRequestRepository _upgradeRequestRepo;
     private readonly IUserRepository _userRepo;
     private readonly IUserRoleRepository _userRoleRepo;
     private readonly IUnitOfWork _unitOfWork;
 
-    public UpgradeRequestService(HotelBookingContext context, IUpgradeRequestRepository upgradeRequestRepo, IUserRepository userRepo, IUserRoleRepository userRoleRepo, IUnitOfWork unitOfWork)
+    public UpgradeRequestService(HotelBookingDBContext context, IUpgradeRequestRepository upgradeRequestRepo, IUserRepository userRepo, IUserRoleRepository userRoleRepo, IUnitOfWork unitOfWork)
     {
         _context = context;
         _upgradeRequestRepo = upgradeRequestRepo;

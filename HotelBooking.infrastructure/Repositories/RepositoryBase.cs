@@ -16,10 +16,10 @@ public interface IRepository<T> where T : class
 
 public class Repository<T> : IRepository<T> where T : class
 {
-    protected readonly HotelBookingContext _HBcontext;
+    protected readonly HotelBookingDBContext _HBcontext;
     protected readonly DbSet<T> _dbSet;
 
-    public Repository(HotelBookingContext HBcontext)
+    public Repository(HotelBookingDBContext HBcontext)
     {
         _HBcontext = HBcontext;
         _dbSet = _HBcontext.Set<T>();

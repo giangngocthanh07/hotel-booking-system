@@ -10,8 +10,8 @@ public class AmenityDTO
     public bool IsDeleted { get; set; } = false;
 
     // Parse từ Additional JSON
-    
+
     [Required(ErrorMessage = "Icon class is required")]
     public string IconClass { get; set; } = null!;
-    public string? IconColor { get; set; }
+    public string? IconColor { get; set; } = "blue";
 }

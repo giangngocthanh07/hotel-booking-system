@@ -1,4 +1,5 @@
 using System.Text.Json;
+using HotelBooking.application.Interfaces;
 using HotelBooking.infrastructure.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,20 +12,37 @@ public interface IHotelService
     public Task<ApiResponse<AmenityDTO>> CreateAmenityAsync(AmenityCreateOrUpdateDTO newAmenity);
     public Task<ApiResponse<AmenityDTO>> UpdateAmenityAsync(int id, AmenityCreateOrUpdateDTO amenity);
     public Task<ApiResponse<bool>> DeleteAmenityAsync(int id);
+    public Task<ApiResponse<List<CityDTO>>> GetAllCitiesAsync();
+    public Task<ApiResponse<CreateHotelResponseDTO>> PostHotelAsync(CreateHotelDTO newHotel, int ownerId);
+
+    public Task<ApiResponse<List<PolicyTypeWithPoliciesDTO>>> GetAllPolicyTypesWithPoliciesAsync();
+    // public Task<ApiResponse<List<PolicyDTO>>> GetAllPoliciesByTypeAsync(int policyTypeId);
+
+    public Task<ApiResponse<UploadResultDTO>> TestUploadImageToCloudinaryAsync(UploadFileDTO file, int userId);
 }
 
 public class HotelService : IHotelService
 {
-    public HotelBookingContext _context;
+    public HotelBookingDBContext _context;
     private readonly IHotelRepository _hotelRepository;
     private readonly IAmenityRepository _amenityRepository;
+    private readonly ICityRepository _cityRepository;
+    private readonly IPolicyTypeRepository _policyTypeRepository;
+    private readonly IPolicyRepository _policyRepository;
+    private readonly IImageHelper _imageHelper;
+    private readonly IPhotoService _photoService;
     public IUnitOfWork _dbu;
 
-    public HotelService(HotelBookingContext context, IHotelRepository hotelRepository, IAmenityRepository amenityRepository, IUnitOfWork dbu)
+    public HotelService(HotelBookingDBContext context, IHotelRepository hotelRepository, IAmenityRepository amenityRepository, ICityRepository cityRepository, IPolicyTypeRepository policyTypeRepository, IPolicyRepository policyRepository, IImageHelper imageHelper, IPhotoService photoService, IUnitOfWork dbu)
     {
         _context = context;
         _hotelRepository = hotelRepository;
         _amenityRepository = amenityRepository;
+        _cityRepository = cityRepository;
+        _policyTypeRepository = policyTypeRepository;
+        _policyRepository = policyRepository;
+        _imageHelper = imageHelper;
+        _photoService = photoService;
         _dbu = dbu;
     }
 
@@ -82,6 +100,7 @@ public class HotelService : IHotelService
             return new ApiResponse<List<AmenityDTO>>
             {
                 StatusCode = StatusCodeResponse.Success,
+                Message = MessageResponse.UPDATE_SUCCESSFULLY,
                 Content = result
             };
         }
@@ -164,7 +183,7 @@ public class HotelService : IHotelService
                 };
 
             // Người dùng mà đổi tên trùng với tên của 1 tiện ích khác thì cũng không cho phép
-            var nameExists = await _amenityRepository.AnyAsync(a => a.Id != id && a.Name.ToLower() == amenity.Name.ToLower() && a.IsDeleted == false);
+            var nameExists = await _amenityRepository.AnyAsync(a => a.Id != id && a.Name.ToLower() == amenity.Name.ToLower());
             if (nameExists) return new ApiResponse<AmenityDTO>
             {
                 StatusCode = StatusCodeResponse.Conflict,
@@ -245,5 +264,428 @@ public class HotelService : IHotelService
     }
     #endregion
 
-    
+    #region 
+    public async Task<ApiResponse<List<CityDTO>>> GetAllCitiesAsync()
+    {
+        try
+        {
+            List<CityDTO> result = new List<CityDTO>();
+
+            var cities = await _cityRepository.GetAllAsync();
+
+            if (cities == null || cities.Count() == 0)
+            {
+                return new ApiResponse<List<CityDTO>>
+                {
+                    StatusCode = StatusCodeResponse.NotFound,
+                    Message = MessageResponse.EMPTY_LIST,
+                    Content = null
+                };
+            }
+
+            foreach (var city in cities)
+            {
+                var additional = JsonSerializer.Deserialize<Dictionary<string, string>>(city.Additional ?? "{}");
+
+                result.Add(new CityDTO
+                {
+                    Id = city.Id,
+                    Name = city.Name,
+                });
+            }
+
+            return new ApiResponse<List<CityDTO>>
+            {
+                StatusCode = StatusCodeResponse.Success,
+                Message = MessageResponse.UPDATE_SUCCESSFULLY,
+                Content = result
+            };
+        }
+        catch (Exception)
+        {
+            return new ApiResponse<List<CityDTO>>
+            {
+                StatusCode = StatusCodeResponse.Error,
+                Message = MessageResponse.ERROR_IN_SERVER,
+                Content = null
+            };
+        }
+    }
+    #endregion
+
+    #region POST HOTEL (Basic Info + Amenities + Images)
+    // =============== ĐĂNG TẢI KHÁCH SẠN MỚI ================
+    public async Task<ApiResponse<CreateHotelResponseDTO>> PostHotelAsync(CreateHotelDTO newHotel, int ownerId)
+    {
+        try
+        {
+            // Bước 1: Tạo Hotel trước
+            var hotel = new Hotel
+            {
+                Name = newHotel.Name,
+                Address = newHotel.Address,
+                Description = newHotel.Description,
+                CoverImageUrl = null,
+                OwnerId = ownerId,
+                CreatedAt = DateTime.UtcNow,
+                IsVerified = true,  // mặc định là true, sau này có thể thêm chức năng verify
+                Status = "Active",
+                IsDeleted = false,
+                CityId = newHotel.CityId,
+                CountryId = null
+            };
+
+            await _hotelRepository.AddAsync(hotel);
+            await _dbu.SaveChangesAsync();
+
+            int hotelId = hotel.Id;
+
+            // Bước 2: Upload ảnh
+            if (newHotel.CoverFile != null)
+            {
+                var coverUrl = await _photoService.UploadHotelCoverImageAsync(newHotel.CoverFile, ownerId, hotelId);
+                hotel.CoverImageUrl = coverUrl;
+            }
+
+            // Ảnh chính
+            if (newHotel.MainFile != null)
+            {
+                var mainUrl = await _photoService.UploadHotelMainImageAsync(newHotel.MainFile, ownerId, hotel.Id);
+                _context.HotelImages.Add(new HotelImage
+                {
+                    HotelId = hotel.Id,
+                    ImageUrl = mainUrl,
+                    IsDeleted = false
+                });
+            }
+
+            // 4 ảnh phụ
+            if (newHotel.SubFiles != null)
+            {
+                foreach (var file in newHotel.SubFiles)
+                {
+                    var subUrl = await _photoService.UploadHotelSubImageAsync(file, ownerId, hotel.Id);
+                    _context.HotelImages.Add(new HotelImage
+                    {
+                        HotelId = hotel.Id,
+                        ImageUrl = subUrl,
+                        IsDeleted = false
+                    });
+                }
+            }
+
+            // Bước 3: Lưu Amenities
+            foreach (var amenityId in newHotel.AmenityIds)
+            {
+                _context.HotelAmenities.Add(new HotelAmenity
+                {
+                    HotelId = hotel.Id,
+                    AmenityId = amenityId
+                });
+            }
+
+            // Bước 4: Update lại Hotel + SaveChanges
+            _context.Hotels.Update(hotel);
+            await _dbu.SaveChangesAsync();
+
+            return new ApiResponse<CreateHotelResponseDTO>
+            {
+                StatusCode = StatusCodeResponse.Success,
+                Message = MessageResponse.CREATE_SUCCESSFULLY,
+                Content = new CreateHotelResponseDTO
+                {
+                    HotelId = hotel.Id,
+                    Name = hotel.Name
+                }
+            };
+        }
+        catch (Exception)
+        {
+            return new ApiResponse<CreateHotelResponseDTO>
+            {
+                StatusCode = StatusCodeResponse.Error,
+                Message = MessageResponse.ERROR_IN_SERVER,
+                Content = null
+            };
+        }
+    }
+
+    #endregion
+
+    #region MANAGE POLICIES
+    // =============== ĐỌC, THÊM, SỬA, XÓA CHÍNH SÁCH CHO KHÁCH SẠN ================
+
+    // public async Task<int> GetPolicyTypeId
+
+    // public async Task<PolicyTypeDTO> GetPolicyTypeByIdAsync(int id)
+    // {
+    //    var policyType = await _context.policyTypesRepo.GetByIdAsync(id);
+    //    if (policyType == null) return null;
+    //    return new PolicyTypeDTO
+    //    {
+    //        Id = policyType.Id,
+    //        Name = policyType.Name,
+    //        IsDeleted = false
+    //    };
+    // }
+
+    public async Task<ApiResponse<List<PolicyTypeWithPoliciesDTO>>> GetAllPolicyTypesWithPoliciesAsync()
+    {
+        var types = await _context.PolicyTypes
+            .Include(pt => pt.Policies.Where(p => p.IsDeleted == false)) // lấy luôn policies còn hiệu lực
+            .ToListAsync();
+
+        if (!types.Any())
+        {
+            return new ApiResponse<List<PolicyTypeWithPoliciesDTO>>
+            {
+                StatusCode = StatusCodeResponse.NotFound,
+                Message = MessageResponse.EMPTY_LIST,
+                Content = null
+            };
+        }
+
+        var result = types.Select(t => new PolicyTypeWithPoliciesDTO
+        {
+            Id = t.Id,
+            Name = t.TypeName,
+            Policies = t.Policies.Select(p => new PolicyDTO
+            {
+                Name = p.Name,
+                Description = p.Description ?? "",
+                PolicyTypeId = p.PolicyTypeId,
+            }).ToList()
+        }).ToList();
+
+        return new ApiResponse<List<PolicyTypeWithPoliciesDTO>>
+        {
+            StatusCode = StatusCodeResponse.Success,
+            Content = result
+        };
+    }
+
+    // public async Task<ApiResponse<List<PolicyDTO>>> GetAllPoliciesByTypeAsync(int policyTypeId)
+    // {
+
+    //     if (policyTypeId <= 0)
+    //     {
+    //         return new ApiResponse<List<PolicyDTO>>
+    //         {
+    //             StatusCode = StatusCodeResponse.BadRequest,
+    //             Message = MessageResponse.NOT_FOUND,
+    //             Content = null
+    //         };
+    //     }
+
+    //     // Query luôn join PolicyType
+    //     var policies = await _context.Policies
+    //         .Include(p => p.PolicyType)
+    //         .Where(p => p.PolicyTypeId == policyTypeId && p.IsDeleted == false)
+    //         .ToListAsync();
+
+    //     if (!policies.Any())
+    //     {
+    //         return new ApiResponse<List<PolicyDTO>>
+    //         {
+    //             StatusCode = StatusCodeResponse.NotFound,
+    //             Message = MessageResponse.EMPTY_LIST,
+    //             Content = null
+    //         };
+    //     }
+
+    //     var result = policies.Select(policy => new PolicyDTO
+    //     {
+    //         Name = policy.Name,
+    //         Description = policy.Description ?? "",
+    //         PolicyTypeId = policy.PolicyTypeId,
+    //     }).ToList();
+
+    //     return new ApiResponse<List<PolicyDTO>>
+    //     {
+    //         StatusCode = StatusCodeResponse.Success,
+    //         Content = result
+    //     };
+
+    // Test: Up ảnh lên Cloudinary vào folder có mã userId
+    public async Task<ApiResponse<UploadResultDTO>> TestUploadImageToCloudinaryAsync(UploadFileDTO file, int userId)
+    {
+        var uploadResult = new UploadResultDTO();
+
+        var uploadResponse = await _photoService.UploadPhotoAsync(file, userId);
+        var storedFileName = uploadResponse;
+
+        if (storedFileName == null)
+        {
+            uploadResult.Uploaded = false;
+            uploadResult.FileName = file.FileName;
+            uploadResult.StoredFileName = null;
+        }
+        else
+        {
+            uploadResult.Uploaded = true;
+            uploadResult.FileName = file.FileName;
+            uploadResult.StoredFileName = storedFileName;
+        }
+
+        return new ApiResponse<UploadResultDTO>
+        {
+            StatusCode = StatusCodeResponse.Success,
+            Message = uploadResult.Uploaded ? MessageResponse.UPDATE_SUCCESSFULLY : MessageResponse.UPDATE_FAILED,
+            Content = uploadResult
+        };
+    }
 }
+
+
+#endregion
+
+
+
+// #region CREATE, UPDATE, DELETE HOTEL
+// // =============== TẠO, SỬA, XÓA KHÁCH SẠN ================
+// public async Task<ApiResponse<int>> CreateHotelAsync(CreateHotelDTO dto, int userId)
+// {
+//     await using var transaction = await _context.Database.BeginTransactionAsync();
+
+//     try
+//     {
+//         // 🏨 Bước 1: Tạo Hotel trước
+//         var hotel = new Hotel
+//         {
+//             Name = dto.Name,
+//             Address = dto.Address,
+//             Description = dto.Description,
+//             CoverImageUrl = null,
+//             OwnerId = userId,
+//             CreatedAt = DateTime.UtcNow,
+//             IsVerified = true,  // mặc định là true, sau này có thể thêm chức năng verify
+//             Status = "Active",
+//             IsDeleted = false,
+//             CityId = dto.CityId,
+//             CountryId = null
+//         };
+
+//         _context.Hotels.Add(hotel);
+//         await _context.SaveChangesAsync(); // sinh HotelId
+
+//         // 🏨 Bước 2: Upload ảnh
+//         // Cover image (ảnh bìa) vẫn lưu trực tiếp vào Hotels
+//         if (dto.CoverFile != null)
+//         {
+//             var coverUrl = await _imageHelper.UploadAsync(dto.CoverFile, userId, hotel.Id, "cover");
+//             hotel.CoverImageUrl = coverUrl;
+//         }
+
+//         if (dto.MainFile != null)
+//             var mainUrl = await _imageHelper.UploadAsync(dto.MainFile, userId, hotel.Id, "main");
+//         _context.HotelImages.Add(new HotelImage
+//         {
+//             HotelId = hotel.Id,
+//             ImageUrl = mainUrl,
+//             IsDeleted = false
+//         });
+//         if (dto.SubFiles != null)
+//         {
+//             int index = 1;
+//             foreach (var file in dto.SubFiles)
+//             {
+//                 var subUrl = await _imageHelper.UploadAsync(file, userId, hotel.Id, $"sub{index}");
+//                 _context.HotelImages.Add(new HotelImage
+//                 {
+//                     HotelId = hotel.Id,
+//                     ImageUrl = subUrl,
+//                     IsDeleted = false
+//                 });
+//                 index++;
+//             }
+//         }
+
+//         // 🏨 Bước 3: Lưu Policies
+//         if (dto.PolicyIds != null && dto.PolicyIds.Any())
+//         {
+//             foreach (var policyId in dto.PolicyIds)
+//             {
+//                 _context.HotelPolicies.Add(new HotelPolicy
+//                 {
+//                     HotelId = hotel.Id,
+//                     PolicyId = policyId,
+//                     CreatedAt = DateTime.UtcNow
+//                 });
+//             }
+//         }
+
+//         // 🏨 Bước 4: Lưu Amenities
+//         foreach (var amenityId in dto.AmenityIds)
+//         {
+//             _context.HotelAmenities.Add(new HotelAmenity
+//             {
+//                 HotelId = hotel.Id,
+//                 AmenityId = amenityId
+//             });
+//         }
+
+//         // 🏨 Bước 5: Update lại Hotel + SaveChanges
+//         _context.Hotels.Update(hotel);
+//         await _context.SaveChangesAsync();
+
+//         // Commit transaction nếu tất cả đều thành công
+//         await transaction.CommitAsync();
+//         return new ApiResponse<int>
+//         {
+//             StatusCode = StatusCodeResponse.Success,
+//             Message = MessageResponse.CREATE_SUCCESSFULLY,
+//             Content = hotel.Id
+//         };
+//     }
+//     catch (Exception ex)
+//     {
+//         // Rollback transaction nếu có lỗi
+//         await transaction.RollbackAsync();
+//         return new ApiResponse<int>
+//         {
+//             StatusCode = StatusCodeResponse.Error,
+//             Message = MessageResponse.ERROR_IN_SERVER,
+//             Content = 0
+//         };
+//     }
+
+// }
+// #endregion
+
+// DTO cho tiện ích khi tạo/sửa khách sạn
+// public class AmenityCreateOrUpdateDTO
+// {
+//     public string Name { get; set; } = "";
+//     public string? Description { get; set; }
+//     public string? IconClass { get; set; }
+//     public string? IconColor { get; set; }
+// }
+
+// // DTO cho chính sách khi tạo/sửa khách sạn
+// public class PolicyCreateOrUpdateDTO
+// {
+//     public string CheckIn { get; set; } = "";
+//     public string CheckOut { get; set; } = "";
+//     public string CancellationPolicy { get; set; } = "";
+// }
+
+// // DTO cho ảnh khách sạn khi tạo/sửa khách sạn
+// public class HotelImageCreateDTO
+// {
+//     public string ImageUrl { get; set; } = "";
+//     public bool IsCover { get; set; } = false;
+// }
+
+// // DTO tổng hợp cho việc tạo/sửa khách sạn
+// public class HotelCreateOrUpdateDTO
+// {
+//     public string Name { get; set; } = "";
+//     public string Address { get; set; } = "";
+//     public string City { get; set; } = "";
+//     public string Country { get; set; } = "";
+//     public string Description { get; set; } = "";
+//     public int StarRating { get; set; }
+//     public List<AmenityCreateOrUpdateDTO> Amenities { get; set; } = new();
+//     public PolicyCreateOrUpdateDTO? Policy { get; set; }
+//     public List<HotelImageCreateDTO> Images { get; set; } = new();
+// }

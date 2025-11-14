@@ -1,3 +1,5 @@
+@namespace HotelBooking.webapp.Components.Manage.Amenity
+
 <div class="col-md-8">
     <div class="card shadow-sm">
         <div class="card-header bg-light">
@@ -33,10 +35,10 @@
                                 <td>@amenity.Name</td>
                                 <td>@amenity.IconClass</td>
                                 <td>
-                                    <button class="btn btn-warning btn-sm me-2" @onclick="() => OnEdit.InvokeAsync(amenity)">
+                                    <button class="btn btn-warning btn-sm me-2" @onclick="() => OnEdit(amenity)">
                                         EDIT
                                     </button>
-                                    <button class="btn btn-danger btn-sm" @onclick="() => OnDelete.InvokeAsync(amenity.Id)">
+                                    <button class="btn btn-danger btn-sm" @onclick="() => OnDelete(amenity.Id)">
                                         DELETE
                                     </button>
                                 </td>
@@ -54,8 +56,19 @@
     public List<AmenityVM> AmenitiesList { get; set; } = new List<AmenityVM>();
 
     [Parameter]
-    public EventCallback<AmenityVM> OnEdit { get; set; }
+    public EventCallback<AmenityVM> EventOnEdit { get; set; }
+
+    public async Task OnEdit(AmenityVM amenity)
+    {
+        EventOnEdit.InvokeAsync(amenity);
+    }
+
     [Parameter]
-    public EventCallback<int> OnDelete { get; set; }
+    public EventCallback<int> EventOnDelete { get; set; }
+
+    public async Task OnDelete(int id)
+    {
+        EventOnDelete.InvokeAsync(id);
+    }
 
 }

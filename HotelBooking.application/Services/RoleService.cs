@@ -8,11 +8,11 @@ public interface IRoleService
 
 public class RoleService : IRoleService
 {
-    HotelBookingContext _context;
+    HotelBookingDBContext _context;
     private readonly IRoleRepository _roleRepository;
     IUnitOfWork _dbu;
 
-    public RoleService(HotelBookingContext context, IRoleRepository roleRepository, IUnitOfWork dbu)
+    public RoleService(HotelBookingDBContext context, IRoleRepository roleRepository, IUnitOfWork dbu)
     {
         _context = context;
         _roleRepository = roleRepository;

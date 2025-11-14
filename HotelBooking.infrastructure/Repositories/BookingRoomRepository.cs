@@ -7,7 +7,7 @@ public interface IBookingRoomRepository : IRepository<BookingRoom>
 
 public class BookingRoomRepository : Repository<BookingRoom>, IBookingRoomRepository
 {
-    public BookingRoomRepository(HotelBookingContext context) : base(context)
+    public BookingRoomRepository(HotelBookingDBContext context) : base(context)
     {
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using HotelBooking.application.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -31,56 +32,21 @@ namespace HotelBooking.api.Controllers
         public async Task<IActionResult> RegisterAdminAsync([FromBody] RegisterAdminDTO newAdmin)
         {
             var res = await _userService.RegisterAdmin(newAdmin);
-            if (res.IsSuccess)
-            {
-                return Ok(res);
-            }
-            else
-            {
-                return BadRequest(res.Message ?? MessageRegister.REGISTER_FAIL);
-            }
+            return ApiResponseHandlerHelper.HandleResponse(res);
         }
 
         [HttpPost("register-customer")]
         public async Task<IActionResult> RegisterCustomerAsync([FromBody] RegisterCustomerDTO newCustomer)
         {
             var res = await _userService.RegisterCustomer(newCustomer);
-            if (res.IsSuccess)
-            {
-                return Ok(res);
-            }
-            else
-            {
-                return BadRequest(res.Message ?? MessageRegister.REGISTER_FAIL);
-            }
+            return ApiResponseHandlerHelper.HandleResponse(res);
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult> LoginUserAsync([FromBody] LoginUserDTO userLogin)
+        public async Task<IActionResult> LoginUserAsync([FromBody] LoginUserDTO userLogin)
         {
             var res = await _userService.LoginUser(userLogin);
-
-            if (res == null)
-            {
-                return StatusCode(500, MessageLogin.ERROR_IN_SERVER);
-            }
-
-            if (res.Message == MessageLogin.USER_NOT_FOUND)
-            {
-                return NotFound(res.Message);
-            }
-            else if (res.Message == MessageLogin.PASSWORD_INCORRECT)
-            {
-                return BadRequest(res.Message);
-            }
-            else if (res.Message == MessageLogin.ERROR_IN_SERVER)
-            {
-                return StatusCode(500, res.Message);
-            }
-            else
-            {
-                return Ok(res); // lúc này res chứa cả Token, UserInfo, Roles, Message
-            }
+            return ApiResponseHandlerHelper.HandleResponse(res);
         }
 
         // [HttpPost("upgrade-request")]

@@ -12,7 +12,7 @@ public interface IUpgradeRequestRepository : IRepository<UpgradeRequest>
 
 public class UpgradeRequestRepository : Repository<UpgradeRequest>, IUpgradeRequestRepository
 {
-    public UpgradeRequestRepository(HotelBookingContext context) : base(context)
+    public UpgradeRequestRepository(HotelBookingDBContext context) : base(context)
     {
     }
 

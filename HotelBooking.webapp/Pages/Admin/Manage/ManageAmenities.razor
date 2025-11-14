@@ -1,6 +1,9 @@
 @page "/admin/manages/manage-amenities"
 @using System.Text.Json
 
+@namespace HotelBooking.webapp.Pages.Admin.Manage
+@using HotelBooking.WebApp.Components.Manage.Amenity
+
 @layout AdminLayout
 @inject IHttpClientFactory _httpClientFactory
 @inject ISnackbar Snackbar
@@ -10,50 +13,10 @@
 
     <div class="row">
         <!-- Form thêm/sửa bên trái -->
-        @* <div class="col-md-4">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                        @(SelectedAmenity.Id == 0 ? "Add New Amenity" : "Edit Amenity")
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <EditForm Model="@SelectedAmenity" OnValidSubmit="SaveOrUpdateAmenity">
-                        <DataAnnotationsValidator />
-                        @* <ValidationSummary /> *@
-
-        @* <div class="mb-3">
-                            <label class="form-label">Name</label>
-                            <InputText class="form-control" @bind-Value="SelectedAmenity.Name" />
-                            <ValidationMessage For="@(() => SelectedAmenity.Name)" class="text-danger"/>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Icon CSS (FontAwesome class)</label>
-                            <input type="text" class="form-control" @bind-Value="SelectedAmenity.IconClass" @bind-Value:event="oninput"
-                               placeholder="fa fa-wifi" />
-                            <ValidationMessage For="@(() => SelectedAmenity.IconClass)" class="text-danger"/>
-                            @if (!string.IsNullOrWhiteSpace(SelectedAmenity.IconClass))
-                            {
-                                <div class="mt-2">
-                                    Preview: <i class="@SelectedAmenity.IconClass fa-2x text-primary"></i>
-                                </div>
-                            }
-                        </div>
-
-                        <div class="d-flex">
-                            <button type="submit" class="btn btn-success me-2 w-50">
-                                @(SelectedAmenity.Id == 0 ? "SAVE" : "UPDATE")
-                            </button>
-                        </div>
-                    </EditForm>
-                </div>
-            </div>
-        </div>  *@
         <AmenityCreateOrUpdateCard AmenityParam="@SelectedAmenity" OnSaveUpdate="@SaveOrUpdateAmenity" />
 
         <!-- Bảng danh sách bên phải -->
-        <ListAmenitiesCard AmenitiesList="@Amenities" OnEdit="@EditAmenity" OnDelete="@DeleteAmenity" />
+        <ListAmenitiesCard AmenitiesList="@Amenities" EventOnEdit="@EditAmenity" EventOnDelete="@DeleteAmenity" />
 
     </div>
 </div>
@@ -79,6 +42,7 @@
         if (apiResponse != null && apiResponse.StatusCode == StatusCodeResponse.Success && apiResponse.Content != null)
         {
             Amenities = apiResponse.Content;
+
         }
         else
         {
@@ -87,23 +51,36 @@
         }
     }
 
-    private void EditAmenity(AmenityVM amenity)
+    private async Task EditAmenity(AmenityVM amenity)
     {
-        SelectedAmenity = new AmenityVM
+        var findAmenity = Amenities.Find(amenityInList => amenityInList.Id == amenity.Id);
+
+        if (findAmenity != null)
         {
-            Id = amenity.Id,
-            Name = amenity.Name,
-            Description = amenity.Description,
-            IconClass = amenity.IconClass,
-        };
+            // Tạo bản sao để hiển thị lên form (tránh sửa trực tiếp list)
+            SelectedAmenity = new AmenityVM
+            {
+                Id = findAmenity.Id,
+                Name = findAmenity.Name,
+                Description = findAmenity.Description,
+                IconClass = findAmenity.IconClass
+            };
+        }
+
     }
 
-    private async Task SaveOrUpdateAmenity(AmenityVM amenity)
+
+    private async Task SaveOrUpdateAmenity()
     {
-        if (amenity.Id == 0)
+        if (SelectedAmenity == null)
+        {
+            return;
+        }
+
+        if (SelectedAmenity.Id == 0)
         {
             // TODO: gọi API POST tạo mới
-            var response = await _httpClient.PostAsJsonAsync("hotel/create-amenity", amenity);
+            var response = await _httpClient.PostAsJsonAsync("hotel/create-amenity", SelectedAmenity);
 
             var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<AmenityVM>>();
 
@@ -113,7 +90,7 @@
         else
         {
             // TODO: gọi API PUT cập nhật
-            var response = await _httpClient.PutAsJsonAsync($"hotel/update-amenity/{amenity.Id}", amenity);
+            var response = await _httpClient.PutAsJsonAsync($"hotel/update-amenity/{SelectedAmenity.Id}", SelectedAmenity);
 
             var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<AmenityVM>>();
 
@@ -129,12 +106,28 @@
         // TODO: gọi API DELETE /hotel/amenities/{id}
         var response = await _httpClient.DeleteAsync($"hotel/delete-amenity/{id}");
 
-        var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
-        SnackbarHelper.Show(Snackbar, apiResponse?.StatusCode ?? "Error", apiResponse?.Message);
+        if (response.IsSuccessStatusCode)
+        {
+            // xóa khỏi list hiện tại
+            Amenities.RemoveAll(a => a.Id == id);
 
-        await GetAllAmenities();
+            // ép re-render
+            StateHasChanged();
+        }
+
+        // var content = await response.Content.ReadAsStringAsync();
+
+        // Console.WriteLine($"Delete API Response: {response.StatusCode} - {content}");
+
+        // Vì content trả về là true, là bool
+
+
+        var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+        SnackbarHelper.Show(Snackbar, apiResponse?.StatusCode ?? "Error", apiResponse?.Message);
 
         // Reset form về Add New
         SelectedAmenity = new AmenityVM();
+
+
     }
 }

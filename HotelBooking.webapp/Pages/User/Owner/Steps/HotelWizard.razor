@@ -1,61 +1,169 @@
 @page "/hotel-wizard"
+@using HotelBooking.webapp.Services
+@inject IHttpClientFactory _httpClientFactory
+@inject HotelFormState FormState
+@inject ISnackbar Snackbar
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+
 @layout OwnerLayout
 
-<div class="d-flex justify-content-center mt-4">
+<MudPaper Class="pa-4 mt-4" Style="max-width:900px;margin:auto;">
+    <MudStepper @bind-ActiveIndex="_activeStep">
+        <ChildContent>
+            <MudStep Title="Basic Info" SecondaryText="Thông tin cơ bản" />
+            <MudStep Title="Amenities" SecondaryText="Tiện ích" />
+            @* <MudStep Title="Policies" SecondaryText="Chính sách" /> *@
+            <MudStep Title="Images" SecondaryText="Ảnh khách sạn" />
+        </ChildContent>
+        <ActionContent Context="stepper">
+            <!-- Nút điều hướng sẽ đặt ở đây -->
+            <!-- Nút Previous -->
+            <!-- Nút Next / Complete -->
+            <!-- Nút Reset -->
+            <!-- Hiển thị nút Reset ở tất cả các bước -->
+        </ActionContent>
+    </MudStepper>
 
+    <EditForm Model="@FormState" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
 
-    <MudPaper Style="width:900px" Class="pa-4">
-        <MudStepper NonLinear ShowResetButton OnPreviewInteraction="OnPreviewInteraction">
-            <MudStep Title="Basic Info" SecondaryText="Thông tin cơ bản">
-                <StepBasicInfo @ref="_stepBasic" />
-            </MudStep>
+        <div class="mt-4">
+            @if (_activeStep == 0)
+            {
+                <StepBasicInfo />
+            }
+            else if (_activeStep == 1)
+            {
+                <StepAmenities />
+            }
+            @* else if (_activeStep == 2)
+            {
+                <StepPolicies />
+            } *@
+            else if (_activeStep == 2)
+            {
+                <StepImages />
+            }
+        </div>
 
-            <MudStep Title="Amenities" SecondaryText="Tiện ích">
-                <StepAmenities @ref="_stepAmenities" />
-            </MudStep>
+        <!-- Điều khiển -->
+        <div class="d-flex justify-content-between mt-4">
+            <MudButton Variant="Variant.Outlined" Disabled="@(_activeStep == 0)" OnClick="PrevStep">
+                PREVIOUS
+            </MudButton>
 
-            <MudStep Title="Policies" SecondaryText="Chính sách">
-                <StepPolicies @ref="_stepPolicy" />
-            </MudStep>
+            <div>
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="HandleReset" Class="me-2">
+                    <MudIcon Icon="@Icons.Material.Filled.Restore" /> RESET
+                </MudButton>
 
-            <MudStep Title="Images" SecondaryText="Ảnh khách sạn">
-                <StepImages @ref="_stepImages" />
-            </MudStep>
-        </MudStepper>
-    </MudPaper>
-</div>
+                @if (_activeStep < 2)
+                {
+                    <MudButton Variant="Variant.Filled" OnClick="NextStep">
+                        NEXT
+                    </MudButton>
+                }
+                else
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit">
+                        COMPLETE
+                    </MudButton>
+                }
+            </div>
+        </div>
+    </EditForm>
+</MudPaper>
 
 @code {
-    private StepBasicInfo? _stepBasic;
-    private StepAmenities? _stepAmenities;
-    private StepPolicies? _stepPolicy;
-    private StepImages? _stepImages;
+    private MudStepper? _stepper;
+    private int _index;
+    private int _activeStep = 0;
+    HttpClient? _httpClient;
 
-    private async Task OnPreviewInteraction(StepperInteractionEventArgs arg)
+    private bool _isSubmitting = false;
+
+    protected override async Task OnInitializedAsync()
     {
-        if (arg.Action == StepAction.Complete)
+        _httpClient = _httpClientFactory.CreateClient("HotelBookingAPI");
+        // Gọi API để lấy danh sách amenities
+        await FormState.LoadAmenitiesAsync();
+        // Chỉ gọi API nếu danh sách thành phố đang rỗng
+        if (FormState.BasicInfo.Cities == null || !FormState.BasicInfo.Cities.Any())
         {
-            switch (arg.StepIndex)
-            {
-                case 0:
-                    if (!(_stepBasic?.Validate() ?? false))
-                        arg.Cancel = true;
-                    break;
-                case 1:
-                    if (!(_stepAmenities?.Validate() ?? false))
-                        arg.Cancel = true;
-                    break;
-                case 2:
-                    if (!(_stepPolicy?.Validate() ?? false))
-                        arg.Cancel = true;
-                    break;
-                case 3:
-                    if (!(_stepImages?.Validate() ?? false))
-                        arg.Cancel = true;
-                    break;
-            }
+            // Gọi hàm trong FormState để lấy dữ liệu
+            await FormState.LoadCitiesAsync();
         }
-        await Task.CompletedTask;
+
+
+        // Gọi API lấy toàn bộ PolicyType (Hủy phòng, Nhận phòng, Trả phòng)
+        
     }
 
+    private void NextStep()
+    {
+        // validate từng step trước khi Next
+        bool valid = _activeStep switch
+        {
+            0 => FormState.ValidateBasicInfo(),
+            1 => FormState.ValidateAmenities(),
+            // 2 => FormState.ValidatePolicy(),
+            2 => FormState.ValidateImages(),
+            _ => true
+        };
+
+        if (valid && _activeStep < 2)
+        {
+            _activeStep++;
+            // Console.WriteLine($"CheckInId={FormState.SelectedCheckInId}, CheckOutId={FormState.SelectedCheckOutId}, CancelId={FormState.SelectedCancellationId}"); 
+        }
+        else
+        {
+            Snackbar.Add("Vui lòng kiểm tra lại thông tin!", Severity.Error);
+            // Console.WriteLine($"CheckInId={FormState.SelectedCheckInId}, CheckOutId={FormState.SelectedCheckOutId}, CancelId={FormState.SelectedCancellationId}");
+        }
+    }
+
+    private void PrevStep()
+    {
+        if (_activeStep > 0)
+            _activeStep--;
+    }
+
+    private void HandleReset()
+    {
+        FormState.Reset();
+        _activeStep = 0;
+        Snackbar.Add("Form đã được reset", Severity.Info);
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (FormState.ValidateAll())
+        {
+            
+
+            _isSubmitting = true;
+            bool success = await FormState.Submit();
+
+            _isSubmitting = false;
+
+            // 
+            if (success)
+            {
+                Snackbar.Add("Gửi thành công!", Severity.Success);
+                FormState.Reset();
+                _activeStep = 0;
+            }
+            else
+            {
+                Snackbar.Add("Đã có lỗi xảy ra. Vui lòng thử lại!", Severity.Error);
+            }
+        }
+        else
+        {
+            Snackbar.Add("Vui lòng kiểm tra lại thông tin!", Severity.Error);
+        }
+
+        
+    }
 }

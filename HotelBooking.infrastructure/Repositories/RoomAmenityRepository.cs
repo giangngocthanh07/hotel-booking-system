@@ -4,5 +4,5 @@ public interface IRoomAmenityRepository : IRepository<RoomAmenity> { }
 
 public class RoomAmenityRepository : Repository<RoomAmenity>, IRoomAmenityRepository
 {
-    public RoomAmenityRepository(HotelBookingContext context) : base(context) { }
+    public RoomAmenityRepository(HotelBookingDBContext context) : base(context) { }
 }

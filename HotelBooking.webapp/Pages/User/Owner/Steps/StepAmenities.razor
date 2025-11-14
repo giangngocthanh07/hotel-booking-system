@@ -1,31 +1,38 @@
-@foreach (var amenity in _amenities)
-{
-    <MudCheckBox T="bool" @bind-Value="amenity.IsSelected" Label="@amenity.Name" />
-}
-@if (!Validate())
-{
-    <MudText Color="Color.Error">Vui lòng chọn ít nhất 1 tiện ích</MudText>
-}
+@using HotelBooking.webapp.Services
+@inject HotelFormState FormState
 
-@code {
-    private List<AmenityDto> _amenities = new()
-{
-new() { Id = 1, Name = "Wifi" },
-new() { Id = 2, Name = "Swimming Pool" },
-new() { Id = 3, Name = "Gym" }
-};
+<MudForm @ref="_form" Model="FormState.Amenities" Class="pa-2">
+    <MudText Typo="Typo.h6" Class="mb-3">Chọn các tiện ích (Amenities) cho khách sạn của bạn:</MudText>
 
-    public bool Validate()
+    @if (!FormState.Amenities.Any())
     {
-        // Ít nhất 1 tiện ích được chọn
-        return _amenities.Any(a => a.IsSelected);
+        <MudText Color="Color.Warning">Không có tiện ích nào. Vui lòng liên hệ quản trị viên.</MudText>
+    }
+    else
+    {
+        <!-- Hiển thị danh sách amenities dưới dạng checkbox -->
+        @foreach (var amenity in FormState.Amenities)
+        {
+            <MudCheckBox T="bool" @bind-Value="amenity.IsSelected" Label="@amenity.Name" />
+        }
     }
 
-    public class AmenityDto
+    @if (!FormState.ValidateAmenities())
+    {
+        <MudText Color="Color.Error">Vui lòng chọn ít nhất 1 tiện ích</MudText>
+    }
+
+</MudForm>
+
+@code {
+    public MudForm? _form;
+
+    public class AmenityVM
     {
         public int Id { get; set; }
         public string Name { get; set; } = "";
 
-        public bool IsSelected { get; set; }
+        // Dùng cho UI chọn
+        public bool IsSelected { get; set; } = false;
     }
 }

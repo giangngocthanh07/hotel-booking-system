@@ -7,23 +7,23 @@ using Microsoft.EntityFrameworkCore;
 public interface IUserService
 {
     public Task<User?> GetByIdAsync(int id);
-    public Task<RegisterResponseDTO> RegisterAdmin(RegisterAdminDTO newAdmin);
-    public Task<RegisterResponseDTO> RegisterCustomer(RegisterCustomerDTO newCustomer);
-    public Task<LoginResponseDTO> LoginUser(LoginUserDTO userLogin);
+    public Task<ApiResponse<RegisterResponseDTO>> RegisterAdmin(RegisterAdminDTO newAdmin);
+    public Task<ApiResponse<RegisterResponseDTO>> RegisterCustomer(RegisterCustomerDTO newCustomer);
+    public Task<ApiResponse<LoginResponseDTO>> LoginUser(LoginUserDTO userLogin);
     public Task<bool> ApproveUpgradeToOwnerAsync(int requestId, int adminId);
     // public Task<bool> RejectUpgradeToOwnerAsync(int requestId, int adminId);
 }
 
 public class UserService : IUserService
 {
-    public HotelBookingContext _context;
+    public HotelBookingDBContext _context;
     private readonly IUserRepository _userRepository;
     private readonly IUserRoleRepository _userRoleRepository;
     private readonly IUpgradeRequestRepository _upgradeRequestRepository;
     public JwtAuthService _jwtAuthService;
     public IUnitOfWork _dbu;
 
-    public UserService(HotelBookingContext context, IUserRepository userRepository, IUserRoleRepository userRoleRepository, IUpgradeRequestRepository upgradeRequestRepository, JwtAuthService jwtAuthService, IUnitOfWork dbu)
+    public UserService(HotelBookingDBContext context, IUserRepository userRepository, IUserRoleRepository userRoleRepository, IUpgradeRequestRepository upgradeRequestRepository, JwtAuthService jwtAuthService, IUnitOfWork dbu)
     {
         _context = context;
         _userRepository = userRepository;
@@ -40,20 +40,24 @@ public class UserService : IUserService
         // lọc IsDeleted = false nếu bạn đang dùng soft delete
     }
 
-    public async Task<RegisterResponseDTO> RegisterAdmin(RegisterAdminDTO newAdmin)
+    public async Task<ApiResponse<RegisterResponseDTO>> RegisterAdmin(RegisterAdminDTO newAdmin)
     {
         try
         {
             var checkAdmin = await _userRepository.SingleOrDefaultAsync(admin => admin.Email == newAdmin.Email || admin.UserName == newAdmin.Username);
             if (checkAdmin != null)
             {
-                return new RegisterResponseDTO
+                return new ApiResponse<RegisterResponseDTO>
                 {
-                    IsSuccess = false,
+                    StatusCode = StatusCodeResponse.Conflict,
+                    Content = new RegisterResponseDTO
+                    {
+                        IsSuccess = false,
+
+                    },
                     Message = checkAdmin.UserName == newAdmin.Username ? MessageRegister.USERNAME_EXIST : MessageRegister.EMAIL_EXIST
                 };
             }
-            ;
 
             var user = new User
             {
@@ -72,7 +76,7 @@ public class UserService : IUserService
             await _userRepository.AddAsync(user);
             // Lưu thay đổi vào database
             await _dbu.SaveChangesAsync(); // Save to generate user.Id
-            // Thêm Role vào bảng UserRoles
+                                           // Thêm Role vào bảng UserRoles
             var userRole = new UserRole
             {
                 UserId = user.Id,
@@ -83,35 +87,50 @@ public class UserService : IUserService
             user.UserRoles.Add(userRole);
             await _dbu.SaveChangesAsync(); // Save again to save UserRole
 
-            return new RegisterResponseDTO
+            return new ApiResponse<RegisterResponseDTO>
             {
-                IsSuccess = true,
-                Message = MessageRegister.REGISTER_SUCCESS,
-                FullName = user.FullName,
-                Email = user.Email
+                StatusCode = StatusCodeResponse.Success,
+                Content = new RegisterResponseDTO
+                {
+                    IsSuccess = true,
+
+                    FullName = user.FullName,
+                    Email = user.Email
+                },
+
+                Message = MessageRegister.REGISTER_SUCCESS
             };
         }
         catch (Exception error)
         {
             Console.Write($@"n{error.Message}");
-            return new RegisterResponseDTO
+            return new ApiResponse<RegisterResponseDTO>
             {
-                IsSuccess = false,
-                Message = MessageRegister.REGISTER_FAIL
+                StatusCode = StatusCodeResponse.Error,
+                Content = new RegisterResponseDTO
+                {
+                    IsSuccess = false,
+
+                },
+                Message = MessageRegister.REGISTER_FAIL,
             };
         }
     }
 
-    public async Task<RegisterResponseDTO> RegisterCustomer(RegisterCustomerDTO newCustomer)
+    public async Task<ApiResponse<RegisterResponseDTO>> RegisterCustomer(RegisterCustomerDTO newCustomer)
     {
         try
         {
             var checkCustomer = await _userRepository.SingleOrDefaultAsync(customer => customer.Email == newCustomer.Email || customer.UserName == newCustomer.Username);
             if (checkCustomer != null)
             {
-                return new RegisterResponseDTO
+                return new ApiResponse<RegisterResponseDTO>
                 {
-                    IsSuccess = false,
+                    StatusCode = StatusCodeResponse.Conflict,
+                    Content = new RegisterResponseDTO
+                    {
+                        IsSuccess = false,
+                    },
                     Message = checkCustomer.UserName == newCustomer.Username ? MessageRegister.USERNAME_EXIST : MessageRegister.EMAIL_EXIST
                 };
             }
@@ -128,6 +147,7 @@ public class UserService : IUserService
                 DateOfBirth = null,
                 IsActive = true
             };
+
             // Thêm newUser vào User
             await _userRepository.AddAsync(user);
             await _dbu.SaveChangesAsync(); // Save to generate user.Id
@@ -144,53 +164,66 @@ public class UserService : IUserService
             // Lưu thay đổi vào database
             await _dbu.SaveChangesAsync();
 
-            return new RegisterResponseDTO
+            return new ApiResponse<RegisterResponseDTO>
             {
-                IsSuccess = true,
-                Message = MessageRegister.REGISTER_SUCCESS,
-                FullName = user.FullName,
-                Email = user.Email
+                StatusCode = StatusCodeResponse.Success,
+                Content = new RegisterResponseDTO
+                {
+                    IsSuccess = true,
+
+                    FullName = user.FullName,
+                    Email = user.Email
+                },
+                Message = MessageRegister.REGISTER_SUCCESS
             };
         }
         catch (Exception error)
         {
-            return new RegisterResponseDTO
+            return new ApiResponse<RegisterResponseDTO>
             {
-                IsSuccess = false,
+                StatusCode = StatusCodeResponse.Error,
+                Content = new RegisterResponseDTO
+                {
+                    IsSuccess = false,
+                },
                 Message = MessageRegister.REGISTER_FAIL
             };
         }
     }
 
-    public async Task<LoginResponseDTO> LoginUser(LoginUserDTO userLogin)
+    public async Task<ApiResponse<LoginResponseDTO>> LoginUser(LoginUserDTO userLogin)
     {
         try
         {
-            var user = await _userRepository.SingleOrDefaultAsync(u => u.UserName == userLogin.UsernameOrEmail || u.Email == userLogin.UsernameOrEmail);
+            var user = await _userRepository.GetUserWithRoles(u => u.UserName == userLogin.UsernameOrEmail || u.Email == userLogin.UsernameOrEmail);
             if (user == null)
             {
-                return new LoginResponseDTO { Message = MessageLogin.USER_NOT_FOUND };
+                return new ApiResponse<LoginResponseDTO> { StatusCode = StatusCodeResponse.NotFound, Message = MessageLogin.USER_NOT_FOUND, Content = null };
             }
 
             // Kiểm tra mật khẩu
             if (!PasswordHelper.VerifyPassword(userLogin.Password, user.PasswordHash))
             {
-                return new LoginResponseDTO { Message = MessageLogin.PASSWORD_INCORRECT };
+                return new ApiResponse<LoginResponseDTO> { StatusCode = StatusCodeResponse.NotFound, Message = MessageLogin.PASSWORD_INCORRECT, Content = null };
             }
             var token = _jwtAuthService.GenerateToken(user);
             var roles = user.UserRoles.Select(ur => ur.Role.Name).ToList();
-            return new LoginResponseDTO
+            return new ApiResponse<LoginResponseDTO>
             {
-                AccessToken = token,
-                FullName = user.FullName,
-                AvatarUrl = user.AvatarUrl,
-                Roles = roles,
-                Message = MessageLogin.LOGIN_SUCCESS
+                StatusCode = StatusCodeResponse.Success,
+                Message = MessageLogin.LOGIN_SUCCESS,
+                Content = new LoginResponseDTO
+                {
+                    AccessToken = token,
+                    FullName = user.FullName,
+                    AvatarUrl = user.AvatarUrl,
+                    Roles = roles,
+                }
             };
         }
         catch (Exception error)
         {
-            return new LoginResponseDTO { Message = MessageLogin.ERROR_IN_SERVER };
+            return new ApiResponse<LoginResponseDTO> { StatusCode = StatusCodeResponse.Error, Message = MessageLogin.ERROR_IN_SERVER, Content = null };
         }
     }
 
@@ -224,7 +257,7 @@ public class UserService : IUserService
             request.ApprovedAt = DateTime.Now;
             request.ApprovedBy = adminId;
 
-            _upgradeRequestRepository.UpdateAsync(request);
+            await _upgradeRequestRepository.UpdateAsync(request);
 
 
             await _dbu.SaveChangesAsync();

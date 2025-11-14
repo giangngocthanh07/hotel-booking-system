@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using HotelBooking.application.Helpers;
 
-namespace HotelBooking.api.Helpers
+namespace HotelBooking.application.Helpers
 {
     public static class ApiResponseHandlerHelper
     {

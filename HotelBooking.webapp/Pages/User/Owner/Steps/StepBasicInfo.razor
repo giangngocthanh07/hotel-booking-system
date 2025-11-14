@@ -1,25 +1,144 @@
-<MudForm @ref="_form" Model="_hotel">
-    <MudTextField @bind-Value="_hotel.Name" Label="Hotel Name" Required="true" />
-    <MudTextField @bind-Value="_hotel.Address" Label="Address" Required="true" />
-    <MudTextField @bind-Value="_hotel.City" Label="City" Required="true" />
-    <MudTextField @bind-Value="_hotel.Description" Label="Description" Lines="3" />
+@using HotelBooking.webapp.Services
+@using ZstdSharp.Unsafe
+@inject HotelFormState FormState
+
+<MudForm @ref="_form" Model="FormState.BasicInfo" Class="pa-2">
+    <!-- Hotel Name -->
+    <MudTextField @bind-Value="FormState.BasicInfo.Name" Label="Tên khách sạn" For="@(() => FormState.BasicInfo.Name)"
+        Required="true" Class="mb-3" />
+
+    <!-- City -->
+    <MudSelect T="int" Label="Thành phố" Variant="Variant.Outlined" @bind-Value="FormState.BasicInfo.CityId"
+        For="@(() => FormState.BasicInfo.CityId)" Required="true" Class="mb-3">
+
+        <MudSelectItem T="int" Value="0">Vui lòng chọn thành phố</MudSelectItem>
+
+        @foreach (var city in FormState.BasicInfo.Cities)
+        {
+            <MudSelectItem T="int" Value="city.Id">@city.Name</MudSelectItem>
+        }
+    </MudSelect>
+
+    <!-- Address: chỉ hiển thị khi đã chọn City -->
+    @if (FormState.BasicInfo.CityId > 0)
+    {
+        <MudTextField @bind-Value="FormState.BasicInfo.Address" Label="Địa chỉ" For="@(() => FormState.BasicInfo.Address)"
+            Required="true" Class="mb-3" />
+    }
+
+    <!-- Description -->
+    <MudTextField @bind-Value="FormState.BasicInfo.Description" Label="Mô tả"
+        For="@(() => FormState.BasicInfo.Description)" Lines="3" Class="mb-3" />
+
+    <!-- Cover Image Upload -->
+
+    @if (FormState.BasicInfo.CoverFile == null)
+    {
+        <MudPaper Class="pa-2 mb-3" Style="background:#FFF3CD; color:#856404; border:1px solid #ffeeba; border-radius:6px;">
+            Hãy chọn <b>1 ảnh bìa</b> cho khách sạn
+        </MudPaper>
+
+        <InputFile OnChange="HandleFileSelected" accept="image/*" Class="mb-3" />
+    }
+    else
+    {
+        <div style="position:relative; display:inline-block; margin-top:10px; width:200px; aspect-ratio:4/3;">
+            <MudTooltip Text="@($"{FormState.BasicInfo.CoverImageName} - {FormState.BasicInfo.CoverImageSize} KB")">
+                <img src="@FormState.BasicInfo.CoverImagePreviewUrl"
+                    style="width:100%; height:100%; object-fit:cover; border-radius:8px; border:2px solid #ddd;" />
+            </MudTooltip>
+
+            <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Error" Size="Size.Small"
+                Style="position:absolute; top:4px; right:4px; background:#fff; border-radius:50%; z-index:10;"
+                OnClick="@(() => RemoveCoverImage(FormState.BasicInfo.CoverFile))" />
+        </div>
+    }
 </MudForm>
 
 @code {
-    private MudForm? _form;
-    private HotelDto _hotel = new();
 
-    public bool Validate()
+    public MudForm? _form;
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
     {
-        _form?.Validate();
-        return _form?.IsValid ?? false;
+        var file = e.File;
+        if (file != null)
+        {
+            FormState.BasicInfo.CoverImageName = file.Name;
+            FormState.BasicInfo.CoverImageSize = file.Size / 1024;
+
+
+            // 1. Khởi tạo đối tượng
+            FormState.BasicInfo.CoverFile = new UploadFileVM
+            {
+                FileName = file.Name,
+                Size = file.Size,
+                ContentType = file.ContentType
+            };
+
+            using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024); 
+            var ms = new MemoryStream();
+
+            await stream.CopyToAsync(ms);
+
+            ms.Position = 0;
+
+            // Lưu file gốc để khi submit gửi sang BE
+
+            FormState.BasicInfo.CoverFile.Content = ms;
+
+            // 4. Tạo chuỗi Base64 để hiển thị preview (Fix 2)
+            var bytes = ms.ToArray();
+            FormState.BasicInfo.CoverImagePreviewUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(bytes)}";
+
+
+            ;
+        }
     }
 
-    public class HotelDto
+    private void RemoveCoverImage(UploadFileVM? file)
     {
+        FormState.BasicInfo.CoverImageName = null;
+        FormState.BasicInfo.CoverImageSize = 0;
+
+        FormState.BasicInfo.CoverImagePreviewUrl = null;
+
+        // Xoá cả preview và file gốc
+        FormState.BasicInfo.CoverFile = null;
+
+    }
+
+    public class HotelVM
+    {
+        [Required(ErrorMessage = "Vui lòng điền tên khách sạn!")]
         public string Name { get; set; } = "";
+
+        [Required(ErrorMessage = "Vui lòng điền địa chỉ!")]
+        [MinLength(10, ErrorMessage = "Địa chỉ phải có ít nhất 10 ký tự!")]
         public string Address { get; set; } = "";
-        public string City { get; set; } = "";
+
+        [Required(ErrorMessage = "Vui lòng chọn thành phố!")]
+        [Range(1, int.MaxValue, ErrorMessage = "Vui lòng chọn thành phố!")]
+        public int CityId { get; set; } = 0; // Lưu ID
+
+        // Danh sách nguồn
+        public List<CityVM> Cities { get; set; } = new();
+
+        [MinLength(20, ErrorMessage = "Mô tả phải có ít nhất 20 ký tự!")]
         public string Description { get; set; } = "";
+
+        [Required(ErrorMessage = "Vui lòng chọn ảnh bìa hợp lệ!")]
+        public UploadFileVM? CoverFile { get; set; }
+
+        public string? CoverImageName { get; set; }
+        public long CoverImageSize { get; set; }
+        public string? CoverImagePreviewUrl { get; set; }
+    }
+
+    public class CityVM
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public bool IsSelected { get; set; } = false;
     }
 }

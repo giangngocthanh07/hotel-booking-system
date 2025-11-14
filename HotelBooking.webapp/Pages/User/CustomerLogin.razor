@@ -80,10 +80,10 @@
             var response = await _httpClient.PostAsJsonAsync("Account/login", userLogin);
             if (response.IsSuccessStatusCode)
             {
-                var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponseDTO>();
-                if (loginResponse?.AccessToken != null)
+                var loginResponse = await response.Content.ReadFromJsonAsync<ApiResponse<LoginResponseDTO>>();
+                if (loginResponse?.Content.AccessToken != null)
                 {
-                    await ((CustomAuthStateProvider)AuthStateProvider).MarkUserAsAuthenticated(loginResponse.AccessToken);
+                    await ((CustomAuthStateProvider)AuthStateProvider).MarkUserAsAuthenticated(loginResponse.Content.AccessToken);
                     errorMessage = null;
                     _nav.NavigateTo("/", forceLoad: true);
                 }
