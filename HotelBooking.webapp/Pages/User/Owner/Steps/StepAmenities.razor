@@ -27,6 +27,16 @@
 @code {
     public MudForm? _form;
 
+    protected override async Task OnInitializedAsync()
+    {
+        FormState.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        FormState.OnChange -= StateHasChanged;
+    }
+
     public class AmenityVM
     {
         public int Id { get; set; }

@@ -109,6 +109,7 @@ namespace HotelBooking.api.Controllers
                 Description = newHotelRequest.Description,
                 CityId = newHotelRequest.CityId,
                 AmenityIds = newHotelRequest.AmenityIds,
+                PolicyIds = newHotelRequest.PolicyIds,
                 CoverFile = await _fileHelper.ConvertToUploadFileVM(newHotelRequest.CoverFile),
                 MainFile = await _fileHelper.ConvertToUploadFileVM(newHotelRequest.MainFile),
                 SubFiles = new List<UploadFileDTO>()

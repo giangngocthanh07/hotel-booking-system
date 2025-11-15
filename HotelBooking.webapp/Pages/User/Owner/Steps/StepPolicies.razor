@@ -1,94 +1,75 @@
-@* @using HotelBooking.webapp.Services
+@using HotelBooking.webapp.Services
+@using OneOf.Types
+@using TagLib.Ape
 @inject HotelFormState FormState
 
 <MudForm @ref="_form" Class="pa-2">
 
-    <!-- Check-in Policy -->
+    <h2 class="text-primary mb-4">Thiết lập chính sách Khách sạn</h2>
 
-    <InputSelect @bind-Value="FormState.SelectedCheckInId" class="form-select">
+    @if (FormState.IsLoading)
+    {
+        <p><em>Đang tải tất cả chính sách...</em></p>
+    }
+    else
+    {
+        <div classclass="row">
+            @foreach (var group in FormState.PolicyGroups)
+            {
+                <div class="col-md-6 mb-3">
+                    <div class="form-group">
+                        <label class="mb-2"><strong>@group.PolicyType.Name</strong></label>
 
-        <option value="">-- Chọn Check-in Policy --</option>
-        @foreach (var policy in CheckInPolicies)
-        {
-            <option value="@policy.Id">@policy.Name</option>
-        }
-    </InputSelect>
+                        @if (group.AvailablePolicies == null)
+                        {
+                            <p><em>Đang tải...</em></p>
+                        }
+                        else
+                        {
+                            <select class="form-control" @bind="group.SelectedPolicyId">
+                                <option value="0">-- Chọn @group.PolicyType.Name --</option>
+                                @foreach (var policy in group.AvailablePolicies)
+                                {
+                                    <option value="@policy.Id">@policy.Name</option>
+                                }
+                            </select>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
 
-    <!-- Check-out Policy -->
-
-    <InputSelect @bind-Value="FormState.SelectedCheckOutId" class="form-select">
-        <option value="">-- Chọn Check-out Policy --</option>
-        @foreach (var policy in CheckOutPolicies)
-        {
-            <option value="@policy.Id">@policy.Name</option>
-        }
-    </InputSelect>
-
-    <!-- Cancellation Policy -->
-
-    <InputSelect @bind-Value="FormState.SelectedCancellationId" class="form-select">
-        <option value="">-- Chọn Cancellation Policy --</option>
-        @foreach (var policy in CancellationPolicies)
-        {
-            <option value="@policy.Id">@policy.Name</option>
-        }
-    </InputSelect>
-
-    @if (!FormState.SelectedPolicyIds.Any())
+    @* @if (!FormState.PolicyGroups.Any())
     {
         <MudText Color="Color.Error">Vui lòng chọn ít nhất 1 policy</MudText>
-    }
+    } *@
 </MudForm>
 
 
 @code {
     public MudForm? _form;
-    public List<PolicyVM> CheckInPolicies { get; set; } = new();
-    public List<PolicyVM> CheckOutPolicies { get; set; } = new();
-    public List<PolicyVM> CancellationPolicies { get; set; } = new();
-
     protected override async Task OnInitializedAsync()
     {
-        var allTypes = await FormState.LoadAllPolicyTypesWithPoliciesAsync();
-
-        var checkInType = allTypes.FirstOrDefault(t => t.Id == 2);
-        if (checkInType != null)
-            CheckInPolicies = checkInType.Policies;
-            Console.WriteLine($"CheckInPolicies count={CheckInPolicies.Count}, first={CheckInPolicies.FirstOrDefault()?.Name}, id={CheckInPolicies.FirstOrDefault()?.Id}");
-
-        var checkOutType = allTypes.FirstOrDefault(t => t.Id == 3);
-        if (checkOutType != null)
-            CheckOutPolicies = checkOutType.Policies;
-            Console.WriteLine($"CheckOutPolicies count={CheckOutPolicies.Count}, first={CheckOutPolicies.FirstOrDefault()?.Name}, id={CheckOutPolicies.FirstOrDefault()?.Id}");
-
-        var cancellationType = allTypes.FirstOrDefault(t => t.Id == 1);
-        if (cancellationType != null)
-            CancellationPolicies = cancellationType.Policies;
-            Console.WriteLine($"CancellationPolicies count={CancellationPolicies.Count}, first={CancellationPolicies.FirstOrDefault()?.Name}, id={CancellationPolicies.FirstOrDefault()?.Id}");
-
         FormState.OnChange += StateHasChanged;
-    } 
 
-    public void OnStateChange()
-    {
-        InvokeAsync(StateHasChanged);
+        // Yêu cầu State tải dữ liệu (chỉ tải nếu list rỗng)
+        if (FormState.PolicyGroups.Count == 0)
+        {
+            await FormState.LoadPolicies();
+        }
     }
+
     public void Dispose()
     {
         FormState.OnChange -= StateHasChanged;
     }
 
 
-    public class PolicyTypeWithPoliciesVM
+    public class PolicyTypeGroupVM
     {
-        public int Id { get; set; }
-        public string Name { get; set; } = "";
-        public List<PolicyVM> Policies { get; set; } = new();
+        public PolicyTypeVM PolicyType = new();
+        public List<PolicyVM>? AvailablePolicies { get; set; }
+        public int SelectedPolicyId { get; set; }
     }
-
-    public class PolicyVM
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = "";
-    }
-} *@
+}

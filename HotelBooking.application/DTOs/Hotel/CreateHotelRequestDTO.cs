@@ -14,6 +14,9 @@ public class CreateHotelRequestDTO
     // Amenities: chỉ gửi ID
     public List<int> AmenityIds { get; set; } = new();
 
+    // Policies: chỉ gửi ID
+    public List<int> PolicyIds { get; set; } = new();
+
     // Policies: chỉ gửi ID (check-in, check-out, cancellation)
     // public List<int> PolicyIds { get; set; } = new();
 }

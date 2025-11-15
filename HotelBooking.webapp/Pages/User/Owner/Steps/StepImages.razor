@@ -24,13 +24,14 @@
 
                     <span
                         style="position:absolute;bottom:6px;left:6px; background:blue;color:#fff;
-                                                                                                                                             padding:3px 8px; border-radius:4px;font-size:12px;">
+                                                                                                                                                     padding:3px 8px; border-radius:4px;font-size:12px;">
                         Main Photo
                     </span>
 
                     <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Error" Size="Size.Small"
                         Style="position:absolute;top:6px;right:6px; background:#fff;
-                                                                                                                                                      border-radius:50%;z-index:10;" OnClick="RemoveMain" />
+                                                                                                                                                              border-radius:50%;z-index:10;"
+                        OnClick="RemoveMain" />
                 </div>
             </MudItem>
 
@@ -46,7 +47,7 @@
 
                             <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Error" Size="Size.Small"
                                 Style="position:absolute;top:4px;right:4px; background:#fff;
-                                                                                                                                                                                                                                                                          border-radius:50%;z-index:10;"
+                                                                                                                                                                                                                                                                                          border-radius:50%;z-index:10;"
                                 OnClick="@(() => RemoveSub(idx))" />
 
                             <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
@@ -63,6 +64,11 @@
 
 @code {
     public MudForm? _form;
+
+    protected override async Task OnInitializedAsync()
+    {
+        FormState.OnChange += StateHasChanged;
+    }
 
     private async Task HandleFiles(InputFileChangeEventArgs e)
     {
@@ -154,6 +160,11 @@
         FormState.HotelImages.SubImagesPreviewUrl.RemoveAt(index);
 
         StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        FormState.OnChange -= StateHasChanged;
     }
 
     public class HotelImagesVM

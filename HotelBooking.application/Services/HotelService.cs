@@ -383,7 +383,21 @@ public class HotelService : IHotelService
                 });
             }
 
-            // Bước 4: Update lại Hotel + SaveChanges
+            // Bước 4: Lưu Policies
+            if (newHotel.PolicyIds != null && newHotel.PolicyIds.Any())
+            {
+                foreach (var policyId in newHotel.PolicyIds)
+                {
+                    _context.HotelPolicies.Add(new HotelPolicy
+                    {
+                        HotelId = hotel.Id,
+                        PolicyId = policyId,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+            }
+
+            // Bước 5: Update lại Hotel + SaveChanges
             _context.Hotels.Update(hotel);
             await _dbu.SaveChangesAsync();
 

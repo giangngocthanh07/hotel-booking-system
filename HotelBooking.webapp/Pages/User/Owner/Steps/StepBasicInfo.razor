@@ -61,6 +61,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        FormState.OnChange += StateHasChanged;
+
         // Chỉ gọi API nếu danh sách thành phố đang rỗng
         if (FormState.BasicInfo.Cities == null || !FormState.BasicInfo.Cities.Any())
         {
@@ -116,6 +118,11 @@
         // Xoá cả preview và file gốc
         FormState.BasicInfo.CoverFile = null;
 
+    }
+
+    public void Dispose()
+    {
+        FormState.OnChange -= StateHasChanged;
     }
 
     public class HotelVM

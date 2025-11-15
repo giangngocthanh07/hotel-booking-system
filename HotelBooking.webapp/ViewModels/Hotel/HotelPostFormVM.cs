@@ -23,7 +23,10 @@ public class HotelPostFormVM
     // 2. Amenities
     public List<int> AmenityIds { get; set; } = new();
 
-    // 3. Hotel Images
+    // 3. Policies
+    public List<int> PolicyIds { get; set; } = new();
+
+    // 4. Hotel Images
     public UploadFileVM? MainFile { get; set; }
     public List<UploadFileVM> SubFiles { get; set; } = new();
 

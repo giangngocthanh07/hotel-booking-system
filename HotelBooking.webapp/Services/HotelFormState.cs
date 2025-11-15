@@ -2,6 +2,8 @@ using Blazored.LocalStorage;
 using HotelBooking.webapp.Pages.User.Owner.Steps;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components.Forms;
+using TagLib.Riff;
+using static HotelBooking.webapp.Pages.User.Owner.Steps.StepPolicies;
 
 
 namespace HotelBooking.webapp.Services
@@ -22,64 +24,11 @@ namespace HotelBooking.webapp.Services
         public StepBasicInfo.HotelVM BasicInfo { get; set; } = new();
         public List<StepAmenities.AmenityVM> Amenities { get; set; } = new();
         public StepImages.HotelImagesVM HotelImages { get; set; } = new();
-
-        // Các lựa chọn chính sách// Các ID vẫn giữ lại vì FE vẫn cần bind
-        // public int SelectedCheckInId
-        // {
-        //     get => _selectedCheckInId;
-        //     set
-        //     {
-        //         if (_selectedCheckInId != value)
-        //         {
-        //             _selectedCheckInId = value;
-        //             NotifyStateChanged();
-        //         }
-        //     }
-        // }
-        // private int _selectedCheckInId;
-
-        // public int SelectedCheckOutId
-        // {
-        //     get => _selectedCheckOutId;
-        //     set
-        //     {
-        //         if (_selectedCheckOutId != value)
-        //         {
-        //             _selectedCheckOutId = value;
-        //             NotifyStateChanged();
-        //         }
-        //     }
-        // }
-        // private int _selectedCheckOutId;
-
-        // public int SelectedCancellationId
-        // {
-        //     get => _selectedCancellationId;
-        //     set
-        //     {
-        //         if (_selectedCancellationId != value)
-        //         {
-        //             _selectedCancellationId = value;
-        //             NotifyStateChanged();
-        //         }
-        //     }
-        // }
-        // private int _selectedCancellationId;
+        public List<PolicyTypeGroupVM> PolicyGroups { get; set; } = new();
+        public bool IsLoading { get; private set; }
 
 
         private void NotifyStateChanged() => OnChange?.Invoke();
-
-        // public List<int> SelectedPolicyIds
-        // {
-        //     get
-        //     {
-        //         var ids = new List<int>();
-        //         if (SelectedCheckInId > 0) ids.Add(SelectedCheckInId);
-        //         if (SelectedCheckOutId > 0) ids.Add(SelectedCheckOutId);
-        //         if (SelectedCancellationId > 0) ids.Add(SelectedCancellationId);
-        //         return ids;
-        //     }
-        // }
 
 
         // Các phương thức xử lý trạng thái form
@@ -93,6 +42,8 @@ namespace HotelBooking.webapp.Services
                 BasicInfo.Cities = result.Content ?? new List<StepBasicInfo.CityVM>();
             }
         }
+
+        #region LOAD AMENITIES
         public async Task LoadAmenitiesAsync()
         {
             var result = await _httpClient.GetFromJsonAsync<ApiResponse<List<StepAmenities.AmenityVM>>>("hotel/get-all-amenities");
@@ -110,20 +61,88 @@ namespace HotelBooking.webapp.Services
                 .Select(a => a.Id)         // Chỉ lấy Id
                 .ToList();
         }
+        #endregion
 
-        // Lấy toàn bộ loại chính sách kèm policies bằng cách gọi API
-        // public async Task<List<StepPolicies.PolicyTypeWithPoliciesVM>> LoadAllPolicyTypesWithPoliciesAsync()
-        // {
-        //     var result = await _httpClient.GetFromJsonAsync<ApiResponse<List<StepPolicies.PolicyTypeWithPoliciesVM>>>("hotel/get-all-policytypes-with-policies");
+        public async Task<List<PolicyTypeVM>> LoadPolicyTypesAsync()
+        {
+            var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<PolicyTypeVM>>>("hotel/get-all-policy-types");
 
-        //     if (result != null && result.StatusCode == "Success" && result.Content != null)
-        //     {
-        //         return result.Content ?? new List<StepPolicies.PolicyTypeWithPoliciesVM>();
-        //     }
 
-        //     return new List<StepPolicies.PolicyTypeWithPoliciesVM>();
-        // }
+            if (response != null && response.StatusCode == "Success" && response.Content != null)
+            {
+                return response.Content ?? new List<PolicyTypeVM>();
+            }
+            else
+            {
+                return new List<PolicyTypeVM>();
+            }
+        }
 
+        public async Task<List<PolicyVM>> LoadPoliciesByTypeIdAsync(int policyTypeId)
+        {
+            var result = await _httpClient.GetFromJsonAsync<ApiResponse<List<PolicyVM>>>($"hotel/get-all-policy-by-type/{policyTypeId}");
+
+            if (result != null && result.StatusCode == "Success" && result.Content != null)
+            {
+                return result.Content ?? new List<PolicyVM>();
+            }
+            else
+            {
+                return new List<PolicyVM>();
+            }
+        }
+
+        #region LOAD POLICIES
+        public async Task LoadPolicies()
+        {
+            IsLoading = true;
+            NotifyStateChanged(); // Báo UI biết là đang "Loading..."
+
+            // 1. Lấy tất cả loại Policy
+            var allPolicyTypes = await LoadPolicyTypesAsync();
+            if (allPolicyTypes == null || !allPolicyTypes.Any())
+            {
+                IsLoading = false;
+                NotifyStateChanged();
+                return;
+            }
+
+            // 2. Tạo một danh sách "Task" để gọi API song song
+            var policyLoadTasks = allPolicyTypes
+                .Select(type => LoadPoliciesByTypeIdAsync(type.Id))
+                .ToList();
+
+            // 3. Chạy tất cả các Task cùng lúc và chờ hoàn thành
+            var policyResults = await Task.WhenAll(policyLoadTasks);
+
+            // Dọn sạch list cũ trước khi thêm
+            PolicyGroups.Clear();
+
+            // 4. Kết hợp các danh sách lại
+            for (int i = 0; i < allPolicyTypes.Count; i++)
+            {
+                PolicyGroups.Add(new PolicyTypeGroupVM
+                {
+                    PolicyType = allPolicyTypes[i],
+                    AvailablePolicies = policyResults[i],
+                    SelectedPolicyId = 0
+                });
+            }
+
+            IsLoading = false;
+            NotifyStateChanged(); // BÁO UI CẬP NHẬT LẦN CUỐI
+        }
+
+        public List<int> GetSelectedPolicyIds()
+        {
+            return PolicyGroups
+                .Where(g => g.SelectedPolicyId > 0) // Lọc những group có chọn policy
+                .Select(g => g.SelectedPolicyId)    // Lấy SelectedPolicyId 
+                .ToList();
+        }
+        #endregion
+
+        #region SUBMIT
         public async Task<bool> Submit()
         {
             // Lấy token từ LocalStorage (lưu sau khi login thành công)
@@ -150,6 +169,7 @@ namespace HotelBooking.webapp.Services
             _hotelForm.Description = BasicInfo.Description;
             _hotelForm.CoverFile = BasicInfo.CoverFile;
             _hotelForm.AmenityIds = GetSelectedAmenityIds();
+            _hotelForm.PolicyIds = GetSelectedPolicyIds();
             _hotelForm.MainFile = HotelImages.MainFile;
             _hotelForm.SubFiles = HotelImages.SubFiles;
 
@@ -168,6 +188,12 @@ namespace HotelBooking.webapp.Services
                 foreach (var amenityId in _hotelForm.AmenityIds)
                 {
                     content.Add(new StringContent(amenityId.ToString()), "AmenityIds");
+                }
+
+                // Thêm List PolicyIds
+                foreach (var policyId in _hotelForm.PolicyIds)
+                {
+                    content.Add(new StringContent(policyId.ToString()), "PolicyIds");
                 }
 
                 // Thêm CoverFile
@@ -214,8 +240,9 @@ namespace HotelBooking.webapp.Services
 
 
         }
+        #endregion
 
-        // Reset toàn bộ form
+        #region RESET
         public void Reset()
         {
             BasicInfo = new();
@@ -226,16 +253,14 @@ namespace HotelBooking.webapp.Services
                 amenity.IsSelected = false;
             }
 
-            // SelectedCheckInId = 0;
-            // SelectedCheckOutId = 0;
-            // SelectedCancellationId = 0;
-
-
+            PolicyGroups = new();
             HotelImages = new();
 
         }
 
-        // Validate từng phần
+        #endregion
+
+        #region VALIDATE
         public bool ValidateBasicInfo() =>
             !string.IsNullOrWhiteSpace(BasicInfo.Name) &&
             BasicInfo.CityId > 0 &&
@@ -245,8 +270,18 @@ namespace HotelBooking.webapp.Services
         public bool ValidateAmenities() =>
             Amenities.Any(a => a.IsSelected);
 
-        // public bool ValidatePolicy() =>
-        //     SelectedPolicyIds.Count > 0;
+        // Trả về 'true' CHỈ KHI tất cả các group
+        // đều có SelectedPolicyId > 0
+        public bool ValidatePolicy()
+        {
+            if (PolicyGroups.Count == 0)
+            {
+                return false; // Chưa tải xong, hoặc không có policy
+            }
+
+            // Kiểm tra xem TẤT CẢ các group có SelectedPolicyId > 0 không
+            return PolicyGroups.All(group => group.SelectedPolicyId > 0);
+        }
 
         public bool ValidateImages() =>
             HotelImages.MainFile != null && HotelImages.SubFiles.Count == 4;
@@ -258,4 +293,6 @@ namespace HotelBooking.webapp.Services
             // ValidatePolicy() &&
             ValidateImages();
     }
+
+    #endregion
 }
