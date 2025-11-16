@@ -5,16 +5,20 @@
 @inject HttpClient _httpClient // Inject HttpClient để gọi API
 @inject IHttpClientFactory _httpClientFactory
 
+@inject ISnackbar Snackbar
+
 <div class="container-fluid p-4">
     <h2 class="text-primary mb-4">Manage Policies</h2>
 
     <div class="row">
         <!-- Dropdown chọn PolicyType bên trái -->
         <PolicyTypeDropDown PolicyTypeList="@policyTypesList" SelectedPolicyType="@selectedPolicyType"
-            OnPolicyTypeChanged="@HandlePolicyTypeChange" />
+            OnPolicyTypeChanged="@HandlePolicyTypeChange" PolicyParam="@SelectedPolicy"
+            OnSaveUpdate="@SaveOrUpdatePolicy" />
 
         <!-- Bảng danh sách các Policies dựa theo PolicyType được chọn bên phải -->
-        <ListPoliciesByType SelectedPolicyType="@selectedPolicyType" PoliciesByType="@policiesListByType" />
+        <ListPoliciesByType SelectedPolicyType="@selectedPolicyType" PoliciesByType="@policiesListByType"
+            EventOnEdit="@EditPolicy" EventOnDelete="@DeletePolicy" />
 
     </div>
 </div>
@@ -25,6 +29,9 @@
     // Biến lưu danh sách lấy từ API
     private List<PolicyTypeVM>? policyTypesList;
     private List<PolicyVM> policiesListByType = new();
+
+    public PolicyVM SelectedPolicy = new();
+
     protected override async Task OnInitializedAsync()
     {
         _httpClient = _httpClientFactory.CreateClient("HotelBookingAPI");
@@ -72,6 +79,8 @@
             // 5. Gọi API để tải lại bảng
             await GetPoliciesListByType();
 
+            SelectedPolicy = new() { PolicyTypeId = selectedPolicyType };
+
             // 6.
             await InvokeAsync(StateHasChanged);
         }
@@ -108,5 +117,80 @@
             Console.WriteLine($"{ex.Message}");
             policiesListByType = new();
         }
+    }
+
+    private async Task EditPolicy(PolicyVM policy)
+    {
+        var findPolicy = policiesListByType.Find(policyInList => policyInList.Id == policy.Id);
+
+        if (findPolicy != null)
+        {
+            // Tạo bản sao để hiển thị lên form (tránh sửa trực tiếp list)
+            SelectedPolicy = new PolicyVM
+            {
+                Id = findPolicy.Id,
+                Name = findPolicy.Name,
+                Description = findPolicy.Description,
+                PolicyTypeId = findPolicy.PolicyTypeId
+            };
+        }
+    }
+
+    private async Task SaveOrUpdatePolicy()
+    {
+        if (SelectedPolicy == null)
+        {
+            return;
+        }
+
+
+
+        if (SelectedPolicy.Id == 0)
+        {
+            // TODO: gọi API POST tạo mới
+            var response = await _httpClient.PostAsJsonAsync("hotel/create-policy", SelectedPolicy);
+
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<PolicyVM>>();
+
+            SnackbarHelper.Show(Snackbar, apiResponse.StatusCode, apiResponse.Message);
+
+        }
+        else
+        {
+            // TODO: gọi API PUT cập nhật
+            var response = await _httpClient.PutAsJsonAsync($"hotel/update-policy/{SelectedPolicy.Id}", SelectedPolicy);
+
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<PolicyVM>>();
+
+            SnackbarHelper.Show(Snackbar, apiResponse?.StatusCode ?? "Error", apiResponse?.Message);
+
+        }
+        await GetPoliciesListByType();
+        SelectedPolicy = new PolicyVM(); // reset form
+    }
+
+    private async Task DeletePolicy(int id)
+    {
+        // TODO: gọi API DELETE /hotel/amenities/{id}
+        var response = await _httpClient.DeleteAsync($"hotel/delete-policy/{id}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            // xóa khỏi list hiện tại
+            policiesListByType.RemoveAll(a => a.Id == id);
+
+            // ép re-render
+            StateHasChanged();
+        }
+
+
+
+        var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+        SnackbarHelper.Show(Snackbar, apiResponse?.StatusCode ?? "Error", apiResponse?.Message);
+
+        // Reset form về Add New
+        SelectedPolicy = new PolicyVM();
+
+
     }
 }

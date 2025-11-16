@@ -39,14 +39,14 @@
 
                                     <td>@policy.Name</td>
                                     <td>@policy.Description</td>
-                                    @* <td>
-                                    <button class="btn btn-warning btn-sm me-2" @onclick="() => OnEdit(policy)">
-                                        EDIT
-                                    </button>
-                                    <button class="btn btn-danger btn-sm" @onclick="() => OnDelete(policy.Id)">
-                                        DELETE
-                                    </button>
-                                </td> *@
+                                    <td>
+                                        <button class="btn btn-warning btn-sm me-2" @onclick="() => OnEdit(policy)">
+                                            EDIT
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" @onclick="() => OnDelete(policy.Id)">
+                                            DELETE
+                                        </button>
+                                    </td>
                                 </tr>
                             }
                         }
@@ -63,4 +63,20 @@
 
     [Parameter]
     public List<PolicyVM>? PoliciesByType { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<PolicyVM> EventOnEdit { get; set; }
+
+    public async Task OnEdit(PolicyVM policy)
+    {
+        EventOnEdit.InvokeAsync(policy);
+    }
+
+    [Parameter]
+    public EventCallback<int> EventOnDelete { get; set; }
+
+    public async Task OnDelete(int id)
+    {
+        EventOnDelete.InvokeAsync(id);
+    }
 }

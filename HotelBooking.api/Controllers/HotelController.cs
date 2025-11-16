@@ -140,6 +140,29 @@ namespace HotelBooking.api.Controllers
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
+        [HttpPost("create-policy")]
+        public async Task<IActionResult> CreatePolicyAsync([FromBody] PolicyCreateOrUpdateDTO newPolicy)
+        {
+            var response = await _hotelService.CreatePolicyAsync(newPolicy);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
+        [HttpPut("update-policy/{id}")]
+        public async Task<IActionResult> UpdatePolicyAsync(int id, [FromBody] PolicyCreateOrUpdateDTO policy)
+        {
+
+            var response = await _hotelService.UpdatePolicyAsync(id, policy);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
+        // [Authorize(Roles = "Admin")]
+        [HttpDelete("delete-policy/{id}")]
+        public async Task<IActionResult> DeletePolicyAsync(int id)
+        {
+            var response = await _hotelService.DeletePolicyAsync(id);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
         [Authorize(Roles = "Owner")]
         [HttpPost("test-upload-photo-cloudinary")]
         public async Task<IActionResult> TestUploadPhotoCloudinaryAsync(IFormFile file)

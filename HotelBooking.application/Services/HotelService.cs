@@ -14,6 +14,9 @@ public interface IHotelService
     public Task<ApiResponse<bool>> DeleteAmenityAsync(int id);
     public Task<ApiResponse<List<PolicyTypeDTO>>> GetAllPolicyTypesAsync();
     public Task<ApiResponse<List<PolicyDTO>>> GetAllPoliciesByTypeAsync(int typeId);
+    public Task<ApiResponse<PolicyDTO>> CreatePolicyAsync(PolicyCreateOrUpdateDTO newPolicy);
+    public Task<ApiResponse<PolicyDTO>> UpdatePolicyAsync(int id, PolicyCreateOrUpdateDTO policy);
+    public Task<ApiResponse<bool>> DeletePolicyAsync(int id);
     public Task<ApiResponse<List<CityDTO>>> GetAllCitiesAsync();
     public Task<ApiResponse<CreateHotelResponseDTO>> PostHotelAsync(CreateHotelDTO newHotel, int ownerId);
 
@@ -509,6 +512,153 @@ public class HotelService : IHotelService
                 StatusCode = StatusCodeResponse.Error,
                 Message = MessageResponse.ERROR_IN_SERVER,
                 Content = null
+            };
+        }
+    }
+
+    public async Task<ApiResponse<PolicyDTO>> CreatePolicyAsync(PolicyCreateOrUpdateDTO newPolicy)
+    {
+        try
+        {
+            // Người dùng mà tạo trùng tên tiện ích thì không cho phép
+            var exists = await _policyRepository.AnyAsync(p => p.Name.ToLower() == newPolicy.Name.ToLower() && p.IsDeleted == false);
+            if (exists) return new ApiResponse<PolicyDTO>
+            {
+                StatusCode = StatusCodeResponse.Conflict,
+                Message = MessageResponse.NAME_ALREADY_EXISTS,
+                Content = null
+            };
+
+            // var additional = JsonSerializer.Serialize(new
+            // {  });
+
+            var policy = new Policy
+            {
+                Name = newPolicy.Name,
+                Description = newPolicy.Description,
+                IsDeleted = false,
+                PolicyTypeId = newPolicy.PolicyTypeId
+            };
+
+            // Map entity sang DTO để trả về cho FE
+            var resultDTO = new PolicyDTO
+            {
+                Id = policy.Id,
+                Name = policy.Name,
+                Description = newPolicy.Description,
+                PolicyTypeId = newPolicy.PolicyTypeId
+            };
+
+            await _policyRepository.AddAsync(policy);
+            await _dbu.SaveChangesAsync();
+
+            return new ApiResponse<PolicyDTO>
+            {
+                StatusCode = StatusCodeResponse.Success,
+                Message = MessageResponse.CREATE_SUCCESSFULLY,
+                Content = resultDTO
+            };
+        }
+        catch (Exception)
+        {
+            return new ApiResponse<PolicyDTO>
+            {
+                StatusCode = StatusCodeResponse.Error,
+                Message = MessageResponse.ERROR_IN_SERVER,
+                Content = null
+            };
+        }
+    }
+
+    public async Task<ApiResponse<PolicyDTO>> UpdatePolicyAsync(int id, PolicyCreateOrUpdateDTO policy)
+    {
+        try
+        {
+            var existingPolicy = await _policyRepository.GetByIdAsync(id);
+            if (existingPolicy == null)
+                return new ApiResponse<PolicyDTO>
+                {
+                    StatusCode = StatusCodeResponse.BadRequest,
+                    Message = MessageResponse.UPDATE_FAILED,
+                    Content = null
+                };
+
+            // Người dùng mà đổi tên trùng với tên của 1 tiện ích khác thì cũng không cho phép
+            var nameExists = await _policyRepository.AnyAsync(p => p.Id != id && p.Name.ToLower() == policy.Name.ToLower());
+            if (nameExists) return new ApiResponse<PolicyDTO>
+            {
+                StatusCode = StatusCodeResponse.Conflict,
+                Message = MessageResponse.NAME_ALREADY_EXISTS,
+                Content = null
+            };
+
+            existingPolicy.Name = policy.Name;
+            existingPolicy.Description = policy.Description;
+            // existingPolicy.Additional = JsonSerializer.Serialize(new
+            // {
+
+            // });
+
+            var resultDTO = new PolicyDTO
+            {
+                Id = existingPolicy.Id,
+                Name = existingPolicy.Name,
+                Description = policy.Description,
+                PolicyTypeId = existingPolicy.PolicyTypeId
+
+            };
+
+            await _policyRepository.UpdateAsync(existingPolicy);
+            await _dbu.SaveChangesAsync();
+
+            return new ApiResponse<PolicyDTO>
+            {
+                StatusCode = StatusCodeResponse.Success,
+                Message = MessageResponse.UPDATE_SUCCESSFULLY,
+                Content = resultDTO
+            }; ;
+        }
+        catch (Exception)
+        {
+            return new ApiResponse<PolicyDTO>
+            {
+                StatusCode = StatusCodeResponse.Error,
+                Message = MessageResponse.ERROR_IN_SERVER,
+                Content = null
+            }; ;
+        }
+    }
+
+    public async Task<ApiResponse<bool>> DeletePolicyAsync(int id)
+    {
+        var policy = await _policyRepository.GetByIdAsync(id);
+
+        if (policy == null) return new ApiResponse<bool>
+        {
+            StatusCode = StatusCodeResponse.NotFound,
+            Message = MessageResponse.NOT_FOUND,
+            Content = false
+        };
+
+        try
+        {
+            policy.IsDeleted = true;
+            await _policyRepository.UpdateAsync(policy);
+            await _dbu.SaveChangesAsync(); // EF Core tự track thay đổi
+            return new ApiResponse<bool>
+            {
+                StatusCode = StatusCodeResponse.Success,
+                Message = MessageResponse.DELETE_SUCCESSFULLY,
+                Content = true
+            };
+        }
+        catch (Exception)
+        {
+            return new ApiResponse<bool>
+            {
+                StatusCode = StatusCodeResponse.Error,
+                Message = MessageResponse.ERROR_IN_SERVER,
+                Content = false
             };
         }
     }
