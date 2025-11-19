@@ -1,0 +1,177 @@
+@using HotelBooking.webapp.ViewModels.Hotel
+<div class="col-md-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h3>Chọn loại dịch vụ</h3>
+
+
+        </div>
+        <div class="card-body">
+            @if (ServiceTypeList == null)
+            {
+                <p><em>Đang tải danh sách...</em></p>
+            }
+            else
+            {
+                <div class="form-group">
+                    <label class="mb-3">Loại dịch vụ:</label>
+
+                    <select class="form-control" value="@SelectedServiceType" @onchange="OnServiceTypeChanged">
+
+                        <option value="0">-- Vui lòng chọn --</option>
+                        @foreach (var type in ServiceTypeList)
+                        {
+                            <option value="@type.Id">@type.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <hr />
+
+                @if (SelectedServiceType > 0)
+                {
+                    <p><strong>Bạn chọn:</strong> @SelectedServiceType</p>
+                }
+            }
+        </div>
+        <hr />
+        @if (ServiceParam != null)
+        {
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        @GetTitle()
+                    </h5>
+                </div>
+
+                <div class="card-body">
+                    <EditForm Model="@ServiceParam" OnValidSubmit="HandleValidSubmit">
+                        <DataAnnotationsValidator />
+                        @* <ValidationSummary /> *@
+
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <InputText class="form-control" @bind-Value="ServiceParam.Name" />
+                            <ValidationMessage For="@(() => ServiceParam.Name)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <InputText class="form-control" @bind-Value="ServiceParam.Description" />
+                            <ValidationMessage For="@(() => ServiceParam.Description)" class="text-danger" />
+                        </div>
+
+
+
+                        @* --- PHẦN ADMIN CHỈ ĐƯỢC XEM (DISABLED) --- *@
+
+                        @* Hiển thị nếu Model là ServiceStandardVM *@
+                        @if (ServiceParam is ServiceStandardVM standardVM)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">Unit</label>
+                                <InputText class="form-control" @bind-Value="standardVM.Unit"
+                                    placeholder="Ví dụ: Kg, Lon, Chai..." />
+                                <ValidationMessage For="@(() => standardVM.Unit)" class="text-danger" />
+
+                            </div>
+
+                            <hr class="my-4" />
+                            <h6 class="text-muted mb-3">Cấu hình dữ liệu (Dành cho Owner - Admin chỉ xem)</h6>
+
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Price (Owner setup)</label>
+                                @* Thêm 'disabled' và 'bg-light' *@
+                                <InputNumber class="form-control bg-light" @bind-Value="standardVM.Price" disabled
+                                    placeholder="Tự động cấu hình bởi Owner" />
+                            </div>
+
+
+                        }
+                        @* Hiển thị nếu Model là ServiceAirportTransferVM *@
+                        else if (ServiceParam is ServiceAirportTransferVM atVM)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Price (Owner setup)</label>
+                                <InputNumber class="form-control bg-light" @bind-Value="atVM.Price" disabled />
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Max Passengers</label>
+                                    <InputNumber class="form-control bg-light" @bind-Value="atVM.MaxPassengers" disabled />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Max Luggage</label>
+                                    <InputNumber class="form-control bg-light" @bind-Value="atVM.MaxLuggage" disabled />
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Round-Trip Price</label>
+                                <InputNumber class="form-control bg-light" @bind-Value="atVM.RoundTripPrice" disabled />
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Surcharge Fee</label>
+                                    <InputNumber class="form-control bg-light" @bind-Value="atVM.AdditionalFee" disabled />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Time Range</label>
+                                    <input class="form-control bg-light" value="--:-- to --:--" disabled />
+                                </div>
+                            </div>
+
+                        }
+
+                        <div class="d-flex">
+                            <button type="submit" class="btn btn-success me-2 w-100">
+                                @(ServiceParam.Id == 0 ? "SAVE" : "UPDATE")
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        }
+
+    </div>
+</div>
+
+@code {
+    // Đây là "Model" chính cho EditForm
+    [Parameter]
+    public ServiceBaseVM? ServiceParam { get; set; }
+
+    //
+    [Parameter]
+    public int SelectedServiceType { get; set; }
+    //
+    [Parameter]
+    public List<ServiceTypeVM>? ServiceTypeList { get; set; }
+    // Biến này sẽ tự động cập nhật khi người dùng chọn
+    // Đây chính là "data type mà được chọn" mà bạn muốn lưu lại
+
+    [Parameter]
+    public EventCallback<ChangeEventArgs> OnServiceTypeChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<ServiceBaseVM> OnSaveUpdate { get; set; }
+
+    private async Task HandleValidSubmit()
+    {
+        await OnSaveUpdate.InvokeAsync(ServiceParam);
+    }
+
+    private string GetTitle()
+    {
+        // Bước 1: Xác định hành động (Action)
+        string action = (ServiceParam?.Id == 0) ? "Add New" : "Edit";
+
+        // Bước 2: Xác định loại (Type)
+        string serviceType = ServiceHelper.GetServiceTypeName(ServiceParam.ServiceTypeId);
+
+        // Bước 3: Trả về kết quả
+        return $"{action} {serviceType}";
+    }
+}

@@ -17,8 +17,12 @@ public interface IHotelService
     public Task<ApiResponse<PolicyDTO>> CreatePolicyAsync(PolicyCreateOrUpdateDTO newPolicy);
     public Task<ApiResponse<PolicyDTO>> UpdatePolicyAsync(int id, PolicyCreateOrUpdateDTO policy);
     public Task<ApiResponse<bool>> DeletePolicyAsync(int id);
+    public Task<ApiResponse<List<ServiceTypeDTO>>> GetAllServiceTypesAsync();
+    public Task<ApiResponse<List<ServiceBaseDTO>>> GetAllServicesByTypeAsync(int typeId);
+    public Task<ApiResponse<ServiceBaseDTO>> CreateServiceByTypeAsync(CreateServiceAdminDTO newService, int typeId);
     public Task<ApiResponse<List<CityDTO>>> GetAllCitiesAsync();
     public Task<ApiResponse<CreateHotelResponseDTO>> PostHotelAsync(CreateHotelDTO newHotel, int ownerId);
+
 
     public Task<ApiResponse<UploadResultDTO>> TestUploadImageToCloudinaryAsync(UploadFileDTO file, int userId);
 }
@@ -31,11 +35,13 @@ public class HotelService : IHotelService
     private readonly ICityRepository _cityRepository;
     private readonly IPolicyTypeRepository _policyTypeRepository;
     private readonly IPolicyRepository _policyRepository;
+    private readonly IServiceTypeRepository _serviceTypeRepository;
+    private readonly IServiceRepository _serviceRepository;
     private readonly IImageHelper _imageHelper;
     private readonly IPhotoService _photoService;
     public IUnitOfWork _dbu;
 
-    public HotelService(HotelBookingDBContext context, IHotelRepository hotelRepository, IAmenityRepository amenityRepository, ICityRepository cityRepository, IPolicyTypeRepository policyTypeRepository, IPolicyRepository policyRepository, IImageHelper imageHelper, IPhotoService photoService, IUnitOfWork dbu)
+    public HotelService(HotelBookingDBContext context, IHotelRepository hotelRepository, IAmenityRepository amenityRepository, ICityRepository cityRepository, IPolicyTypeRepository policyTypeRepository, IPolicyRepository policyRepository, IServiceTypeRepository serviceTypeRepository, IServiceRepository serviceRepository, IImageHelper imageHelper, IPhotoService photoService, IUnitOfWork dbu)
     {
         _context = context;
         _hotelRepository = hotelRepository;
@@ -43,6 +49,8 @@ public class HotelService : IHotelService
         _cityRepository = cityRepository;
         _policyTypeRepository = policyTypeRepository;
         _policyRepository = policyRepository;
+        _serviceTypeRepository = serviceTypeRepository;
+        _serviceRepository = serviceRepository;
         _imageHelper = imageHelper;
         _photoService = photoService;
         _dbu = dbu;
@@ -663,6 +671,290 @@ public class HotelService : IHotelService
         }
     }
 
+    #region MANAGE SERVICES
+    public async Task<ApiResponse<List<ServiceTypeDTO>>> GetAllServiceTypesAsync()
+    {
+        try
+        {
+            var serviceTypes = await _serviceTypeRepository.WhereAsync(sv => sv.IsDeleted == false);
+
+            if (serviceTypes == null || !serviceTypes.Any())
+            {
+                return new ApiResponse<List<ServiceTypeDTO>>
+                {
+                    StatusCode = StatusCodeResponse.NotFound,
+                    Message = MessageResponse.EMPTY_LIST,
+                    Content = null
+                };
+            }
+
+            var result = serviceTypes.Select(sv => new ServiceTypeDTO
+            {
+                Id = sv.Id,
+                Name = sv.TypeName,
+                IsDeleted = sv.IsDeleted
+            }).ToList();
+
+            return new ApiResponse<List<ServiceTypeDTO>>
+            {
+                StatusCode = StatusCodeResponse.Success,
+                Message = MessageResponse.UPDATE_SUCCESSFULLY,
+                Content = result
+            };
+
+        }
+        catch (Exception)
+        {
+            return new ApiResponse<List<ServiceTypeDTO>>
+            {
+                StatusCode = StatusCodeResponse.Error,
+                Message = MessageResponse.ERROR_IN_SERVER,
+                Content = null
+            };
+        }
+    }
+
+    public async Task<ApiResponse<List<ServiceBaseDTO>>> GetAllServicesByTypeAsync(int typeId)
+    {
+        try
+        {
+            // Khai báo list DTO abstract
+            var resultList = new List<ServiceBaseDTO>();
+
+            // 2. Dùng If-Else để build câu query cho đúng Type
+
+            if (typeId == 1) // Standard
+            {
+                var services = await _serviceRepository.WhereAsync(sv => sv.ServiceTypeId == 1 && sv.IsDeleted == false);
+
+                if (services == null || !services.Any())
+                {
+                    return new ApiResponse<List<ServiceBaseDTO>>
+                    {
+                        StatusCode = StatusCodeResponse.NotFound,
+                        Message = MessageResponse.EMPTY_LIST,
+                        Content = null
+                    };
+                }
+
+                foreach (var sv in services)
+                {
+                    var additional = JsonSerializer.Deserialize<Dictionary<string, string>>(sv.Additional ?? "{}");
+
+                    var standardDTO = new ServiceStandardDTO
+                    {
+                        Id = sv.Id,
+                        Name = sv.Name,
+                        Description = sv.Description,
+                        Unit = additional?.GetValueOrDefault("Unit", ""),
+                        Price = sv.Price,
+                        IsDeleted = sv.IsDeleted,
+                        ServiceTypeId = sv.ServiceTypeId
+                    };
+
+                    resultList.Add(standardDTO);
+                }
+
+            }
+            else if (typeId == 2) // Airport Transfer
+            {
+                var services = await _serviceRepository.WhereAsync(sv => sv.ServiceTypeId == 2 && sv.IsDeleted == false);
+
+                if (services == null || !services.Any())
+                {
+                    return new ApiResponse<List<ServiceBaseDTO>>
+                    {
+                        StatusCode = StatusCodeResponse.NotFound,
+                        Message = MessageResponse.EMPTY_LIST,
+                        Content = null
+                    };
+                }
+
+                // Cấu hình để JsonSerializer không phân biệt chữ hoa/thường
+                var jsonOptions = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+
+                foreach (var sv in services)
+                {
+                    var additional = JsonSerializer.Deserialize<ServiceAdditionalDataAT>(sv.Additional ?? "{}", jsonOptions);
+
+                    var atDTO = new ServiceAirportTransferDTO
+                    {
+                        Id = sv.Id,
+                        Name = sv.Name,
+                        Description = sv.Description,
+                        Price = sv.Price,
+                        IsDeleted = sv.IsDeleted,
+                        ServiceTypeId = sv.ServiceTypeId,
+
+                        // Gán trực tiếp từ đối tượng 'additional'
+                        MaxPassengers = additional?.MaxPassengers,
+                        MaxLuggage = additional?.MaxLuggage,
+                        RoundTripPrice = additional?.RoundTripPrice,
+                        AdditionalFee = additional?.AdditionalFee,
+                        AdditionalFeeStartTime = additional?.AdditionalFeeStartTime,
+                        AdditionalFeeEndTime = additional?.AdditionalFeeEndTime
+                    };
+
+                    resultList.Add(atDTO);
+                }
+            }
+            else
+            {
+                return new ApiResponse<List<ServiceBaseDTO>>
+                {
+                    StatusCode = StatusCodeResponse.NotFound,
+                    Message = MessageResponse.NOT_FOUND,
+                    Content = null
+                };
+            }
+            return new ApiResponse<List<ServiceBaseDTO>>
+            {
+                StatusCode = StatusCodeResponse.Success,
+                Message = MessageResponse.UPDATE_SUCCESSFULLY,
+                Content = resultList
+            };
+        }
+        catch (Exception)
+        {
+
+            return new ApiResponse<List<ServiceBaseDTO>>
+            {
+                StatusCode = StatusCodeResponse.Error,
+                Message = MessageResponse.ERROR_IN_SERVER,
+                Content = null
+            };
+        }
+    }
+
+    public async Task<ApiResponse<ServiceBaseDTO>> CreateServiceByTypeAsync(CreateServiceAdminDTO newService, int typeId)
+    {
+        try
+        {
+            var exists = await _serviceRepository.AnyAsync(sv => sv.Name.ToLower() == newService.Name.ToLower() && sv.IsDeleted == false);
+            if (exists) return new ApiResponse<ServiceBaseDTO>
+            {
+                StatusCode = StatusCodeResponse.Conflict,
+                Message = MessageResponse.NAME_ALREADY_EXISTS,
+                Content = null
+            };
+
+            var entityToAdd = new Service();
+
+            // Các trường chung
+            entityToAdd.Name = newService.Name;
+            entityToAdd.Description = newService.Description;
+            entityToAdd.ServiceTypeId = typeId;
+
+
+            object? additionalData = null;
+
+            switch (typeId)
+            {
+                case 1: // Standard
+                        // Tạo object chứa các trường của Standard (Giá trị null)
+                    if (newService is CreateStandardServiceAdminDTO standard)
+                    {
+                        additionalData = new { Unit = standard.Unit };
+                    }
+                    else
+                    {
+                        return new ApiResponse<ServiceBaseDTO>
+                        {
+                            StatusCode = StatusCodeResponse.BadRequest,
+                            Message = MessageResponse.CREATE_FAILED,
+                            Content = null
+                        };
+                    }
+                    break;
+
+                case 2: // Airport Transfer
+                        // Tạo object chứa các trường của Airport (Giá trị null)
+                    additionalData = new ServiceAdditionalDataAT()
+                    {
+                        MaxPassengers = 0,
+                        MaxLuggage = 0,
+                        RoundTripPrice = (decimal?)null,
+                        AdditionalFee = (decimal?)null,
+                        AdditionalFeeStartTime = (TimeSpan?)null,
+                        AdditionalFeeEndTime = (TimeSpan?)null
+                    };
+                    break;
+
+                default:
+                    return new ApiResponse<ServiceBaseDTO>
+                    {
+                        StatusCode = StatusCodeResponse.BadRequest,
+                        Message = MessageResponse.CREATE_FAILED,
+                        Content = null
+                    };
+            }
+
+            if (additionalData != null)
+            {
+                entityToAdd.Additional = JsonSerializer.Serialize(additionalData);
+            }
+
+            await _serviceRepository.AddAsync(entityToAdd);
+            await _dbu.SaveChangesAsync();
+
+            // Trả về DTO tương ứng
+            ServiceBaseDTO resultDTO = null;
+            if (typeId == 1)
+            {
+                resultDTO = new ServiceStandardDTO
+                {
+                    Id = entityToAdd.Id,
+                    Name = entityToAdd.Name,
+                    Description = entityToAdd.Description,
+                    Unit = JsonSerializer.Deserialize<ServiceStandardDTO>(entityToAdd.Additional ?? "{}")?.Unit,
+                    Price = entityToAdd.Price,
+                    ServiceTypeId = entityToAdd.ServiceTypeId
+                };
+            }
+            else if (typeId == 2)
+            {
+                resultDTO = new ServiceAirportTransferDTO
+                {
+                    Id = entityToAdd.Id,
+                    Name = entityToAdd.Name,
+                    Description = entityToAdd.Description,
+                    Price = entityToAdd.Price,
+                    ServiceTypeId = entityToAdd.ServiceTypeId,
+                    MaxPassengers = null,
+                    MaxLuggage = null,
+                    RoundTripPrice = null,
+                    AdditionalFee = null,
+                    AdditionalFeeStartTime = null,
+                    AdditionalFeeEndTime = null
+                };
+            }
+
+            return new ApiResponse<ServiceBaseDTO>
+            {
+                StatusCode = StatusCodeResponse.Success,
+                Message = MessageResponse.CREATE_SUCCESSFULLY,
+                Content = resultDTO
+            };
+
+        }
+        catch (Exception)
+        {
+
+            return new ApiResponse<ServiceBaseDTO>
+            {
+                StatusCode = StatusCodeResponse.Error,
+                Message = MessageResponse.ERROR_IN_SERVER,
+                Content = null
+            };
+        }
+
+    }
+
+    #endregion
+
     // Test: Up ảnh lên Cloudinary vào folder có mã userId
     public async Task<ApiResponse<UploadResultDTO>> TestUploadImageToCloudinaryAsync(UploadFileDTO file, int userId)
     {
@@ -696,153 +988,3 @@ public class HotelService : IHotelService
 
 #endregion
 
-
-
-// #region CREATE, UPDATE, DELETE HOTEL
-// // =============== TẠO, SỬA, XÓA KHÁCH SẠN ================
-// public async Task<ApiResponse<int>> CreateHotelAsync(CreateHotelDTO dto, int userId)
-// {
-//     await using var transaction = await _context.Database.BeginTransactionAsync();
-
-//     try
-//     {
-//         // 🏨 Bước 1: Tạo Hotel trước
-//         var hotel = new Hotel
-//         {
-//             Name = dto.Name,
-//             Address = dto.Address,
-//             Description = dto.Description,
-//             CoverImageUrl = null,
-//             OwnerId = userId,
-//             CreatedAt = DateTime.UtcNow,
-//             IsVerified = true,  // mặc định là true, sau này có thể thêm chức năng verify
-//             Status = "Active",
-//             IsDeleted = false,
-//             CityId = dto.CityId,
-//             CountryId = null
-//         };
-
-//         _context.Hotels.Add(hotel);
-//         await _context.SaveChangesAsync(); // sinh HotelId
-
-//         // 🏨 Bước 2: Upload ảnh
-//         // Cover image (ảnh bìa) vẫn lưu trực tiếp vào Hotels
-//         if (dto.CoverFile != null)
-//         {
-//             var coverUrl = await _imageHelper.UploadAsync(dto.CoverFile, userId, hotel.Id, "cover");
-//             hotel.CoverImageUrl = coverUrl;
-//         }
-
-//         if (dto.MainFile != null)
-//             var mainUrl = await _imageHelper.UploadAsync(dto.MainFile, userId, hotel.Id, "main");
-//         _context.HotelImages.Add(new HotelImage
-//         {
-//             HotelId = hotel.Id,
-//             ImageUrl = mainUrl,
-//             IsDeleted = false
-//         });
-//         if (dto.SubFiles != null)
-//         {
-//             int index = 1;
-//             foreach (var file in dto.SubFiles)
-//             {
-//                 var subUrl = await _imageHelper.UploadAsync(file, userId, hotel.Id, $"sub{index}");
-//                 _context.HotelImages.Add(new HotelImage
-//                 {
-//                     HotelId = hotel.Id,
-//                     ImageUrl = subUrl,
-//                     IsDeleted = false
-//                 });
-//                 index++;
-//             }
-//         }
-
-//         // 🏨 Bước 3: Lưu Policies
-//         if (dto.PolicyIds != null && dto.PolicyIds.Any())
-//         {
-//             foreach (var policyId in dto.PolicyIds)
-//             {
-//                 _context.HotelPolicies.Add(new HotelPolicy
-//                 {
-//                     HotelId = hotel.Id,
-//                     PolicyId = policyId,
-//                     CreatedAt = DateTime.UtcNow
-//                 });
-//             }
-//         }
-
-//         // 🏨 Bước 4: Lưu Amenities
-//         foreach (var amenityId in dto.AmenityIds)
-//         {
-//             _context.HotelAmenities.Add(new HotelAmenity
-//             {
-//                 HotelId = hotel.Id,
-//                 AmenityId = amenityId
-//             });
-//         }
-
-//         // 🏨 Bước 5: Update lại Hotel + SaveChanges
-//         _context.Hotels.Update(hotel);
-//         await _context.SaveChangesAsync();
-
-//         // Commit transaction nếu tất cả đều thành công
-//         await transaction.CommitAsync();
-//         return new ApiResponse<int>
-//         {
-//             StatusCode = StatusCodeResponse.Success,
-//             Message = MessageResponse.CREATE_SUCCESSFULLY,
-//             Content = hotel.Id
-//         };
-//     }
-//     catch (Exception ex)
-//     {
-//         // Rollback transaction nếu có lỗi
-//         await transaction.RollbackAsync();
-//         return new ApiResponse<int>
-//         {
-//             StatusCode = StatusCodeResponse.Error,
-//             Message = MessageResponse.ERROR_IN_SERVER,
-//             Content = 0
-//         };
-//     }
-
-// }
-// #endregion
-
-// DTO cho tiện ích khi tạo/sửa khách sạn
-// public class AmenityCreateOrUpdateDTO
-// {
-//     public string Name { get; set; } = "";
-//     public string? Description { get; set; }
-//     public string? IconClass { get; set; }
-//     public string? IconColor { get; set; }
-// }
-
-// // DTO cho chính sách khi tạo/sửa khách sạn
-// public class PolicyCreateOrUpdateDTO
-// {
-//     public string CheckIn { get; set; } = "";
-//     public string CheckOut { get; set; } = "";
-//     public string CancellationPolicy { get; set; } = "";
-// }
-
-// // DTO cho ảnh khách sạn khi tạo/sửa khách sạn
-// public class HotelImageCreateDTO
-// {
-//     public string ImageUrl { get; set; } = "";
-//     public bool IsCover { get; set; } = false;
-// }
-
-// // DTO tổng hợp cho việc tạo/sửa khách sạn
-// public class HotelCreateOrUpdateDTO
-// {
-//     public string Name { get; set; } = "";
-//     public string Address { get; set; } = "";
-//     public string City { get; set; } = "";
-//     public string Country { get; set; } = "";
-//     public string Description { get; set; } = "";
-//     public int StarRating { get; set; }
-//     public List<AmenityCreateOrUpdateDTO> Amenities { get; set; } = new();
-//     public PolicyCreateOrUpdateDTO? Policy { get; set; }
-//     public List<HotelImageCreateDTO> Images { get; set; } = new();
-// }

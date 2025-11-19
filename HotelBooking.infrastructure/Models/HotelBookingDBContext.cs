@@ -59,6 +59,8 @@ public partial class HotelBookingDBContext : DbContext
 
     public virtual DbSet<Service> Services { get; set; }
 
+    public virtual DbSet<ServiceType> ServiceTypes { get; set; }
+
     public virtual DbSet<UpgradeRequest> UpgradeRequests { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
@@ -491,6 +493,20 @@ public partial class HotelBookingDBContext : DbContext
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.Name).HasMaxLength(100);
             entity.Property(e => e.Price).HasColumnType("decimal(18, 2)");
+
+            entity.HasOne(d => d.ServiceType).WithMany(p => p.Services)
+                .HasForeignKey(d => d.ServiceTypeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Services_ServiceTypes");
+        });
+
+        modelBuilder.Entity<ServiceType>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__ServiceT__3214EC079B21F35D");
+
+            entity.Property(e => e.Description).HasMaxLength(100);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.TypeName).HasMaxLength(50);
         });
 
         modelBuilder.Entity<UpgradeRequest>(entity =>

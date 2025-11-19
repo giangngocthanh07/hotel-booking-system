@@ -42,6 +42,8 @@ builder.Services.AddScoped<IHotelPolicyRepository, HotelPolicyRepository>();
 builder.Services.AddScoped<IHotelAmenityRepository, HotelAmenityRepository>();
 builder.Services.AddScoped<IBookingRoomRepository, BookingRoomRepository>();
 builder.Services.AddScoped<IPolicyTypeRepository, PolicyTypeRepository>();
+builder.Services.AddScoped<IServiceTypeRepository, ServiceTypeRepository>();
+builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
 
 
 // DI for UnitOfWork
@@ -98,6 +100,10 @@ builder.Services.AddSwaggerGen(options =>
             new string[] {}
         }
     });
+
+    // BẬT 2 DÒNG NÀY:
+    options.UseAllOfForInheritance(); // Hiển thị kế thừa
+    options.UseOneOfForPolymorphism(); // Hiển thị đa hình (OneOf)
 });
 
 // ============== JWT Authentication & Authorization =============== //

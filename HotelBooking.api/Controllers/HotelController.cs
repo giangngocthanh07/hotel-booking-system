@@ -163,6 +163,37 @@ namespace HotelBooking.api.Controllers
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
+        #region MANAGE SERVICE
+        [HttpGet("get-all-service-types")]
+        public async Task<IActionResult> GetAllServiceTypesAsync()
+        {
+            var response = await _hotelService.GetAllServiceTypesAsync();
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
+        [HttpGet("get-all-service-by-type/{typeId}")]
+        public async Task<IActionResult> GetAllServicesByTypeAsync(int typeId)
+        {
+            var response = await _hotelService.GetAllServicesByTypeAsync(typeId);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
+        [HttpPost("create-standard-service")]
+        public async Task<IActionResult> CreateStandardServiceAsync([FromBody] CreateStandardServiceAdminDTO newService)
+        {
+            var response = await _hotelService.CreateServiceByTypeAsync(newService, 1);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
+        [HttpPost("create-airport-transfer-service")]
+        public async Task<IActionResult> CreateAirportTransferServiceAsync([FromBody] CreateAirportTransferServiceAdminDTO newService)
+        {
+            var response = await _hotelService.CreateServiceByTypeAsync(newService, 2);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
+        #endregion
+
         [Authorize(Roles = "Owner")]
         [HttpPost("test-upload-photo-cloudinary")]
         public async Task<IActionResult> TestUploadPhotoCloudinaryAsync(IFormFile file)

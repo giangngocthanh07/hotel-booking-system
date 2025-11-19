@@ -17,5 +17,9 @@ public partial class Service
 
     public decimal Price { get; set; }
 
+    public int ServiceTypeId { get; set; }
+
     public virtual ICollection<BookingService> BookingServices { get; set; } = new List<BookingService>();
+
+    public virtual ServiceType ServiceType { get; set; } = null!;
 }

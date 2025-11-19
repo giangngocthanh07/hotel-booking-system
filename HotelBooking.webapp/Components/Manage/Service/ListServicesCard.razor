@@ -1,0 +1,130 @@
+@using HotelBooking.webapp.ViewModels.Hotel
+<div class="col-md-8">
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Danh sách @SelectedServiceType</h5>
+        </div>
+        <div class="card-body">
+            @if (ServicesByType == null)
+            // Nếu dùng cách không có tính đa hình chỉ cần thay ServicesByType thành ServiceBaseList
+            {
+                <div class="text-center text-muted">
+                    <p><em>Đang tải dữ liệu...</em></p>
+                </div>
+            }
+            else
+            {
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:60px;">Id</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            @if (SelectedServiceType == 1)
+                            {
+                                <th>Unit</th>
+                                <th>Price (per Unit)</th>
+                            }
+                            else if (SelectedServiceType == 2)
+                            {
+                                <th>Price (One-Way)</th>
+                                <th>Capacity</th>
+                                <th>Surcharge (Fee/Time)</th>
+                            }
+                            <th style="width:160px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ServicesByType.Count == 0)
+                        {
+                            // TÍNH TOÁN COLSPAN ĐỘNG
+                            int colCount = 4; // Cột cơ bản: Id, Name, Desc, Actions
+                            if (SelectedServiceType == 1) { colCount = 6; }
+                            else if (SelectedServiceType == 2) { colCount = 7; }
+
+                            <tr>
+                                <td colspan="@colCount" class="text-center text-muted">
+                                    No services found
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var service in ServicesByType)
+                            // Nếu dùng cách không có tính đa hình chỉ cần thay ServicesByType thành ServiceBaseList
+                            {
+                                <tr>
+                                    <td>@service.Id</td>
+                                    <td>@service.Name</td>
+                                    <td>@service.Description</td>
+                                    @if (service is ServiceStandardVM standard)
+                                    {
+                                        <td>@standard.Unit</td>
+                                        <td>@standard.Price.ToString() VNĐ</td>
+                                    }
+                                    else if (service is ServiceAirportTransferVM at)
+                                    {
+                                        <td>@at.Price.ToString() VNĐ</td>
+                                        <td class="p-0"> @* Xóa padding của <td> cha *@
+                                            <table class="table table-borderless table-sm mb-0">
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="ps-2 py-0" style="width: 140px;">Max Guests:</td>
+                                                        <td class="py-0">@at.MaxPassengers</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="ps-2 py-0">Max Luggage:</td>
+                                                        <td class="py-0">@at.MaxLuggage</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </td>
+
+                                        @* === SỬA LẠI CỘT SURCHARGE === *@
+                                        <td class="p-0"> @* Xóa padding của <td> cha *@
+                                            <table class="table table-borderless table-sm mb-0">
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="ps-2 py-0" style="width: 60px;">Fee:</td>
+                                                        <td class="py-0">@at.AdditionalFee.ToString() VNĐ</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="ps-2 py-0">From:</td>
+                                                        <td class="py-0">@at.AdditionalFeeStartTime.ToString()</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="ps-2 py-0">To:</td>
+                                                        <td class="py-0">@at.AdditionalFeeEndTime.ToString()</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    }
+
+                                    <td>
+                                        @* <button class="btn btn-warning btn-sm me-2" @onclick="() => OnEdit(service)">
+                                            EDIT
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" @onclick="() => OnDelete(service.Id)">
+                                            DELETE
+                                        </button> *@
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int SelectedServiceType { get; set; }
+
+    // List được dùng theo cách có tính đa hình
+    [Parameter]
+    public List<ServiceBaseVM>? ServicesByType { get; set; }
+
+}
