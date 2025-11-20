@@ -192,6 +192,27 @@ namespace HotelBooking.api.Controllers
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
+        [HttpPut("update-standard-service/{id}")]
+        public async Task<IActionResult> UpdateStandardServiceAsync(int id, [FromBody] UpdateStandardServiceAdminDTO updatedService)
+        {
+            var response = await _hotelService.UpdateServiceByTypeAsync(id, updatedService, 1);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
+        [HttpPut("update-airport-transfer-service/{id}")]
+        public async Task<IActionResult> UpdateAirportTransferServiceAsync(int id, [FromBody] UpdateAirportTransferServiceAdminDTO updatedService)
+        {
+            var response = await _hotelService.UpdateServiceByTypeAsync(id, updatedService, 2);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
+        [HttpDelete("delete-service/{id}")]
+        public async Task<IActionResult> DeleteServiceAsync(int id)
+        {
+            var response = await _hotelService.DeleteServiceAsync(id);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
         #endregion
 
         [Authorize(Roles = "Owner")]

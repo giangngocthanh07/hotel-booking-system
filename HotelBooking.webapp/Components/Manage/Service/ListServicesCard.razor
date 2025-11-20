@@ -102,12 +102,12 @@
                                     }
 
                                     <td>
-                                        @* <button class="btn btn-warning btn-sm me-2" @onclick="() => OnEdit(service)">
+                                        <button class="btn btn-warning btn-sm me-2" @onclick="() => OnEdit(service)">
                                             EDIT
                                         </button>
                                         <button class="btn btn-danger btn-sm" @onclick="() => OnDelete(service.Id)">
                                             DELETE
-                                        </button> *@
+                                        </button>
                                     </td>
                                 </tr>
                             }
@@ -126,5 +126,19 @@
     // List được dùng theo cách có tính đa hình
     [Parameter]
     public List<ServiceBaseVM>? ServicesByType { get; set; }
+
+    [Parameter]
+    public EventCallback<ServiceBaseVM> EventOnEdit { get; set; }
+    public async Task OnEdit(ServiceBaseVM service)
+    {
+        await EventOnEdit.InvokeAsync(service);
+    }
+
+    [Parameter]
+    public EventCallback<int> EventOnDelete { get; set; }
+    public async Task OnDelete(int id)
+    {
+        await EventOnDelete.InvokeAsync(id);
+    }
 
 }

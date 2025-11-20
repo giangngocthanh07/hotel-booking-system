@@ -20,6 +20,8 @@ public interface IHotelService
     public Task<ApiResponse<List<ServiceTypeDTO>>> GetAllServiceTypesAsync();
     public Task<ApiResponse<List<ServiceBaseDTO>>> GetAllServicesByTypeAsync(int typeId);
     public Task<ApiResponse<ServiceBaseDTO>> CreateServiceByTypeAsync(CreateServiceAdminDTO newService, int typeId);
+    public Task<ApiResponse<ServiceBaseDTO>> UpdateServiceByTypeAsync(int id, UpdateServiceAdminDTO updatedService, int typeId);
+    public Task<ApiResponse<bool>> DeleteServiceAsync(int id);
     public Task<ApiResponse<List<CityDTO>>> GetAllCitiesAsync();
     public Task<ApiResponse<CreateHotelResponseDTO>> PostHotelAsync(CreateHotelDTO newHotel, int ownerId);
 
@@ -70,6 +72,7 @@ public class HotelService : IHotelService
         "EXEC sp_SearchHotels @CityName={0}, @CheckIn={1}, @CheckOut={2}, @Adults={3}, @Children={4}, @Rooms={5}",
         cityName, checkIn, checkOut, adults, children, rooms)
     .ToListAsync();
+
         return hotels;
     }
 
@@ -951,6 +954,169 @@ public class HotelService : IHotelService
             };
         }
 
+    }
+
+    public async Task<ApiResponse<ServiceBaseDTO>> UpdateServiceByTypeAsync(int id, UpdateServiceAdminDTO updatedService, int typeId)
+    {
+        try
+        {
+            var existingService = await _serviceRepository.GetByIdAsync(id);
+            if (existingService == null)
+            {
+                return new ApiResponse<ServiceBaseDTO>
+                {
+                    StatusCode = StatusCodeResponse.NotFound,
+                    Message = MessageResponse.NOT_FOUND,
+                    Content = null
+                };
+            }
+
+            // Kiểm tra trùng tên
+            var nameExists = await _serviceRepository.AnyAsync(sv => sv.Id != id && sv.Name.ToLower() == updatedService.Name.ToLower());
+            if (nameExists) return new ApiResponse<ServiceBaseDTO>
+            {
+                StatusCode = StatusCodeResponse.Conflict,
+                Message = MessageResponse.NAME_ALREADY_EXISTS,
+                Content = null
+            };
+
+            // Kiểm tra id được cập nhật có đúng loại dịch vụ không
+            if (existingService.ServiceTypeId != typeId)
+            {
+                return new ApiResponse<ServiceBaseDTO>
+                {
+                    StatusCode = StatusCodeResponse.BadRequest,
+                    Message = MessageResponse.UPDATE_FAILED,
+                    Content = null
+                };
+            }
+
+            // Cập nhật các trường chung
+            existingService.Name = updatedService.Name;
+            existingService.Description = updatedService.Description;
+
+            // Cập nhật các trường đặc thù theo typeId
+            object? additionalData = null;
+            ServiceAdditionalDataAT? additionalDataAT = null;
+
+            switch (typeId)
+            {
+                case 1: // Standard
+                    if (updatedService is UpdateStandardServiceAdminDTO standard)
+                    {
+                        additionalData = new { Unit = standard.Unit };
+                    }
+                    else
+                    {
+                        return new ApiResponse<ServiceBaseDTO>
+                        {
+                            StatusCode = StatusCodeResponse.BadRequest,
+                            Message = MessageResponse.UPDATE_FAILED,
+                            Content = null
+                        };
+                    }
+                    break;
+
+                case 2: // Airport Transfer
+                        // Không có trường đặc thù để cập nhật
+                    additionalDataAT = JsonSerializer.Deserialize<ServiceAdditionalDataAT>(existingService.Additional ?? "{}");
+                    break;
+                default:
+                    return new ApiResponse<ServiceBaseDTO>
+                    {
+                        StatusCode = StatusCodeResponse.BadRequest,
+                        Message = MessageResponse.UPDATE_FAILED,
+                        Content = null
+                    };
+            }
+            if (additionalData != null)
+            {
+                existingService.Additional = JsonSerializer.Serialize(additionalData);
+            }
+            await _serviceRepository.UpdateAsync(existingService);
+            await _dbu.SaveChangesAsync();
+            // Trả về DTO tương ứng
+            ServiceBaseDTO resultDTO = null;
+            if (typeId == 1)
+            {
+                resultDTO = new ServiceStandardDTO
+                {
+                    Id = existingService.Id,
+                    Name = existingService.Name,
+                    Description = existingService.Description,
+                    Unit = JsonSerializer.Deserialize<ServiceStandardDTO>(existingService.Additional ?? "{}")?.Unit,
+                    Price = existingService.Price,
+                    ServiceTypeId = existingService.ServiceTypeId
+                };
+            }
+            else if (typeId == 2)
+            {
+
+                resultDTO = new ServiceAirportTransferDTO
+                {
+                    Id = existingService.Id,
+                    Name = existingService.Name,
+                    Description = existingService.Description,
+                    Price = existingService.Price,
+                    ServiceTypeId = existingService.ServiceTypeId,
+                    MaxPassengers = additionalDataAT?.MaxPassengers,
+                    MaxLuggage = additionalDataAT?.MaxLuggage,
+                    RoundTripPrice = additionalDataAT?.RoundTripPrice,
+                    AdditionalFee = additionalDataAT?.AdditionalFee,
+                    AdditionalFeeStartTime = additionalDataAT?.AdditionalFeeStartTime,
+                    AdditionalFeeEndTime = additionalDataAT?.AdditionalFeeEndTime
+                };
+            }
+            return new ApiResponse<ServiceBaseDTO>
+            {
+                StatusCode = StatusCodeResponse.Success,
+                Message = MessageResponse.UPDATE_SUCCESSFULLY,
+                Content = resultDTO
+            };
+        }
+        catch (Exception)
+        {
+            return new ApiResponse<ServiceBaseDTO>
+            {
+                StatusCode = StatusCodeResponse.Error,
+                Message = MessageResponse.ERROR_IN_SERVER,
+                Content = null
+            };
+        }
+    }
+
+    public async Task<ApiResponse<bool>> DeleteServiceAsync(int id)
+    {
+        var service = await _serviceRepository.GetByIdAsync(id);
+
+        if (service == null) return new ApiResponse<bool>
+        {
+            StatusCode = StatusCodeResponse.NotFound,
+            Message = MessageResponse.NOT_FOUND,
+            Content = false
+        };
+
+        try
+        {
+            service.IsDeleted = true;
+            await _serviceRepository.UpdateAsync(service);
+            await _dbu.SaveChangesAsync(); // EF Core tự track thay đổi
+            return new ApiResponse<bool>
+            {
+                StatusCode = StatusCodeResponse.Success,
+                Message = MessageResponse.DELETE_SUCCESSFULLY,
+                Content = true
+            };
+        }
+        catch (Exception)
+        {
+            return new ApiResponse<bool>
+            {
+                StatusCode = StatusCodeResponse.Error,
+                Message = MessageResponse.ERROR_IN_SERVER,
+                Content = false
+            };
+        }
     }
 
     #endregion
