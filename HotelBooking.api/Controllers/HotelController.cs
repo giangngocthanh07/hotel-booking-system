@@ -164,6 +164,13 @@ namespace HotelBooking.api.Controllers
         }
 
         #region MANAGE SERVICE
+        [HttpGet("get-manage-service-data")]
+        public async Task<IActionResult> GetManageServiceDataAsync([FromQuery] int? selectedTypeId)
+        {
+            var response = await _hotelService.GetManageServiceDataAsync(selectedTypeId);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
         [HttpGet("get-all-service-types")]
         public async Task<IActionResult> GetAllServiceTypesAsync()
         {

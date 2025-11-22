@@ -10,6 +10,7 @@ public interface IRepository<T> where T : class
     Task UpdateAsync(T entity);
     Task DeleteAsync(int id);
     Task<T?> SingleOrDefaultAsync(Expression<Func<T, bool>> predicate);
+    Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate);
     Task<IEnumerable<T>> WhereAsync(Expression<Func<T, bool>> predicate);
     Task<bool> AnyAsync(Expression<Func<T, bool>> predicate);
 }
@@ -60,6 +61,7 @@ public class Repository<T> : IRepository<T> where T : class
 
     public async Task<T?> SingleOrDefaultAsync(Expression<Func<T, bool>> predicate) => await _dbSet.AsNoTracking().SingleOrDefaultAsync(predicate);
 
+    public async Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate) => await _dbSet.AsNoTracking().FirstOrDefaultAsync(predicate);
 
     public async Task<IEnumerable<T>> WhereAsync(Expression<Func<T, bool>> predicate) => await _dbSet.AsNoTracking().Where(predicate).ToListAsync();
 

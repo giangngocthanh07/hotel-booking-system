@@ -2,11 +2,10 @@
 <div class="col-md-8">
     <div class="card shadow-sm">
         <div class="card-header bg-light">
-            <h5 class="mb-0">Danh sách @SelectedServiceType</h5>
+            <h5 class="mb-0">Danh sách @PageData.SelectedTypeName</h5>
         </div>
         <div class="card-body">
-            @if (ServicesByType == null)
-            // Nếu dùng cách không có tính đa hình chỉ cần thay ServicesByType thành ServiceBaseList
+            @if (IsLoading)
             {
                 <div class="text-center text-muted">
                     <p><em>Đang tải dữ liệu...</em></p>
@@ -20,12 +19,12 @@
                             <th style="width:60px;">Id</th>
                             <th>Name</th>
                             <th>Description</th>
-                            @if (SelectedServiceType == 1)
+                            @if (PageData.SelectedTypeId == 1)
                             {
                                 <th>Unit</th>
                                 <th>Price (per Unit)</th>
                             }
-                            else if (SelectedServiceType == 2)
+                            else if (PageData.SelectedTypeId == 2)
                             {
                                 <th>Price (One-Way)</th>
                                 <th>Capacity</th>
@@ -35,12 +34,12 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (ServicesByType.Count == 0)
+                        @if (PageData.Services.Count == 0)
                         {
                             // TÍNH TOÁN COLSPAN ĐỘNG
                             int colCount = 4; // Cột cơ bản: Id, Name, Desc, Actions
-                            if (SelectedServiceType == 1) { colCount = 6; }
-                            else if (SelectedServiceType == 2) { colCount = 7; }
+                            if (PageData.SelectedTypeId == 1) { colCount = 6; }
+                            else if (PageData.SelectedTypeId == 2) { colCount = 7; }
 
                             <tr>
                                 <td colspan="@colCount" class="text-center text-muted">
@@ -50,7 +49,7 @@
                         }
                         else
                         {
-                            @foreach (var service in ServicesByType)
+                            @foreach (var service in PageData.Services)
                             // Nếu dùng cách không có tính đa hình chỉ cần thay ServicesByType thành ServiceBaseList
                             {
                                 <tr>
@@ -102,10 +101,10 @@
                                     }
 
                                     <td>
-                                        <button class="btn btn-warning btn-sm me-2" @onclick="() => OnEdit(service)">
+                                        <button class="btn btn-warning btn-sm me-2" @onclick="() => EventOnEdit.InvokeAsync(service)">
                                             EDIT
                                         </button>
-                                        <button class="btn btn-danger btn-sm" @onclick="() => OnDelete(service.Id)">
+                                        <button class="btn btn-danger btn-sm" @onclick="() => EventOnDelete.InvokeAsync(service.Id)">
                                             DELETE
                                         </button>
                                     </td>
@@ -121,24 +120,14 @@
 
 @code {
     [Parameter]
-    public int SelectedServiceType { get; set; }
-
-    // List được dùng theo cách có tính đa hình
+    public bool IsLoading { get; set; }
     [Parameter]
-    public List<ServiceBaseVM>? ServicesByType { get; set; }
+    public ManageServiceVM PageData { get; set; } = null!;
 
     [Parameter]
     public EventCallback<ServiceBaseVM> EventOnEdit { get; set; }
-    public async Task OnEdit(ServiceBaseVM service)
-    {
-        await EventOnEdit.InvokeAsync(service);
-    }
 
     [Parameter]
     public EventCallback<int> EventOnDelete { get; set; }
-    public async Task OnDelete(int id)
-    {
-        await EventOnDelete.InvokeAsync(id);
-    }
 
 }

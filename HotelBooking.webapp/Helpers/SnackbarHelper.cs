@@ -2,7 +2,7 @@ using MudBlazor;
 
 public static class SnackbarHelper
 {
-    public static void Show(ISnackbar snackbar, string status, string? message)
+    public static void Show(ISnackbar snackbar, string status, string message)
     {
         switch (status)
         {

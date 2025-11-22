@@ -1,6 +1,7 @@
 @using HotelBooking.webapp.Components.Manage.Service
 @using HotelBooking.webapp.ViewModels.Hotel
 
+
 @page "/admin/manages/manage-services"
 @layout AdminLayout
 
@@ -12,111 +13,61 @@
     <h2 class="text-primary mb-4">Manage Services</h2>
 
     <div class="row">
-        <ServiceCreateOrUpdateCard ServiceTypeList="@serviceTypesList" SelectedServiceType="@selectedServiceType"
-            ServiceParam="@SelectedService" OnServiceTypeChanged="@HandleServiceTypeChange"
-            OnSaveUpdate="@SaveOrUpdateService" />
+        <ServiceCreateOrUpdateCard PageData="@PageData" ServiceParam="@SelectedService"
+            OnServiceTypeChanged="@HandleServiceTypeChange" OnSaveUpdate="@SaveOrUpdateService" />
 
-        <ListServicesCard SelectedServiceType="@selectedServiceType" ServicesByType="@ListServicesByType"
-            EventOnEdit="@EditService" EventOnDelete="@DeleteService" />
+        <ListServicesCard IsLoading="@_isLoading" PageData="@PageData" EventOnEdit="@EditService"
+            EventOnDelete="@DeleteService" />
 
     </div>
 </div>
 
 @code {
-    int selectedServiceType = 0;
+    private bool _isLoading = false;
+    private ManageServiceVM PageData = new();
+    public int selectedTypeId = 0;
+
     public ServiceBaseVM? SelectedService { get; set; }
     // Biến lưu danh sách lấy từ API
-    private List<ServiceTypeVM>? serviceTypesList;
-
-    // List dùng cho cách ứng dụng tính đa hình (ListServiceCard.razor)
-    public List<ServiceBaseVM> ListServicesByType = new();
 
     protected override async Task OnInitializedAsync()
     {
         _httpClient = _httpClientFactory.CreateClient("HotelBookingAPI");
 
-        await GetAllServiceTypes();
+        await LoadData(null);
+
     }
 
-    // 1 Hàm duy nhất trả về List service theo các type thay vì hard code viết nhiều hàm,
-    // Sử dụng tính đa hình - coi trong ServiceBaseVM
-    private async Task GetAllServiceTypes()
+    private async Task LoadData(int? typeId)
     {
-        try
-        {
-            // Gọi API
-            var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<ServiceTypeVM>>>("hotel/get-all-service-types");
+        _isLoading = true;
+        var url = $"hotel/get-manage-service-data?selectedTypeId={typeId}";
 
-            if (response != null && response.StatusCode == StatusCodeResponse.Success && response.Content != null)
-            {
-                serviceTypesList = response.Content;
-            }
-        }
-        catch (Exception ex)
+        var response = await _httpClient.GetFromJsonAsync<ApiResponse<ManageServiceVM>>(url);
+
+        if (response != null && response.StatusCode == StatusCodeResponse.Success && response.Content != null)
         {
-            //Xử lý lỗi(ví dụ: log lỗi, hiển thị thông báo)
-            Console.WriteLine($"Lỗi khi tải ServiceTypes: {ex.Message}");
+            PageData = response.Content;
+
+            SelectedService = ServiceHelper.CreateNewServiceInstance(PageData.SelectedTypeId);
+
         }
+
+        _isLoading = false;
     }
 
-    private async Task HandleServiceTypeChange(ChangeEventArgs e)
+
+    private async Task HandleServiceTypeChange(int newId)
     {
-        // 1. Lấy giá trị 'string' từ sự kiện
-        var newIdString = e.Value?.ToString();
-
-        // 2. Chuyển sang Int
-        if (int.TryParse(newIdString, out int newId))
+        if (PageData != null)
         {
-            // 3. Kiểm tra xem giá trị có thực sự thay đổi không
-            if (selectedServiceType == newId)
-            {
-                return;
-            }
-
-            // 4. Có thay đổi thì cập nhật lại giá trị
-            selectedServiceType = newId;
-
-            await GetAllServicesByType();
-
-            SelectedService = ServiceHelper.CreateNewServiceInstance(newId);
-
-            // 6.
-            await InvokeAsync(StateHasChanged);
+            PageData.SelectedTypeId = newId;
+            // (Tùy chọn) Xóa tạm list services cũ để hiện Loading hoặc bảng trắng
+            PageData.Services = new List<ServiceBaseVM>();
         }
+        await LoadData(newId);
     }
 
-
-    private async Task GetAllServicesByType()
-    {
-        if (selectedServiceType == 0)
-        {
-            ListServicesByType = new();
-            return;
-        }
-
-        try
-        {
-            ListServicesByType = null;
-            await InvokeAsync(StateHasChanged);
-
-            // Gọi API
-            var response = await
-            _httpClient.GetFromJsonAsync<ApiResponse<List<ServiceBaseVM>>>($"hotel/get-all-service-by-type/{selectedServiceType}");
-
-            if (response != null && response.StatusCode == StatusCodeResponse.Success && response.Content != null)
-            {
-                ListServicesByType = response.Content;
-            }
-            else
-            {
-                ListServicesByType = new();
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error: {ex.Message}");
-        }
-    }
 
     private async Task SaveOrUpdateService()
     {
@@ -133,7 +84,7 @@
 
         // 3. Xây dựng API Endpoint động
         string apiAction = isCreate ? "create" : "update";
-        string apiType = selectedServiceType switch
+        string apiType = PageData!.SelectedTypeId switch
         {
             1 => "standard-service",
             2 => "airport-transfer-service",
@@ -147,67 +98,54 @@
             apiEndpoint += $"/{SelectedService.Id}";
         }
 
-
-        // 4. Gọi API (Hợp nhất logic HTTP)
-        HttpResponseMessage response;
-        if (isCreate)
+        try
         {
-            response = await _httpClient.PostAsJsonAsync(apiEndpoint, SelectedService);
+            // 4. Gọi API (Hợp nhất logic HTTP)
+            HttpResponseMessage response;
+            if (isCreate)
+            {
+                response = await _httpClient.PostAsJsonAsync(apiEndpoint, SelectedService);
+            }
+            else
+            {
+                response = await _httpClient.PutAsJsonAsync(apiEndpoint, SelectedService);
+            }
+
+            // 5. Xử lý phản hồi bằng Helper (Gọn gàng & Tái sử dụng)
+            var finalApiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<ServiceBaseVM>>();
+
+            // Bảo vệ null: sử dụng giá trị mặc định nếu finalApiResponse là null
+            var status = finalApiResponse?.StatusCode ?? StatusCodeResponse.Error;
+            var message = finalApiResponse?.Message ?? MessageResponse.ERROR_IN_SERVER;
+            SnackbarHelper.Show(Snackbar, status, message);
+
+            // 6. Reset Form & Tải lại danh sách (Chỉ khi thành công)
+            if (status == StatusCodeResponse.Success)
+            {
+                // Tạo object mới để xóa trắng form
+                SelectedService = ServiceHelper.CreateNewServiceInstance(PageData.SelectedTypeId);
+
+                // Tải lại bảng dữ liệu
+                await LoadData(PageData.SelectedTypeId);
+
+                // Cập nhật UI
+                await InvokeAsync(StateHasChanged);
+            }
         }
-        else
+        catch (Exception)
         {
-            response = await _httpClient.PutAsJsonAsync(apiEndpoint, SelectedService);
-        }
-
-        // 5. Xử lý phản hồi bằng Helper (Gọn gàng & Tái sử dụng)
-        var finalApiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<ServiceBaseVM>>();
-
-        SnackbarHelper.Show(Snackbar, finalApiResponse.StatusCode, finalApiResponse.Message);
-
-        // 6. Reset Form & Tải lại danh sách (Chỉ khi thành công)
-        if (finalApiResponse?.StatusCode == StatusCodeResponse.Success)
-        {
-            // Tạo object mới để xóa trắng form
-            SelectedService = ServiceHelper.CreateNewServiceInstance(selectedServiceType);
-
-            // Tải lại bảng dữ liệu
-            await GetAllServicesByType();
-
-            // Cập nhật UI
-            await InvokeAsync(StateHasChanged);
+            SnackbarHelper.Show(Snackbar, StatusCodeResponse.Error, MessageResponse.ERROR_IN_SERVER);
         }
     }
 
-
     private async Task EditService(ServiceBaseVM service)
     {
-        var findService = ListServicesByType.Find(svInList => svInList.Id == service.Id);
+        var findService = PageData?.Services.FirstOrDefault(x => x.Id == service.Id);
 
         if (findService == null) return;
 
-        SelectedService = ServiceHelper.CreateNewServiceInstance(findService.ServiceTypeId);
-
-        if (SelectedService == null) return;
-
-        SelectedService.Id = findService.Id;
-        SelectedService.Name = findService.Name;
-        SelectedService.Description = findService.Description;
-
-        // Ánh xạ các trường đặc thù bằng Pattern Matching
-        switch (findService.ServiceTypeId)
-        {
-            case 1: // Standard Service
-                    // Kiểm tra và ép kiểu an toàn cho cả NGUỒN và ĐÍCH
-                if (findService is ServiceStandardVM sourceStandard && SelectedService is ServiceStandardVM targetStandard)
-                {
-                    // Ánh xạ các thuộc tính riêng biệt
-                    targetStandard.Unit = sourceStandard.Unit;
-
-                }
-                break;
-            default:
-                break;
-        }
+        // 2. Clone bằng Helper (An toàn, Nhanh, Không dùng JSON/Object)
+        SelectedService = ServiceHelper.CloneService(findService);
 
         // Kích hoạt render để hiển thị form Edit
         await InvokeAsync(StateHasChanged);
@@ -217,25 +155,16 @@
     {
         // Gọi API DELETE
         var response = await _httpClient.DeleteAsync($"hotel/delete-service/{id}");
+        var result = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
 
-        if (response.IsSuccessStatusCode)
+        if (result?.StatusCode == StatusCodeResponse.Success)
         {
-            ListServicesByType.RemoveAll(sv => sv.Id == id);
-            StateHasChanged();
+            SnackbarHelper.Show(Snackbar, StatusCodeResponse.Success, "Đã xóa thành công");
+            await LoadData(PageData.SelectedTypeId);
         }
-
-        var finalApiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
-        SnackbarHelper.Show(Snackbar, finalApiResponse?.StatusCode ?? "Error", finalApiResponse?.Message);
-
-        // a. Tải lại danh sách từ Server (Đảm bảo đồng bộ dữ liệu chính xác nhất)
-        await GetAllServicesByType();
-
-        // b. Reset form về trạng thái Add New
-        // (Để tránh trường hợp form đang hiển thị dữ liệu của item vừa bị xóa)
-        SelectedService = ServiceHelper.CreateNewServiceInstance(selectedServiceType);
-
-        // c. Cập nhật UI
-        await InvokeAsync(StateHasChanged);
+        else
+        {
+            SnackbarHelper.Show(Snackbar, StatusCodeResponse.Error, result?.Message ?? "Lỗi xóa");
+        }
     }
-
 }

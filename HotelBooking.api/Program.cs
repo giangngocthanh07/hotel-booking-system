@@ -40,6 +40,7 @@ builder.Services.AddScoped<IRoomServiceRepository, RoomServiceRepository>();
 builder.Services.AddScoped<IRoomAmenityRepository, RoomAmenityRepository>();
 builder.Services.AddScoped<IHotelPolicyRepository, HotelPolicyRepository>();
 builder.Services.AddScoped<IHotelAmenityRepository, HotelAmenityRepository>();
+builder.Services.AddScoped<IHotelImageRepository, HotelImageRepository>();
 builder.Services.AddScoped<IBookingRoomRepository, BookingRoomRepository>();
 builder.Services.AddScoped<IPolicyTypeRepository, PolicyTypeRepository>();
 builder.Services.AddScoped<IServiceTypeRepository, ServiceTypeRepository>();

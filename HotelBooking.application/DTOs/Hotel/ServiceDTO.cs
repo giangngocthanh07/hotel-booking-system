@@ -8,6 +8,12 @@ public class ServiceTypeDTO
     public bool? IsDeleted { get; set; }
 }
 
+public enum ServiceTypeEnum
+{
+    Standard = 1,
+    AirportTransfer = 2,
+}
+
 // Báo hiệu đây là lớp đa hình
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "discriminator")]
 // Khai báo các con và đặt tên định danh (discriminator) cho chúng
@@ -62,4 +68,17 @@ public class ServiceAdditionalDataAT
     // Chúng ta đọc TimeSpan dưới dạng string trước
     public TimeSpan? AdditionalFeeStartTime { get; set; }
     public TimeSpan? AdditionalFeeEndTime { get; set; }
+}
+
+public class ManageServiceDTO
+{
+    // 1. List ServiceType để FE chọn loại dịch vụ
+    public List<ServiceTypeDTO> ServiceTypes { get; set; } = new List<ServiceTypeDTO>();
+
+    // Phần 2: Thông tin của Loại đang được chọn (để hiện tiêu đề, form add)
+    public int SelectedTypeId { get; set; }
+    public string? SelectedTypeName { get; set; }
+
+    // Phần 3: Danh sách dịch vụ của loại đó (để fill Table)
+    public List<ServiceBaseDTO> Services { get; set; } = new();
 }

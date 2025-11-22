@@ -48,3 +48,11 @@ public class ServiceAirportTransferVM : ServiceBaseVM
     public TimeSpan? AdditionalFeeStartTime { get; set; }
     public TimeSpan? AdditionalFeeEndTime { get; set; }
 }
+
+public class ManageServiceVM
+{
+    public List<ServiceTypeVM> ServiceTypes { get; set; } = new();
+    public List<ServiceBaseVM> Services { get; set; } = new();
+    public int SelectedTypeId { get; set; }
+    public string? SelectedTypeName { get; set; }
+}

@@ -10,4 +10,5 @@ public class ServiceTypeRepository : Repository<ServiceType>, IServiceTypeReposi
     public ServiceTypeRepository(HotelBookingDBContext context) : base(context)
     {
     }
+
 }

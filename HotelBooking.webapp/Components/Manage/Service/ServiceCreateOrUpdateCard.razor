@@ -7,7 +7,7 @@
 
         </div>
         <div class="card-body">
-            @if (ServiceTypeList == null)
+            @if (PageData?.ServiceTypes == null)
             {
                 <p><em>Đang tải danh sách...</em></p>
             }
@@ -16,31 +16,24 @@
                 <div class="form-group">
                     <label class="mb-3">Loại dịch vụ:</label>
 
-                    <select class="form-control" value="@SelectedServiceType" @onchange="OnServiceTypeChanged">
+                    <select class="form-control" value="@PageData.SelectedTypeId" @onchange="OnTypeChanged">
 
-                        <option value="0">-- Vui lòng chọn --</option>
-                        @foreach (var type in ServiceTypeList)
+
+                        @foreach (var type in PageData.ServiceTypes)
                         {
                             <option value="@type.Id">@type.Name</option>
                         }
                     </select>
                 </div>
-
-                <hr />
-
-                @if (SelectedServiceType > 0)
-                {
-                    <p><strong>Bạn chọn:</strong> @SelectedServiceType</p>
-                }
             }
         </div>
         <hr />
-        @if (ServiceParam != null)
+        @if (ServiceParam != null && PageData != null)
         {
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">
-                        @GetTitle()
+                        @(ServiceParam.Id == 0 ? "Add" : "Edit") @PageData.SelectedTypeName
                     </h5>
                 </div>
 
@@ -125,10 +118,16 @@
 
                         }
 
-                        <div class="d-flex">
-                            <button type="submit" class="btn btn-success me-2 w-100">
-                                @(ServiceParam.Id == 0 ? "SAVE" : "UPDATE")
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn @(ServiceParam.Id == 0 ? "btn-success" : "btn-warning")">
+                                <i class="bi bi-save"></i> @(ServiceParam.Id == 0 ? "LƯU LẠI" : "CẬP NHẬT")
                             </button>
+                            @if (ServiceParam.Id != 0)
+                            {
+                                <button type="button" class="btn btn-secondary" @onclick="ResetForm">
+                                    <i class="bi bi-x-circle"></i> Hủy bỏ
+                                </button>
+                            }
                         </div>
                     </EditForm>
                 </div>
@@ -139,39 +138,35 @@
 </div>
 
 @code {
+    [Parameter]
+    public ManageServiceVM? PageData { get; set; }
     // Đây là "Model" chính cho EditForm
     [Parameter]
     public ServiceBaseVM? ServiceParam { get; set; }
 
-    //
     [Parameter]
-    public int SelectedServiceType { get; set; }
-    //
-    [Parameter]
-    public List<ServiceTypeVM>? ServiceTypeList { get; set; }
-    // Biến này sẽ tự động cập nhật khi người dùng chọn
-    // Đây chính là "data type mà được chọn" mà bạn muốn lưu lại
+    public EventCallback<int> OnServiceTypeChanged { get; set; }
 
     [Parameter]
-    public EventCallback<ChangeEventArgs> OnServiceTypeChanged { get; set; }
+    public EventCallback OnSaveUpdate { get; set; }
 
-    [Parameter]
-    public EventCallback<ServiceBaseVM> OnSaveUpdate { get; set; }
+    private async Task OnTypeChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int newId))
+        {
+            await OnServiceTypeChanged.InvokeAsync(newId);
+        }
+    }
 
     private async Task HandleValidSubmit()
     {
         await OnSaveUpdate.InvokeAsync(ServiceParam);
     }
 
-    private string GetTitle()
+    private async Task ResetForm()
     {
-        // Bước 1: Xác định hành động (Action)
-        string action = (ServiceParam?.Id == 0) ? "Add New" : "Edit";
-
-        // Bước 2: Xác định loại (Type)
-        string serviceType = ServiceHelper.GetServiceTypeName(ServiceParam.ServiceTypeId);
-
-        // Bước 3: Trả về kết quả
-        return $"{action} {serviceType}";
+        // Gọi lại change type với ID hiện tại để Cha reset lại form về rỗng
+        if (PageData != null)
+            await OnServiceTypeChanged.InvokeAsync(PageData.SelectedTypeId);
     }
 }

@@ -17,6 +17,7 @@ public interface IHotelService
     public Task<ApiResponse<PolicyDTO>> CreatePolicyAsync(PolicyCreateOrUpdateDTO newPolicy);
     public Task<ApiResponse<PolicyDTO>> UpdatePolicyAsync(int id, PolicyCreateOrUpdateDTO policy);
     public Task<ApiResponse<bool>> DeletePolicyAsync(int id);
+    public Task<ApiResponse<ManageServiceDTO>> GetManageServiceDataAsync(int? selectedTypeId);
     public Task<ApiResponse<List<ServiceTypeDTO>>> GetAllServiceTypesAsync();
     public Task<ApiResponse<List<ServiceBaseDTO>>> GetAllServicesByTypeAsync(int typeId);
     public Task<ApiResponse<ServiceBaseDTO>> CreateServiceByTypeAsync(CreateServiceAdminDTO newService, int typeId);
@@ -33,7 +34,11 @@ public class HotelService : IHotelService
 {
     public HotelBookingDBContext _context;
     private readonly IHotelRepository _hotelRepository;
+    private readonly IHotelImageRepository _hotelImageRepository;
+    private readonly IHotelAmenityRepository _hotelAmenityRepository;
+    private readonly IHotelPolicyRepository _hotelPolicyRepository;
     private readonly IAmenityRepository _amenityRepository;
+    private readonly ICountryRepository _countryRepository;
     private readonly ICityRepository _cityRepository;
     private readonly IPolicyTypeRepository _policyTypeRepository;
     private readonly IPolicyRepository _policyRepository;
@@ -43,11 +48,15 @@ public class HotelService : IHotelService
     private readonly IPhotoService _photoService;
     public IUnitOfWork _dbu;
 
-    public HotelService(HotelBookingDBContext context, IHotelRepository hotelRepository, IAmenityRepository amenityRepository, ICityRepository cityRepository, IPolicyTypeRepository policyTypeRepository, IPolicyRepository policyRepository, IServiceTypeRepository serviceTypeRepository, IServiceRepository serviceRepository, IImageHelper imageHelper, IPhotoService photoService, IUnitOfWork dbu)
+    public HotelService(HotelBookingDBContext context, IHotelRepository hotelRepository, IHotelImageRepository hotelImageRepository, IHotelAmenityRepository hotelAmenityRepository, IHotelPolicyRepository hotelPolicyRepository, IAmenityRepository amenityRepository, ICountryRepository countryRepository, ICityRepository cityRepository, IPolicyTypeRepository policyTypeRepository, IPolicyRepository policyRepository, IServiceTypeRepository serviceTypeRepository, IServiceRepository serviceRepository, IImageHelper imageHelper, IPhotoService photoService, IUnitOfWork dbu)
     {
         _context = context;
         _hotelRepository = hotelRepository;
+        _hotelImageRepository = hotelImageRepository;
+        _hotelAmenityRepository = hotelAmenityRepository;
+        _hotelPolicyRepository = hotelPolicyRepository;
         _amenityRepository = amenityRepository;
+        _countryRepository = countryRepository;
         _cityRepository = cityRepository;
         _policyTypeRepository = policyTypeRepository;
         _policyRepository = policyRepository;
@@ -278,6 +287,55 @@ public class HotelService : IHotelService
     #endregion
 
     #region 
+    public async Task<ApiResponse<List<CityDTO>>> GetAllCitiesVNAsync()
+    {
+        try
+        {
+            var country = await _countryRepository.FirstOrDefaultAsync(c => c.Name.ToLower() == "vietnam");
+
+            List<CityDTO> result = new List<CityDTO>();
+
+            var cities = await _cityRepository.GetAllAsync();
+
+            if (cities == null || cities.Count() == 0)
+            {
+                return new ApiResponse<List<CityDTO>>
+                {
+                    StatusCode = StatusCodeResponse.NotFound,
+                    Message = MessageResponse.EMPTY_LIST,
+                    Content = null
+                };
+            }
+
+            foreach (var city in cities)
+            {
+                var additional = JsonSerializer.Deserialize<Dictionary<string, string>>(city.Additional ?? "{}");
+
+                result.Add(new CityDTO
+                {
+                    Id = city.Id,
+                    Name = city.Name,
+                });
+            }
+
+            return new ApiResponse<List<CityDTO>>
+            {
+                StatusCode = StatusCodeResponse.Success,
+                Message = MessageResponse.UPDATE_SUCCESSFULLY,
+                Content = result
+            };
+        }
+        catch (Exception)
+        {
+            return new ApiResponse<List<CityDTO>>
+            {
+                StatusCode = StatusCodeResponse.Error,
+                Message = MessageResponse.ERROR_IN_SERVER,
+                Content = null
+            };
+        }
+    }
+
     public async Task<ApiResponse<List<CityDTO>>> GetAllCitiesAsync()
     {
         try
@@ -364,7 +422,7 @@ public class HotelService : IHotelService
             if (newHotel.MainFile != null)
             {
                 var mainUrl = await _photoService.UploadHotelMainImageAsync(newHotel.MainFile, ownerId, hotel.Id);
-                _context.HotelImages.Add(new HotelImage
+                await _hotelImageRepository.AddAsync(new HotelImage
                 {
                     HotelId = hotel.Id,
                     ImageUrl = mainUrl,
@@ -378,7 +436,7 @@ public class HotelService : IHotelService
                 foreach (var file in newHotel.SubFiles)
                 {
                     var subUrl = await _photoService.UploadHotelSubImageAsync(file, ownerId, hotel.Id);
-                    _context.HotelImages.Add(new HotelImage
+                    await _hotelImageRepository.AddAsync(new HotelImage
                     {
                         HotelId = hotel.Id,
                         ImageUrl = subUrl,
@@ -390,7 +448,7 @@ public class HotelService : IHotelService
             // Bước 3: Lưu Amenities
             foreach (var amenityId in newHotel.AmenityIds)
             {
-                _context.HotelAmenities.Add(new HotelAmenity
+                await _hotelAmenityRepository.AddAsync(new HotelAmenity
                 {
                     HotelId = hotel.Id,
                     AmenityId = amenityId
@@ -402,7 +460,7 @@ public class HotelService : IHotelService
             {
                 foreach (var policyId in newHotel.PolicyIds)
                 {
-                    _context.HotelPolicies.Add(new HotelPolicy
+                    await _hotelPolicyRepository.AddAsync(new HotelPolicy
                     {
                         HotelId = hotel.Id,
                         PolicyId = policyId,
@@ -412,7 +470,7 @@ public class HotelService : IHotelService
             }
 
             // Bước 5: Update lại Hotel + SaveChanges
-            _context.Hotels.Update(hotel);
+            await _hotelRepository.UpdateAsync(hotel);
             await _dbu.SaveChangesAsync();
 
             return new ApiResponse<CreateHotelResponseDTO>
@@ -675,6 +733,87 @@ public class HotelService : IHotelService
     }
 
     #region MANAGE SERVICES
+    public async Task<ApiResponse<ManageServiceDTO>> GetManageServiceDataAsync(int? selectedTypeId)
+    {
+        try
+        {
+            // BƯỚC 1: Lấy danh sách Service Types trước (Dùng await luôn để xong bước này mới qua bước sau)
+            var typesRaw = await _serviceTypeRepository.WhereAsync(st => st.IsDeleted == false);
+
+            List<ServiceTypeDTO> serviceTypesDTO = typesRaw.Select(st => new ServiceTypeDTO
+            {
+                Id = st.Id,
+                Name = st.TypeName,
+                IsDeleted = st.IsDeleted
+            }).ToList();
+
+            List<ServiceBaseDTO> mappedServices = new();
+            int typeIdToFetch = 0;
+            string currentTypeName = "";
+
+            // Kiểm tra nếu danh sách rỗng
+            if (!serviceTypesDTO.Any())
+            {
+                return new ApiResponse<ManageServiceDTO>
+                {
+                    StatusCode = StatusCodeResponse.NotFound,
+                    Message = MessageResponse.EMPTY_LIST,
+                    Content = null
+                };
+            }
+
+            // BƯỚC 2: Xác định ID cần lấy
+            if (selectedTypeId.HasValue)
+            {
+                // Nếu user chọn, lấy theo ý user
+                typeIdToFetch = selectedTypeId.Value;
+            }
+            else
+            {
+                // Nếu load lần đầu, lấy cái đầu tiên trong list vừa query xong
+                typeIdToFetch = serviceTypesDTO.First().Id;
+            }
+
+            // Lấy tên loại để hiển thị
+            currentTypeName = serviceTypesDTO.FirstOrDefault(t => t.Id == typeIdToFetch)?.Name ?? "";
+
+            // BƯỚC 3: Query Services (Chạy sau khi Bước 1 đã hoàn tất)
+            var servicesRaw = await _serviceRepository.WhereAsync(s => s.ServiceTypeId == typeIdToFetch && s.IsDeleted == false);
+
+            // Mapping dữ liệu
+            foreach (var sv in servicesRaw)
+            {
+                var dto = ServiceHelper.MapToServiceDTO(sv);
+                if (dto != null) mappedServices.Add(dto);
+            }
+
+            // BƯỚC 4: Đóng gói kết quả
+            var result = new ManageServiceDTO
+            {
+                ServiceTypes = serviceTypesDTO,
+                Services = mappedServices,
+                SelectedTypeId = typeIdToFetch,
+                SelectedTypeName = currentTypeName
+            };
+
+            return new ApiResponse<ManageServiceDTO>
+            {
+                StatusCode = StatusCodeResponse.Success,
+                Message = MessageResponse.UPDATE_SUCCESSFULLY,
+                Content = result
+            };
+        }
+        catch (Exception)
+        {
+            // Log lỗi để debug
+            return new ApiResponse<ManageServiceDTO>
+            {
+                StatusCode = StatusCodeResponse.Error,
+                Message = MessageResponse.ERROR_IN_SERVER,
+                Content = null
+            };
+        }
+    }
     public async Task<ApiResponse<List<ServiceTypeDTO>>> GetAllServiceTypesAsync()
     {
         try
