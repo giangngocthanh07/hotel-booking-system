@@ -16,10 +16,16 @@ namespace HotelBooking.api.Controllers
     public class HotelController : ControllerBase
     {
         IHotelService _hotelService;
+        IAmenityManage _amenityService;
+        IPolicyManage _policyService;
+        IServiceManage _serviceManage;
         IFileHelper _fileHelper;
-        public HotelController(IHotelService hotelService, IFileHelper fileHelper)
+        public HotelController(IHotelService hotelService, IAmenityManage amenityService, IPolicyManage policyService, IServiceManage serviceManage, IFileHelper fileHelper)
         {
             _hotelService = hotelService;
+            _amenityService = amenityService;
+            _policyService = policyService;
+            _serviceManage = serviceManage;
             _fileHelper = fileHelper;
         }
 
@@ -47,12 +53,13 @@ namespace HotelBooking.api.Controllers
             return Ok(response);
         }
 
+        #region MANAGE AMENITY
         // =============== ĐỌC, THÊM, SỬA, XÓA TIỆN ÍCH CHO KHÁCH SẠN ================
         // [Authorize(Roles = "Admin")]
         [HttpGet("get-all-amenities")]
         public async Task<IActionResult> GetAllAmenitiesAsync()
         {
-            var response = await _hotelService.GetAllAmenitiesAsync();
+            var response = await _amenityService.GetAllAsync();
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
@@ -61,7 +68,7 @@ namespace HotelBooking.api.Controllers
         [HttpPost("create-amenity")]
         public async Task<IActionResult> CreateAmenityAsync([FromBody] AmenityCreateOrUpdateDTO newAmenity)
         {
-            var response = await _hotelService.CreateAmenityAsync(newAmenity);
+            var response = await _amenityService.CreateAsync(newAmenity);
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
@@ -70,7 +77,7 @@ namespace HotelBooking.api.Controllers
         public async Task<IActionResult> UpdateAmenityAsync(int id, [FromBody] AmenityCreateOrUpdateDTO amenity)
         {
 
-            var response = await _hotelService.UpdateAmenityAsync(id, amenity);
+            var response = await _amenityService.UpdateAsync(id, amenity);
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
@@ -78,9 +85,10 @@ namespace HotelBooking.api.Controllers
         [HttpDelete("delete-amenity/{id}")]
         public async Task<IActionResult> DeleteAmenityAsync(int id)
         {
-            var response = await _hotelService.DeleteAmenityAsync(id);
+            var response = await _amenityService.DeleteAsync(id);
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
+        #endregion
 
         [HttpGet("get-all-cities")]
         public async Task<IActionResult> GetAllCitiesAsync()
@@ -125,18 +133,26 @@ namespace HotelBooking.api.Controllers
         }
 
 
+        #region MANAGE POLICY
         // ================= ĐỌC, THÊM, SỬA, XÓA CHÍNH SÁCH CHO KHÁCH SẠN ================
         [HttpGet("get-all-policy-types")]
-        public async Task<IActionResult> GetAllPolicyTypesAsync()
+        public async Task<IActionResult> GetPolicyTypesAsync()
         {
-            var response = await _hotelService.GetAllPolicyTypesAsync();
+            var response = await _policyService.GetPolicyTypesAsync();
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
         [HttpGet("get-all-policy-by-type/{policyTypeId}")]
         public async Task<IActionResult> GetAllPoliciesByTypeAsync(int policyTypeId)
         {
-            var response = await _hotelService.GetAllPoliciesByTypeAsync(policyTypeId);
+            var response = await _policyService.GetAllByTypeAsync(policyTypeId);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
+        [HttpGet("get-manage-policy-data")]
+        public async Task<IActionResult> GetPolicyManageDataAsync([FromQuery] int? typeId)
+        {
+            var response = await _policyService.GetManagePolicyDataAsync(typeId);
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
@@ -151,7 +167,7 @@ namespace HotelBooking.api.Controllers
         public async Task<IActionResult> UpdatePolicyAsync(int id, [FromBody] PolicyCreateOrUpdateDTO policy)
         {
 
-            var response = await _hotelService.UpdatePolicyAsync(id, policy);
+            var response = await _policyService.UpdateAsync(id, policy);
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
@@ -159,15 +175,16 @@ namespace HotelBooking.api.Controllers
         [HttpDelete("delete-policy/{id}")]
         public async Task<IActionResult> DeletePolicyAsync(int id)
         {
-            var response = await _hotelService.DeletePolicyAsync(id);
+            var response = await _policyService.DeleteAsync(id);
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
+        #endregion
 
         #region MANAGE SERVICE
         [HttpGet("get-manage-service-data")]
         public async Task<IActionResult> GetManageServiceDataAsync([FromQuery] int? selectedTypeId)
         {
-            var response = await _hotelService.GetManageServiceDataAsync(selectedTypeId);
+            var response = await _serviceManage.GetManageServiceDataAsync(selectedTypeId);
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
@@ -181,42 +198,42 @@ namespace HotelBooking.api.Controllers
         [HttpGet("get-all-service-by-type/{typeId}")]
         public async Task<IActionResult> GetAllServicesByTypeAsync(int typeId)
         {
-            var response = await _hotelService.GetAllServicesByTypeAsync(typeId);
+            var response = await _serviceManage.GetAllByTypeAsync(typeId);
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
         [HttpPost("create-standard-service")]
-        public async Task<IActionResult> CreateStandardServiceAsync([FromBody] CreateStandardServiceAdminDTO newService)
+        public async Task<IActionResult> CreateStandardServiceAsync([FromBody] StdServiceCreateOrUpdateDTO newService)
         {
-            var response = await _hotelService.CreateServiceByTypeAsync(newService, 1);
+            var response = await _serviceManage.CreateAsync(newService);
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
         [HttpPost("create-airport-transfer-service")]
-        public async Task<IActionResult> CreateAirportTransferServiceAsync([FromBody] CreateAirportTransferServiceAdminDTO newService)
+        public async Task<IActionResult> CreateAirportTransferServiceAsync([FromBody] AirportTransServiceCreateOrUpdateDTO newService)
         {
-            var response = await _hotelService.CreateServiceByTypeAsync(newService, 2);
+            var response = await _serviceManage.CreateAsync(newService);
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
         [HttpPut("update-standard-service/{id}")]
-        public async Task<IActionResult> UpdateStandardServiceAsync(int id, [FromBody] UpdateStandardServiceAdminDTO updatedService)
+        public async Task<IActionResult> UpdateStandardServiceAsync(int id, [FromBody] StdServiceCreateOrUpdateDTO updatedService)
         {
-            var response = await _hotelService.UpdateServiceByTypeAsync(id, updatedService, 1);
+            var response = await _serviceManage.UpdateAsync(id, updatedService);
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
         [HttpPut("update-airport-transfer-service/{id}")]
-        public async Task<IActionResult> UpdateAirportTransferServiceAsync(int id, [FromBody] UpdateAirportTransferServiceAdminDTO updatedService)
+        public async Task<IActionResult> UpdateAirportTransferServiceAsync(int id, [FromBody] AirportTransServiceCreateOrUpdateDTO updatedService)
         {
-            var response = await _hotelService.UpdateServiceByTypeAsync(id, updatedService, 2);
+            var response = await _serviceManage.UpdateAsync(id, updatedService);
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
         [HttpDelete("delete-service/{id}")]
         public async Task<IActionResult> DeleteServiceAsync(int id)
         {
-            var response = await _hotelService.DeleteServiceAsync(id);
+            var response = await _serviceManage.DeleteAsync(id);
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 

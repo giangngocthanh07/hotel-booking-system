@@ -20,8 +20,8 @@ public interface IHotelService
     public Task<ApiResponse<ManageServiceDTO>> GetManageServiceDataAsync(int? selectedTypeId);
     public Task<ApiResponse<List<ServiceTypeDTO>>> GetAllServiceTypesAsync();
     public Task<ApiResponse<List<ServiceBaseDTO>>> GetAllServicesByTypeAsync(int typeId);
-    public Task<ApiResponse<ServiceBaseDTO>> CreateServiceByTypeAsync(CreateServiceAdminDTO newService, int typeId);
-    public Task<ApiResponse<ServiceBaseDTO>> UpdateServiceByTypeAsync(int id, UpdateServiceAdminDTO updatedService, int typeId);
+    public Task<ApiResponse<ServiceBaseDTO>> CreateServiceByTypeAsync(ServiceCreateOrUpdateDTO newService);
+    public Task<ApiResponse<ServiceBaseDTO>> UpdateServiceByTypeAsync(int id, ServiceCreateOrUpdateDTO updatedService);
     public Task<ApiResponse<bool>> DeleteServiceAsync(int id);
     public Task<ApiResponse<List<CityDTO>>> GetAllCitiesAsync();
     public Task<ApiResponse<CreateHotelResponseDTO>> PostHotelAsync(CreateHotelDTO newHotel, int ownerId);
@@ -971,7 +971,7 @@ public class HotelService : IHotelService
         }
     }
 
-    public async Task<ApiResponse<ServiceBaseDTO>> CreateServiceByTypeAsync(CreateServiceAdminDTO newService, int typeId)
+    public async Task<ApiResponse<ServiceBaseDTO>> CreateServiceByTypeAsync(ServiceCreateOrUpdateDTO newService)
     {
         try
         {
@@ -983,37 +983,20 @@ public class HotelService : IHotelService
                 Content = null
             };
 
-            var entityToAdd = new Service();
 
-            // Các trường chung
-            entityToAdd.Name = newService.Name;
-            entityToAdd.Description = newService.Description;
-            entityToAdd.ServiceTypeId = typeId;
-
-
+            int typeId;
             object? additionalData = null;
 
-            switch (typeId)
+            switch (newService)
             {
-                case 1: // Standard
-                        // Tạo object chứa các trường của Standard (Giá trị null)
-                    if (newService is CreateStandardServiceAdminDTO standard)
-                    {
-                        additionalData = new { Unit = standard.Unit };
-                    }
-                    else
-                    {
-                        return new ApiResponse<ServiceBaseDTO>
-                        {
-                            StatusCode = StatusCodeResponse.BadRequest,
-                            Message = MessageResponse.CREATE_FAILED,
-                            Content = null
-                        };
-                    }
+                case StdServiceCreateOrUpdateDTO std:
+                    typeId = 1; // Type Standard
+                    additionalData = new { Unit = std.Unit };
                     break;
 
-                case 2: // Airport Transfer
-                        // Tạo object chứa các trường của Airport (Giá trị null)
+                case AirportTransServiceCreateOrUpdateDTO at: // Airport Transfer
+                                                              // Tạo object chứa các trường của Airport (Giá trị null)
+                    typeId = 2;
                     additionalData = new ServiceAdditionalDataAT()
                     {
                         MaxPassengers = 0,
@@ -1033,6 +1016,13 @@ public class HotelService : IHotelService
                         Content = null
                     };
             }
+
+            var entityToAdd = new Service();
+
+            // Các trường chung
+            entityToAdd.Name = newService.Name;
+            entityToAdd.Description = newService.Description;
+            entityToAdd.ServiceTypeId = typeId;
 
             if (additionalData != null)
             {
@@ -1095,7 +1085,7 @@ public class HotelService : IHotelService
 
     }
 
-    public async Task<ApiResponse<ServiceBaseDTO>> UpdateServiceByTypeAsync(int id, UpdateServiceAdminDTO updatedService, int typeId)
+    public async Task<ApiResponse<ServiceBaseDTO>> UpdateServiceByTypeAsync(int id, ServiceCreateOrUpdateDTO updatedService)
     {
         try
         {
@@ -1119,45 +1109,22 @@ public class HotelService : IHotelService
                 Content = null
             };
 
-            // Kiểm tra id được cập nhật có đúng loại dịch vụ không
-            if (existingService.ServiceTypeId != typeId)
-            {
-                return new ApiResponse<ServiceBaseDTO>
-                {
-                    StatusCode = StatusCodeResponse.BadRequest,
-                    Message = MessageResponse.UPDATE_FAILED,
-                    Content = null
-                };
-            }
 
-            // Cập nhật các trường chung
-            existingService.Name = updatedService.Name;
-            existingService.Description = updatedService.Description;
-
-            // Cập nhật các trường đặc thù theo typeId
+            // Cập nhật các trường đặc thù theo type
+            int targetTypeId;
             object? additionalData = null;
             ServiceAdditionalDataAT? additionalDataAT = null;
 
-            switch (typeId)
+            switch (updatedService)
             {
-                case 1: // Standard
-                    if (updatedService is UpdateStandardServiceAdminDTO standard)
-                    {
-                        additionalData = new { Unit = standard.Unit };
-                    }
-                    else
-                    {
-                        return new ApiResponse<ServiceBaseDTO>
-                        {
-                            StatusCode = StatusCodeResponse.BadRequest,
-                            Message = MessageResponse.UPDATE_FAILED,
-                            Content = null
-                        };
-                    }
+                case StdServiceCreateOrUpdateDTO stdDto: // Standard
+                    targetTypeId = 1;
+                    additionalData = new { Unit = stdDto.Unit };
                     break;
 
-                case 2: // Airport Transfer
-                        // Không có trường đặc thù để cập nhật
+                case AirportTransServiceCreateOrUpdateDTO atDto: // Airport Transfer
+                                                                 // Không có trường đặc thù để cập nhật
+                    targetTypeId = 2;
                     additionalDataAT = JsonSerializer.Deserialize<ServiceAdditionalDataAT>(existingService.Additional ?? "{}");
                     break;
                 default:
@@ -1168,15 +1135,32 @@ public class HotelService : IHotelService
                         Content = null
                     };
             }
+
+            // 4. Validate: DTO gửi lên phải đúng với loại dịch vụ trong DB
+            // (Không thể lấy DTO Standard để update cho dịch vụ Airport Transfer)
+            if (existingService.ServiceTypeId != targetTypeId)
+            {
+                return new ApiResponse<ServiceBaseDTO>
+                {
+                    StatusCode = StatusCodeResponse.BadRequest,
+                    Message = MessageResponse.UPDATE_FAILED
+                };
+            }
+
+            // Cập nhật các trường chung
+            existingService.Name = updatedService.Name;
+            existingService.Description = updatedService.Description;
+
             if (additionalData != null)
             {
                 existingService.Additional = JsonSerializer.Serialize(additionalData);
             }
+
             await _serviceRepository.UpdateAsync(existingService);
             await _dbu.SaveChangesAsync();
             // Trả về DTO tương ứng
             ServiceBaseDTO resultDTO = null;
-            if (typeId == 1)
+            if (targetTypeId == 1)
             {
                 resultDTO = new ServiceStandardDTO
                 {
@@ -1188,7 +1172,7 @@ public class HotelService : IHotelService
                     ServiceTypeId = existingService.ServiceTypeId
                 };
             }
-            else if (typeId == 2)
+            else if (targetTypeId == 2)
             {
 
                 resultDTO = new ServiceAirportTransferDTO

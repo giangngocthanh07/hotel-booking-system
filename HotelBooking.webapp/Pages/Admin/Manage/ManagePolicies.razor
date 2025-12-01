@@ -95,7 +95,7 @@
 
         try
         {
-            policiesListByType = null;
+            policiesListByType = new();
             await InvokeAsync(StateHasChanged);
 
             // Gọi API
@@ -151,7 +151,7 @@
 
             var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<PolicyVM>>();
 
-            SnackbarHelper.Show(Snackbar, apiResponse.StatusCode, apiResponse.Message);
+            SnackbarHelper.Show(Snackbar, apiResponse?.StatusCode ?? "Error", apiResponse?.Message ?? "Error In Server");
 
         }
         else
@@ -161,7 +161,7 @@
 
             var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<PolicyVM>>();
 
-            SnackbarHelper.Show(Snackbar, apiResponse?.StatusCode ?? "Error", apiResponse?.Message);
+            SnackbarHelper.Show(Snackbar, apiResponse?.StatusCode ?? "Error", apiResponse?.Message ?? "Error In Server");
 
         }
         await GetPoliciesListByType();
@@ -185,7 +185,7 @@
 
 
         var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
-        SnackbarHelper.Show(Snackbar, apiResponse?.StatusCode ?? "Error", apiResponse?.Message);
+        SnackbarHelper.Show(Snackbar, apiResponse?.StatusCode ?? "Error", apiResponse?.Message ?? "Error In Server");
 
         // Reset form về Add New
         SelectedPolicy = new PolicyVM();

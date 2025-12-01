@@ -1,11 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-public class ServiceTypeDTO
+public class ServiceTypeDTO : BaseAdminDTO
 {
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public bool? IsDeleted { get; set; }
 }
 
 public enum ServiceTypeEnum
@@ -19,15 +16,9 @@ public enum ServiceTypeEnum
 // Khai báo các con và đặt tên định danh (discriminator) cho chúng
 [JsonDerivedType(typeof(ServiceStandardDTO), typeDiscriminator: "standard")]
 [JsonDerivedType(typeof(ServiceAirportTransferDTO), typeDiscriminator: "airportTransfer")]
-public abstract class ServiceBaseDTO
+public abstract class ServiceBaseDTO : BaseAdminDTO
 {
-    public int Id { get; set; }
-
-    [Required(ErrorMessage = "Name is required")]
-    public string Name { get; set; } = string.Empty;
-    public string? Description { get; set; }
     public decimal Price { get; set; } = 0;
-    public bool? IsDeleted { get; set; }
     public int ServiceTypeId { get; set; }
 }
 
@@ -36,7 +27,6 @@ public class ServiceStandardDTO : ServiceBaseDTO
     // Thêm vào trường Additional bên DB
     [Required(ErrorMessage = "Vui lòng nhập đơn vị đo lường")]
     public string Unit { get; set; } = string.Empty;
-
 
 }
 
@@ -59,6 +49,25 @@ public class ServiceAirportTransferDTO : ServiceBaseDTO
 
 }
 
+// DTO Thêm/Sửa dịch vụ
+public abstract class ServiceCreateOrUpdateDTO : BaseCreateOrUpdateAdminDTO
+{
+    public abstract int TargetTypeId { get; }
+}
+
+public class StdServiceCreateOrUpdateDTO : ServiceCreateOrUpdateDTO
+{
+    public override int TargetTypeId => (int)ServiceTypeEnum.Standard;
+    [Required(ErrorMessage = "Vui lòng nhập đơn vị đo lường")]
+    public string Unit { get; set; } = string.Empty;
+}
+
+public class AirportTransServiceCreateOrUpdateDTO : ServiceCreateOrUpdateDTO
+{
+    public override int TargetTypeId => (int)ServiceTypeEnum.AirportTransfer;
+}
+
+// DTO hiển thị dịch vụ đưa đón sân bay với các trường cụ thể
 public class ServiceAdditionalDataAT
 {
     public int? MaxPassengers { get; set; }

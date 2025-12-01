@@ -51,4 +51,44 @@ public static class ServiceHelper
                 return null;
         }
     }
+
+    // THÊM METHOD NÀY: Dùng để đóng gói dữ liệu khi Create/Update
+    public static string MapToAdditionalJson(ServiceCreateOrUpdateDTO dto, string? existingAdditional = null)
+    {
+        switch (dto)
+        {
+            case StdServiceCreateOrUpdateDTO stdDto:
+                var dict = new Dictionary<string, string>
+                {
+                    { "Unit", stdDto.Unit }
+                };
+                return JsonSerializer.Serialize(dict, _jsonOptions);
+
+
+            case AirportTransServiceCreateOrUpdateDTO _:
+
+                // Logic: "Update giữ nguyên, Create lấy mặc định"
+
+                // 1. Nếu đang Update (có existingAdditional) -> Trả về cái cũ
+                if (!string.IsNullOrEmpty(existingAdditional) && existingAdditional != "{}")
+                {
+                    return existingAdditional;
+                }
+
+                // 2. Nếu đang Create -> Tạo dữ liệu mặc định (hoặc null tùy ý bạn)
+                var defaultAtData = new ServiceAdditionalDataAT
+                {
+                    MaxPassengers = null,
+                    MaxLuggage = null,
+                    RoundTripPrice = null,
+                    AdditionalFee = null,
+                    AdditionalFeeStartTime = null,
+                    AdditionalFeeEndTime = null
+                };
+                return JsonSerializer.Serialize(defaultAtData, _jsonOptions);
+
+            default:
+                return "{}";
+        }
+    }
 }

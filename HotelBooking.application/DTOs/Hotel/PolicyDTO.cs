@@ -1,15 +1,25 @@
-public class PolicyDTO
+
+public class PolicyDTO : BaseAdminDTO
 {
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public string Description { get; set; }
-    public bool? IsDeleted { get; set; }
     public int PolicyTypeId { get; set; }
 }
 
-public class PolicyTypeDTO
+public class PolicyTypeDTO : BaseAdminDTO
 {
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public bool? IsDeleted { get; set; }
+
+}
+
+public class PolicyCreateOrUpdateDTO : BaseCreateOrUpdateAdminDTO
+{
+    public int PolicyTypeId { get; set; }
+}
+
+public class MangagePolicyDTO
+{
+    public List<PolicyTypeDTO> PolicyTypes { get; set; } = new List<PolicyTypeDTO>();
+
+    public int SelectedTypeId { get; set; }
+    public string? SelectedTypeName { get; set; }
+
+    public List<PolicyDTO> Policies { get; set; } = new();
 }

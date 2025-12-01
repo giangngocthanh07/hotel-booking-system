@@ -58,6 +58,10 @@ builder.Services.AddScoped<IHotelService, HotelService>();
 builder.Services.AddScoped<IUpgradeRequestService, UpgradeRequestService>();
 builder.Services.AddScoped<IPhotoService, PhotoService>();
 
+builder.Services.AddScoped<IAmenityManage, AmenityManage>();
+builder.Services.AddScoped<IPolicyManage, PolicyManage>();
+builder.Services.AddScoped<IServiceManage, ServiceManage>();
+
 // DI for Helpers
 builder.Services.AddSingleton<IImageHelper, ImageHelper>();
 builder.Services.AddScoped<IFileHelper, FileHelper>();
