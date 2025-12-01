@@ -35,12 +35,7 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateOrUpdateDTO> : IBa
             var entity = await _repo.GetByIdAsync(id);
             if (entity == null)
             {
-                return new ApiResponse<TDto>
-                {
-                    StatusCode = StatusCodeResponse.NotFound,
-                    Message = MessageResponse.NOT_FOUND,
-                    Content = default!
-                };
+                return ResponseFactory.Failure<TDto>(StatusCodeResponse.NotFound, MessageResponse.NOT_FOUND);
             }
             // Mapping logic from TEntity to TDto should be implemented here
             TDto dto = MapToDto(entity);
