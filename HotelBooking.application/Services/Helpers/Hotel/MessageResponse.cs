@@ -1,4 +1,4 @@
-// MESSAGE CRUD AMENITY
+
 
 public static class MessageResponse
 {
@@ -13,6 +13,7 @@ public static class MessageResponse
     public static string NOT_FOUND = "Không tìm thấy!";
     public static string BAD_REQUEST = "Yêu cầu không hợp lệ!";
     public static string NAME_ALREADY_EXISTS = "Tên đã tồn tại!";
+    public static string EMPTY_NAME = "Tên không được để trống!";
     public static string EMPTY_LIST = "Danh sách rỗng!";
     public static string ERROR_IN_SERVER = "Lỗi ở phía máy chủ!";
 }

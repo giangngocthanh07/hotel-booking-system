@@ -15,7 +15,7 @@ public interface IRepository<T> where T : class
     Task<bool> AnyAsync(Expression<Func<T, bool>> predicate);
 }
 
-public class Repository<T> : IRepository<T> where T : class
+public class Repository<T> : IRepository<T> where T : class     // Đảo ngượv sự phụ thuộc ở đây
 {
     protected readonly HotelBookingDBContext _HBcontext;
     protected readonly DbSet<T> _dbSet;

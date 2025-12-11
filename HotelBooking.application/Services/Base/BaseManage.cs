@@ -5,11 +5,13 @@ public interface IBaseManage<TEntity, TRepo, TDto, TCreateOrUpdateDTO> : ICommon
 {
 }
 
-public abstract class BaseManage<TEntity, TRepo, TDto, TCreateOrUpdateDTO> : IBaseManage<TEntity, TRepo, TDto, TCreateOrUpdateDTO> where TEntity : class where TRepo : IRepository<TEntity>
+public abstract class BaseManage<TEntity, TRepo, TDto, TCreateOrUpdateDTO> : IBaseManage<TEntity, TRepo, TDto, TCreateOrUpdateDTO>
+    where TEntity : class
+    where TRepo : IRepository<TEntity>
 {
     // Implementation of base management functionalities
-    public readonly TRepo _repo;
-    public IUnitOfWork _dbu;
+    protected readonly TRepo _repo;
+    protected readonly IUnitOfWork _dbu;
 
     public BaseManage(TRepo repo, IUnitOfWork dbu)
     {
@@ -27,6 +29,15 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateOrUpdateDTO> : IBa
 
     // 3. Map từ UpdateDTO vào Entity CÓ SẴN (Dùng cho Update, Deleted)
     protected abstract void MapToEntity(TCreateOrUpdateDTO updateDto, TEntity entity);
+
+    // --- HOOK METHODS ---
+    // Từ khóa "virtual" cho phép lớp con Override. 
+    // Mặc định trả về Success để các bảng đơn giản không cần viết gì thêm.
+
+    protected virtual async Task<ValidationResult> ValidateAsync(TCreateOrUpdateDTO dto, int? id = null)
+    {
+        return await Task.FromResult(ValidationResult.Success());
+    }
 
     public virtual async Task<ApiResponse<TDto>> GetByIdAsync(int id)
     {
@@ -52,6 +63,16 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateOrUpdateDTO> : IBa
     {
         try
         {
+            // [BƯỚC 1] Gọi Validate
+            var validateResult = await ValidateAsync(createDto);
+
+            // Nếu toang -> Trả về lỗi ngay lập tức
+            if (!validateResult.IsValid)
+            {
+                return ResponseFactory.Failure<TDto>(validateResult.StatusCode, validateResult.Message);
+            }
+
+            // [BƯỚC 2] Logic lưu DB bình thường
             var entity = MapToEntity(createDto);
             await _repo.AddAsync(entity);
             await _dbu.SaveChangesAsync();
@@ -73,6 +94,15 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateOrUpdateDTO> : IBa
         {
             var entity = await _repo.GetByIdAsync(id);
 
+            // [BƯỚC 1] Gọi Hook Validate Update (Truyền ID để check logic trùng lặp ngoại trừ chính nó)
+            var validateResult = await ValidateAsync(updateDto, id);
+
+            if (!validateResult.IsValid)
+            {
+                return ResponseFactory.Failure<TDto>(validateResult.StatusCode, validateResult.Message);
+            }
+
+            // [BƯỚC 2] Update logic bình thường
             MapToEntity(updateDto, entity);
             await _repo.UpdateAsync(entity);
             await _dbu.SaveChangesAsync();
@@ -98,6 +128,8 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateOrUpdateDTO> : IBa
                 return ResponseFactory.Failure<bool>(StatusCodeResponse.NotFound, MessageResponse.NOT_FOUND);
             }
 
+            // Check xem entity có phải là ISoftDelete không
+            // --- XÓA MỀM (Cực nhanh, ko cần Reflection) ---
             // Dùng Reflection để tìm cột IsDeleted
             var isDeletedProp = typeof(TEntity).GetProperty("IsDeleted");
 
@@ -126,44 +158,5 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateOrUpdateDTO> : IBa
         {
             return ResponseFactory.ServerError<bool>();
         }
-    }
-
-    private Expression<Func<TEntity, bool>> IsNotDeletedPredicate()
-    {
-        // 1. Tạo tham số x
-        // Tương đương: x =>
-        var param = Expression.Parameter(typeof(TEntity), "x");
-
-        // 2. Tạo Member Expression
-        // Tương đương: x.IsDeleted
-        // Expression.Property trả về một đối tượng kiểu MemberExpression
-        var prop = Expression.Property(param, "IsDeleted");
-
-        // 3. Tạo hằng số
-        // Tương đương: == true
-        var trueValue = Expression.Constant(true, typeof(bool?));
-
-        // 4. Xử lý ép kiểu (Không quan trọng, code cho an toàn)
-        var propConverted = Expression.Convert(prop, typeof(bool?));
-
-        // 5. Tạo phép so sánh (BinaryExpression)
-        // Tương đương: x.IsDeleted != true;
-        var notEqual = Expression.NotEqual(propConverted, trueValue);
-
-        // 6. Đóng gói thành Lambda hoàn chỉnh
-        return Expression.Lambda<Func<TEntity, bool>>(notEqual, param);
-    }
-
-    protected virtual async Task<IEnumerable<TEntity>> GetEntitiesInternalAsync()
-    {
-        // Dùng IsNotDeletedPredicate (Expression) để lọc
-        var predicate = IsNotDeletedPredicate();
-
-        // CÓ cột IsDeleted -> Dùng WhereAsync của Repo (Chạy SQL cực nhanh)
-        if (predicate != null)
-        {
-            return await _repo.WhereAsync(predicate);
-        }
-        return await _repo.GetAllAsync();
     }
 }

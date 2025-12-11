@@ -159,7 +159,7 @@ namespace HotelBooking.api.Controllers
         [HttpPost("create-policy")]
         public async Task<IActionResult> CreatePolicyAsync([FromBody] PolicyCreateOrUpdateDTO newPolicy)
         {
-            var response = await _hotelService.CreatePolicyAsync(newPolicy);
+            var response = await _policyService.CreateAsync(newPolicy);
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 

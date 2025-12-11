@@ -49,6 +49,56 @@ public class AmenityManage : BaseManage<Amenity, IAmenityRepository, AmenityDTO,
         };
     }
 
+    // Validation
+    protected override async Task<ValidationResult> ValidateAsync(AmenityCreateOrUpdateDTO dto, int? id = null)
+    {
+        // Cấu trúc chuỗi kiểm tra (Chain of Responsibility)
+        // Nó sẽ chạy từ trái sang phải, gặp cái nào lỗi (khác null) là return ngay lập tức.
+
+        var basicCheck = ValidateUtils.RequireNotEmpty(dto.Name, MessageResponse.EMPTY_NAME, StatusCodeResponse.BadRequest);
+
+        // Nếu các check cơ bản đã có lỗi -> Return luôn, khỏi cần check DB cho tốn thời gian
+        if (basicCheck != null) return basicCheck;
+
+        // --- CHECK DB (Logic Check trùng) ---
+        // Phần Async ta nên tách ra check riêng sau khi check cơ bản đã OK
+        // --- 2. VALIDATE NGHIỆP VỤ (Cần DB) ---
+
+        // A. Xử lý riêng cho trường hợp UPDATE
+        if (id.HasValue) // Tương đương: if (id != null)
+        {
+            // Phải query lấy entity cũ lên để so sánh
+            // Lưu ý: EF Core có cơ chế Cache, nên việc query ở đây và query lại ở hàm UpdateAsync 
+            // thường không ảnh hưởng đáng kể hiệu năng (nó lấy từ bộ nhớ đệm).
+            var existingEntity = await _repo.GetByIdAsync(id.Value);
+
+            // Kiểm tra tồn tại
+            // Nếu existingEntity null -> Trả về 404 NotFound ngay lập tức
+            var foundCheck = ValidateUtils.RequireFound(existingEntity, MessageResponse.NOT_FOUND, StatusCodeResponse.NotFound);
+            if (foundCheck != null) return foundCheck;
+
+            // Nếu entity bị deleted == true -> Trả về lỗi NotFound
+            if (existingEntity.IsDeleted == true)
+            {
+                return ValidationResult.Fail(MessageResponse.NOT_FOUND, StatusCodeResponse.NotFound);
+            }
+        }
+
+        // B. Xử lý Check trùng tên (Áp dụng cho cả Create và Update)
+        bool isDuplicate;
+        if (id == null)
+            isDuplicate = await _repo.AnyAsync(x => x.Name == dto.Name);
+        else
+            isDuplicate = await _repo.AnyAsync(x => x.Name == dto.Name && x.Id != id);
+
+        if (isDuplicate)
+        {
+            return ValidationResult.Fail(MessageResponse.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
+        }
+        // Nếu qua hết cửa ải -> Thành công
+        return ValidationResult.Success();
+    }
+
     public async Task<ApiResponse<List<AmenityDTO>>> GetAllAsync()
     {
         var amenities = await _repo.WhereAsync(a => a.IsDeleted == false);
@@ -68,37 +118,5 @@ public class AmenityManage : BaseManage<Amenity, IAmenityRepository, AmenityDTO,
         {
             return ResponseFactory.ServerError<List<AmenityDTO>>();
         }
-    }
-
-    public override async Task<ApiResponse<AmenityDTO>> CreateAsync(AmenityCreateOrUpdateDTO createDto)
-    {
-        // 1. Kiểm tra trùng tên
-        var exists = await _repo.AnyAsync(a => a.Name.ToLower() == createDto.Name.ToLower() && a.IsDeleted == false);
-
-        if (exists)
-        {
-            return ResponseFactory.Failure<AmenityDTO>(StatusCodeResponse.Conflict, MessageResponse.NAME_ALREADY_EXISTS);
-        }
-
-        // 2. Nếu không trùng, gọi hàm cha để tiếp tục quy trình chuẩn (Map -> Add -> Save)
-        return await base.CreateAsync(createDto);
-    }
-
-    public override async Task<ApiResponse<AmenityDTO>> UpdateAsync(int id, AmenityCreateOrUpdateDTO updateDto)
-    {
-        var exists = await _repo.AnyAsync(x => x.Id != id && x.Name == updateDto.Name && x.IsDeleted == false);
-
-        if (exists)
-        {
-            return ResponseFactory.Failure<AmenityDTO>(StatusCodeResponse.Conflict, MessageResponse.NAME_ALREADY_EXISTS);
-        }
-
-        // 2. Gọi hàm cha để update
-        return await base.UpdateAsync(id, updateDto);
-    }
-
-    public override async Task<ApiResponse<bool>> DeleteAsync(int id)
-    {
-        return await base.DeleteAsync(id);
     }
 }

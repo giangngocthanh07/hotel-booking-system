@@ -7,7 +7,7 @@ public interface IPolicyManage : ITypedManage<PolicyDTO, PolicyCreateOrUpdateDTO
 }
 public class PolicyManage : BaseManage<Policy, IPolicyRepository, PolicyDTO, PolicyCreateOrUpdateDTO>, IPolicyManage
 {
-    IPolicyTypeRepository _poliTypeRepo;
+    private readonly IPolicyTypeRepository _poliTypeRepo;
     public PolicyManage(IPolicyRepository repository, IUnitOfWork dbo, IPolicyTypeRepository poliTypeRepo) : base(repository, dbo)
     {
         _poliTypeRepo = poliTypeRepo;
@@ -40,6 +40,62 @@ public class PolicyManage : BaseManage<Policy, IPolicyRepository, PolicyDTO, Pol
             PolicyTypeId = createDto.PolicyTypeId
 
         };
+    }
+
+    // Validation
+    protected override async Task<ValidationResult> ValidateAsync(PolicyCreateOrUpdateDTO dto, int? id = null)
+    {
+        // Cấu trúc chuỗi kiểm tra (Chain of Responsibility)
+        // Nó sẽ chạy từ trái sang phải, gặp cái nào lỗi (khác null) là return ngay lập tức.
+
+        var basicCheck = ValidateUtils.RequireNotEmpty(dto.Name, MessageResponse.EMPTY_NAME, StatusCodeResponse.BadRequest) ??
+                        ValidateUtils.Require(dto.PolicyTypeId > 0, MessageResponse.BAD_REQUEST, StatusCodeResponse.BadRequest);
+
+        // Nếu các check cơ bản đã có lỗi -> Return luôn, khỏi cần check DB cho tốn thời gian
+        if (basicCheck != null) return basicCheck;
+
+        // --- CHECK DB (Logic Check trùng) ---
+        // Phần Async ta nên tách ra check riêng sau khi check cơ bản đã OK
+
+        // A. Xử lý riêng cho trường hợp UPDATE
+        if (id.HasValue) // Tương đương: if (id != null)
+        {
+            // Phải query lấy entity cũ lên để so sánh
+            // Lưu ý: EF Core có cơ chế Cache, nên việc query ở đây và query lại ở hàm UpdateAsync 
+            // thường không ảnh hưởng đáng kể hiệu năng (nó lấy từ bộ nhớ đệm).
+            var existingEntity = await _repo.GetByIdAsync(id.Value);
+
+            // Kiểm tra tồn tại
+            // Nếu existingEntity null -> Trả về 404 NotFound ngay lập tức
+            var foundCheck = ValidateUtils.RequireFound(existingEntity, MessageResponse.NOT_FOUND, StatusCodeResponse.NotFound);
+            if (foundCheck != null) return foundCheck;
+
+            // Nếu entity bị deleted == true -> Trả về lỗi NotFound
+            if (existingEntity.IsDeleted == true)
+            {
+                return ValidationResult.Fail(MessageResponse.NOT_FOUND, StatusCodeResponse.NotFound);
+            }
+
+            // [LOGIC BẠN CẦN]: Kiểm tra xem User có cố tình đổi Loại dịch vụ không?
+            if (existingEntity?.PolicyTypeId != dto.PolicyTypeId)
+            {
+                return ValidationResult.Fail(MessageResponse.BAD_REQUEST, StatusCodeResponse.BadRequest);
+            }
+        }
+
+        // B. Xử lý Check trùng tên (Áp dụng cho cả Create và Update)
+        bool isDuplicate;
+        if (id == null)
+            isDuplicate = await _repo.AnyAsync(x => x.Name == dto.Name);
+        else
+            isDuplicate = await _repo.AnyAsync(x => x.Name == dto.Name && x.Id != id);
+
+        if (isDuplicate)
+        {
+            return ValidationResult.Fail(MessageResponse.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
+        }
+        // Nếu qua hết cửa ải -> Thành công
+        return ValidationResult.Success();
     }
 
     public async Task<ApiResponse<List<PolicyDTO>>> GetAllByTypeAsync(int typeId)
@@ -129,36 +185,6 @@ public class PolicyManage : BaseManage<Policy, IPolicyRepository, PolicyDTO, Pol
             return ResponseFactory.ServerError<List<PolicyTypeDTO>>();
         }
     }
-
-    public override async Task<ApiResponse<PolicyDTO>> CreateAsync(PolicyCreateOrUpdateDTO createDto)
-    {
-        var exists = await _repo.AnyAsync(sv => sv.Name.ToLower() == createDto.Name.ToLower() && sv.IsDeleted == false);
-
-        if (exists)
-            return ResponseFactory.Failure<PolicyDTO>(StatusCodeResponse.Conflict, MessageResponse.NAME_ALREADY_EXISTS);
-
-        return await base.CreateAsync(createDto);
-    }
-
-    public override async Task<ApiResponse<PolicyDTO>> UpdateAsync(int id, PolicyCreateOrUpdateDTO updateDto)
-    {
-        // 1. Lấy entity hiện tại từ DB lên để kiểm tra
-        var existingEntity = await _repo.GetByIdAsync(id);
-
-        // Nếu không tìm thấy ID -> Trả về NotFound ngay (hoặc để base xử lý, nhưng check ở đây luôn cho tiện luồng)
-        if (existingEntity == null || existingEntity.IsDeleted == true)
-        {
-            return ResponseFactory.Failure<PolicyDTO>(StatusCodeResponse.NotFound, MessageResponse.NOT_FOUND);
-        }
-
-        var exists = await _repo.AnyAsync(p => p.Name.ToLower() == updateDto.Name.ToLower() && p.IsDeleted == false);
-
-        if (exists)
-            return ResponseFactory.Failure<PolicyDTO>(StatusCodeResponse.Conflict, MessageResponse.NAME_ALREADY_EXISTS);
-
-        return await base.UpdateAsync(id, updateDto);
-    }
-
 }
 
 

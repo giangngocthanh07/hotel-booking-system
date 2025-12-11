@@ -16,3 +16,4 @@ public interface ITypedManage<TDto, TCreateOrUpdateDTO> : ICommonManage<TDto, TC
     Task<ApiResponse<List<TDto>>> GetAllByTypeAsync(int typeId);
 }
 
+
