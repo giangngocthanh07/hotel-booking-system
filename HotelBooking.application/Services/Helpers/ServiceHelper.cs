@@ -3,7 +3,7 @@ using HotelBooking.infrastructure.Models;
 
 public static class ServiceHelper
 {
-    // Khai báo static readonly để dùng chung, không cần tạo mới liên tục -> Tối ưu bộ nhớ
+    // Khai báo static readonly để dùng chung, không cần tạo mới liên tục -> Tối ưu bộ nhớ - ĐÂY LÀ 1 STATIC SIMPLE FACTORY PATTERN
     private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
     {
         PropertyNameCaseInsensitive = true
@@ -12,7 +12,7 @@ public static class ServiceHelper
     {
         var additionalJson = sv.Additional ?? "{}";
 
-        switch ((ServiceTypeEnum)sv.ServiceTypeId)
+        switch ((ServiceTypeEnum)sv.TypeId)
         {
             case ServiceTypeEnum.Standard: // ID = 1
                 var dict = JsonSerializer.Deserialize<Dictionary<string, string>>(additionalJson, _jsonOptions);
@@ -23,7 +23,7 @@ public static class ServiceHelper
                     Description = sv.Description,
                     Price = sv.Price,
                     IsDeleted = sv.IsDeleted,
-                    ServiceTypeId = sv.ServiceTypeId,
+                    TypeId = sv.TypeId,
                     // Map riêng
                     Unit = dict?.GetValueOrDefault("Unit", "") ?? ""
                 };
@@ -37,7 +37,7 @@ public static class ServiceHelper
                     Description = sv.Description,
                     Price = sv.Price,
                     IsDeleted = sv.IsDeleted,
-                    ServiceTypeId = sv.ServiceTypeId,
+                    TypeId = sv.TypeId,
                     // Map riêng
                     MaxPassengers = atData?.MaxPassengers,
                     MaxLuggage = atData?.MaxLuggage,
@@ -52,7 +52,7 @@ public static class ServiceHelper
         }
     }
 
-    // THÊM METHOD NÀY: Dùng để đóng gói dữ liệu khi Create/Update
+    // THÊM METHOD NÀY: Dùng để đóng gói dữ liệu khi Create/Update - ĐÂY LÀ STATIC SIMPLE FACTORY PATTERN
     public static string MapToAdditionalJson(ServiceCreateOrUpdateDTO dto, string? existingAdditional = null)
     {
         switch (dto)

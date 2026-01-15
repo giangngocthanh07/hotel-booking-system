@@ -15,18 +15,24 @@ namespace HotelBooking.api.Controllers
     [ApiController]
     public class HotelController : ControllerBase
     {
-        IHotelService _hotelService;
-        IAmenityManage _amenityService;
-        IPolicyManage _policyService;
-        IServiceManage _serviceManage;
-        IFileHelper _fileHelper;
-        public HotelController(IHotelService hotelService, IAmenityManage amenityService, IPolicyManage policyService, IServiceManage serviceManage, IFileHelper fileHelper)
+        private readonly IHotelService _hotelService;
+        private readonly IAmenityManage _amenityService;
+        private readonly IPolicyManage _policyService;
+        private readonly IServiceManage _serviceManage;
+        private readonly IRoomQualityManage _rqManage;
+        private readonly IRoomAttributeFacade _roomAttributeFacade;
+        private readonly IManagementAdmin _managementAdmin;
+        private readonly IFileHelper _fileHelper;
+        public HotelController(IHotelService hotelService, IAmenityManage amenityService, IRoomQualityManage rqManage, IPolicyManage policyService, IServiceManage serviceManage, IFileHelper fileHelper, IRoomAttributeFacade roomAttributeFacade, IManagementAdmin managementAdmin)
         {
             _hotelService = hotelService;
             _amenityService = amenityService;
+            _rqManage = rqManage;
             _policyService = policyService;
             _serviceManage = serviceManage;
             _fileHelper = fileHelper;
+            _roomAttributeFacade = roomAttributeFacade;
+            _managementAdmin = managementAdmin;
         }
 
         [Authorize(Roles = "Owner")]
@@ -53,16 +59,221 @@ namespace HotelBooking.api.Controllers
             return Ok(response);
         }
 
-        #region MANAGE AMENITY
-        // =============== ĐỌC, THÊM, SỬA, XÓA TIỆN ÍCH CHO KHÁCH SẠN ================
-        // [Authorize(Roles = "Admin")]
-        [HttpGet("get-all-amenities")]
-        public async Task<IActionResult> GetAllAmenitiesAsync()
+        #region GET MANAGE GROUP DATA
+        // ==========================================
+        // 1. API LẤY MENU (SIÊU NHẸ)
+        // ==========================================
+        // URL: api/hotel/manage/menu/Service
+        // Nhiệm vụ: Chỉ trả về danh sách Types để Frontend vẽ Dropdown
+        [HttpGet("get-manage-menu/{module}")]
+        public async Task<IActionResult> GetManageMenu(ManageModuleEnum module)
         {
-            var response = await _amenityService.GetAllAsync();
+            // Gọi sang ManagementAdmin (Class vừa refactor xong)
+            var result = await _managementAdmin.GetManageMenuAsync(module);
+            return Ok(result);
+        }
+
+        // ==========================================
+        // 2. API LẤY DỮ LIỆU (THEO TỪNG MODULE)
+        // ==========================================
+        // Tại sao không gom 1 cái generic? -> Để Swagger hiển thị rõ DTO trả về cho từng loại
+
+        // --- A. SERVICE DATA ---
+        // URL: api/hotel/get-service-data?typeId=1
+        [HttpGet("get-service-data")]
+        public async Task<IActionResult> GetServiceData([FromQuery] int? typeId)
+        {
+            // Gọi trực tiếp ServiceManage (Hàm vừa refactor xong)
+            var result = await _serviceManage.GetServicesByTypeAsync(typeId);
+            return Ok(result);
+        }
+
+        // --- B. ROOM QUALITY DATA ---
+        // URL: api/hotel/get-room-quality-data?typeId=1
+        [HttpGet("get-room-quality-data")]
+        public async Task<IActionResult> GetRoomQualityData([FromQuery] int? typeId)
+        {
+            var response = await _rqManage.GetRoomQualitiesByTypeAsync(typeId);
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
+        // --- C. AMENITY DATA ---
+        // URL: api/hotel/get-amenity-data?typeId=1
+        [HttpGet("get-amenity-data")]
+        public async Task<IActionResult> GetAmenityData([FromQuery] int? typeId)
+        {
+            var response = await _amenityService.GetAmenitiesByTypeAsync(typeId);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
+        // --- D. POLICY DATA ---
+        // URL: api/hotel/get-policy-data?typeId=1
+        [HttpGet("get-policy-data")]
+        public async Task<IActionResult> GetPolicyData([FromQuery] int? typeId)
+        {
+            var response = await _policyService.GetPoliciesByTypeAsync(typeId);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
+        // [Authorize(Roles = "Admin")]
+        [HttpGet("get-unit-type-data")]
+        public async Task<IActionResult> GetUnitTypeData()
+        {
+            var response = await _roomAttributeFacade.UnitTypeManage.GetAllAsync();
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
+        // [Authorize(Roles = "Admin")]
+        [HttpGet("get-bed-type-data")]
+        public async Task<IActionResult> GetBedTypeData()
+        {
+            var response = await _roomAttributeFacade.BedTypeManage.GetAllAsync();
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
+        // [Authorize(Roles = "Admin")]
+        [HttpGet("get-room-view-data")]
+        public async Task<IActionResult> GetRoomView()
+        {
+            var response = await _roomAttributeFacade.RoomViewManage.GetAllAsync();
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+        #endregion
+
+        #region GET ATTRIBUTE BY TYPE
+        [HttpGet("get-room-attributes-by-type/{type}")]
+        public async Task<IActionResult> GetRoomAttributesByTypeAsync(RoomAttributeType type,
+            [FromQuery] int? typeId)
+        {
+            var response = await _roomAttributeFacade.GetAllByTypeAsync(type, typeId);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+        #endregion
+
+        #region MANAGE UNIT TYPE
+        // =============== THÊM, SỬA, XÓA LOẠI PHÒNG ================
+
+        // [Authorize(Roles = "Admin")]
+        [HttpPost("create-unit-type")]
+        public async Task<IActionResult> CreateUnitTypeAsync([FromBody] UnitTypeCreateOrUpdateDTO newUnitType)
+        {
+            var response = await _roomAttributeFacade.UnitTypeManage.CreateAsync(newUnitType);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
+        // [Authorize(Roles = "Admin")]
+        [HttpPut("update-unit-type/{id}")]
+        public async Task<IActionResult> UpdateUnitTypeAsync(int id, [FromBody] UnitTypeCreateOrUpdateDTO ut)
+        {
+
+            var response = await _roomAttributeFacade.UnitTypeManage.UpdateAsync(id, ut);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
+        // [Authorize(Roles = "Admin")]
+        [HttpDelete("delete-unit-type/{id}")]
+        public async Task<IActionResult> DeleteUnitTypeAsync(int id)
+        {
+            var response = await _roomAttributeFacade.UnitTypeManage.DeleteAsync(id);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+        #endregion
+
+        #region MANAGE BED TYPE
+        // =============== THÊM, SỬA, XÓA LOẠI GIƯỜNG ================
+
+        // [Authorize(Roles = "Admin")]
+        [HttpPost("create-bed-type")]
+        public async Task<IActionResult> CreateBedTypeAsync([FromBody] BedTypeCreateOrUpdateDTO newBedType)
+        {
+            var response = await _roomAttributeFacade.BedTypeManage.CreateAsync(newBedType);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
+        // [Authorize(Roles = "Admin")]
+        [HttpPut("update-bed-type/{id}")]
+        public async Task<IActionResult> UpdateBedTypeAsync(int id, [FromBody] BedTypeCreateOrUpdateDTO bt)
+        {
+
+            var response = await _roomAttributeFacade.BedTypeManage.UpdateAsync(id, bt);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
+        // [Authorize(Roles = "Admin")]
+        [HttpDelete("delete-bed-type/{id}")]
+        public async Task<IActionResult> DeleteBedTypeAsync(int id)
+        {
+            var response = await _roomAttributeFacade.BedTypeManage.DeleteAsync(id);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+        #endregion
+
+        #region MANAGE ROOM VIEW
+        // =============== THÊM, SỬA, XÓA LOẠI VIEW PHÒNG ================
+
+        // [Authorize(Roles = "Admin")]
+        [HttpPost("create-room-view")]
+        public async Task<IActionResult> CreateRoomViewAsync([FromBody] RoomViewCreateOrUpdateDTO newRoomView)
+        {
+            var response = await _roomAttributeFacade.RoomViewManage.CreateAsync(newRoomView);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
+        // [Authorize(Roles = "Admin")]
+        [HttpPut("update-room-view/{id}")]
+        public async Task<IActionResult> UpdateRoomViewAsync(int id, [FromBody] RoomViewCreateOrUpdateDTO rv)
+        {
+
+            var response = await _roomAttributeFacade.RoomViewManage.UpdateAsync(id, rv);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
+        // [Authorize(Roles = "Admin")]
+        [HttpDelete("delete-room-view/{id}")]
+        public async Task<IActionResult> DeleteRoomViewAsync(int id)
+        {
+            var response = await _roomAttributeFacade.RoomViewManage.DeleteAsync(id);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+        #endregion
+
+        #region MANAGE ROOM QUALITY
+        // =============== THÊM, SỬA, XÓA CHẤT LƯỢNG PHÒNG ================
+        //
+        [HttpPost("create-room-quality")]
+        public async Task<IActionResult> CreateRoomQualityAsync([FromBody] RoomQualityCreateOrUpdateDTO newRoomQuality)
+        {
+            var response = await _rqManage.CreateAsync(newRoomQuality);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
+        [HttpPut("update-room-quality/{id}")]
+        public async Task<IActionResult> UpdateRoomQualityAsync(int id, [FromBody] RoomQualityCreateOrUpdateDTO rq)
+        {
+
+            var response = await _rqManage.UpdateAsync(id, rq);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
+        [HttpDelete("delete-room-quality/{id}")]
+        public async Task<IActionResult> DeleteRoomQualityAsync(int id)
+        {
+            var response = await _rqManage.DeleteAsync(id);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
+        #endregion
+
+        #region MANAGE AMENITY
+        // =============== THÊM, SỬA, XÓA TIỆN ÍCH CHO KHÁCH SẠN ================
+
+        // 
+        [HttpGet("get-all-amenity-types")]
+        public async Task<IActionResult> GetAllAmenityTypeAsync()
+        {
+            var response = await _amenityService.GetTypeDataAsync();
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
 
         // [Authorize(Roles = "Admin")]
         [HttpPost("create-amenity")]
@@ -88,6 +299,7 @@ namespace HotelBooking.api.Controllers
             var response = await _amenityService.DeleteAsync(id);
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
+
         #endregion
 
         [HttpGet("get-all-cities")]
@@ -134,25 +346,11 @@ namespace HotelBooking.api.Controllers
 
 
         #region MANAGE POLICY
-        // ================= ĐỌC, THÊM, SỬA, XÓA CHÍNH SÁCH CHO KHÁCH SẠN ================
+        // ================= THÊM, SỬA, XÓA CHÍNH SÁCH CHO KHÁCH SẠN ================
         [HttpGet("get-all-policy-types")]
         public async Task<IActionResult> GetPolicyTypesAsync()
         {
-            var response = await _policyService.GetPolicyTypesAsync();
-            return ApiResponseHandlerHelper.HandleResponse(response);
-        }
-
-        [HttpGet("get-all-policy-by-type/{policyTypeId}")]
-        public async Task<IActionResult> GetAllPoliciesByTypeAsync(int policyTypeId)
-        {
-            var response = await _policyService.GetAllByTypeAsync(policyTypeId);
-            return ApiResponseHandlerHelper.HandleResponse(response);
-        }
-
-        [HttpGet("get-manage-policy-data")]
-        public async Task<IActionResult> GetPolicyManageDataAsync([FromQuery] int? typeId)
-        {
-            var response = await _policyService.GetManagePolicyDataAsync(typeId);
+            var response = await _policyService.GetTypeDataAsync();
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
@@ -180,25 +378,11 @@ namespace HotelBooking.api.Controllers
         }
         #endregion
 
-        #region MANAGE SERVICE
-        [HttpGet("get-manage-service-data")]
-        public async Task<IActionResult> GetManageServiceDataAsync([FromQuery] int? selectedTypeId)
-        {
-            var response = await _serviceManage.GetManageServiceDataAsync(selectedTypeId);
-            return ApiResponseHandlerHelper.HandleResponse(response);
-        }
-
+        #region MANAGE SERVICE 
         [HttpGet("get-all-service-types")]
         public async Task<IActionResult> GetAllServiceTypesAsync()
         {
             var response = await _hotelService.GetAllServiceTypesAsync();
-            return ApiResponseHandlerHelper.HandleResponse(response);
-        }
-
-        [HttpGet("get-all-service-by-type/{typeId}")]
-        public async Task<IActionResult> GetAllServicesByTypeAsync(int typeId)
-        {
-            var response = await _serviceManage.GetAllByTypeAsync(typeId);
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 

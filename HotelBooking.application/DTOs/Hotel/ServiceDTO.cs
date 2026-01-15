@@ -19,7 +19,7 @@ public enum ServiceTypeEnum
 public abstract class ServiceBaseDTO : BaseAdminDTO
 {
     public decimal Price { get; set; } = 0;
-    public int ServiceTypeId { get; set; }
+    public int TypeId { get; set; }
 }
 
 public class ServiceStandardDTO : ServiceBaseDTO
@@ -79,15 +79,3 @@ public class ServiceAdditionalDataAT
     public TimeSpan? AdditionalFeeEndTime { get; set; }
 }
 
-public class ManageServiceDTO
-{
-    // 1. List ServiceType để FE chọn loại dịch vụ
-    public List<ServiceTypeDTO> ServiceTypes { get; set; } = new List<ServiceTypeDTO>();
-
-    // Phần 2: Thông tin của Loại đang được chọn (để hiện tiêu đề, form add)
-    public int SelectedTypeId { get; set; }
-    public string? SelectedTypeName { get; set; }
-
-    // Phần 3: Danh sách dịch vụ của loại đó (để fill Table)
-    public List<ServiceBaseDTO> Services { get; set; } = new();
-}

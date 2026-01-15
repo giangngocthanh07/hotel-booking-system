@@ -17,6 +17,10 @@ public partial class HotelBookingDBContext : DbContext
 
     public virtual DbSet<Amenity> Amenities { get; set; }
 
+    public virtual DbSet<AmenityType> AmenityTypes { get; set; }
+
+    public virtual DbSet<BedType> BedTypes { get; set; }
+
     public virtual DbSet<Booking> Bookings { get; set; }
 
     public virtual DbSet<BookingRoom> BookingRooms { get; set; }
@@ -55,11 +59,21 @@ public partial class HotelBookingDBContext : DbContext
 
     public virtual DbSet<RoomImage> RoomImages { get; set; }
 
+    public virtual DbSet<RoomQuality> RoomQualities { get; set; }
+
+    public virtual DbSet<RoomQualityGroup> RoomQualityGroups { get; set; }
+
     public virtual DbSet<RoomType> RoomTypes { get; set; }
+
+    public virtual DbSet<RoomTypeBedConfig> RoomTypeBedConfigs { get; set; }
+
+    public virtual DbSet<RoomView> RoomViews { get; set; }
 
     public virtual DbSet<Service> Services { get; set; }
 
     public virtual DbSet<ServiceType> ServiceTypes { get; set; }
+
+    public virtual DbSet<UnitType> UnitTypes { get; set; }
 
     public virtual DbSet<UpgradeRequest> UpgradeRequests { get; set; }
 
@@ -78,6 +92,30 @@ public partial class HotelBookingDBContext : DbContext
 
             entity.HasIndex(e => e.Name, "UQ__Amenitie__737584F6222DCDCA").IsUnique();
 
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.Name).HasMaxLength(100);
+
+            entity.HasOne(d => d.Type).WithMany(p => p.Amenities)
+                .HasForeignKey(d => d.TypeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Amenities_Type");
+        });
+
+        modelBuilder.Entity<AmenityType>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__AmenityC__3214EC07E63B7993");
+
+            entity.Property(e => e.Description).HasMaxLength(255);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.Name).HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<BedType>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__BedTypes__3214EC072128D7F7");
+
+            entity.Property(e => e.DefaultCapacity).HasDefaultValue(1);
+            entity.Property(e => e.Description).HasMaxLength(100);
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.Name).HasMaxLength(100);
         });
@@ -362,10 +400,10 @@ public partial class HotelBookingDBContext : DbContext
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.Name).HasMaxLength(150);
 
-            entity.HasOne(d => d.PolicyType).WithMany(p => p.Policies)
-                .HasForeignKey(d => d.PolicyTypeId)
+            entity.HasOne(d => d.Type).WithMany(p => p.Policies)
+                .HasForeignKey(d => d.TypeId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Policies__Policy__09746778");
+                .HasConstraintName("FK_Policies_PolicyTypes");
         });
 
         modelBuilder.Entity<PolicyType>(entity =>
@@ -373,7 +411,7 @@ public partial class HotelBookingDBContext : DbContext
             entity.HasKey(e => e.Id).HasName("PK__PolicyTy__90DE2D7E64A4FE33");
 
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
-            entity.Property(e => e.TypeName).HasMaxLength(50);
+            entity.Property(e => e.Name).HasMaxLength(50);
         });
 
         modelBuilder.Entity<Review>(entity =>
@@ -462,6 +500,31 @@ public partial class HotelBookingDBContext : DbContext
                 .HasConstraintName("FK_RoomImages_RoomTypes");
         });
 
+        modelBuilder.Entity<RoomQuality>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__RoomQual__3214EC07885E78B4");
+
+            entity.Property(e => e.Description).HasMaxLength(100);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.Name).HasMaxLength(100);
+            entity.Property(e => e.SortOrder).HasDefaultValue(0);
+
+            entity.HasOne(d => d.Type).WithMany(p => p.RoomQualities)
+                .HasForeignKey(d => d.TypeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__RoomQuali__Group__4F12BBB9");
+        });
+
+        modelBuilder.Entity<RoomQualityGroup>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__RoomQual__3214EC07DC893B45");
+
+            entity.Property(e => e.Description).HasMaxLength(100);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.Name).HasMaxLength(100);
+            entity.Property(e => e.SortOrder).HasDefaultValue(0);
+        });
+
         modelBuilder.Entity<RoomType>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__RoomType__3214EC072436EC76");
@@ -473,12 +536,51 @@ public partial class HotelBookingDBContext : DbContext
             entity.HasIndex(e => new { e.HotelId, e.Name }, "UQ_RoomTypes_Name_Hotel").IsUnique();
 
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.IsPrivateBathroom).HasDefaultValue(true);
+            entity.Property(e => e.MaxExtraBeds).HasDefaultValue(0);
             entity.Property(e => e.Name).HasMaxLength(100);
             entity.Property(e => e.PricePerNight).HasColumnType("decimal(18, 2)");
 
             entity.HasOne(d => d.Hotel).WithMany(p => p.RoomTypes)
                 .HasForeignKey(d => d.HotelId)
                 .HasConstraintName("FK_RoomTypes_Hotels");
+
+            entity.HasOne(d => d.Quality).WithMany(p => p.RoomTypes)
+                .HasForeignKey(d => d.QualityId)
+                .HasConstraintName("FK_RoomTypes_Quality");
+
+            entity.HasOne(d => d.RoomView).WithMany(p => p.RoomTypes)
+                .HasForeignKey(d => d.RoomViewId)
+                .HasConstraintName("FK_RoomTypes_View");
+
+            entity.HasOne(d => d.UnitType).WithMany(p => p.RoomTypes)
+                .HasForeignKey(d => d.UnitTypeId)
+                .HasConstraintName("FK_RoomTypes_UnitType");
+        });
+
+        modelBuilder.Entity<RoomTypeBedConfig>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__RoomType__3214EC07813A3E36");
+
+            entity.Property(e => e.Quantity).HasDefaultValue(1);
+
+            entity.HasOne(d => d.BedType).WithMany(p => p.RoomTypeBedConfigs)
+                .HasForeignKey(d => d.BedTypeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_BedConfig_BedType");
+
+            entity.HasOne(d => d.RoomType).WithMany(p => p.RoomTypeBedConfigs)
+                .HasForeignKey(d => d.RoomTypeId)
+                .HasConstraintName("FK_BedConfig_RoomType");
+        });
+
+        modelBuilder.Entity<RoomView>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__RoomView__3214EC0730EDDAFC");
+
+            entity.Property(e => e.Description).HasMaxLength(100);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.Name).HasMaxLength(100);
         });
 
         modelBuilder.Entity<Service>(entity =>
@@ -494,8 +596,8 @@ public partial class HotelBookingDBContext : DbContext
             entity.Property(e => e.Name).HasMaxLength(100);
             entity.Property(e => e.Price).HasColumnType("decimal(18, 2)");
 
-            entity.HasOne(d => d.ServiceType).WithMany(p => p.Services)
-                .HasForeignKey(d => d.ServiceTypeId)
+            entity.HasOne(d => d.Type).WithMany(p => p.Services)
+                .HasForeignKey(d => d.TypeId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Services_ServiceTypes");
         });
@@ -506,7 +608,17 @@ public partial class HotelBookingDBContext : DbContext
 
             entity.Property(e => e.Description).HasMaxLength(100);
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
-            entity.Property(e => e.TypeName).HasMaxLength(50);
+            entity.Property(e => e.Name).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<UnitType>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__UnitType__3214EC074D55D86B");
+
+            entity.Property(e => e.Description).HasMaxLength(100);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.IsEntirePlace).HasDefaultValue(false);
+            entity.Property(e => e.Name).HasMaxLength(100);
         });
 
         modelBuilder.Entity<UpgradeRequest>(entity =>

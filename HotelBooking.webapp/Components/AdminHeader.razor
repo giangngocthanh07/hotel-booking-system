@@ -4,6 +4,7 @@
 
         <div class="collapse navbar-collapse">
             <ul class="navbar-nav me-auto">
+                
                 <!-- Dropdown Requests -->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="requestsDropdown" role="button"
@@ -24,28 +25,11 @@
                         <!-- sau này thêm Hotel Approval -->
                     </ul>
                 </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="requestsDropdown" role="button"
-                        data-bs-toggle="dropdown" aria-expanded="false">
+
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="admin/manage/Service?typeId=1" Match="NavLinkMatch.Prefix">
                         Management
-                    </a>
-                    <ul class="dropdown-menu" aria-labelledby="requestsDropdown">
-                        <li>
-                            <NavLink class="dropdown-item" href="/admin/manages/manage-amenities">
-                                Amenities Management
-                            </NavLink>
-                        </li>
-                        <li>
-                            <NavLink class="dropdown-item" href="/admin/manages/manage-policies">
-                                Policies Management
-                            </NavLink>
-                        </li>
-                        <li>
-                            <NavLink class="dropdown-item" href="/admin/manages/manage-services">
-                                Services Management
-                            </NavLink>
-                        </li>
-                    </ul>
+                    </NavLink>
                 </li>
             </ul>
         </div>

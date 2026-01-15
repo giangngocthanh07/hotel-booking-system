@@ -7,7 +7,7 @@ public partial class PolicyType
 {
     public int Id { get; set; }
 
-    public string TypeName { get; set; } = null!;
+    public string Name { get; set; } = null!;
 
     public bool? IsDeleted { get; set; }
 

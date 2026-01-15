@@ -1,0 +1,159 @@
+@* File: Pages/Admin/BedTypeManager.razor *@
+
+@* --- 1. ĐỊNH NGHĨA ROUTING --- *@
+@page "/admin/manage/bedtype"
+
+@* --- 2. SỬ DỤNG LAYOUT ADMIN CHUNG --- *@
+@layout AdminLayout
+@inject IManagementService _service
+@inject ILogger<BedTypeManager> Logger
+@implements IDisposable
+
+<MasterDetailLayout TItem="BedTypeVM" Items="_items" Model="_model" OnSubmit="SaveData" OnEdit="OnEditItem"
+    OnDelete="HandleDelete" OnCancel="ResetForm">
+
+    @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
+    <SidebarTopContent>
+        @* NHÚNG COMPONENT MENU THÔNG MINH VÀO ĐÂY *@
+        @* Nó tự biết đường vẽ ra Dropdown *@
+        <GlobalNavMenu CurrentModule="BedType" CurrentTypeId="TypeId" />
+    </SidebarTopContent>
+
+    @* --- B. CẤU HÌNH FORM --- *@
+    <FormContent Context="formData">
+        <div class="mb-3">
+            <label class="form-label fw-bold small text-muted">Name</label>
+            <InputText class="form-control" @bind-Value="formData.Name" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label fw-bold small text-muted">Default Capacity</label>
+            <InputNumber class="form-control" @bind-Value="formData.DefaultCapacity" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label fw-bold small text-muted">Description</label>
+            <InputTextArea class="form-control" @bind-Value="formData.Description" />
+        </div>
+    </FormContent>
+
+    @* --- C. CẤU HÌNH BẢNG (TABLE) --- *@
+    <TableHeader>
+        <th>ID</th>
+        <th>Name</th>
+        <th>DefaultCapacity</th>
+        <th>Description</th>
+    </TableHeader>
+
+    <RowTemplate Context="row">
+        <td>@row.Id</td>
+        <td><strong>@row.Name</strong></td>
+        <td>@row.DefaultCapacity</td>
+        <td>@row.Description</td>
+    </RowTemplate>
+
+</MasterDetailLayout>
+
+
+@code {
+    // --- PARAMETERS TỪ URL ---
+    // Tự động nhận giá trị từ URL /admin/manage/bedtype
+    [Parameter] public int? TypeId { get; set; }
+
+    // --- STATE ---
+    private List<BedTypeVM> _items;
+    private BedTypeVM _model = new();
+    private bool _isUpdate = false;
+
+    // Biến kiểm soát vòng đời & Re-render
+    private Guid _instanceId = Guid.NewGuid();
+    private bool _disposed = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Hàm này chỉ chạy khi component SINH RA
+        Console.WriteLine($"[SINH RA] Component ID: {_instanceId} - Lúc: {DateTime.Now.ToString("mm:ss.fff")}");
+
+        // 1. Nhường quyền cho UI vẽ cái Spinner "Loading..." lên màn hình trước đã
+        // Lệnh này cực quan trọng để Navigation Manager biết là "À, trang đã load xong rồi"
+        await Task.Yield();
+        await LoadData();
+    }
+    private async Task LoadData()
+    {
+        if (_items == null)
+        {
+            // Chỉ hiện loading lần đầu
+            _items = null;
+            // InvokeAsync(StateHasChanged); // Không cần thiết ở OnInit
+        }
+
+        try
+        {
+            // Gọi API dành riêng cho Non-Type (Lấy tất cả)
+            var res = await _service.GetBedTypes();
+
+            if (!_disposed)
+            {
+                if (res.StatusCode == StatusCodeResponse.Success && res.Content != null)
+                {
+                    // Lấy Items trực tiếp
+                    _items = res.Content;
+                }
+                else
+                {
+                    _items = new List<BedTypeVM>();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Lỗi load data bedtype");
+            _items = new List<BedTypeVM>(); // Hết lỗi để UI hiện bảng trống}
+        }
+    }
+
+    // --- CRUD METHODS ---
+    private void OnEditItem(BedTypeVM item)
+    {
+        _isUpdate = true;
+        _model = new BedTypeVM
+        {
+            Id = item.Id,
+            Name = item.Name,
+            DefaultCapacity = item.DefaultCapacity,
+            Description =
+        item.Description
+        };
+    }
+
+    private async Task HandleDelete(BedTypeVM item)
+    {
+        // Gọi API xóa thực tế
+        var res = await _service.DeleteBedType(item.Id);
+
+        if (res.StatusCode == StatusCodeResponse.Success)
+        {
+            // Xóa thành công thì load lại bảng
+            await LoadData();
+        }
+    }
+
+    private void ResetForm()
+    {
+        _isUpdate = false;
+        _model = new();
+    }
+
+    private async Task SaveData()
+    {
+        if (_isUpdate) await _service.UpdateBedType(_model);
+        else await _service.CreateBedType(_model);
+        await LoadData();
+        ResetForm();
+    }
+
+    // Hàm hủy (Implement IDisposable nếu cần, hoặc dùng biến cờ đơn giản)
+    public void Dispose()
+    {
+        _disposed = true;
+    }
+}

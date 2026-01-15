@@ -1,8 +1,8 @@
 using HotelBooking.application.Helpers;
 using HotelBooking.infrastructure.Models;
-public interface IServiceManage : ITypedManage<ServiceBaseDTO, ServiceCreateOrUpdateDTO>
+public interface IServiceManage : ITypedManage<ServiceBaseDTO, ServiceTypeDTO, ServiceCreateOrUpdateDTO>
 {
-    Task<ApiResponse<ManageServiceDTO>> GetManageServiceDataAsync(int? selectedTypeId = null);
+    Task<ApiResponse<ManageDataResult<ServiceBaseDTO>>> GetServicesByTypeAsync(int? typeId);
 }
 public class ServiceManage : BaseManage<Service, IServiceRepository, ServiceBaseDTO, ServiceCreateOrUpdateDTO>, IServiceManage
 {
@@ -31,7 +31,7 @@ public class ServiceManage : BaseManage<Service, IServiceRepository, ServiceBase
         {
             Name = createDto.Name,
             Description = createDto.Description,
-            ServiceTypeId = createDto.TargetTypeId,
+            TypeId = createDto.TargetTypeId,
             Additional = ServiceHelper.MapToAdditionalJson(createDto)
 
         };
@@ -40,121 +40,68 @@ public class ServiceManage : BaseManage<Service, IServiceRepository, ServiceBase
     // Validation
     protected override async Task<ValidationResult> ValidateAsync(ServiceCreateOrUpdateDTO dto, int? id = null)
     {
-        // Cấu trúc chuỗi kiểm tra (Chain of Responsibility)
-        // Nó sẽ chạy từ trái sang phải, gặp cái nào lỗi (khác null) là return ngay lập tức.
-
-        var basicCheck =
-            ValidateUtils.RequireNotEmpty(dto.Name, MessageResponse.EMPTY_NAME, StatusCodeResponse.BadRequest) ??
-            ValidateUtils.Require(dto.TargetTypeId > 0, MessageResponse.BAD_REQUEST, StatusCodeResponse.BadRequest);
-
-        // Nếu các check cơ bản đã có lỗi -> Return luôn, khỏi cần check DB cho tốn thời gian
-        if (basicCheck != null) return basicCheck;
-
-        // --- CHECK DB (Logic Check trùng) ---
-        // Phần Async ta nên tách ra check riêng sau khi check cơ bản đã OK
-
-        // --- 2. VALIDATE NGHIỆP VỤ (Cần DB) ---
-
-        // A. Xử lý riêng cho trường hợp UPDATE
-        if (id.HasValue) // Tương đương: if (id != null)
-        {
-            // Phải query lấy entity cũ lên để so sánh
-            // Lưu ý: EF Core có cơ chế Cache, nên việc query ở đây và query lại ở hàm UpdateAsync 
-            // thường không ảnh hưởng đáng kể hiệu năng (nó lấy từ bộ nhớ đệm).
-            var existingEntity = await _repo.GetByIdAsync(id.Value);
-
-            // Kiểm tra tồn tại
-            // Nếu existingEntity null -> Trả về 404 NotFound ngay lập tức
-            var foundCheck = ValidateUtils.RequireFound(existingEntity, MessageResponse.NOT_FOUND, StatusCodeResponse.NotFound);
-            if (foundCheck != null) return foundCheck;
-
-            // Nếu entity bị deleted == true -> Trả về lỗi NotFound
-            if (existingEntity.IsDeleted == true)
-            {
-                return ValidationResult.Fail(MessageResponse.NOT_FOUND, StatusCodeResponse.NotFound);
-            }
-
-            // [LOGIC BẠN CẦN]: Kiểm tra xem User có cố tình đổi Loại dịch vụ không?
-            if (existingEntity?.ServiceTypeId != dto.TargetTypeId)
-            {
-                return ValidationResult.Fail(MessageResponse.BAD_REQUEST, StatusCodeResponse.BadRequest);
-            }
-        }
-
-        // B. Xử lý Check trùng tên (Áp dụng cho cả Create và Update)
-        bool isDuplicate;
-        if (id == null)
-            isDuplicate = await _repo.AnyAsync(x => x.Name == dto.Name);
-        else
-            isDuplicate = await _repo.AnyAsync(x => x.Name == dto.Name && x.Id != id);
-
-
-        if (isDuplicate)
-        {
-            return ValidationResult.Fail(MessageResponse.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
-        }
-        // Nếu qua hết cửa ải -> Thành công
-        return ValidationResult.Success();
+        var basicValidation = ValidateFactory.ValidateFullAsync<Service>(
+            _repo,
+            dto.Name,
+            id,
+            typeId: dto.TargetTypeId,
+            getEntityIsDeletedFunc: x => x.IsDeleted,
+            isDeletedSelector: x => x.IsDeleted,
+            nameSelector: x => x.Name);
+        return await basicValidation;
     }
 
-    public async Task<ApiResponse<List<ServiceBaseDTO>>> GetAllByTypeAsync(int typeId)
+    public async Task<ApiResponse<List<ServiceTypeDTO>>> GetTypeDataAsync()
     {
         try
         {
-            var services = await _repo.WhereAsync(sv => sv.ServiceTypeId == typeId && sv.IsDeleted == false);
+            var svTypes = await _svTypeRepo.WhereAsync(sv => sv.IsDeleted == false);
 
-            if (services == null || !services.Any())
+            if (svTypes == null || !svTypes.Any())
             {
-                return ResponseFactory.Failure<List<ServiceBaseDTO>>(StatusCodeResponse.NotFound, MessageResponse.EMPTY_LIST);
+                return ResponseFactory.Failure<List<ServiceTypeDTO>>(StatusCodeResponse.NotFound, MessageResponse.EMPTY_LIST);
             }
 
-            var result = services.Select(p => MapToDto(p)).ToList();
+            var result = svTypes.Select(sv => new ServiceTypeDTO
+            {
+                Id = sv.Id,
+                Name = sv.Name,
+                IsDeleted = sv.IsDeleted
+            }).ToList();
 
             return ResponseFactory.Success(result, MessageResponse.GET_SUCCESSFULLY);
         }
         catch (Exception)
         {
-            return ResponseFactory.ServerError<List<ServiceBaseDTO>>();
+            return ResponseFactory.ServerError<List<ServiceTypeDTO>>();
         }
     }
 
-    public async Task<ApiResponse<ManageServiceDTO>> GetManageServiceDataAsync(int? selectedTypeId = null)
+    public async Task<ApiResponse<ManageDataResult<ServiceBaseDTO>>> GetServicesByTypeAsync(int? typeId)
     {
-        try
-        {
-            var types = await _svTypeRepo.GetAllAsync();
+        return await ManagementAdminHelper.GetDataByTypeAsync<Service, ServiceBaseDTO>(
+            typeId,
 
-            var typeDtos = types.Select(t => new ServiceTypeDTO
+            // Logic 1: lấy ID mặc định: Query bảng ServiceType, lấy thằng đầu tiên chưa xóa
+            getDefaultIdFunc: async () =>
             {
-                Id = t.Id,
-                Name = t.TypeName,
-                IsDeleted = t.IsDeleted
-            }).ToList();
-
-            // 2. Xác định Type nào đang được chọn
-            // Nếu user không truyền vào -> Lấy cái đầu tiên trong danh sách
-            int currentTypeId = selectedTypeId ?? (typeDtos.FirstOrDefault()?.Id ?? 0);
-            string? currentTypeName = typeDtos.FirstOrDefault(t => t.Id == currentTypeId)?.Name;
-
-            // 3. Lấy danh sách Service theo Type đã chọn
-            // Tận dụng hàm Where của Repo chính
-            var serviceEntities = await _repo.WhereAsync(sv => sv.ServiceTypeId == currentTypeId && sv.IsDeleted == false);
-            var serviceDtos = serviceEntities.Select(sv => ServiceHelper.MapToServiceDTO(sv)).ToList();
-
-            // 4. Đóng gói vào ViewModel (MangagePolicyDTO)
-            var viewModel = new ManageServiceDTO
+                // query DB lấy 1 dòng
+                var firstType = (await _svTypeRepo.WhereAsync(x => x.IsDeleted != true)).FirstOrDefault();
+                return firstType?.Id;
+            },
+            // Logic 2: kiểm tra ID tồn tại: Query bảng ServiceType
+            checkTypeExistsFunc: async (id) =>
             {
-                ServiceTypes = typeDtos,
-                SelectedTypeId = currentTypeId,
-                SelectedTypeName = currentTypeName,
-                Services = serviceDtos
-            };
+                // Kiểm tra xem có dòng nào có Id này và chưa bị xóa không
+                var exists = (await _svTypeRepo.WhereAsync(x => x.Id == id && x.IsDeleted != true)).Any();
+                return exists;
+            },
+            // Logic 3: Lấy Entity từ DB
+            getItemsByTypeIdFunc: async (id) => await _repo.WhereAsync(sv => sv.TypeId == id && sv.IsDeleted == false),
 
-            return ResponseFactory.Success(viewModel, MessageResponse.GET_SUCCESSFULLY);
-        }
-        catch (Exception)
-        {
-            return ResponseFactory.ServerError<ManageServiceDTO>();
-        }
+            // Logic 4: Map sang DTO (Tái sử dụng hàm MapToDto có sẵn)
+            mapToDtoFunc: MapToDto
+        );
     }
+
 }

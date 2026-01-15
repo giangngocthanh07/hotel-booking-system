@@ -1,0 +1,172 @@
+@* File: Pages/Admin/PolicyManager.razor *@
+
+@* --- 1. ĐỊNH NGHĨA ROUTING --- *@
+@page "/admin/manage/policy"
+@page "/admin/manage/policy/{TypeId:int}"
+
+@* --- 2. SỬ DỤNG LAYOUT ADMIN CHUNG --- *@
+@layout AdminLayout
+@inject IManagementService _service
+@inject ILogger<PolicyManager> Logger
+@implements IDisposable
+
+<MasterDetailLayout TItem="PolicyVM" Items="_items" Model="_model" OnSubmit="SaveData" OnEdit="OnEditItem"
+    OnDelete="HandleDelete" OnCancel="ResetForm">
+
+    @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
+    <SidebarTopContent>
+        @* NHÚNG COMPONENT MENU THÔNG MINH VÀO ĐÂY *@
+        @* Nó tự biết đường vẽ ra Dropdown *@
+        <GlobalNavMenu CurrentModule="Policy" CurrentTypeId="TypeId" />
+    </SidebarTopContent>
+
+    @* --- B. CẤU HÌNH FORM --- *@
+    <FormContent Context="formData">
+        <div class="mb-3">
+            <label class="form-label fw-bold small text-muted">Name</label>
+            <InputText class="form-control" @bind-Value="formData.Name" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label fw-bold small text-muted">Description</label>
+            <InputTextArea class="form-control" @bind-Value="formData.Description" />
+        </div>
+    </FormContent>
+
+    @* --- C. CẤU HÌNH BẢNG (TABLE) --- *@
+    <TableHeader>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Description</th>
+    </TableHeader>
+
+    <RowTemplate Context="row">
+        <td>@row.Id</td>
+        <td><strong>@row.Name</strong></td>
+        <td>@row.Description</td>
+    </RowTemplate>
+
+</MasterDetailLayout>
+
+
+@code {
+    // --- PARAMETERS TỪ URL ---
+    // Tự động nhận giá trị từ URL /admin/manage/policy/{TypeId}
+    [Parameter] public int? TypeId { get; set; }
+
+    // --- STATE ---
+    private List<PolicyVM> _items;
+    private PolicyVM _model = new();
+    private bool _isUpdate = false;
+
+    // Biến kiểm soát vòng đời & Re-render
+    private int? _previousTypeId = -999;
+    // Mỗi khi tạo mới class này, C# sẽ sinh ra một cái ID ngẫu nhiên cho nó
+    private Guid _instanceId = Guid.NewGuid();
+    private bool _disposed = false;
+
+    // --- LIFECYCLE ---
+    protected override void OnInitialized()
+    {
+        // Hàm này chỉ chạy khi component SINH RA
+        Console.WriteLine($"[SINH RA] Component ID: {_instanceId} - Lúc: {DateTime.Now.ToString("mm:ss.fff")}");
+    }
+    protected override async Task OnParametersSetAsync()
+    {
+        // 1. Nếu URL không có TypeId (Vào trang gốc), set mặc định là 1002 (CheckIn)
+        if (TypeId == null)
+        {
+            TypeId = 1002;
+        }
+
+        // 2. Chặn trùng
+        if (TypeId == _previousTypeId) return;
+        _previousTypeId = TypeId;
+
+        try
+        {
+            ResetForm(); // Reset form khi đổi tab
+            await LoadData();
+        }
+        catch (TaskCanceledException) { }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Lỗi tải dữ liệu Policy");
+        }
+    }
+    private async Task LoadData()
+    {
+        _items = null; // Kích hoạt Spinner
+        StateHasChanged();
+
+        try
+        {
+            // Gọi API Mới
+            var res = await _service.GetPoliciesByType(TypeId);
+
+            if (!_disposed)
+            {
+                if (res.StatusCode == StatusCodeResponse.Success && res.Content != null)
+                {
+                    // Lấy items trực tiếp từ Generic VM
+                    _items = res.Content.Items;
+                }
+                else
+                {
+                    _items = new List<PolicyVM>();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Lỗi load data policy");
+            _items = new List<PolicyVM>(); // Hết lỗi để UI hiện bảng trống}
+        }
+    }
+
+    // --- CRUD METHODS ---
+    private void OnEditItem(PolicyVM item)
+    {
+        _isUpdate = true;
+        _model = new PolicyVM { Id = item.Id, Name = item.Name, Description = item.Description, TypeId = item.TypeId };
+    }
+
+    private async Task HandleDelete(PolicyVM item)
+    {
+        // Gọi API xóa thực tế
+        var res = await _service.DeletePolicy(item.Id);
+
+        if (res.StatusCode == StatusCodeResponse.Success)
+        {
+            // Xóa thành công thì load lại bảng
+            await LoadData();
+        }
+    }
+
+    private void ResetForm()
+    {
+        _isUpdate = false;
+        _model = new();
+
+        
+    }
+
+    private async Task SaveData()
+    {
+        // [QUAN TRỌNG] Gán TypeId vào Model trước khi gửi xuống Server
+        if (TypeId.HasValue)
+        {
+            _model.TypeId = TypeId.Value;
+        }
+
+        if (_isUpdate) await _service.UpdatePolicy(_model);
+        else await _service.CreatePolicy(_model);
+        await LoadData();
+        ResetForm();
+    }
+
+    // Hàm hủy (Implement IDisposable nếu cần, hoặc dùng biến cờ đơn giản)
+    public void Dispose()
+    {
+        _disposed = true;
+    }
+}

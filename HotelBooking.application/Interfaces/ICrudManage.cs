@@ -11,9 +11,9 @@ public interface IStandardManage<TDto, TCreateOrUpdateDTO> : ICommonManage<TDto,
     Task<ApiResponse<List<TDto>>> GetAllAsync();
 }
 
-public interface ITypedManage<TDto, TCreateOrUpdateDTO> : ICommonManage<TDto, TCreateOrUpdateDTO>
+public interface ITypedManage<TDto, TypeDTO, TCreateOrUpdateDTO> : ICommonManage<TDto, TCreateOrUpdateDTO>
 {
-    Task<ApiResponse<List<TDto>>> GetAllByTypeAsync(int typeId);
+    Task<ApiResponse<List<TypeDTO>>> GetTypeDataAsync();
 }
 
 

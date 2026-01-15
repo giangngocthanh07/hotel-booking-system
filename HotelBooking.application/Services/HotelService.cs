@@ -17,7 +17,6 @@ public interface IHotelService
     public Task<ApiResponse<PolicyDTO>> CreatePolicyAsync(PolicyCreateOrUpdateDTO newPolicy);
     public Task<ApiResponse<PolicyDTO>> UpdatePolicyAsync(int id, PolicyCreateOrUpdateDTO policy);
     public Task<ApiResponse<bool>> DeletePolicyAsync(int id);
-    public Task<ApiResponse<ManageServiceDTO>> GetManageServiceDataAsync(int? selectedTypeId);
     public Task<ApiResponse<List<ServiceTypeDTO>>> GetAllServiceTypesAsync();
     public Task<ApiResponse<List<ServiceBaseDTO>>> GetAllServicesByTypeAsync(int typeId);
     public Task<ApiResponse<ServiceBaseDTO>> CreateServiceByTypeAsync(ServiceCreateOrUpdateDTO newService);
@@ -113,9 +112,7 @@ public class HotelService : IHotelService
                 {
                     Id = amenity.Id,
                     Name = amenity.Name,
-                    Description = additional.GetValueOrDefault("Description", null),
-                    IconClass = additional.GetValueOrDefault("IconClass", ""),
-                    IconColor = additional.GetValueOrDefault("IconColor", "blue"),
+                    Description = additional.GetValueOrDefault("Description", null)
                 });
             }
 
@@ -151,7 +148,7 @@ public class HotelService : IHotelService
             };
 
             var additional = JsonSerializer.Serialize(new
-            { Description = newAmenity.Description, IconClass = newAmenity.IconClass, IconColor = string.IsNullOrWhiteSpace(newAmenity.IconColor) ? "blue" : newAmenity.IconColor });
+            { Description = newAmenity.Description});
 
             var amenity = new Amenity
             {
@@ -166,8 +163,6 @@ public class HotelService : IHotelService
                 Id = amenity.Id,
                 Name = amenity.Name,
                 Description = newAmenity.Description,
-                IconClass = newAmenity.IconClass,
-                IconColor = string.IsNullOrWhiteSpace(newAmenity.IconColor) ? "blue" : newAmenity.IconColor
             };
 
             await _amenityRepository.AddAsync(amenity);
@@ -216,18 +211,14 @@ public class HotelService : IHotelService
             existingAmenity.Name = amenity.Name;
             existingAmenity.Additional = JsonSerializer.Serialize(new
             {
-                Description = string.IsNullOrWhiteSpace(amenity.Description) ? null : amenity.Description,
-                IconClass = amenity.IconClass,
-                IconColor = string.IsNullOrWhiteSpace(amenity.IconColor) ? "blue" : amenity.IconColor
+                Description = string.IsNullOrWhiteSpace(amenity.Description) ? null : amenity.Description
             });
 
             var resultDTO = new AmenityDTO
             {
                 Id = existingAmenity.Id,
                 Name = existingAmenity.Name,
-                Description = amenity.Description,
-                IconClass = amenity.IconClass,
-                IconColor = string.IsNullOrWhiteSpace(amenity.IconColor) ? "blue" : amenity.IconColor
+                Description = amenity.Description
             };
 
             await _amenityRepository.UpdateAsync(existingAmenity);
@@ -519,7 +510,7 @@ public class HotelService : IHotelService
             var result = policyTypes.Select(pt => new PolicyTypeDTO
             {
                 Id = pt.Id,
-                Name = pt.TypeName,
+                Name = pt.Name,
                 IsDeleted = pt.IsDeleted
             }).ToList();
 
@@ -546,7 +537,7 @@ public class HotelService : IHotelService
     {
         try
         {
-            var policies = await _policyRepository.WhereAsync(p => p.PolicyTypeId == typeId && p.IsDeleted == false);
+            var policies = await _policyRepository.WhereAsync(p => p.TypeId == typeId && p.IsDeleted == false);
 
             if (policies == null || !policies.Any())
             {
@@ -564,7 +555,7 @@ public class HotelService : IHotelService
                 Name = p.Name,
                 Description = p.Description,
                 IsDeleted = p.IsDeleted,
-                PolicyTypeId = p.PolicyTypeId
+                TypeId = p.TypeId
             }).ToList();
 
             return new ApiResponse<List<PolicyDTO>>
@@ -606,7 +597,7 @@ public class HotelService : IHotelService
                 Name = newPolicy.Name,
                 Description = newPolicy.Description,
                 IsDeleted = false,
-                PolicyTypeId = newPolicy.PolicyTypeId
+                TypeId = newPolicy.TypeId
             };
 
             // Map entity sang DTO để trả về cho FE
@@ -615,7 +606,7 @@ public class HotelService : IHotelService
                 Id = policy.Id,
                 Name = policy.Name,
                 Description = newPolicy.Description,
-                PolicyTypeId = newPolicy.PolicyTypeId
+                TypeId = newPolicy.TypeId
             };
 
             await _policyRepository.AddAsync(policy);
@@ -673,7 +664,7 @@ public class HotelService : IHotelService
                 Id = existingPolicy.Id,
                 Name = existingPolicy.Name,
                 Description = policy.Description,
-                PolicyTypeId = existingPolicy.PolicyTypeId
+                TypeId = existingPolicy.TypeId
 
             };
 
@@ -733,87 +724,87 @@ public class HotelService : IHotelService
     }
 
     #region MANAGE SERVICES
-    public async Task<ApiResponse<ManageServiceDTO>> GetManageServiceDataAsync(int? selectedTypeId)
-    {
-        try
-        {
-            // BƯỚC 1: Lấy danh sách Service Types trước (Dùng await luôn để xong bước này mới qua bước sau)
-            var typesRaw = await _serviceTypeRepository.WhereAsync(st => st.IsDeleted == false);
+    // public async Task<ApiResponse<ManageServiceDTO>> GetManageServiceDataAsync(int? selectedTypeId)
+    // {
+    //     try
+    //     {
+    //         // BƯỚC 1: Lấy danh sách Service Types trước (Dùng await luôn để xong bước này mới qua bước sau)
+    //         var typesRaw = await _serviceTypeRepository.WhereAsync(st => st.IsDeleted == false);
 
-            List<ServiceTypeDTO> serviceTypesDTO = typesRaw.Select(st => new ServiceTypeDTO
-            {
-                Id = st.Id,
-                Name = st.TypeName,
-                IsDeleted = st.IsDeleted
-            }).ToList();
+    //         List<ServiceTypeDTO> serviceTypesDTO = typesRaw.Select(st => new ServiceTypeDTO
+    //         {
+    //             Id = st.Id,
+    //             Name = st.TypeName,
+    //             IsDeleted = st.IsDeleted
+    //         }).ToList();
 
-            List<ServiceBaseDTO> mappedServices = new();
-            int typeIdToFetch = 0;
-            string currentTypeName = "";
+    //         List<ServiceBaseDTO> mappedServices = new();
+    //         int typeIdToFetch = 0;
+    //         string currentTypeName = "";
 
-            // Kiểm tra nếu danh sách rỗng
-            if (!serviceTypesDTO.Any())
-            {
-                return new ApiResponse<ManageServiceDTO>
-                {
-                    StatusCode = StatusCodeResponse.NotFound,
-                    Message = MessageResponse.EMPTY_LIST,
-                    Content = null
-                };
-            }
+    //         // Kiểm tra nếu danh sách rỗng
+    //         if (!serviceTypesDTO.Any())
+    //         {
+    //             return new ApiResponse<ManageServiceDTO>
+    //             {
+    //                 StatusCode = StatusCodeResponse.NotFound,
+    //                 Message = MessageResponse.EMPTY_LIST,
+    //                 Content = null
+    //             };
+    //         }
 
-            // BƯỚC 2: Xác định ID cần lấy
-            if (selectedTypeId.HasValue)
-            {
-                // Nếu user chọn, lấy theo ý user
-                typeIdToFetch = selectedTypeId.Value;
-            }
-            else
-            {
-                // Nếu load lần đầu, lấy cái đầu tiên trong list vừa query xong
-                typeIdToFetch = serviceTypesDTO.First().Id;
-            }
+    //         // BƯỚC 2: Xác định ID cần lấy
+    //         if (selectedTypeId.HasValue)
+    //         {
+    //             // Nếu user chọn, lấy theo ý user
+    //             typeIdToFetch = selectedTypeId.Value;
+    //         }
+    //         else
+    //         {
+    //             // Nếu load lần đầu, lấy cái đầu tiên trong list vừa query xong
+    //             typeIdToFetch = serviceTypesDTO.First().Id;
+    //         }
 
-            // Lấy tên loại để hiển thị
-            currentTypeName = serviceTypesDTO.FirstOrDefault(t => t.Id == typeIdToFetch)?.Name ?? "";
+    //         // Lấy tên loại để hiển thị
+    //         currentTypeName = serviceTypesDTO.FirstOrDefault(t => t.Id == typeIdToFetch)?.Name ?? "";
 
-            // BƯỚC 3: Query Services (Chạy sau khi Bước 1 đã hoàn tất)
-            var servicesRaw = await _serviceRepository.WhereAsync(s => s.ServiceTypeId == typeIdToFetch && s.IsDeleted == false);
+    //         // BƯỚC 3: Query Services (Chạy sau khi Bước 1 đã hoàn tất)
+    //         var servicesRaw = await _serviceRepository.WhereAsync(s => s.ServiceTypeId == typeIdToFetch && s.IsDeleted == false);
 
-            // Mapping dữ liệu
-            foreach (var sv in servicesRaw)
-            {
-                var dto = ServiceHelper.MapToServiceDTO(sv);
-                if (dto != null) mappedServices.Add(dto);
-            }
+    //         // Mapping dữ liệu
+    //         foreach (var sv in servicesRaw)
+    //         {
+    //             var dto = ServiceHelper.MapToServiceDTO(sv);
+    //             if (dto != null) mappedServices.Add(dto);
+    //         }
 
-            // BƯỚC 4: Đóng gói kết quả
-            var result = new ManageServiceDTO
-            {
-                ServiceTypes = serviceTypesDTO,
-                Services = mappedServices,
-                SelectedTypeId = typeIdToFetch,
-                SelectedTypeName = currentTypeName
-            };
+    //         // BƯỚC 4: Đóng gói kết quả
+    //         var result = new ManageServiceDTO
+    //         {
+    //             ServiceTypes = serviceTypesDTO,
+    //             Services = mappedServices,
+    //             SelectedTypeId = typeIdToFetch,
+    //             SelectedTypeName = currentTypeName
+    //         };
 
-            return new ApiResponse<ManageServiceDTO>
-            {
-                StatusCode = StatusCodeResponse.Success,
-                Message = MessageResponse.UPDATE_SUCCESSFULLY,
-                Content = result
-            };
-        }
-        catch (Exception)
-        {
-            // Log lỗi để debug
-            return new ApiResponse<ManageServiceDTO>
-            {
-                StatusCode = StatusCodeResponse.Error,
-                Message = MessageResponse.ERROR_IN_SERVER,
-                Content = null
-            };
-        }
-    }
+    //         return new ApiResponse<ManageServiceDTO>
+    //         {
+    //             StatusCode = StatusCodeResponse.Success,
+    //             Message = MessageResponse.UPDATE_SUCCESSFULLY,
+    //             Content = result
+    //         };
+    //     }
+    //     catch (Exception)
+    //     {
+    //         // Log lỗi để debug
+    //         return new ApiResponse<ManageServiceDTO>
+    //         {
+    //             StatusCode = StatusCodeResponse.Error,
+    //             Message = MessageResponse.ERROR_IN_SERVER,
+    //             Content = null
+    //         };
+    //     }
+    // }
     public async Task<ApiResponse<List<ServiceTypeDTO>>> GetAllServiceTypesAsync()
     {
         try
@@ -833,7 +824,7 @@ public class HotelService : IHotelService
             var result = serviceTypes.Select(sv => new ServiceTypeDTO
             {
                 Id = sv.Id,
-                Name = sv.TypeName,
+                Name = sv.Name,
                 IsDeleted = sv.IsDeleted
             }).ToList();
 
@@ -867,7 +858,7 @@ public class HotelService : IHotelService
 
             if (typeId == 1) // Standard
             {
-                var services = await _serviceRepository.WhereAsync(sv => sv.ServiceTypeId == 1 && sv.IsDeleted == false);
+                var services = await _serviceRepository.WhereAsync(sv => sv.TypeId == 1 && sv.IsDeleted == false);
 
                 if (services == null || !services.Any())
                 {
@@ -891,7 +882,7 @@ public class HotelService : IHotelService
                         Unit = additional?.GetValueOrDefault("Unit", ""),
                         Price = sv.Price,
                         IsDeleted = sv.IsDeleted,
-                        ServiceTypeId = sv.ServiceTypeId
+                        TypeId = sv.TypeId
                     };
 
                     resultList.Add(standardDTO);
@@ -900,7 +891,7 @@ public class HotelService : IHotelService
             }
             else if (typeId == 2) // Airport Transfer
             {
-                var services = await _serviceRepository.WhereAsync(sv => sv.ServiceTypeId == 2 && sv.IsDeleted == false);
+                var services = await _serviceRepository.WhereAsync(sv => sv.TypeId == 2 && sv.IsDeleted == false);
 
                 if (services == null || !services.Any())
                 {
@@ -929,7 +920,7 @@ public class HotelService : IHotelService
                         Description = sv.Description,
                         Price = sv.Price,
                         IsDeleted = sv.IsDeleted,
-                        ServiceTypeId = sv.ServiceTypeId,
+                        TypeId = sv.TypeId,
 
                         // Gán trực tiếp từ đối tượng 'additional'
                         MaxPassengers = additional?.MaxPassengers,
@@ -1022,7 +1013,7 @@ public class HotelService : IHotelService
             // Các trường chung
             entityToAdd.Name = newService.Name;
             entityToAdd.Description = newService.Description;
-            entityToAdd.ServiceTypeId = typeId;
+            entityToAdd.TypeId = typeId;
 
             if (additionalData != null)
             {
@@ -1043,7 +1034,7 @@ public class HotelService : IHotelService
                     Description = entityToAdd.Description,
                     Unit = JsonSerializer.Deserialize<ServiceStandardDTO>(entityToAdd.Additional ?? "{}")?.Unit,
                     Price = entityToAdd.Price,
-                    ServiceTypeId = entityToAdd.ServiceTypeId
+                    TypeId = entityToAdd.TypeId
                 };
             }
             else if (typeId == 2)
@@ -1054,7 +1045,7 @@ public class HotelService : IHotelService
                     Name = entityToAdd.Name,
                     Description = entityToAdd.Description,
                     Price = entityToAdd.Price,
-                    ServiceTypeId = entityToAdd.ServiceTypeId,
+                    TypeId = entityToAdd.TypeId,
                     MaxPassengers = null,
                     MaxLuggage = null,
                     RoundTripPrice = null,
@@ -1138,7 +1129,7 @@ public class HotelService : IHotelService
 
             // 4. Validate: DTO gửi lên phải đúng với loại dịch vụ trong DB
             // (Không thể lấy DTO Standard để update cho dịch vụ Airport Transfer)
-            if (existingService.ServiceTypeId != targetTypeId)
+            if (existingService.TypeId != targetTypeId)
             {
                 return new ApiResponse<ServiceBaseDTO>
                 {
@@ -1169,7 +1160,7 @@ public class HotelService : IHotelService
                     Description = existingService.Description,
                     Unit = JsonSerializer.Deserialize<ServiceStandardDTO>(existingService.Additional ?? "{}")?.Unit,
                     Price = existingService.Price,
-                    ServiceTypeId = existingService.ServiceTypeId
+                    TypeId = existingService.TypeId
                 };
             }
             else if (targetTypeId == 2)
@@ -1181,7 +1172,7 @@ public class HotelService : IHotelService
                     Name = existingService.Name,
                     Description = existingService.Description,
                     Price = existingService.Price,
-                    ServiceTypeId = existingService.ServiceTypeId,
+                    TypeId = existingService.TypeId,
                     MaxPassengers = additionalDataAT?.MaxPassengers,
                     MaxLuggage = additionalDataAT?.MaxLuggage,
                     RoundTripPrice = additionalDataAT?.RoundTripPrice,

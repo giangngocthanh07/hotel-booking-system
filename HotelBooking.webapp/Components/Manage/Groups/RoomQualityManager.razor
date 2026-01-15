@@ -1,0 +1,168 @@
+@* File: Pages/Admin/RoomQualityManager.razor *@
+
+@* --- 1. ĐỊNH NGHĨA ROUTING --- *@
+@page "/admin/manage/roomquality"
+@page "/admin/manage/roomquality/{TypeId:int}"
+
+@* --- 2. SỬ DỤNG LAYOUT ADMIN CHUNG --- *@
+@layout AdminLayout
+@inject IManagementService _service
+@inject ILogger<RoomQualityManager> Logger
+@implements IDisposable
+
+<MasterDetailLayout TItem="RoomQualityVM" Items="_items" Model="_model" OnSubmit="SaveData" OnEdit="OnEditItem"
+    OnDelete="HandleDelete" OnCancel="ResetForm">
+
+    @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
+    <SidebarTopContent>
+        @* NHÚNG COMPONENT MENU THÔNG MINH VÀO ĐÂY *@
+        @* Nó tự biết đường vẽ ra Dropdown *@
+        <GlobalNavMenu CurrentModule="RoomQuality" CurrentTypeId="TypeId" />
+    </SidebarTopContent>
+
+    @* --- B. CẤU HÌNH FORM --- *@
+    <FormContent Context="formData">
+        <div class="mb-3">
+            <label class="form-label fw-bold small text-muted">Name</label>
+            <InputText class="form-control" @bind-Value="formData.Name" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label fw-bold small text-muted">Sort Order</label>
+            <InputNumber class="form-control" @bind-Value="formData.SortOrder" />
+        </div>
+    </FormContent>
+
+    @* --- C. CẤU HÌNH BẢNG (TABLE) --- *@
+    <TableHeader>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Sort Order</th>
+    </TableHeader>
+
+    <RowTemplate Context="row">
+        <td>@row.Id</td>
+        <td><strong>@row.Name</strong></td>
+        <td>@row.SortOrder</td>
+    </RowTemplate>
+
+</MasterDetailLayout>
+
+@code {
+    // --- PARAMETERS TỪ URL ---
+    // Tự động nhận giá trị từ URL /admin/manage/roomquality/{TypeId}
+    [Parameter] public int? TypeId { get; set; }
+
+    // --- STATE ---
+    private List<RoomQualityVM> _items;
+    private RoomQualityVM _model = new();
+    private bool _isUpdate = false;
+
+    // Biến kiểm soát vòng đời & Re-render
+    private int? _previousTypeId = -999;
+    // Mỗi khi tạo mới class này, C# sẽ sinh ra một cái ID ngẫu nhiên cho nó
+    private Guid _instanceId = Guid.NewGuid();
+    private bool _disposed = false;
+
+    // --- LIFECYCLE ---
+    protected override void OnInitialized()
+    {
+        // Hàm này chỉ chạy khi component SINH RA
+        Console.WriteLine($"[SINH RA] Component ID: {_instanceId} - Lúc: {DateTime.Now.ToString("mm:ss.fff")}");
+    }
+    protected override async Task OnParametersSetAsync()
+    {
+        // 1. Nếu URL không có TypeId (Vào trang gốc), set mặc định là 1002 (Economy)
+        if (TypeId == null)
+        {
+            TypeId = 1;
+        }
+
+        // 2. Chặn trùng
+        if (TypeId == _previousTypeId) return;
+        _previousTypeId = TypeId;
+
+        try
+        {
+            ResetForm(); // Reset form khi đổi tab
+            await LoadData();
+        }
+        catch (TaskCanceledException) { }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Lỗi tải dữ liệu RoomQuality");
+        }
+    }
+    private async Task LoadData()
+    {
+        _items = null; // Kích hoạt Spinner
+        StateHasChanged();
+
+        try
+        {
+            // Gọi API Mới (GetRoomQualitiesByType)
+            var res = await _service.GetRoomQualitiesByType(TypeId);
+
+            if (!_disposed)
+            {
+                if (res.StatusCode == StatusCodeResponse.Success && res.Content != null)
+                {
+                    // Lấy Items trực tiếp từ Generic VM
+                    _items = res.Content.Items;
+                }
+                else
+                {
+                    _items = new List<RoomQualityVM>();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Lỗi load data roomquality");
+            _items = new List<RoomQualityVM>(); // Hết lỗi để UI hiện bảng trống}
+        }
+    }
+
+    // --- CRUD METHODS ---
+    private void OnEditItem(RoomQualityVM item)
+    {
+        _isUpdate = true;
+        _model = new RoomQualityVM { Id = item.Id, Name = item.Name, SortOrder = item.SortOrder, TypeId = item.TypeId };
+    }
+
+    private async Task HandleDelete(RoomQualityVM item)
+    {
+        // Gọi API xóa thực tế
+        var res = await _service.DeleteRoomQuality(item.Id);
+
+        if (res.StatusCode == StatusCodeResponse.Success)
+        {
+            // Xóa thành công thì load lại bảng
+            await LoadData();
+        }
+    }
+
+    private void ResetForm()
+    {
+        _isUpdate = false;
+        _model = new();
+    }
+
+    private async Task SaveData()
+    {
+        if (TypeId.HasValue)
+        {
+            _model.TypeId = TypeId.Value;
+        }
+
+        if (_isUpdate) await _service.UpdateRoomQuality(_model);
+        else await _service.CreateRoomQuality(_model);
+        await LoadData();
+        ResetForm();
+    }
+
+    // Hàm hủy (Implement IDisposable nếu cần, hoặc dùng biến cờ đơn giản)
+    public void Dispose()
+    {
+        _disposed = true;
+    }
+}

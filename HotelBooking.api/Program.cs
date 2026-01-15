@@ -1,14 +1,14 @@
 using System.Security.Claims;
 using System.Text;
-using System.Text.Json;
 using AutoMapper;
 using HotelBooking.application.Services;
 using HotelBooking.infrastructure.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 using HotelBooking.application.Interfaces;
+using Microsoft.OpenApi.Models;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +18,7 @@ builder.Services.AddDbContext<HotelBookingDBContext>(options =>
     options.UseSqlServer(connectionString));
 
 // DI for Repository
+builder.Services.AddScoped<IAmenityTypeRepository, AmenityTypeRepository>();
 builder.Services.AddScoped<IAmenityRepository, AmenityRepository>();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<ICityRepository, CityRepository>();
@@ -45,6 +46,11 @@ builder.Services.AddScoped<IBookingRoomRepository, BookingRoomRepository>();
 builder.Services.AddScoped<IPolicyTypeRepository, PolicyTypeRepository>();
 builder.Services.AddScoped<IServiceTypeRepository, ServiceTypeRepository>();
 builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
+builder.Services.AddScoped<IUnitTypeRepository, UnitTypeRepository>();
+builder.Services.AddScoped<IBedTypeRepository, BedTypeRepository>();
+builder.Services.AddScoped<IRoomViewRepository, RoomViewRepository>();
+builder.Services.AddScoped<IRoomQualityRepository, RoomQualityRepository>();
+builder.Services.AddScoped<IRoomQualityGroupRepository, RoomQualityGroupRepository>();
 
 
 // DI for UnitOfWork
@@ -61,6 +67,14 @@ builder.Services.AddScoped<IPhotoService, PhotoService>();
 builder.Services.AddScoped<IAmenityManage, AmenityManage>();
 builder.Services.AddScoped<IPolicyManage, PolicyManage>();
 builder.Services.AddScoped<IServiceManage, ServiceManage>();
+builder.Services.AddScoped<IRoomQualityManage, RoomQualityManage>();
+
+builder.Services.AddScoped<IRoomViewManage, RoomViewManage>();
+builder.Services.AddScoped<IBedTypeManage, BedTypeManage>();
+builder.Services.AddScoped<IUnitTypeManage, UnitTypeManage>();
+
+builder.Services.AddScoped<IRoomAttributeFacade, RoomAttributeFacade>();
+builder.Services.AddScoped<IManagementAdmin, ManagementAdmin>();
 
 // DI for Helpers
 builder.Services.AddSingleton<IImageHelper, ImageHelper>();
@@ -109,6 +123,9 @@ builder.Services.AddSwaggerGen(options =>
     // BẬT 2 DÒNG NÀY:
     options.UseAllOfForInheritance(); // Hiển thị kế thừa
     options.UseOneOfForPolymorphism(); // Hiển thị đa hình (OneOf)
+
+    // Thêm Enum Schema Filter để hiển thị mô tả Enum
+    options.SchemaFilter<EnumSchemaFilter>();
 });
 
 // ============== JWT Authentication & Authorization =============== //
@@ -166,6 +183,8 @@ var app = builder.Build();
 
 // app.UseHttpsRedirection();
 app.UseCors("AllowAll");
+
+app.UseMiddleware<PerformanceMiddleware>();
 
 //use middleware controller
 app.MapControllers();

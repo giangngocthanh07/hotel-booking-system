@@ -1,0 +1,101 @@
+@* File: Components/Manage/GlobalNavMenu.razor *@
+@inject NavigationManager Nav
+@inject IManagementService _manageService
+@inject ILogger<GlobalNavMenu> Logger
+
+
+@* 1. Dropdown chọn Module (Chuyển trang) *@
+<div class="mb-3">
+    <label class="form-label small fw-bold text-muted">Module</label>
+    <select class="form-select" value="@CurrentModule" @onchange="OnModuleChanged">
+        <option value="Service">Service</option>
+        <option value="Policy">Policy</option>
+        <option value="Amenity">Amenity</option>
+        <option value="RoomQuality">RoomQuality</option>
+        <option value="UnitType">UnitType</option>
+        <option value="BedType">BedType</option>
+        <option value="RoomView">RoomView</option>
+    </select>
+</div>
+
+@* 2. Dropdown chọn Type (Load từ API) *@
+@if (_types != null && _types.Any())
+{
+    <div class="mb-3">
+        <label class="form-label small fw-bold text-muted">Type / Category</label>
+        <select class="form-select" value="@CurrentTypeId" @onchange="OnTypeChanged">
+            @foreach (var t in _types)
+            {
+                <option value="@t.Id">@t.Name</option>
+            }
+        </select>
+    </div>
+}
+else if (_isLoading)
+{
+    <div class="text-center small text-muted"><span class="spinner-border spinner-border-sm me-1"></span>Loading menu...
+    </div>
+}
+
+
+@code {
+    // --- PARAMETERS ---
+    // Nhận vào để biết đang đứng ở đâu (để highlight đúng option)
+    [Parameter] public string CurrentModule { get; set; } = "Service";
+    [Parameter] public int? CurrentTypeId { get; set; }
+
+    // --- STATE ---
+    private List<ManageTypeVM>? _types;
+    private bool _isLoading = false;
+
+    // --- LIFECYCLE ---
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMenuData();
+    }
+
+    // Khi tham số từ cha đổi (VD: User bấm link khác), menu cũng phải update theo
+    protected override async Task OnParametersSetAsync()
+    {
+        // Nếu module đổi thì load lại list Type
+        // Logic check cache đơn giản để tránh gọi API thừa
+        if (_types == null)
+        {
+            await LoadMenuData();
+        }
+    }
+
+    private async Task LoadMenuData()
+    {
+        _isLoading = true;
+        // Parse String sang Enum (Giả sử bạn có Enum ManageModuleEnum)
+        if (Enum.TryParse<ManageModuleEnum>(CurrentModule, out var moduleEnum))
+        {
+            var res = await _manageService.GetManageModuleTypesOnly(moduleEnum);
+            if (res.StatusCode == StatusCodeResponse.Success)
+            {
+                _types = res.Content?.Types;
+            }
+        }
+        _isLoading = false;
+    }
+
+    // --- EVENTS ---
+    private void OnModuleChanged(ChangeEventArgs e)
+    {
+        var selectedModule = e.Value?.ToString();
+        // Chuyển trang sang module khác (Reset TypeId)
+        // URL Pattern: /admin/manage/{Module}
+        Nav.NavigateTo($"/admin/manage/{selectedModule.ToLower()}");
+    }
+
+    private void OnTypeChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int newTypeId))
+        {
+            // Chuyển trang nhưng giữ nguyên module, chỉ đổi ID
+            // URL Pattern: /admin/manage/{Module}/{TypeId}
+            Nav.NavigateTo($"/admin/manage/{CurrentModule.ToLower()}/{newTypeId}");
+        }
+    }
+}

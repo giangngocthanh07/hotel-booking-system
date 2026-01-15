@@ -7,7 +7,7 @@
 @inject IHttpClientFactory _httpClientFactory
 @inject Blazored.LocalStorage.ILocalStorageService _localStorage
 
-<div class="container py-4">
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
     <div class="card shadow-sm">
         <div class="card-header bg-white d-flex justify-content-between align-items-center">
             <h4 class="mb-0">Request Details #@RequestId</h4>
@@ -137,7 +137,7 @@
                 toastMessage = null; // Clear any previous messages
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             toastClass = "bg-danger";
             toastMessage = "Error loading request details.";

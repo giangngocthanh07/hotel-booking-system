@@ -28,7 +28,7 @@ namespace HotelBooking.application.Helpers
         // ==========================================
         // 1. NHÓM SUCCESS (Thành công - 2xx)
         // ==========================================
-        public static ApiResponse<T> Success<T>(T data, string message)
+        public static ApiResponse<T> Success<T>(T? data, string? message)
         {
             return CreateResponse(StatusCodeResponse.Success, message, data);
         }
@@ -37,7 +37,7 @@ namespace HotelBooking.application.Helpers
         // 2. NHÓM FAILURE (Lỗi logic/Client - 4xx)
         // Bao gồm: BadRequest, NotFound, Conflict, Unauthorized...
         // ==========================================
-        public static ApiResponse<T> Failure<T>(string statusCode, string message)
+        public static ApiResponse<T> Failure<T>(string? statusCode, string? message)
         {
             // Bạn có thể thêm validation ở đây để đảm bảo statusCode là 4xx nếu muốn
             return CreateResponse<T>(statusCode, message, default!);
@@ -54,7 +54,7 @@ namespace HotelBooking.application.Helpers
         // ==========================================
         // HÀM PRIVATE (Core) - Để tránh lặp code (DRY)
         // ==========================================
-        private static ApiResponse<T> CreateResponse<T>(string statusCode, string message, T content)
+        private static ApiResponse<T> CreateResponse<T>(string? statusCode, string? message, T? content)
         {
             return new ApiResponse<T>
             {

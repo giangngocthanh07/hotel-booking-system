@@ -1,0 +1,162 @@
+@* File: Pages/Admin/UnitTypeManager.razor *@
+
+@* --- 1. ĐỊNH NGHĨA ROUTING --- *@
+@page "/admin/manage/unittype"
+
+@* --- 2. SỬ DỤNG LAYOUT ADMIN CHUNG --- *@
+@layout AdminLayout
+@inject IManagementService _service
+@inject ILogger<UnitTypeManager> Logger
+@implements IDisposable
+
+<MasterDetailLayout TItem="UnitTypeVM" Items="_items" Model="_model" OnSubmit="SaveData" OnEdit="OnEditItem"
+    OnDelete="HandleDelete" OnCancel="ResetForm">
+
+    @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
+    <SidebarTopContent>
+        @* NHÚNG COMPONENT MENU THÔNG MINH VÀO ĐÂY *@
+        @* Nó tự biết đường vẽ ra Dropdown *@
+        <GlobalNavMenu CurrentModule="UnitType" CurrentTypeId="TypeId" />
+    </SidebarTopContent>
+
+    @* --- B. CẤU HÌNH FORM --- *@
+    <FormContent Context="formData">
+        <div class="mb-3">
+            <label class="form-label fw-bold small text-muted">Name</label>
+            <InputText class="form-control" @bind-Value="formData.Name" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label fw-bold small text-muted">IsEntirePlace</label>
+            <input type="checkbox" class="form-check-input" checked="@(formData.IsEntirePlace == true)"
+                @onchange="@(e => formData.IsEntirePlace = (bool?)e.Value)" />
+        </div>
+
+        @if (formData.IsEntirePlace == true)
+        {
+            <div class="alert alert-info py-2 small">
+                <i class="fa-solid fa-house"></i> Đây là loại hình cho thuê nguyên căn.
+            </div>
+        }
+    </FormContent>
+
+    @* --- C. CẤU HÌNH BẢNG (TABLE) --- *@
+    <TableHeader>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Is Entire Place</th>
+    </TableHeader>
+
+    <RowTemplate Context="row">
+        <td>@row.Id</td>
+        <td><strong>@row.Name</strong></td>
+        <td class="text-center">
+            @if (row.IsEntirePlace == true)
+            {
+                <span class="badge bg-success"><i class="fa-solid fa-check"></i> Yes</span>
+            }
+            else
+            {
+                <span class="text-muted small">-</span>
+            }
+        </td>
+    </RowTemplate>
+
+</MasterDetailLayout>
+
+
+@code {
+    // --- PARAMETERS TỪ URL ---
+    // Tự động nhận giá trị từ URL /admin/manage/unittype
+    [Parameter] public int? TypeId { get; set; }
+
+    // --- STATE ---
+    private List<UnitTypeVM> _items;
+    private UnitTypeVM _model = new();
+    private bool _isUpdate = false;
+
+    // Biến kiểm soát vòng đời & Re-render
+    private Guid _instanceId = Guid.NewGuid();
+    private bool _disposed = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Hàm này chỉ chạy khi component SINH RA
+        Console.WriteLine($"[SINH RA] Component ID: {_instanceId} - Lúc: {DateTime.Now.ToString("mm:ss.fff")}");
+        // 1. Nhường quyền cho UI vẽ cái Spinner "Loading..." lên màn hình trước đã
+        // Lệnh này cực quan trọng để Navigation Manager biết là "À, trang đã load xong rồi"
+        await Task.Yield();
+        await LoadData();
+    }
+    private async Task LoadData()
+    {
+        if (_items == null)
+        {
+            // Chỉ hiện loading lần đầu
+            _items = null;
+            // InvokeAsync(StateHasChanged); // Không cần thiết ở OnInit
+        }
+
+        try
+        {
+            // Gọi API dành riêng cho Non-Type (Lấy tất cả)
+            var res = await _service.GetUnitTypes();
+
+            if (!_disposed)
+            {
+                if (res.StatusCode == StatusCodeResponse.Success && res.Content != null)
+                {
+                    // Lấy Items trực tiếp
+                    _items = res.Content;
+                }
+                else
+                {
+                    _items = new List<UnitTypeVM>();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Lỗi load data unittype");
+            _items = new List<UnitTypeVM>(); // Hết lỗi để UI hiện bảng trống}
+        }
+    }
+
+    // --- CRUD METHODS ---
+    private void OnEditItem(UnitTypeVM item)
+    {
+        _isUpdate = true;
+        _model = new UnitTypeVM { Id = item.Id, Name = item.Name, IsEntirePlace = item.IsEntirePlace };
+    }
+
+    private async Task HandleDelete(UnitTypeVM item)
+    {
+        // Gọi API xóa thực tế
+        var res = await _service.DeleteUnitType(item.Id);
+
+        if (res.StatusCode == StatusCodeResponse.Success)
+        {
+            // Xóa thành công thì load lại bảng
+            await LoadData();
+        }
+    }
+
+    private void ResetForm()
+    {
+        _isUpdate = false;
+        _model = new();
+    }
+
+    private async Task SaveData()
+    {
+        if (_isUpdate) await _service.UpdateUnitType(_model);
+        else await _service.CreateUnitType(_model);
+        await LoadData();
+        ResetForm();
+    }
+
+    // Hàm hủy (Implement IDisposable nếu cần, hoặc dùng biến cờ đơn giản)
+    public void Dispose()
+    {
+        _disposed = true;
+    }
+}

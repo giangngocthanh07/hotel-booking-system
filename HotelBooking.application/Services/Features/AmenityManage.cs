@@ -2,13 +2,18 @@ using System.Text.Json;
 using HotelBooking.application.Helpers;
 using HotelBooking.infrastructure.Models;
 
-public interface IAmenityManage : IStandardManage<AmenityDTO, AmenityCreateOrUpdateDTO>;
+public interface IAmenityManage : ITypedManage<AmenityDTO, AmenityTypeDTO, AmenityCreateOrUpdateDTO>
+{
+    Task<ApiResponse<ManageDataResult<AmenityDTO>>> GetAmenitiesByTypeAsync(int? typeId);
+}
 
 public class AmenityManage : BaseManage<Amenity, IAmenityRepository, AmenityDTO, AmenityCreateOrUpdateDTO>, IAmenityManage
 {
-    public AmenityManage(IAmenityRepository repository, IUnitOfWork unitOfWork)
+    private readonly IAmenityTypeRepository _amenityTypeRepo;
+    public AmenityManage(IAmenityRepository repository, IAmenityTypeRepository amenityTypeRepository, IUnitOfWork unitOfWork)
         : base(repository, unitOfWork)
     {
+        _amenityTypeRepo = amenityTypeRepository;
     }
 
 
@@ -21,8 +26,8 @@ public class AmenityManage : BaseManage<Amenity, IAmenityRepository, AmenityDTO,
             Id = entity.Id,
             Name = entity.Name,
             Description = additional.GetValueOrDefault("Description", null),
-            IconClass = additional.GetValueOrDefault("IconClass", null) ?? "",
-            IconColor = additional.GetValueOrDefault("IconColor", null) ?? "blue",
+            IsDeleted = entity.IsDeleted,
+            TypeId = entity.TypeId
         };
     }
 
@@ -32,91 +37,101 @@ public class AmenityManage : BaseManage<Amenity, IAmenityRepository, AmenityDTO,
         entity.Additional = JsonSerializer.Serialize(new
         {
             Description = string.IsNullOrWhiteSpace(updateDto.Description) ? null : updateDto.Description,
-            IconClass = updateDto.IconClass,
-            IconColor = string.IsNullOrWhiteSpace(updateDto.IconColor) ? "blue" : updateDto.IconColor
         });
     }
 
     protected override Amenity MapToEntity(AmenityCreateOrUpdateDTO createDto)
     {
         var additional = JsonSerializer.Serialize(new
-        { Description = createDto.Description, IconClass = createDto.IconClass, IconColor = string.IsNullOrWhiteSpace(createDto.IconColor) ? "blue" : createDto.IconColor });
+        { Description = createDto.Description });
 
         return new Amenity
         {
             Name = createDto.Name,
             Additional = additional,
+            IsDeleted = false,
+            TypeId = createDto.TypeId
         };
     }
 
     // Validation
     protected override async Task<ValidationResult> ValidateAsync(AmenityCreateOrUpdateDTO dto, int? id = null)
     {
-        // Cấu trúc chuỗi kiểm tra (Chain of Responsibility)
-        // Nó sẽ chạy từ trái sang phải, gặp cái nào lỗi (khác null) là return ngay lập tức.
-
-        var basicCheck = ValidateUtils.RequireNotEmpty(dto.Name, MessageResponse.EMPTY_NAME, StatusCodeResponse.BadRequest);
-
-        // Nếu các check cơ bản đã có lỗi -> Return luôn, khỏi cần check DB cho tốn thời gian
-        if (basicCheck != null) return basicCheck;
-
-        // --- CHECK DB (Logic Check trùng) ---
-        // Phần Async ta nên tách ra check riêng sau khi check cơ bản đã OK
-        // --- 2. VALIDATE NGHIỆP VỤ (Cần DB) ---
-
-        // A. Xử lý riêng cho trường hợp UPDATE
-        if (id.HasValue) // Tương đương: if (id != null)
-        {
-            // Phải query lấy entity cũ lên để so sánh
-            // Lưu ý: EF Core có cơ chế Cache, nên việc query ở đây và query lại ở hàm UpdateAsync 
-            // thường không ảnh hưởng đáng kể hiệu năng (nó lấy từ bộ nhớ đệm).
-            var existingEntity = await _repo.GetByIdAsync(id.Value);
-
-            // Kiểm tra tồn tại
-            // Nếu existingEntity null -> Trả về 404 NotFound ngay lập tức
-            var foundCheck = ValidateUtils.RequireFound(existingEntity, MessageResponse.NOT_FOUND, StatusCodeResponse.NotFound);
-            if (foundCheck != null) return foundCheck;
-
-            // Nếu entity bị deleted == true -> Trả về lỗi NotFound
-            if (existingEntity.IsDeleted == true)
-            {
-                return ValidationResult.Fail(MessageResponse.NOT_FOUND, StatusCodeResponse.NotFound);
-            }
-        }
-
-        // B. Xử lý Check trùng tên (Áp dụng cho cả Create và Update)
-        bool isDuplicate;
-        if (id == null)
-            isDuplicate = await _repo.AnyAsync(x => x.Name == dto.Name);
-        else
-            isDuplicate = await _repo.AnyAsync(x => x.Name == dto.Name && x.Id != id);
-
-        if (isDuplicate)
-        {
-            return ValidationResult.Fail(MessageResponse.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
-        }
-        // Nếu qua hết cửa ải -> Thành công
-        return ValidationResult.Success();
+        var basicValidation = ValidateFactory.ValidateFullAsync<Amenity>(
+            _repo,
+            dto.Name,
+            id,
+            dto.TypeId,
+            getEntityIsDeletedFunc: x => x.IsDeleted,
+            isDeletedSelector: x => x.IsDeleted,
+            nameSelector: x => x.Name);
+        return await basicValidation;
     }
 
-    public async Task<ApiResponse<List<AmenityDTO>>> GetAllAsync()
+    public async Task<ApiResponse<List<AmenityTypeDTO>>> GetTypeDataAsync()
     {
-        var amenities = await _repo.WhereAsync(a => a.IsDeleted == false);
-
-        if (amenities == null || amenities.Count() == 0)
-        {
-            return ResponseFactory.Failure<List<AmenityDTO>>(StatusCodeResponse.NotFound, MessageResponse.EMPTY_LIST);
-        }
-
         try
         {
-            var result = amenities.Select(a => MapToDto(a)).ToList();
+            var amenityTypes = await _amenityTypeRepo.WhereAsync(a => a.IsDeleted == false);
+
+            if (amenityTypes == null || !amenityTypes.Any())
+            {
+                return ResponseFactory.Failure<List<AmenityTypeDTO>>(StatusCodeResponse.NotFound, MessageResponse.EMPTY_LIST);
+            }
+
+            // 2. Map sang DTO và xử lý JSON cho TỪNG item
+            var result = amenityTypes.Select(a =>
+            {
+                // A. Giải mã JSON của từng dòng (Additional)
+                // Nếu null hoặc rỗng -> Tạo Dictionary rỗng để tránh lỗi
+                var additionalData = string.IsNullOrWhiteSpace(a.Additional)
+                    ? new Dictionary<string, string?>()
+                    : JsonSerializer.Deserialize<Dictionary<string, string?>>(a.Additional)
+                      ?? new Dictionary<string, string?>();
+
+                // B. Trả về DTO đã map dữ liệu
+                return new AmenityTypeDTO
+                {
+                    Id = a.Id,
+                    Name = a.Name,
+                    IsDeleted = a.IsDeleted,
+
+                    // C. Lấy value từ Dictionary (dùng GetValueOrDefault cho an toàn)
+                    IconClass = additionalData.GetValueOrDefault("IconClass"),
+                    IconColor = additionalData.GetValueOrDefault("IconColor")
+                };
+            }).ToList();
 
             return ResponseFactory.Success(result, MessageResponse.GET_SUCCESSFULLY);
         }
         catch (Exception)
         {
-            return ResponseFactory.ServerError<List<AmenityDTO>>();
+            return ResponseFactory.ServerError<List<AmenityTypeDTO>>();
         }
+    }
+
+    public async Task<ApiResponse<ManageDataResult<AmenityDTO>>> GetAmenitiesByTypeAsync(int? typeId)
+    {
+        return await ManagementAdminHelper.GetDataByTypeAsync<Amenity, AmenityDTO>(
+            typeId,
+            // Logic 1: lấy ID mặc định: Query bảng ServiceType, lấy thằng đầu tiên chưa xóa
+            getDefaultIdFunc: async () =>
+            {
+                // query DB lấy 1 dòng
+                var firstType = (await _amenityTypeRepo.WhereAsync(x => x.IsDeleted != true)).FirstOrDefault();
+                return firstType?.Id;
+            },
+            // Logic 2: kiểm tra ID tồn tại: Query bảng AmenityType
+            checkTypeExistsFunc: async (id) =>
+            {
+                // Kiểm tra xem có dòng nào có Id này và chưa bị xóa không
+                var exists = (await _amenityTypeRepo.WhereAsync(x => x.Id == id && x.IsDeleted != true)).Any();
+                return exists;
+            },
+            // Logic 3: Lấy Entity từ DB
+            getItemsByTypeIdFunc: async (id) => await _repo.WhereAsync(sv => sv.TypeId == id && sv.IsDeleted == false),
+            // Logic 4: Map sang DTO (Tái sử dụng hàm MapToDto có sẵn)
+            mapToDtoFunc: MapToDto
+        );
     }
 }

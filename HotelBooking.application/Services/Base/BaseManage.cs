@@ -21,6 +21,8 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateOrUpdateDTO> : IBa
 
     // --- ĐỊNH NGHĨA 3 HÀM BẮT BUỘC CON PHẢI LÀM ---
 
+    // Các factory method để map giữa Entity, DTO, CreateDTO, UpdateDTO
+
     // 1. Map từ Entity -> DTO (Dùng cho GetAll, GetById, return Create)
     protected abstract TDto MapToDto(TEntity entity);
 
@@ -30,14 +32,9 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateOrUpdateDTO> : IBa
     // 3. Map từ UpdateDTO vào Entity CÓ SẴN (Dùng cho Update, Deleted)
     protected abstract void MapToEntity(TCreateOrUpdateDTO updateDto, TEntity entity);
 
-    // --- HOOK METHODS ---
-    // Từ khóa "virtual" cho phép lớp con Override. 
-    // Mặc định trả về Success để các bảng đơn giản không cần viết gì thêm.
-
-    protected virtual async Task<ValidationResult> ValidateAsync(TCreateOrUpdateDTO dto, int? id = null)
-    {
-        return await Task.FromResult(ValidationResult.Success());
-    }
+    // 4. --- VALIDATION METHOD ---
+    // Hook method để Validate dữ liệu trước khi Create/Update
+    protected abstract Task<ValidationResult> ValidateAsync(TCreateOrUpdateDTO dto, int? id = null); 
 
     public virtual async Task<ApiResponse<TDto>> GetByIdAsync(int id)
     {

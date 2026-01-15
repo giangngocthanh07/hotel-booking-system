@@ -1,0 +1,73 @@
+@if (_isVisible)
+{
+    <div class="modal-backdrop fade show"></div>
+
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+
+                @* HEADER *@
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="fa-solid fa-triangle-exclamation me-2"></i> @Title
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="Hide"></button>
+                </div>
+
+                @* BODY *@
+                <div class="modal-body">
+                    <p class="fw-bold">@Message</p>
+                    <p class="text-danger small mb-0">Hành động này không thể hoàn tác.</p>
+                </div>
+
+                @* FOOTER *@
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="Hide">
+                        <i class="fa-solid fa-xmark me-1"></i> Bỏ qua
+                    </button>
+                    <button type="button" class="btn btn-danger" @onclick="OnConfirmClicked">
+                        <i class="fa-solid fa-trash me-1"></i> Đồng ý Xóa
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    // --- 1. PARAMETERS (Cấu hình nội dung) ---
+    [Parameter] public string Title { get; set; } = "Xác nhận xóa";
+    [Parameter] public string Message { get; set; } = "Bạn có chắc chắn muốn xóa mục này?";
+
+    // Sự kiện bắn về cha khi bấm "Đồng ý"
+    [Parameter] public EventCallback OnConfirm { get; set; }
+
+    // --- 2. STATE ---
+    private bool _isVisible = false;
+
+    // --- 3. PUBLIC METHODS (Để cha gọi) ---
+
+    // Hàm mở modal
+    public void Show()
+    {
+        _isVisible = true;
+        StateHasChanged();
+    }
+
+    // Hàm đóng modal
+    public void Hide()
+    {
+        _isVisible = false;
+        StateHasChanged();
+    }
+
+    // --- 4. INTERNAL LOGIC ---
+    private async Task OnConfirmClicked()
+    {
+        // 1. Gọi sự kiện của cha
+        await OnConfirm.InvokeAsync();
+        // 2. Tự đóng modal
+        Hide();
+    }
+}

@@ -1,0 +1,194 @@
+@typeparam TItem
+@using System.ComponentModel.DataAnnotations
+
+<div class="container p-0 ">
+    <div class="row g-4 justify-content-center">
+
+        <div class="col-12 col-lg-3">
+            <div class="card shadow-sm border-0 h-100" style="top: 1rem; z-index: 1;">
+
+                <div class="card-body bg-light rounded">
+                    <h6 class="fw-bold text-uppercase text-muted mb-3">
+                        <i class="fa-solid fa-filter me-1"></i> Control Panel
+                    </h6>
+
+                    <div class="mb-4">
+                        @if (SidebarTopContent != null)
+                        {
+                            @SidebarTopContent
+                        }
+                    </div>
+
+                    <hr class="my-3" />
+
+                    <h5 class="@(_isEditMode ? "text-warning" : "text-success") fw-bold mb-3">
+                        @(_isEditMode ? "UPDATE ITEM" : "ADD NEW")
+                    </h5>
+
+                    <EditForm Model="Model" OnValidSubmit="HandleSubmit">
+                        <DataAnnotationsValidator />
+
+                        @if (FormContent != null)
+                        {
+                            @FormContent(Model)
+                        }
+
+                        <div class="mt-4 d-grid gap-2">
+                            <button type="submit"
+                                class="btn @(_isEditMode ? "btn-warning text-white" : "btn-success") shadow-sm">
+                                <i class="fa-solid @(_isEditMode ? "fa-save" : "fa-plus")"></i>
+                                @(_isEditMode ? "SAVE CHANGE" : "CREATE NEW")
+                            </button>
+
+                            @if (_isEditMode)
+                            {
+                                <button type="button" class="btn btn-outline-secondary" @onclick="CancelEdit">
+                                    Cancel
+                                </button>
+                            }
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-9">
+            <div class="card shadow-sm border-0 h-100" style="top: 1rem; z-index: 1;">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold text-dark">Data List</h5>
+                    <span class="badge bg-secondary rounded-pill">Total: @(Items?.Count ?? 0)</span>
+                </div>
+
+                <div class="card-body p-0">
+                    @if (Items == null)
+                    {
+                        // CHỈ HIỆN SPINNER Ở KHU VỰC BẢNG DỮ LIỆU
+                        <div class="text-center p-5 text-muted"
+                            style="height: 400px; display: flex; align-items: center; justify-content: center;">
+                            <div>
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <div class="mt-2 small">Đang tải dữ liệu...</div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        // KHI CÓ DỮ LIỆU THÌ HIỆN BẢNG
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light text-secondary text-uppercase small fw-bold">
+                                    <tr>
+                                        @TableHeader
+                                        <th class="text-center" style="width: 120px;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="border-top-0">
+                                    @if (Items.Any())
+                                    {
+                                        @foreach (var item in Items)
+                                        {
+                                            <tr>
+                                                @RowTemplate(item)
+                                                <td class="text-center">
+                                                    <button class="btn btn-sm btn-link text-warning p-0 me-2"
+                                                        @onclick="() => EditItem(item)">
+                                                        <i class="fa-solid fa-pen-to-square"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-link text-danger p-0"
+                                                        @onclick="() => RequestDelete(item)">
+                                                        <i class="fa-solid fa-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="100" class="text-center align-middle text-muted"
+                                                style="height: 500px;">
+                                                <div class="d-flex flex-column align-items-center justify-content-center">
+                                                    <i class="fa-solid fa-inbox fa-3x mb-3 opacity-25"></i>
+                                                    <p class="mb-0 fw-bold">No data available</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ConfirmModal @ref="_confirmModal" Title="Xóa dữ liệu?" Message="Bạn có thực sự muốn xóa dòng dữ liệu này không?"
+    OnConfirm="ConfirmDelete" />
+
+@code {
+    // --- DATA ---
+    [Parameter] public List<TItem> Items { get; set; }
+    [Parameter] public TItem Model { get; set; }
+
+    // --- UI FRAGMENTS ---
+    [Parameter] public RenderFragment SidebarTopContent { get; set; } // Chứa Dropdown Module/Type
+    [Parameter] public RenderFragment<TItem> FormContent { get; set; }
+    [Parameter] public RenderFragment TableHeader { get; set; }
+    [Parameter] public RenderFragment<TItem> RowTemplate { get; set; }
+
+    // --- EVENTS ---
+    [Parameter] public EventCallback OnSubmit { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public EventCallback<TItem> OnEdit { get; set; }
+    [Parameter] public EventCallback<TItem> OnDelete { get; set; }
+
+    // --- LOGIC ---
+    private bool _isEditMode = false;
+
+    // Logic cho Modal Xóa
+    // 1. Biến tham chiếu đến Component con (để gọi hàm Show)
+    private ConfirmModal _confirmModal;
+    // 2. Biến lưu tạm item đang muốn xóa
+    private TItem _itemToDelete;
+
+    private async Task EditItem(TItem item)
+    {
+        _isEditMode = true;
+        await OnEdit.InvokeAsync(item);
+    }
+    private async Task CancelEdit()
+    {
+        _isEditMode = false;
+        await OnCancel.InvokeAsync();
+    }
+
+    // 1. Khi bấm nút thùng rác -> Hiện Modal
+    private void RequestDelete(TItem item)
+    {
+        _itemToDelete = item;
+        _confirmModal.Show();
+    }
+
+    // 2. Khi bấm nút "Yes, Delete" trong Modal
+    private async Task ConfirmDelete()
+    {
+        // Gọi Event Delete ra ngoài cho Manager xử lý (API)
+        await OnDelete.InvokeAsync(_itemToDelete); // Gọi sự kiện xóa
+
+        // Nếu đang sửa đúng thằng bị xóa thì reset form
+        if (_isEditMode && Model.Equals(_itemToDelete))
+        {
+            await CancelEdit();
+        }
+        // Không cần gọi _confirmModal.Hide() vì nó tự đóng rồi
+        _itemToDelete = default;
+    }
+
+    private async Task HandleSubmit()
+    {
+        await OnSubmit.InvokeAsync();
+        if (_isEditMode) _isEditMode = false;
+    }
+}

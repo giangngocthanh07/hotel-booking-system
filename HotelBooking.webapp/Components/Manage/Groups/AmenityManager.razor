@@ -1,0 +1,166 @@
+@* File: Pages/Admin/AmenityManager.razor *@
+
+@* --- 1. ĐỊNH NGHĨA ROUTING --- *@
+@page "/admin/manage/amenity"
+@page "/admin/manage/amenity/{TypeId:int}"
+
+@* --- 2. SỬ DỤNG LAYOUT ADMIN CHUNG --- *@
+@layout AdminLayout
+@inject IManagementService _service
+@inject ILogger<AmenityManager> Logger
+@implements IDisposable
+
+<MasterDetailLayout TItem="AmenityVM" Items="_items" Model="_model" OnSubmit="SaveData" OnEdit="OnEditItem"
+    OnDelete="HandleDelete" OnCancel="ResetForm">
+
+    @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
+    <SidebarTopContent>
+        @* NHÚNG COMPONENT MENU THÔNG MINH VÀO ĐÂY *@
+        @* Nó tự biết đường vẽ ra Dropdown *@
+        <GlobalNavMenu CurrentModule="Amenity" CurrentTypeId="TypeId" />
+    </SidebarTopContent>
+
+    @* --- B. CẤU HÌNH FORM --- *@
+    <FormContent Context="formData">
+        <div class="mb-3">
+            <label class="form-label fw-bold small text-muted">Name</label>
+            <InputText class="form-control" @bind-Value="formData.Name" />
+        </div>
+    </FormContent>
+
+    @* --- C. CẤU HÌNH BẢNG (TABLE) --- *@
+    <TableHeader>
+        <th>ID</th>
+        <th>Name</th>
+    </TableHeader>
+
+    <RowTemplate Context="row">
+        <td>@row.Id</td>
+        <td><strong>@row.Name</strong></td>
+    </RowTemplate>
+
+</MasterDetailLayout>
+
+
+@code {
+    // --- PARAMETERS TỪ URL ---
+    // Tự động nhận giá trị từ URL /admin/manage/amenity/{TypeId}
+    [Parameter] public int? TypeId { get; set; }
+
+    // --- STATE ---
+    private List<AmenityVM> _items;
+    private AmenityVM _model = new();
+    private bool _isUpdate = false;
+
+    // Biến kiểm soát vòng đời & Re-render
+    private int? _previousTypeId = -999;
+    // Mỗi khi tạo mới class này, C# sẽ sinh ra một cái ID ngẫu nhiên cho nó
+    private Guid _instanceId = Guid.NewGuid();
+    private bool _disposed = false;
+
+    // --- LIFECYCLE ---
+    protected override void OnInitialized()
+    {
+        // Hàm này chỉ chạy khi component SINH RA
+        Console.WriteLine($"[SINH RA] Component ID: {_instanceId} - Lúc: {DateTime.Now.ToString("mm:ss.fff")}");
+    }
+    protected override async Task OnParametersSetAsync()
+    {
+        // 1. Nếu URL không có TypeId (Vào trang gốc), set mặc định là 1002 (InRoom)
+        if (TypeId == null)
+        {
+            TypeId = 1;
+        }
+
+        // 2. Chặn trùng
+        if (TypeId == _previousTypeId) return;
+        _previousTypeId = TypeId;
+
+        try
+        {
+            ResetForm(); // Reset form khi đổi tab
+            await LoadData();
+        }
+        catch (TaskCanceledException) { }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Lỗi tải dữ liệu Amenity");
+        }
+    }
+    private async Task LoadData()
+    {
+        _items = null; // Kích hoạt loading
+        StateHasChanged();
+
+        try
+        {
+            // Gọi API Mới (Chỉ lấy Data)
+            var res = await _service.GetAmenitiesByType(TypeId);
+
+            if (!_disposed)
+            {
+                if (res.StatusCode == StatusCodeResponse.Success && res.Content != null)
+                {
+                    // Lấy Items trực tiếp từ Generic VM
+                    _items = res.Content.Items;
+                }
+                else
+                {
+                    _items = new List<AmenityVM>();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Lỗi load data amenity");
+            _items = new List<AmenityVM>(); // Hết lỗi để UI hiện bảng trống}
+        }
+
+    }
+
+    // --- CRUD METHODS ---
+    private void OnEditItem(AmenityVM item)
+    {
+        _isUpdate = true;
+        _model = new AmenityVM { Id = item.Id, Name = item.Name, TypeId = item.TypeId };
+    }
+
+    private async Task HandleDelete(AmenityVM item)
+    {
+        // Gọi API xóa thực tế
+        var res = await _service.DeleteAmenity(item.Id);
+
+        if (res.StatusCode == StatusCodeResponse.Success)
+        {
+            // Xóa thành công thì load lại bảng
+            await LoadData();
+        }
+    }
+
+    private void ResetForm()
+    {
+        _isUpdate = false;
+        _model = new();
+    }
+
+    private async Task SaveData()
+    {
+        // [QUAN TRỌNG] Gán TypeId hiện tại vào Model trước khi gửi
+        // Vì nếu user tạo mới, BE cần biết Amenity này thuộc loại nào (Phòng tắm hay Phòng ngủ...)
+        if (TypeId.HasValue)
+        {
+            _model.TypeId = TypeId.Value;
+        }
+
+        if (_isUpdate) await _service.UpdateAmenity(_model);
+        else await _service.CreateAmenity(_model);
+        await LoadData();
+        ResetForm();
+    }
+
+    // Hàm hủy (Implement IDisposable nếu cần, hoặc dùng biến cờ đơn giản)
+    public void Dispose()
+    {
+        _disposed = true;
+    }
+}

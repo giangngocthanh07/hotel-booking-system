@@ -1,8 +1,13 @@
+public class PolicyTypeVM : BaseAdminVM
+{
+
+}
 public class PolicyVM : BaseAdminVM
 {
-    public int PolicyTypeId { get; set; }
+    public int TypeId { get; set; }
 }
 
-public class PolicyTypeVM : BaseAdminVM
-{ }
-
+public class PolicyCreateOrUpdateVM : BaseCreateOrUpdateAdminVM
+{
+    public int TypeId { get; set; }
+}

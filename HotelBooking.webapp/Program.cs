@@ -49,6 +49,7 @@ builder.Services.AddHttpContextAccessor();
 
 // DI service
 builder.Services.AddScoped<HotelFormState>();
+builder.Services.AddScoped<IManagementService, ManagementService>();
 
 
 var app = builder.Build();
