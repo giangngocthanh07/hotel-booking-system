@@ -3,10 +3,161 @@
 
 <MudThemeProvider />
 <MudDialogProvider />
-<MudSnackbarProvider /> 
+<MudSnackbarProvider />
 <MudPopoverProvider />
 
-<AdminHeader />
-<main>
-    @Body
-</main>
+<div class="app-layout-wrapper">
+
+    <header class="app-header">
+        <AdminHeader />
+    </header>
+
+    <div class="app-body">
+
+        <aside class="app-sidebar">
+            <AdminSidebar />
+        </aside>
+
+        <main class="app-main">
+            <div class="main-content-inner">
+                @Body
+            </div>
+        </main>
+    </div>
+</div>
+
+<style>
+    /* Wrapper chính: Flex dọc */
+    .app-layout-wrapper {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        /* Cố định bằng chiều cao màn hình */
+        width: 100vw;
+        overflow: hidden;
+        /* Chặn cuộn thừa */
+    }
+
+    /* Header: Không co giãn */
+    .app-header {
+        flex: 0 0 auto;
+        z-index: 100;
+        /* Đè lên nội dung nếu cần */
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Body (Sidebar + Main): Chiếm hết phần còn lại */
+    .app-body {
+        display: flex;
+        flex: 1 1 auto;
+        /* Tự giãn để lấp đầy chiều cao còn lại */
+        overflow: hidden;
+        /* Quan trọng: Chặn cuộn ở cấp này */
+        position: relative;
+    }
+
+    /* Sidebar */
+    .app-sidebar {
+        width: 260px;
+        min-width: 260px;
+        background-color: #1e2125;
+        flex-direction: column;
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+
+        /* Mặc định trên Mobile thì ẩn đi bằng transform (để làm hiệu ứng trượt) */
+        /* Hoặc dùng display: none nếu không cần hiệu ứng */
+        display: none;
+    }
+
+    /* Main Content */
+    .app-main {
+        flex: 1;
+        /* Chiếm hết chiều ngang còn lại */
+        background-color: #f8f9fa;
+        overflow-y: auto;
+        /* QUAN TRỌNG: Thanh cuộn sẽ nằm ở đây */
+        overflow-x: hidden;
+        /* Tránh thanh cuộn ngang không mong muốn */
+        position: relative;
+    }
+
+    /* Padding nội dung */
+    .main-content-inner {
+        min-height: auto;
+        /* Đảm bảo background fill hết */
+    }
+
+    /* Giới hạn độ rộng khi ở trang danh sách (HotelId == 0) */
+    .container-limited {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    /* Scrollbar đẹp hơn */
+    .app-main::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .app-main::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .app-main::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 4px;
+    }
+
+    .app-main::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+
+    @@media (min-width: 992px) {
+        .app-sidebar {
+            display: flex !important;
+            position: relative;
+            transform: none;
+            height: auto;
+            z-index: 1;
+        }
+    }
+
+    /* Trên màn hình nhỏ (Mobile): Cấu hình fixed đè lên */
+    @@media (max-width: 991.98px) {
+        .app-sidebar.mobile-show {
+            display: flex;
+            position: absolute;
+            /* Trôi nổi đè lên main */
+            top: 0;
+            left: 0;
+            height: 100%;
+            z-index: 1050;
+            /* Cao hơn nội dung */
+            box-shadow: 4px 0 10px rgba(0, 0, 0, 0.5);
+            animation: slideIn 0.3s forwards;
+        }
+    }
+
+    @@keyframes slideIn {
+        from {
+            transform: translateX(-100%);
+        }
+
+        to {
+            transform: translateX(0);
+        }
+    }
+
+    /* Overlay làm tối nền */
+    .sidebar-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1040;
+        /* Thấp hơn sidebar 1 chút */
+        backdrop-filter: blur(2px);
+    }
+</style>

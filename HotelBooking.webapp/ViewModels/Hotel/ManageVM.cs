@@ -30,12 +30,7 @@ public class ManageMenuResultVM
 }
 
 // T là kiểu dữ liệu của item (VD: ServiceBaseDTO, PolicyDTO...)
-public class ManageDataResultVM<T>
+public class PagedManageResult<T> : PagedResult<T>
 {
-    // ID của loại đang được chọn (Backend trả về để FE biết đường highlight tab)
     public int? SelectedTypeId { get; set; }
-    // Danh sách loại (Categories) - Có thể null nếu module phẳng
-    public List<ManageTypeVM>? Types { get; set; }
-
-    public List<T> Items { get; set; } = new();
 }

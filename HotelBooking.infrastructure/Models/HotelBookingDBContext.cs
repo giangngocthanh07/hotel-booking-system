@@ -393,10 +393,11 @@ public partial class HotelBookingDBContext : DbContext
 
         modelBuilder.Entity<Policy>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Policies__3214EC0700D60673");
+            entity.HasKey(e => e.Id).HasName("PK__tmp_ms_x__3214EC07BA1DDFBC");
 
             entity.HasIndex(e => e.Name, "UQ_Policies_Name").IsUnique();
 
+            entity.Property(e => e.Amount).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.Name).HasMaxLength(150);
 

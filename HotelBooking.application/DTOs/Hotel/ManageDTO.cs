@@ -32,13 +32,13 @@ public class ManageMenuResult
 }
 
 // T là kiểu dữ liệu của item (VD: ServiceBaseDTO, PolicyDTO...)
-public class ManageDataResult<T>
+public class PagedManageResult<T> : PagedResult<T>
 {
-    // FE cần biết đó là ID nào để update URL hoặc UI.
     public int? SelectedTypeId { get; set; }
-    // Tổng số bản ghi (Dùng nếu sau này bạn làm phân trang)
-    public int TotalCount { get; set; }
 
-    // Danh sách dữ liệu chính (Cái này thay đổi tùy theo T)
-    public List<T> Items { get; set; } = new();
+    public PagedManageResult(List<T> items, int count, int pageIndex, int pageSize, int? selectedType) 
+        : base(items, count, pageIndex, pageSize)
+    {
+        SelectedTypeId = selectedType;
+    }
 }

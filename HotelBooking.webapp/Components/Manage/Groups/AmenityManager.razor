@@ -8,10 +8,12 @@
 @layout AdminLayout
 @inject IManagementService _service
 @inject ILogger<AmenityManager> Logger
+@inject ISnackbar _snackbar
 @implements IDisposable
 
-<MasterDetailLayout TItem="AmenityVM" Items="_items" Model="_model" OnSubmit="SaveData" OnEdit="OnEditItem"
-    OnDelete="HandleDelete" OnCancel="ResetForm">
+<MasterDetailLayout TItem="AmenityVM" Items="_items" Model="_model" PageIndex="_paging.PageIndex ?? 1"
+    TotalPages="_totalPages" TotalCount="_totalCount" OnPageChanged="HandlePageChanged" OnSubmit="SaveData"
+    OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm">
 
     @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
     <SidebarTopContent>
@@ -52,6 +54,14 @@
     private AmenityVM _model = new();
     private bool _isUpdate = false;
 
+
+    // --- QUẢN LÝ PHÂN TRANG ---
+    // Khởi tạo request: Trang 1, Size 10
+    private PagingRequest _paging = new() { PageIndex = 1, PageSize = 10 };
+    private int _totalPages = 0;
+    private int _totalCount = 0;
+
+
     // Biến kiểm soát vòng đời & Re-render
     private int? _previousTypeId = -999;
     // Mỗi khi tạo mới class này, C# sẽ sinh ra một cái ID ngẫu nhiên cho nó
@@ -78,6 +88,9 @@
 
         try
         {
+            // [QUAN TRỌNG] Reset về trang 1 khi đổi loại Amenity (đổi Tab)
+            _paging.PageIndex = 1;
+
             ResetForm(); // Reset form khi đổi tab
             await LoadData();
         }
@@ -87,6 +100,16 @@
             Logger.LogError(ex, "Lỗi tải dữ liệu Amenity");
         }
     }
+
+    // --- HÀM XỬ LÝ KHI BẤM CHUYỂN TRANG ---
+    private async Task HandlePageChanged(int newPage)
+    {
+        // Cập nhật số trang mới vào Request
+        _paging.PageIndex = newPage;
+        // Gọi lại API
+        await LoadData();
+    }
+
     private async Task LoadData()
     {
         _items = null; // Kích hoạt loading
@@ -95,24 +118,35 @@
         try
         {
             // Gọi API Mới (Chỉ lấy Data)
-            var res = await _service.GetAmenitiesByType(TypeId);
+            var res = await _service.GetAmenitiesByType(TypeId, _paging);
 
             if (!_disposed)
             {
                 if (res.StatusCode == StatusCodeResponse.Success && res.Content != null)
                 {
-                    // Lấy Items trực tiếp từ Generic VM
+                    // Nhận dữ liệu phân trang từ API
                     _items = res.Content.Items;
+                    _totalPages = res.Content.TotalPages;
+                    _totalCount = res.Content.TotalCount;
                 }
                 else
                 {
+                    // Nếu lỗi thì hiện thông báo (trừ khi là danh sách rỗng hợp lệ)
+                    if (res.StatusCode != StatusCodeResponse.Success)
+                    {
+                        SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
+                    }
+
                     _items = new List<AmenityVM>();
+                    _totalPages = 0;
+                    _totalCount = 0;
                 }
             }
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Lỗi load data amenity");
+            SnackbarHelper.Show(_snackbar, StatusCodeResponse.Error, MessageResponse.ERROR_IN_SERVER);
             _items = new List<AmenityVM>(); // Hết lỗi để UI hiện bảng trống}
         }
 
@@ -129,6 +163,9 @@
     {
         // Gọi API xóa thực tế
         var res = await _service.DeleteAmenity(item.Id);
+
+        // Hiển thị thông báo
+        SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
 
         if (res.StatusCode == StatusCodeResponse.Success)
         {
@@ -152,10 +189,18 @@
             _model.TypeId = TypeId.Value;
         }
 
-        if (_isUpdate) await _service.UpdateAmenity(_model);
-        else await _service.CreateAmenity(_model);
-        await LoadData();
-        ResetForm();
+        ApiResponse<AmenityVM> res;
+        if (_isUpdate) res = await _service.UpdateAmenity(_model);
+        else res = await _service.CreateAmenity(_model);
+
+        // Hiển thị thông báo
+        SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
+
+        if (res.StatusCode == StatusCodeResponse.Success)
+        {
+            await LoadData();
+            ResetForm();
+        }
     }
 
     // Hàm hủy (Implement IDisposable nếu cần, hoặc dùng biến cờ đơn giản)

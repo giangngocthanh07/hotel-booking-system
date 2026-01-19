@@ -8,9 +8,13 @@ public interface IRoomAttributeFacade
     IRoomViewManage RoomViewManage { get; }
     IRoomQualityManage RoomQualityManage { get; }
 
-    // Lấy List dựa vào enum
-    Task<ApiResponse<IEnumerable<RoomAttributeDTO>>> GetAllByTypeAsync(RoomAttributeType type, int? typeId = null);
+    // --- HÀM: LẤY DANH SÁCH PHÂN TRANG THEO ENUM ---
+    Task<ApiResponse<PagedManageResult<RoomAttributeDTO>>> GetPagedByTypeAsync(
+        RoomAttributeType type,
+        PagingRequest paging,
+        int? typeId = null);
 }
+
 
 public class RoomAttributeFacade : IRoomAttributeFacade
 {
@@ -27,7 +31,10 @@ public class RoomAttributeFacade : IRoomAttributeFacade
         RoomQualityManage = roomQualityManage;
     }
 
-    public async Task<ApiResponse<IEnumerable<RoomAttributeDTO>>> GetAllByTypeAsync(RoomAttributeType type, int? typeId = null)
+    public async Task<ApiResponse<PagedManageResult<RoomAttributeDTO>>> GetPagedByTypeAsync(
+        RoomAttributeType type,
+        PagingRequest paging,
+        int? typeId = null)
     {
         // --- BƯỚC 1: VALIDATION ĐẦU VÀO ---
         // Sử dụng chuỗi check liên hoàn. Nếu cái đầu null (OK) thì check cái sau.
@@ -70,7 +77,7 @@ public class RoomAttributeFacade : IRoomAttributeFacade
         // Nếu phát hiện lỗi -> Return ngay lập tức
         if (!validationError.IsValid)
         {
-            return ResponseFactory.Failure<IEnumerable<RoomAttributeDTO>>(
+            return ResponseFactory.Failure<PagedManageResult<RoomAttributeDTO>>(
                 validationError.StatusCode,
                 validationError.Message
             );
@@ -78,45 +85,74 @@ public class RoomAttributeFacade : IRoomAttributeFacade
 
         try
         {
-            IEnumerable<RoomAttributeDTO>? result = null;
             switch (type)
             {
                 case RoomAttributeType.UnitType:
-                    var r1 = await UnitTypeManage.GetAllAsync();
-                    if (r1.StatusCode != StatusCodeResponse.Success)
-                        return ResponseFactory.Failure<IEnumerable<RoomAttributeDTO>>(r1.StatusCode, r1.Message);
+                    // Gọi Manager con
+                    var r1 = await UnitTypeManage.GetPagedListAsync(paging);
+                    // Convert kết quả con sang kết quả cha (xem hàm Helper bên dưới)
+                    return ConvertToBasePagedResult(r1);
 
-                    result = r1?.Content?.Cast<RoomAttributeDTO>(); // Ép kiểu về cha
-                    break;
                 case RoomAttributeType.BedType:
-                    var r2 = await BedTypeManage.GetAllAsync();
-                    if (r2.StatusCode != StatusCodeResponse.Success)
-                        return ResponseFactory.Failure<IEnumerable<RoomAttributeDTO>>(r2.StatusCode, r2.Message);
+                    var r2 = await BedTypeManage.GetPagedListAsync(paging);
+                    return ConvertToBasePagedResult(r2);
 
-                    result = r2?.Content?.Cast<RoomAttributeDTO>();
-                    break;
                 case RoomAttributeType.RoomView:
-                    var r3 = await RoomViewManage.GetAllAsync();
-                    if (r3.StatusCode != StatusCodeResponse.Success)
-                        return ResponseFactory.Failure<IEnumerable<RoomAttributeDTO>>(r3.StatusCode, r3.Message);
+                    var r3 = await RoomViewManage.GetPagedListAsync(paging);
+                    return ConvertToBasePagedResult(r3);
 
-                    result = r3?.Content?.Cast<RoomAttributeDTO>();
-                    break;
                 case RoomAttributeType.RoomQuality:
-                    var r4 = await RoomQualityManage.GetAllByTypeAsync(typeId);
-                    if (r4.StatusCode != StatusCodeResponse.Success)
-                        return ResponseFactory.Failure<IEnumerable<RoomAttributeDTO>>(r4.StatusCode, r4.Message);
+                    // RoomQuality cần TypeId
+                    var r4 = await RoomQualityManage.GetRoomQualitiesByTypeAsync(typeId, paging);
+                    return ConvertToBasePagedResult(r4);
 
-                    result = r4?.Content?.Cast<RoomAttributeDTO>();
-                    break;
                 default:
-                    return ResponseFactory.Failure<IEnumerable<RoomAttributeDTO>>(StatusCodeResponse.BadRequest, MessageResponse.BAD_REQUEST);
+                    return ResponseFactory.Failure<PagedManageResult<RoomAttributeDTO>>(
+                       StatusCodeResponse.BadRequest,
+                       MessageResponse.BAD_REQUEST);
             }
-            return ResponseFactory.Success(result, MessageResponse.GET_SUCCESSFULLY);
         }
         catch (Exception)
         {
-            return ResponseFactory.ServerError<IEnumerable<RoomAttributeDTO>>();
+            return ResponseFactory.ServerError<PagedManageResult<RoomAttributeDTO>>();
         }
+    }
+
+    // --- HELPER CHUYỂN ĐỔI KẾT QUẢ TỪ CON SANG CHA ---
+    // T: Kiểu dữ liệu con (VD: UnitTypeDTO)
+    // Hàm này giúp Facade trả về kiểu chung RoomAttributeDTO
+    private ApiResponse<PagedManageResult<RoomAttributeDTO>> ConvertToBasePagedResult<T>(
+        ApiResponse<PagedManageResult<T>> sourceResponse) where T : RoomAttributeDTO
+    {
+        // Nếu API con thất bại, trả về lỗi y hệt
+        if (sourceResponse.StatusCode != StatusCodeResponse.Success || sourceResponse.Content == null)
+        {
+            return ResponseFactory.Failure<PagedManageResult<RoomAttributeDTO>>(
+                sourceResponse.StatusCode,
+                sourceResponse.Message);
+        }
+
+        var sourceContent = sourceResponse.Content;
+
+        // Sử dụng Constructor thay vì Object Initializer
+        var baseResult = new PagedManageResult<RoomAttributeDTO>(
+            // 1. Items (Cast từ con sang cha)
+            sourceContent.Items.Cast<RoomAttributeDTO>().ToList(),
+
+            // 2. TotalCount
+            sourceContent.TotalCount,
+
+            // 3. PageIndex
+            sourceContent.PageIndex,
+
+            // 4. PageSize
+            sourceContent.PageSize,
+
+            // 5. SelectedTypeId
+            sourceContent.SelectedTypeId
+        );
+
+        // Lưu ý: Không cần truyền TotalPages, vì Constructor sẽ tự tính dựa trên Count và Size.
+        return ResponseFactory.Success(baseResult, sourceResponse.Message);
     }
 }

@@ -109,6 +109,33 @@ public static class ValidateFactory
     // ---------------------------------------------------------
 
     /// <summary>
+    /// Kiểm tra tính hợp lệ của tham số phân trang
+    /// </summary>
+    public static ValidationResult ValidatePaging(PagingRequest? paging)
+    {
+        // 1. Kiểm tra đối tượng null
+        var nullCheck = RequireNotNull(paging);
+        if (!nullCheck.IsValid) return nullCheck;
+
+        // Lưu ý: Vì RequireNotNull đã pass, trình biên dịch hiểu paging không null ở dưới đây
+        // Nhưng để an toàn trong lambda, ta vẫn dùng biến p (đã check)
+
+        return BasicCheck(
+            // Rule 1: PageIndex phải >= 1
+            Require(paging!, p => p.PageIndex >= 1,
+                "PageIndex must be greater than or equal to 1.", StatusCodeResponse.BadRequest),
+
+            // Rule 2: PageSize phải >= 1
+            Require(paging!, p => p.PageSize >= 1,
+                "PageSize must be greater than or equal to 1.", StatusCodeResponse.BadRequest),
+
+            // Rule 3: PageSize không được quá lớn (Chống DDOS, ví dụ max 100)
+            Require(paging!, p => p.PageSize <= 100,
+                "PageSize cannot exceed 100 records.", StatusCodeResponse.BadRequest)
+        );
+    }
+
+    /// <summary>
     /// Kiểm tra trùng tên động cho các Entity có cấu trúc giống nhau (Id, Name, IsDeleted).
     /// </summary>
     /// <typeparam name="TEntity">Loại Entity cần kiểm tra (phải có Id, Name, IsDeleted)</typeparam>
@@ -208,7 +235,6 @@ public static class ValidateFactory
 
         return ValidationResult.Success();
     }
-
 
     private static async Task<bool> CheckDuplicateDynamicAsync<TEntity>(
         IRepository<TEntity> repo,

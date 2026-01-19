@@ -4,7 +4,7 @@ using HotelBooking.infrastructure.Models;
 
 public interface IAmenityManage : ITypedManage<AmenityDTO, AmenityTypeDTO, AmenityCreateOrUpdateDTO>
 {
-    Task<ApiResponse<ManageDataResult<AmenityDTO>>> GetAmenitiesByTypeAsync(int? typeId);
+    Task<ApiResponse<PagedManageResult<AmenityDTO>>> GetAmenitiesByTypeAsync(int? typeId, PagingRequest paging);
 }
 
 public class AmenityManage : BaseManage<Amenity, IAmenityRepository, AmenityDTO, AmenityCreateOrUpdateDTO>, IAmenityManage
@@ -110,10 +110,12 @@ public class AmenityManage : BaseManage<Amenity, IAmenityRepository, AmenityDTO,
         }
     }
 
-    public async Task<ApiResponse<ManageDataResult<AmenityDTO>>> GetAmenitiesByTypeAsync(int? typeId)
+    public async Task<ApiResponse<PagedManageResult<AmenityDTO>>> GetAmenitiesByTypeAsync(int? typeId, PagingRequest paging)
     {
         return await ManagementAdminHelper.GetDataByTypeAsync<Amenity, AmenityDTO>(
             typeId,
+            paging,
+
             // Logic 1: lấy ID mặc định: Query bảng ServiceType, lấy thằng đầu tiên chưa xóa
             getDefaultIdFunc: async () =>
             {
@@ -129,7 +131,12 @@ public class AmenityManage : BaseManage<Amenity, IAmenityRepository, AmenityDTO,
                 return exists;
             },
             // Logic 3: Lấy Entity từ DB
-            getItemsByTypeIdFunc: async (id) => await _repo.WhereAsync(sv => sv.TypeId == id && sv.IsDeleted == false),
+            getPagedItemsFunc: async (id, page, size) =>
+            await _repo.GetPagedAsync(
+                x => x.TypeId == id && x.IsDeleted == false,
+                page,
+                size,
+                q => q.OrderByDescending(x => x.Id)),
             // Logic 4: Map sang DTO (Tái sử dụng hàm MapToDto có sẵn)
             mapToDtoFunc: MapToDto
         );

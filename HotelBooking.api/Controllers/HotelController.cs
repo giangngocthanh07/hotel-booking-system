@@ -81,37 +81,65 @@ namespace HotelBooking.api.Controllers
         // --- A. SERVICE DATA ---
         // URL: api/hotel/get-service-data?typeId=1
         [HttpGet("get-service-data")]
-        public async Task<IActionResult> GetServiceData([FromQuery] int? typeId)
+        public async Task<IActionResult> GetServiceData([FromQuery] int? typeId, [FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
         {
+            var request = new PagingRequest { PageIndex = pageIndex, PageSize = pageSize };
+
             // Gọi trực tiếp ServiceManage (Hàm vừa refactor xong)
-            var result = await _serviceManage.GetServicesByTypeAsync(typeId);
+            var result = await _serviceManage.GetServicesByTypeAsync(typeId, request);
             return Ok(result);
         }
 
         // --- B. ROOM QUALITY DATA ---
         // URL: api/hotel/get-room-quality-data?typeId=1
         [HttpGet("get-room-quality-data")]
-        public async Task<IActionResult> GetRoomQualityData([FromQuery] int? typeId)
+        public async Task<IActionResult> GetRoomQualityData([FromQuery] int? typeId, [FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
         {
-            var response = await _rqManage.GetRoomQualitiesByTypeAsync(typeId);
+            var request = new PagingRequest { PageIndex = pageIndex, PageSize = pageSize };
+
+            var response = await _rqManage.GetRoomQualitiesByTypeAsync(typeId, request);
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
         // --- C. AMENITY DATA ---
         // URL: api/hotel/get-amenity-data?typeId=1
         [HttpGet("get-amenity-data")]
-        public async Task<IActionResult> GetAmenityData([FromQuery] int? typeId)
+        public async Task<IActionResult> GetAmenityData([FromQuery] int? typeId, [FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
         {
-            var response = await _amenityService.GetAmenitiesByTypeAsync(typeId);
+            var request = new PagingRequest { PageIndex = pageIndex, PageSize = pageSize };
+
+            var response = await _amenityService.GetAmenitiesByTypeAsync(typeId, request);
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
         // --- D. POLICY DATA ---
         // URL: api/hotel/get-policy-data?typeId=1
         [HttpGet("get-policy-data")]
-        public async Task<IActionResult> GetPolicyData([FromQuery] int? typeId)
+        public async Task<IActionResult> GetPolicyData([FromQuery] int? typeId, [FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
         {
-            var response = await _policyService.GetPoliciesByTypeAsync(typeId);
+            var request = new PagingRequest { PageIndex = pageIndex, PageSize = pageSize };
+
+            var response = await _policyService.GetPoliciesByTypeAsync(typeId, request);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
+        // ==================================================================================
+        // 1. API GET PHÂN TRANG (Thay thế cho các hàm GetUnitTypeData cũ khi dùng cho Table)
+        // URL: GET /api/hotel/room-attribute/get-paged-data?type=UnitType&pageIndex=1...
+        // ==================================================================================
+        [HttpGet("room-attribute/get-paged-data")]
+        public async Task<IActionResult> GetPagedData(
+            [FromQuery] RoomAttributeType type, // Enum: UnitType, BedType, RoomView...
+            [FromQuery] int pageIndex = 1, 
+            [FromQuery] int pageSize = 10,
+            [FromQuery] int? typeId = null)     // Chỉ dùng cho RoomQuality
+        {
+            // 1. Tạo request phân trang
+            var paging = new PagingRequest { PageIndex = pageIndex, PageSize = pageSize };
+
+            // 2. Gọi Facade (Nó tự biết switch-case vào đúng Manager)
+            var response = await _roomAttributeFacade.GetPagedByTypeAsync(type, paging, typeId);
+            
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
@@ -136,16 +164,6 @@ namespace HotelBooking.api.Controllers
         public async Task<IActionResult> GetRoomView()
         {
             var response = await _roomAttributeFacade.RoomViewManage.GetAllAsync();
-            return ApiResponseHandlerHelper.HandleResponse(response);
-        }
-        #endregion
-
-        #region GET ATTRIBUTE BY TYPE
-        [HttpGet("get-room-attributes-by-type/{type}")]
-        public async Task<IActionResult> GetRoomAttributesByTypeAsync(RoomAttributeType type,
-            [FromQuery] int? typeId)
-        {
-            var response = await _roomAttributeFacade.GetAllByTypeAsync(type, typeId);
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
         #endregion

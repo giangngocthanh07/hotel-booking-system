@@ -13,6 +13,11 @@ public interface IRepository<T> where T : class
     Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate);
     Task<IEnumerable<T>> WhereAsync(Expression<Func<T, bool>> predicate);
     Task<bool> AnyAsync(Expression<Func<T, bool>> predicate);
+    Task<(List<T> Items, int TotalCount)> GetPagedAsync(
+    Expression<Func<T, bool>> filter,
+    int pageIndex,
+    int pageSize,
+    Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null);
 }
 
 public class Repository<T> : IRepository<T> where T : class     // Đảo ngượv sự phụ thuộc ở đây
@@ -66,5 +71,38 @@ public class Repository<T> : IRepository<T> where T : class     // Đảo ngư�
     public async Task<IEnumerable<T>> WhereAsync(Expression<Func<T, bool>> predicate) => await _dbSet.AsNoTracking().Where(predicate).ToListAsync();
 
     public async Task<bool> AnyAsync(Expression<Func<T, bool>> predicate) => await _dbSet.AsNoTracking().AnyAsync(predicate);
+
+    public async Task<(List<T> Items, int TotalCount)> GetPagedAsync(
+    Expression<Func<T, bool>> filter,
+    int pageIndex,
+    int pageSize,
+    Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null)
+    {
+        // 1. Tạo query và lọc
+        var query = _dbSet.AsNoTracking().Where(filter);
+
+        // 2. Đếm tổng số bản ghi (QUAN TRỌNG: Đếm trước khi cắt trang)
+        int totalCount = await query.CountAsync();
+
+        // 3. Sắp xếp (nếu có) - Bắt buộc phải sort trước khi Skip/Take
+        if (orderBy != null)
+        {
+            query = orderBy(query);
+        }
+        else
+        {
+            // EF.Property giúp truy cập thuộc tính bằng chuỗi string
+            // Lưu ý: Phải đúng kiểu dữ liệu (int), nếu Id là Guid hay String thì sẽ lỗi
+            query = query.OrderByDescending(x => EF.Property<int>(x, "Id"));
+        }
+
+        // 4. Cắt trang (Pagination Logic)
+        var items = await query
+            .Skip((pageIndex - 1) * pageSize) // Bỏ qua các trang trước
+            .Take(pageSize)                   // Lấy số lượng cần thiết
+            .ToListAsync();
+
+        return (items, totalCount);
+    }
 }
 

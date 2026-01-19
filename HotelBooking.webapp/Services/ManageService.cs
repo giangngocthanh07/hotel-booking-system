@@ -10,15 +10,15 @@ public interface IManagementService
     Task<ApiResponse<ManageMenuResultVM>> GetManageModuleTypesOnly(ManageModuleEnum module);
 
     // 2. GET DATA (TYPED)
-    Task<ApiResponse<ManageDataResultVM<ServiceBaseVM>>> GetServicesByType(int? typeId);
-    Task<ApiResponse<ManageDataResultVM<PolicyVM>>> GetPoliciesByType(int? typeId);
-    Task<ApiResponse<ManageDataResultVM<AmenityVM>>> GetAmenitiesByType(int? typeId);
-    Task<ApiResponse<ManageDataResultVM<RoomQualityVM>>> GetRoomQualitiesByType(int? typeId);
+    Task<ApiResponse<PagedManageResult<ServiceBaseVM>>> GetServicesByType(int? typeId, PagingRequest paging);
+    Task<ApiResponse<PagedManageResult<PolicyVM>>> GetPoliciesByType(int? typeId, PagingRequest paging);
+    Task<ApiResponse<PagedManageResult<AmenityVM>>> GetAmenitiesByType(int? typeId, PagingRequest paging);
+    Task<ApiResponse<PagedManageResult<RoomQualityVM>>> GetRoomQualitiesByType(int? typeId, PagingRequest paging);
 
     // 3. GET DATA (NON-TYPED)
-    Task<ApiResponse<List<UnitTypeVM>>> GetUnitTypes();
-    Task<ApiResponse<List<BedTypeVM>>> GetBedTypes();
-    Task<ApiResponse<List<RoomViewVM>>> GetRoomViews();
+    Task<ApiResponse<PagedManageResult<UnitTypeVM>>> GetUnitTypes(PagingRequest paging);
+    Task<ApiResponse<PagedManageResult<BedTypeVM>>> GetBedTypes(PagingRequest paging);
+    Task<ApiResponse<PagedManageResult<RoomViewVM>>> GetRoomViews(PagingRequest paging);
 
 
     // ==========================================
@@ -98,15 +98,19 @@ public class ManagementService : IManagementService
     // 1. GET: 
     // ==========================================
     // Typed Groups
-    public Task<ApiResponse<ManageDataResultVM<ServiceBaseVM>>> GetServicesByType(int? typeId) => GetGenericTyped<ServiceBaseVM>("hotel/get-service-data", typeId);
-    public Task<ApiResponse<ManageDataResultVM<PolicyVM>>> GetPoliciesByType(int? typeId) => GetGenericTyped<PolicyVM>("hotel/get-policy-data", typeId);
-    public Task<ApiResponse<ManageDataResultVM<AmenityVM>>> GetAmenitiesByType(int? typeId) => GetGenericTyped<AmenityVM>("hotel/get-amenity-data", typeId);
-    public Task<ApiResponse<ManageDataResultVM<RoomQualityVM>>> GetRoomQualitiesByType(int? typeId) => GetGenericTyped<RoomQualityVM>("hotel/get-room-quality-data", typeId);
+    public Task<ApiResponse<PagedManageResult<ServiceBaseVM>>> GetServicesByType(int? typeId, PagingRequest paging) => GetGenericTyped<ServiceBaseVM>("hotel/get-service-data", typeId, paging);
+    public Task<ApiResponse<PagedManageResult<PolicyVM>>> GetPoliciesByType(int? typeId, PagingRequest paging) => GetGenericTyped<PolicyVM>("hotel/get-policy-data", typeId, paging);
+    public Task<ApiResponse<PagedManageResult<AmenityVM>>> GetAmenitiesByType(int? typeId, PagingRequest paging) => GetGenericTyped<AmenityVM>("hotel/get-amenity-data", typeId, paging);
+    public Task<ApiResponse<PagedManageResult<RoomQualityVM>>> GetRoomQualitiesByType(int? typeId, PagingRequest paging) => GetGenericTyped<RoomQualityVM>("hotel/get-room-quality-data", typeId, paging);
 
     // Non-Typed Groups
-    public Task<ApiResponse<List<UnitTypeVM>>> GetUnitTypes() => _http.GetApiAsync<List<UnitTypeVM>>("hotel/get-unit-type-data");
-    public Task<ApiResponse<List<BedTypeVM>>> GetBedTypes() => _http.GetApiAsync<List<BedTypeVM>>("hotel/get-bed-type-data");
-    public Task<ApiResponse<List<RoomViewVM>>> GetRoomViews() => _http.GetApiAsync<List<RoomViewVM>>("hotel/get-room-view-data");
+    public Task<ApiResponse<PagedManageResult<UnitTypeVM>>> GetUnitTypes(PagingRequest paging)
+        => GetAttributePaged<UnitTypeVM>(RoomAttributeType.UnitType, paging);
+    public Task<ApiResponse<PagedManageResult<BedTypeVM>>> GetBedTypes(PagingRequest paging)
+        => GetAttributePaged<BedTypeVM>(RoomAttributeType.BedType, paging);
+    public Task<ApiResponse<PagedManageResult<RoomViewVM>>> GetRoomViews(PagingRequest paging)
+        => GetAttributePaged<RoomViewVM>(RoomAttributeType.RoomView, paging);
+
     // ==========================================
     // 2. DELETE: Xóa dữ liệu
     // ==========================================
@@ -196,13 +200,51 @@ public class ManagementService : IManagementService
         }
     }
 
+    // Helper 1: Gọi API Phân trang (Get Paged Data)
+    private async Task<ApiResponse<PagedManageResult<T>>> GetAttributePaged<T>(RoomAttributeType type, PagingRequest paging, int? typeId = null)
+    {
+        // Build URL: api/hotel/room-attribute/get-paged-data?type=UnitType&pageIndex=1...
+        var url = $"hotel/room-attribute/get-paged-data?type={type}&pageIndex={paging.PageIndex}&pageSize={paging.PageSize}";
+        
+        if (typeId.HasValue) url += $"&typeId={typeId}";
+
+        return await _http.GetApiAsync<PagedManageResult<T>>(url);
+    }
+
     // ==========================================
     // 5. PRIVATE GENERIC HELPERS (Nồi dùng chung)
     // ==========================================
-    private Task<ApiResponse<ManageDataResultVM<T>>> GetGenericTyped<T>(string endpoint, int? typeId)
+    private Task<ApiResponse<PagedManageResult<T>>> GetGenericTyped<T>(string endpoint, int? typeId, PagingRequest paging)
     {
-        var url = typeId.HasValue ? $"{endpoint}?typeId={typeId}" : endpoint;
-        return _http.GetApiAsync<ManageDataResultVM<T>>(url);
+        // Xây dựng Query String
+        // Bắt đầu với endpoint
+        var url = endpoint;
+        var queryParams = new List<string>();
+
+        // Thêm typeId nếu có
+        if (typeId.HasValue)
+        {
+            queryParams.Add($"typeId={typeId}");
+        }
+
+        // Thêm tham số phân trang nếu có
+        if (paging != null)
+        {
+             // Sử dụng giá trị mặc định nếu null (tuy nhiên logic validate ở BE đã xử lý, ở đây cứ truyền lên)
+             // Lưu ý: Nếu paging.PageIndex là null, string interpolation sẽ ra chuỗi rỗng hoặc lỗi tùy cấu hình,
+             // nên tốt nhất check null hoặc dùng .GetValueOrDefault().
+             // Giả sử PagingRequest ở Client cũng dùng int? như Server
+             if(paging.PageIndex.HasValue) queryParams.Add($"pageIndex={paging.PageIndex}");
+             if(paging.PageSize.HasValue) queryParams.Add($"pageSize={paging.PageSize}");
+        }
+
+        // Nối query string vào URL
+        if (queryParams.Any())
+        {
+            url += "?" + string.Join("&", queryParams);
+        }
+
+        return _http.GetApiAsync<PagedManageResult<T>>(url);
     }
     // Helper cho CREATE
     private Task<ApiResponse<T>> PostGeneric<T>(string endpoint, T vm)

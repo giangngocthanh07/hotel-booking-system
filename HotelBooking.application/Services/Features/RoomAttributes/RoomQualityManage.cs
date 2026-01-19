@@ -4,7 +4,7 @@ using HotelBooking.infrastructure.Models;
 public interface IRoomQualityManage : ITypedManage<RoomQualityDTO, RoomQualityGroupDTO, RoomQualityCreateOrUpdateDTO>
 {
     Task<ApiResponse<List<RoomQualityDTO>>> GetAllByTypeAsync(int? typeId = null);
-    Task<ApiResponse<ManageDataResult<RoomQualityDTO>>> GetRoomQualitiesByTypeAsync(int? typeId);
+    Task<ApiResponse<PagedManageResult<RoomQualityDTO>>> GetRoomQualitiesByTypeAsync(int? typeId, PagingRequest paging);
 }
 
 public class RoomQualityManage : BaseManage<RoomQuality, IRoomQualityRepository, RoomQualityDTO, RoomQualityCreateOrUpdateDTO>, IRoomQualityManage
@@ -122,10 +122,12 @@ public class RoomQualityManage : BaseManage<RoomQuality, IRoomQualityRepository,
     }
 
     // Hàm này dùng cho ManagementAdmin.cs
-    public async Task<ApiResponse<ManageDataResult<RoomQualityDTO>>> GetRoomQualitiesByTypeAsync(int? typeId)
+    public async Task<ApiResponse<PagedManageResult<RoomQualityDTO>>> GetRoomQualitiesByTypeAsync(int? typeId, PagingRequest paging)
     {
         return await ManagementAdminHelper.GetDataByTypeAsync<RoomQuality, RoomQualityDTO>(
             typeId,
+            paging,
+
             // Logic 1: lấy ID mặc định: Query bảng RoomQualityGroup, lấy thằng đầu tiên chưa xóa
             getDefaultIdFunc: async () =>
             {
@@ -141,7 +143,12 @@ public class RoomQualityManage : BaseManage<RoomQuality, IRoomQualityRepository,
                 return exists;
             },
             // Logic 3: Lấy Entity từ DB
-            getItemsByTypeIdFunc: async (id) => await _repo.WhereAsync(sv => sv.TypeId == id && sv.IsDeleted == false),
+            getPagedItemsFunc: async (id, page, size) =>
+            await _repo.GetPagedAsync(
+                x => x.TypeId == id && x.IsDeleted == false,
+                page,
+                size,
+                q => q.OrderByDescending(x => x.Id)),
             // Logic 4: Map sang DTO (Tái sử dụng hàm MapToDto có sẵn)
             mapToDtoFunc: MapToDto
         );

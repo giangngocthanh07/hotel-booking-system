@@ -44,13 +44,17 @@ public static class ManagementAdminHelper
     }
 
     // --- PHẦN 2: HELPER CHO API DATA (Lấy Items theo TypeId) ---
-    public static async Task<ApiResponse<ManageDataResult<TDto>>> GetDataByTypeAsync<TEntity, TDto>(
+    public static async Task<ApiResponse<PagedManageResult<TDto>>> GetDataByTypeAsync<TEntity, TDto>(
         int? typeId,
+        PagingRequest paging, // 1. Nhận tham số phân trang
+
         Func<Task<int?>> getDefaultIdFunc,
         // Logic kiểm tra ID có tồn tại trong DB không (Input: int -> Output: bool)
         Func<int, Task<bool>> checkTypeExistsFunc,
-        // Logic lấy dữ liệu từ DB (Input: typeId -> Output: List Entity)
-        Func<int, Task<IEnumerable<TEntity>>> getItemsByTypeIdFunc,
+
+        // 2. Hàm lấy dữ liệu trả về Tuple (Items, TotalCount)
+        Func<int, int, int, Task<(IEnumerable<TEntity> Items, int TotalCount)>> getPagedItemsFunc,
+
         // Logic map từ Entity sang DTO
         Func<TEntity, TDto> mapToDtoFunc)
 
@@ -61,10 +65,21 @@ public static class ManagementAdminHelper
         {
             int currentTypeId;
 
-            // --- VALIDATION 1: Check số âm hoặc bằng 0 ---
+            // --- VALIDATION: Phân trang ---
+            var pagingCheck = ValidateFactory.ValidatePaging(paging);
+
+            if (!pagingCheck.IsValid)
+            {
+                return ResponseFactory.Failure<PagedManageResult<TDto>>(
+                    pagingCheck.StatusCode, // Trả về 400 (BadRequest)
+                    pagingCheck.Message     // Ví dụ: "PageIndex must be greater than 1"
+                );
+            }
+
+            // --- VALIDATION: Check số âm hoặc bằng 0 ---
             if (typeId.HasValue && typeId <= 0)
             {
-                return ResponseFactory.Failure<ManageDataResult<TDto>>(
+                return ResponseFactory.Failure<PagedManageResult<TDto>>(
                     StatusCodeResponse.BadRequest,
                     "TypeId must be greater than 0"
                 );
@@ -79,9 +94,9 @@ public static class ManagementAdminHelper
                 if (!isExist)
                 {
                     // --- VALIDATION 2: ID không tồn tại trong DB ---
-                    return ResponseFactory.Failure<ManageDataResult<TDto>>(
+                    return ResponseFactory.Failure<PagedManageResult<TDto>>(
                         StatusCodeResponse.NotFound,
-                        $"Type with Id {typeId} not found."
+                        MessageResponse.NOT_FOUND
                     );
                 }
 
@@ -99,30 +114,29 @@ public static class ManagementAdminHelper
                 else
                 {
                     // Case C: Bảng Type trống trơn -> Trả về list rỗng (Hợp lệ)
-                    return ResponseFactory.Success(new ManageDataResult<TDto>
-                    {
-                        SelectedTypeId = null,
-                        Items = new List<TDto>(),
-                        TotalCount = 0
-                    }, MessageResponse.EMPTY_LIST);
+                    // Trường hợp không có Type nào trong DB -> Trả về rỗng
+                    return ResponseFactory.Success(
+                        new PagedManageResult<TDto>(new List<TDto>(), 0, paging.PageIndex.Value, paging.PageSize.Value, null),
+                        MessageResponse.EMPTY_LIST
+                    );
                 }
             }
 
-            // 3. Lấy Data
-            var entities = await getItemsByTypeIdFunc(currentTypeId);
+            // 3. LẤY DỮ LIỆU PHÂN TRANG (Gọi Repo)
+            var (entities, totalCount) = await getPagedItemsFunc(currentTypeId, paging.PageIndex.Value, paging.PageSize.Value);
 
-            var result = new ManageDataResult<TDto>
-            {
-                SelectedTypeId = currentTypeId,
-                Items = entities.Select(e => mapToDtoFunc(e)).ToList(),
-                TotalCount = entities.Count()
-            };
+            // 4. MAP SANG DTO
+            var dtos = entities.Select(e => mapToDtoFunc(e)).ToList();
+
+            // 5. ĐÓNG GÓI KẾT QUẢ (Dùng PagedManageResult)
+            // Truyền currentTypeId vào để FE biết đường highlight menu
+            var result = new PagedManageResult<TDto>(dtos, totalCount, paging.PageIndex.Value, paging.PageSize.Value, currentTypeId);
 
             return ResponseFactory.Success(result, MessageResponse.GET_SUCCESSFULLY);
         }
         catch (Exception)
         {
-            return ResponseFactory.ServerError<ManageDataResult<TDto>>();
+            return ResponseFactory.ServerError<PagedManageResult<TDto>>();
         }
     }
 }

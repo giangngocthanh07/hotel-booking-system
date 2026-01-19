@@ -1,0 +1,224 @@
+@inject NavigationManager _nav
+
+<div class="d-flex flex-column h-100 w-100 sidebar-theme">
+
+    <div class="flex-grow-1 overflow-auto custom-scrollbar p-3 pt-2">
+        <ul class="nav flex-column gap-1">
+
+            <li class="nav-label mt-2 mb-2">QUẢN TRỊ</li>
+
+            <li class="nav-item">
+                <NavLink class="nav-link" href="/admin/dashboard" Match="NavLinkMatch.All">
+                    <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
+                </NavLink>
+            </li>
+
+            <li class="nav-item">
+                <NavLink class="nav-link" href="/admin/users">
+                    <i class="bi bi-people-fill"></i> <span>Người dùng</span>
+                </NavLink>
+            </li>
+
+            <li class="nav-item">
+                <div class="nav-link collapsed d-flex justify-content-between cursor-pointer" data-bs-toggle="collapse"
+                    data-bs-target="#requests-collapse" aria-expanded="false">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-envelope-paper"></i> <span>Duyệt yêu cầu</span>
+                    </div>
+                    <i class="bi bi-chevron-down small transition-icon"></i>
+                </div>
+
+                <div class="collapse mt-1" id="requests-collapse">
+                    <ul class="nav flex-column gap-1 ps-3 border-start border-secondary border-opacity-25 ms-3">
+                        <li class="nav-item">
+                            <NavLink class="nav-link sub-link" href="/admin/requests/requests-overview">
+                                <i class="bi bi-bar-chart-steps"></i><span>Tổng quan</span>
+                            </NavLink>
+                        </li>
+                        <li class="nav-item">
+                            <NavLink class="nav-link sub-link" href="/admin/requests/upgrade-owner">
+                                <i class="bi bi-person-up"></i><span>Nâng cấp Owner</span>
+                            </NavLink>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+            <li class="nav-label mt-4 mb-2">HỆ THỐNG</li>
+
+            <li class="nav-item">
+                <div class="nav-link collapsed d-flex justify-content-between cursor-pointer" data-bs-toggle="collapse"
+                    data-bs-target="#management-collapse" aria-expanded="false">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-gear-wide-connected"></i> <span>Cấu hình chung</span>
+                    </div>
+                    <i class="bi bi-chevron-down small transition-icon"></i>
+                </div>
+
+                <div class="collapse mt-1" id="management-collapse">
+                    <ul class="nav flex-column gap-1 ps-3 border-start border-secondary border-opacity-25 ms-3">
+                        <li class="nav-item">
+                            <NavLink class="nav-link sub-link" href="/admin/manage/service">
+                                <i class="bi bi-house-door"></i><span>Dịch vụ</span>
+                            </NavLink>
+                        </li>
+                    
+                        <li class="nav-item">
+                            <NavLink class="nav-link sub-link" href="/admin/manage/policy">
+                                <i class="bi bi-file-earmark-text"></i><span>Chính sách</span>
+                            </NavLink>
+                        </li>
+
+                        <li class="nav-item">
+                            <NavLink class="nav-link sub-link" href="/admin/manage/amenity">
+                                <i class="bi bi-droplet"></i><span>Tiện nghi</span>
+                            </NavLink>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <NavLink class="nav-link sub-link" href="/admin/manage/roomquality">
+                                <i class="bi bi-stars"></i><span>Hạng phòng</span>
+                            </NavLink>
+                        </li>
+                        <li class="nav-item">
+                            <NavLink class="nav-link sub-link" href="/admin/manage/unittype">
+                                <i class="bi bi-house-door"></i><span>Loại lưu trú</span>
+                            </NavLink>
+                        </li>
+                        <li class="nav-item">
+                            <NavLink class="nav-link sub-link" href="/admin/manage/bedtype">
+                                <i class="fas fa-bed"></i><span>Loại giường</span>
+                            </NavLink>
+                        </li>
+                        <li class="nav-item">
+                            <NavLink class="nav-link sub-link" href="/admin/manage/roomview">
+                                <i class="bi bi-image"></i><span>Cảnh quan</span>
+                            </NavLink>
+                        </li>
+                        <li class="nav-item">
+                            <NavLink class="nav-link sub-link" href="/admin/system-config">
+                                <i class="bi bi-gear"></i> <span>Hệ thống tự động</span>
+                            </NavLink>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            <li class="nav-label mt-4 mb-2">MARKETING</li>
+
+            <li class="nav-item">
+                <NavLink class="nav-link" href="/admin/manages/manage-banners">
+                    <i class="bi bi-card-image"></i> <span>Banner</span>
+                </NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link" href="/admin/manages/manage-promotions">
+                    <i class="bi bi-tags"></i> <span>Ưu đãi</span>
+                </NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link" href="/admin/finances">
+                    <i class="bi bi-coin"></i> <span>Tài chính</span>
+                </NavLink>
+            </li>
+        </ul>
+    </div>
+
+</div>
+
+<style>
+    /* ... (Copy y nguyên phần style bạn đã gửi ở trên vào đây) ... */
+
+    /* Tổng thể Sidebar */
+    .sidebar-theme {
+        background-color: #1e2125;
+        color: #adb5bd;
+    }
+
+    .nav-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #6c757d;
+        letter-spacing: 0.5px;
+    }
+
+    .nav-link {
+        color: #adb5bd !important;
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        font-weight: 500;
+        font-size: 0.9rem;
+        cursor: pointer;
+    }
+
+    .nav-link i {
+        font-size: 1.1rem;
+        margin-right: 12px;
+        width: 20px;
+        text-align: center;
+        transition: transform 0.2s;
+    }
+
+    .nav-link:not(.active):hover {
+        background-color: rgba(255, 255, 255, 0.08);
+        color: #fff !important;
+        padding-left: 16px;
+    }
+
+    .nav-link:hover i {
+        transform: scale(1.1);
+        color: #fff;
+    }
+
+    /* Active State xử lý NavLink Active của Blazor */
+    .nav-link.active {
+        color: #fff !important;
+        background-color: rgba(255, 255, 255, 0.1);
+        /* Hoặc dùng màu xanh brand: #0d6efd */
+    }
+
+    /* Sub-link Active */
+    .sub-link.active {
+        background-color: #0d6efd !important;
+        /* Highlight rõ mục con đang chọn */
+        color: #fff !important;
+        font-weight: 600;
+    }
+
+    /* Sub-link padding */
+    .sub-link {
+        font-size: 0.85rem;
+        padding: 8px 10px;
+        border-radius: 6px;
+    }
+
+    /* Collapse logic styles */
+    .nav-link[data-bs-toggle="collapse"][aria-expanded="true"] {
+        color: #fff !important;
+    }
+
+    .nav-link[aria-expanded="true"] .transition-icon {
+        transform: rotate(180deg);
+    }
+
+    .transition-icon {
+        transition: transform 0.3s ease;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #495057;
+        border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #6c757d;
+    }
+</style>

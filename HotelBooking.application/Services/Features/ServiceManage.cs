@@ -2,7 +2,7 @@ using HotelBooking.application.Helpers;
 using HotelBooking.infrastructure.Models;
 public interface IServiceManage : ITypedManage<ServiceBaseDTO, ServiceTypeDTO, ServiceCreateOrUpdateDTO>
 {
-    Task<ApiResponse<ManageDataResult<ServiceBaseDTO>>> GetServicesByTypeAsync(int? typeId);
+    Task<ApiResponse<PagedManageResult<ServiceBaseDTO>>> GetServicesByTypeAsync(int? typeId, PagingRequest paging);
 }
 public class ServiceManage : BaseManage<Service, IServiceRepository, ServiceBaseDTO, ServiceCreateOrUpdateDTO>, IServiceManage
 {
@@ -77,10 +77,11 @@ public class ServiceManage : BaseManage<Service, IServiceRepository, ServiceBase
         }
     }
 
-    public async Task<ApiResponse<ManageDataResult<ServiceBaseDTO>>> GetServicesByTypeAsync(int? typeId)
+    public async Task<ApiResponse<PagedManageResult<ServiceBaseDTO>>> GetServicesByTypeAsync(int? typeId, PagingRequest paging)
     {
         return await ManagementAdminHelper.GetDataByTypeAsync<Service, ServiceBaseDTO>(
             typeId,
+            paging,
 
             // Logic 1: lấy ID mặc định: Query bảng ServiceType, lấy thằng đầu tiên chưa xóa
             getDefaultIdFunc: async () =>
@@ -97,7 +98,12 @@ public class ServiceManage : BaseManage<Service, IServiceRepository, ServiceBase
                 return exists;
             },
             // Logic 3: Lấy Entity từ DB
-            getItemsByTypeIdFunc: async (id) => await _repo.WhereAsync(sv => sv.TypeId == id && sv.IsDeleted == false),
+            getPagedItemsFunc: async (id, page, size) => 
+            await _repo.GetPagedAsync(
+                x => x.TypeId == id && x.IsDeleted == false, 
+                page, 
+                size, 
+                q => q.OrderByDescending(x => x.Id)),
 
             // Logic 4: Map sang DTO (Tái sử dụng hàm MapToDto có sẵn)
             mapToDtoFunc: MapToDto

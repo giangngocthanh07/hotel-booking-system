@@ -6,7 +6,7 @@
 
 @* 1. Dropdown chọn Module (Chuyển trang) *@
 <div class="mb-3">
-    <label class="form-label small fw-bold text-muted">Module</label>
+    <label class="form-label small fw-bold text-muted">Nhóm dữ liệu</label>
     <select class="form-select" value="@CurrentModule" @onchange="OnModuleChanged">
         <option value="Service">Service</option>
         <option value="Policy">Policy</option>
@@ -22,7 +22,7 @@
 @if (_types != null && _types.Any())
 {
     <div class="mb-3">
-        <label class="form-label small fw-bold text-muted">Type / Category</label>
+        <label class="form-label small fw-bold text-muted">Phân loại</label>
         <select class="form-select" value="@CurrentTypeId" @onchange="OnTypeChanged">
             @foreach (var t in _types)
             {

@@ -8,10 +8,12 @@
 @layout AdminLayout
 @inject IManagementService _service
 @inject ILogger<PolicyManager> Logger
+@inject ISnackbar _snackbar
 @implements IDisposable
 
-<MasterDetailLayout TItem="PolicyVM" Items="_items" Model="_model" OnSubmit="SaveData" OnEdit="OnEditItem"
-    OnDelete="HandleDelete" OnCancel="ResetForm">
+<MasterDetailLayout TItem="PolicyVM" Items="items" Model="_model" PageIndex="_paging.PageIndex ?? 1"
+    TotalPages="totalPages" TotalCount="totalCount" OnPageChanged="HandlePageChanged" OnSubmit="SaveData"
+    OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm">
 
     @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
     <SidebarTopContent>
@@ -22,6 +24,8 @@
 
     @* --- B. CẤU HÌNH FORM --- *@
     <FormContent Context="formData">
+
+        @* 1. CÁC TRƯỜNG CHO PHÉP NHẬP (EDITABLE) *@
         <div class="mb-3">
             <label class="form-label fw-bold small text-muted">Name</label>
             <InputText class="form-control" @bind-Value="formData.Name" />
@@ -30,6 +34,131 @@
             <label class="form-label fw-bold small text-muted">Description</label>
             <InputTextArea class="form-control" @bind-Value="formData.Description" />
         </div>
+
+        <hr class="my-4" />
+
+        @* 2. CÁC TRƯỜNG READ-ONLY (TỰ ĐỘNG ĐIỀN THEO LUẬT) *@
+        @* Chỉ hiển thị để Admin biết, không cho sửa *@
+        @* --- CASE 1002: CHECK-IN / CHECK-OUT --- *@
+        @if (TypeId == 1002)
+        {
+            <h6 class="text-primary mb-3"><i class="fa-regular fa-clock"></i> Quy định thời gian (Cố định)</h6>
+            @* Dùng g-2 để tạo khoảng cách thoáng đãng giữa các ô *@
+            <div class="row g-2">
+
+                @* 1. Check-in: Chiếm full dòng *@
+                <div class="col-12">
+                    <label class="small text-muted fw-bold">Giờ nhận phòng (Check-In)</label>
+                    <input type="time" value="@(formData.TimeFrom?.ToString("HH:mm") ?? "14:00")"
+                        class="form-control bg-light" disabled />
+                </div>
+
+                @* 2. Check-out: Chiếm full dòng *@
+                <div class="col-12">
+                    <label class="small text-muted fw-bold">Giờ trả phòng (Check-Out)</label>
+                    <input type="time" value="@(formData.TimeTo?.ToString("HH:mm") ?? "12:00")"
+                        class="form-control bg-light" disabled />
+                </div>
+
+            </div>
+
+            @* Thông báo đẩy xuống dưới một chút cho đẹp *@
+            <div class="alert alert-info py-2 small mt-3">
+                <i class="fa-solid fa-circle-info me-1"></i> Giờ chuẩn quốc tế, không thể thay đổi.
+            </div>
+        }
+
+        @* --- CASE 1003: CANCELLATION --- *@
+        @if (TypeId == 1003)
+        {
+            <h6 class="text-danger mb-3"><i class="fa-solid fa-ban"></i> Quy định hủy phòng</h6>
+            <div class="row g-2">
+
+                @* 1. Số ngày báo trước: Xuống dòng riêng (col-12) *@
+                <div class="col-12">
+                    <label class="small text-muted fw-bold">Hủy trước (ngày)</label>
+                    <div class="input-group">
+                        <input value="@formData.IntValue1" class="form-control bg-light fw-bold" disabled />
+                        <span class="input-group-text bg-white">ngày</span>
+                    </div>
+                </div>
+
+                @* 2. Phí phạt: Xuống dòng riêng (col-12) *@
+                <div class="col-12 mt-2">
+                    <label class="small text-muted fw-bold">Phí phạt (%)</label>
+                    <div class="input-group">
+                        <input value="@formData.Percent" class="form-control bg-light fw-bold text-danger" disabled />
+                        <span class="input-group-text bg-white">%</span>
+                    </div>
+                </div>
+
+                @* 3. Checkbox hoàn tiền: Xuống dòng riêng *@
+                <div class="col-12 mt-3">
+                    <div class="form-check p-3 border rounded bg-light">
+                        @* Dùng style pointer-events-none để chặn click nhưng vẫn hiện rõ *@
+                        <input class="form-check-input" type="checkbox" checked="@formData.BoolValue" disabled
+                            style="opacity: 1;">
+                        <label class="form-check-label fw-bold ms-1 text-dark">
+                            Được hoàn tiền
+                        </label>
+                        <div class="small text-muted mt-1 fst-italic">
+                            (Nếu hủy đúng hạn quy định)
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        }
+
+        @* --- CASE 1004: CHILDREN --- *@
+        @if (TypeId == 1004)
+        {
+            <h6 class="text-success mb-3"><i class="fa-solid fa-child"></i> Quy định trẻ em</h6>
+            @* SỬ DỤNG row g-2 ĐỂ GIẢM KHOẢNG CÁCH GIỮA CÁC CỘT *@
+            <div class="row g-2">
+
+                @* 1. Độ tuổi: Cho chiếm hết chiều ngang (col-12) *@
+                <div class="col-12">
+                    <label class="small text-muted fw-bold">Độ tuổi áp dụng</label>
+                    <div class="input-group">
+                        @* Thêm text-center để số nằm giữa cho đẹp *@
+                        <input value="@formData.IntValue1" class="form-control bg-light text-center" disabled />
+                        <span class="input-group-text bg-white border-start-0 border-end-0">-</span>
+                        <input value="@formData.IntValue2" class="form-control bg-light text-center" disabled />
+                        <span class="input-group-text">tuổi</span>
+                    </div>
+                </div>
+
+                @* 2. Phụ thu: Cho xuống dòng và chiếm hết chiều ngang (col-12) *@
+                <div class="col-12 mt-2">
+                    <label class="small text-muted fw-bold">Phụ thu (VNĐ)</label>
+                    <div class="input-group">
+                        @* Thêm icon tiền tệ cho chuyên nghiệp *@
+                        <input value="@(formData.Amount?.ToString("N0") ?? "0")"
+                            class="form-control bg-light border-start-0 fw-bold text-end" disabled />
+                        <span class="input-group-text bg-light border-end-0">₫</span>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @* --- CASE 2002: PETS --- *@
+        @if (TypeId == 2002)
+        {
+            <h6 class="text-warning mb-3"><i class="fa-solid fa-paw"></i> Quy định thú cưng</h6>
+            <div class="row">
+                <div class="col-6 mb-3">
+                    <label class="small text-muted">Phí vệ sinh / con</label>
+                    <input value="@(formData.Amount?.ToString("N0"))" class="form-control bg-light" disabled />
+                </div>
+                <div class="col-6 mb-3 d-flex align-items-end">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" checked="@formData.BoolValue" disabled>
+                        <label class="form-check-label">Cho phép mang theo</label>
+                    </div>
+                </div>
+            </div>
+        }
     </FormContent>
 
     @* --- C. CẤU HÌNH BẢNG (TABLE) --- *@
@@ -37,12 +166,33 @@
         <th>ID</th>
         <th>Name</th>
         <th>Description</th>
+        <th>Preview</th>
     </TableHeader>
 
     <RowTemplate Context="row">
         <td>@row.Id</td>
         <td><strong>@row.Name</strong></td>
         <td>@row.Description</td>
+        <td>
+            @* Hiển thị tóm tắt thông số *@
+            @if (row.TypeId == 1002)
+            {
+                <span class="badge bg-primary">@row.TimeFrom - @row.TimeTo</span>
+            }
+            @if (row.TypeId == 1003)
+            {
+                <span class="badge bg-danger">Trước @row.IntValue1 ngày | @row.Percent%</span>
+            }
+            @if (row.TypeId == 1004)
+            {
+                <span class="badge bg-success">@row.IntValue1-@row.IntValue2 tuổi |
+                    @row.Amount?.ToString("N0")đ</span>
+            }
+            @if (row.TypeId == 2002)
+            {
+                <span class="badge bg-warning text-dark">Phí: @row.Amount?.ToString("N0")đ</span>
+            }
+        </td>
     </RowTemplate>
 
 </MasterDetailLayout>
@@ -54,9 +204,15 @@
     [Parameter] public int? TypeId { get; set; }
 
     // --- STATE ---
-    private List<PolicyVM> _items;
+    private List<PolicyVM> items;
     private PolicyVM _model = new();
     private bool _isUpdate = false;
+
+    // --- QUẢN LÝ PHÂN TRANG ---
+    // Khởi tạo request: Trang 1, Size 10
+    private PagingRequest _paging = new() { PageIndex = 1, PageSize = 10 };
+    private int totalPages = 0;
+    private int totalCount = 0;
 
     // Biến kiểm soát vòng đời & Re-render
     private int? _previousTypeId = -999;
@@ -84,6 +240,9 @@
 
         try
         {
+            // [QUAN TRỌNG] Reset về trang 1 khi đổi loại Amenity (đổi Tab)
+            _paging.PageIndex = 1;
+
             ResetForm(); // Reset form khi đổi tab
             await LoadData();
         }
@@ -93,33 +252,54 @@
             Logger.LogError(ex, "Lỗi tải dữ liệu Policy");
         }
     }
+
+    // --- HÀM XỬ LÝ KHI BẤM CHUYỂN TRANG ---
+    private async Task HandlePageChanged(int newPage)
+    {
+        // Cập nhật số trang mới vào Request
+        _paging.PageIndex = newPage;
+        // Gọi lại API
+        await LoadData();
+    }
+
     private async Task LoadData()
     {
-        _items = null; // Kích hoạt Spinner
+        items = null; // Kích hoạt Spinner
         StateHasChanged();
 
         try
         {
             // Gọi API Mới
-            var res = await _service.GetPoliciesByType(TypeId);
+            var res = await _service.GetPoliciesByType(TypeId, _paging);
 
             if (!_disposed)
             {
                 if (res.StatusCode == StatusCodeResponse.Success && res.Content != null)
                 {
-                    // Lấy items trực tiếp từ Generic VM
-                    _items = res.Content.Items;
+                    // Nhận dữ liệu phân trang từ API
+                    items = res.Content.Items;
+                    totalPages = res.Content.TotalPages;
+                    totalCount = res.Content.TotalCount;
                 }
                 else
                 {
-                    _items = new List<PolicyVM>();
+                    // Nếu lỗi thì hiện thông báo (trừ khi là danh sách rỗng hợp lệ)
+                    if (res.StatusCode != StatusCodeResponse.Success)
+                    {
+                        SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
+                    }
+
+                    items = new List<PolicyVM>();
+                    totalPages = 0;
+                    totalCount = 0;
                 }
             }
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Lỗi load data policy");
-            _items = new List<PolicyVM>(); // Hết lỗi để UI hiện bảng trống}
+            SnackbarHelper.Show(_snackbar, StatusCodeResponse.Error, MessageResponse.ERROR_IN_SERVER);
+            items = new List<PolicyVM>(); // Hết lỗi để UI hiện bảng trống}
         }
     }
 
@@ -127,13 +307,31 @@
     private void OnEditItem(PolicyVM item)
     {
         _isUpdate = true;
-        _model = new PolicyVM { Id = item.Id, Name = item.Name, Description = item.Description, TypeId = item.TypeId };
+        _model = new PolicyVM
+        {
+            Id = item.Id,
+            Name = item.Name,
+            Description = item.Description,
+            TypeId = item.TypeId,
+
+            // QUAN TRỌNG: Phải copy hết các field này thì form mới hiện số
+            TimeFrom = item.TimeFrom,
+            TimeTo = item.TimeTo,
+            IntValue1 = item.IntValue1,
+            IntValue2 = item.IntValue2,
+            Amount = item.Amount,
+            Percent = item.Percent,
+            BoolValue = item.BoolValue
+        };
     }
 
     private async Task HandleDelete(PolicyVM item)
     {
         // Gọi API xóa thực tế
         var res = await _service.DeletePolicy(item.Id);
+
+        // Hiển thị thông báo
+        SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
 
         if (res.StatusCode == StatusCodeResponse.Success)
         {
@@ -147,7 +345,10 @@
         _isUpdate = false;
         _model = new();
 
-        
+        if (TypeId.HasValue)
+        {
+            PolicyHelper.ApplyDefaultValues(_model, TypeId.Value);
+        }
     }
 
     private async Task SaveData()
@@ -158,10 +359,18 @@
             _model.TypeId = TypeId.Value;
         }
 
-        if (_isUpdate) await _service.UpdatePolicy(_model);
-        else await _service.CreatePolicy(_model);
-        await LoadData();
-        ResetForm();
+        ApiResponse<PolicyVM> res;
+        if (_isUpdate) res = await _service.UpdatePolicy(_model);
+        else res = await _service.CreatePolicy(_model);
+
+        // Hiển thị thông báo
+        SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
+
+        if (res.StatusCode == StatusCodeResponse.Success)
+        {
+            await LoadData();
+            ResetForm();
+        }
     }
 
     // Hàm hủy (Implement IDisposable nếu cần, hoặc dùng biến cờ đơn giản)

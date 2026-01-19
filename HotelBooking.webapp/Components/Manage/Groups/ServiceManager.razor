@@ -10,13 +10,15 @@
 @layout AdminLayout
 @inject IManagementService _service
 @inject ILogger<ServiceManager> Logger
+@inject ISnackbar _snackbar
 @implements IDisposable
 
 @* --- 3. MASTER DETAIL LAYOUT (OPTIMIZED VERSION) --- *@
 @* Luôn hiển thị layout, Items truyền vào có thể null *@
 
-<MasterDetailLayout TItem="ServiceBaseVM" Items="_items" Model="_model" OnSubmit="SaveData" OnEdit="OnEditItem"
-    OnDelete="HandleDelete" OnCancel="ResetForm">
+<MasterDetailLayout TItem="ServiceBaseVM" Items="items" Model="_model" PageIndex="_paging.PageIndex ?? 1"
+    TotalPages="totalPages" TotalCount="totalCount" OnPageChanged="HandlePageChanged" OnSubmit="SaveData"
+    OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm">
 
     @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
     <SidebarTopContent>
@@ -165,9 +167,16 @@
     [Parameter] public int? TypeId { get; set; }
 
     // --- STATE ---
-    private List<ServiceBaseVM>? _items; // Nullable để kích hoạt Spinner
+    private List<ServiceBaseVM>? items; // Nullable để kích hoạt Spinner
     private ServiceBaseVM _model = new ServiceStandardVM();
     private bool _isUpdate = false;
+
+    // --- QUẢN LÝ PHÂN TRANG ---
+    // Khởi tạo request: Trang 1, Size 10
+    private PagingRequest _paging = new() { PageIndex = 1, PageSize = 10 };
+    private int totalPages = 0;
+    private int totalCount = 0;
+
 
     // Biến kiểm soát vòng đời & Re-render
     private int? _previousTypeId = -999;
@@ -198,6 +207,9 @@
         // 3. Load Data
         try
         {
+            // [QUAN TRỌNG] Reset về trang 1 khi đổi loại Amenity (đổi Tab)
+            _paging.PageIndex = 1;
+
             ResetForm(); // Reset form khi đổi tab
             await LoadData();
         }
@@ -208,37 +220,54 @@
         }
     }
 
+    // --- HÀM XỬ LÝ KHI BẤM CHUYỂN TRANG ---
+    private async Task HandlePageChanged(int newPage)
+    {
+        // Cập nhật số trang mới vào Request
+        _paging.PageIndex = newPage;
+        // Gọi lại API
+        await LoadData();
+    }
+
     private async Task LoadData()
     {
         // Set null để hiện spinner loading khi chuyển tab
-        _items = null;
+        items = null;
         StateHasChanged(); // Ép UI cập nhật trạng thái Loading ngay
 
         try
         {
             // Gọi API Service mới (chỉ lấy Data)
-            var res = await _service.GetServicesByType(TypeId);
+            var res = await _service.GetServicesByType(TypeId, _paging);
 
             if (!_disposed)
             {
                 if (res.StatusCode == StatusCodeResponse.Success && res.Content != null)
                 {
-                    // [SỬA LỖI] Truy cập đúng property Items của Generic VM
-                    _items = res.Content.Items;
-
-                    Logger.LogInformation("✅ LoadData success. Count: {Count}", _items.Count);
+                    // Nhận dữ liệu phân trang từ API
+                    items = res.Content.Items;
+                    totalPages = res.Content.TotalPages;
+                    totalCount = res.Content.TotalCount;
                 }
                 else
                 {
-                    _items = new List<ServiceBaseVM>();
-                    Logger.LogError("❌ LoadData failed");
+                    // Nếu lỗi thì hiện thông báo (trừ khi là danh sách rỗng hợp lệ)
+                    if (res.StatusCode != StatusCodeResponse.Success)
+                    {
+                        SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
+                    }
+
+                    items = new List<ServiceBaseVM>();
+                    totalPages = 0;
+                    totalCount = 0;
                 }
             }
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Lỗi load data service");
-            _items = new List<ServiceBaseVM>(); // Hết lỗi để UI hiện bảng trống}
+            SnackbarHelper.Show(_snackbar, StatusCodeResponse.Error, MessageResponse.ERROR_IN_SERVER);
+            items = new List<ServiceBaseVM>(); // Hết lỗi để UI hiện bảng trống}
         }
     }
 
@@ -271,17 +300,29 @@
     private async Task HandleDelete(ServiceBaseVM item)
     {
         var res = await _service.DeleteService(item.Id);
+        
+        // Hiển thị thông báo
+        SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
+
         if (res.StatusCode == StatusCodeResponse.Success) await LoadData();
     }
 
     private async Task SaveData()
     {
+        if (TypeId.HasValue) _model.ServiceTypeId = TypeId.Value;
 
-        if (_isUpdate) await _service.UpdateService(_model);
-        else await _service.CreateService(_model);
+        ApiResponse<ServiceBaseVM> res;
+        if (_isUpdate) res = await _service.UpdateService(_model);
+        else res = await _service.CreateService(_model);
 
-        await LoadData();
-        ResetForm();
+        // Hiển thị thông báo
+        SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
+
+        if (res.StatusCode == StatusCodeResponse.Success)
+        {
+            await LoadData();
+            ResetForm();
+        }
     }
 
     // Hàm hủy (Implement IDisposable nếu cần, hoặc dùng biến cờ đơn giản)

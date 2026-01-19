@@ -1,8 +1,15 @@
 using System.Net.Http.Json;
+using System.Text.Json;
 using MudBlazor;
 
 public static class HttpClientExtensions
 {
+    // 1. [QUAN TRỌNG] Tạo cấu hình JSON dùng chung
+    private static readonly JsonSerializerOptions _options = new JsonSerializerOptions
+    {
+        PropertyNameCaseInsensitive = true, // Bỏ qua phân biệt hoa thường (items == Items)
+        PropertyNamingPolicy = null // Giữ nguyên tên property nếu cần
+    };
 
     // 1. GET Helper
     public static async Task<ApiResponse<T>> GetApiAsync<T>(this HttpClient client, string url)
@@ -66,14 +73,14 @@ public static class HttpClientExtensions
     {
         if (response.IsSuccessStatusCode)
         {
-            var result = await response.Content.ReadFromJsonAsync<ApiResponse<T>>();
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<T>>(_options);
             return result ?? ResponseFactory.Failure<T>(StatusCodeResponse.Error, MessageResponse.ERROR_IN_SERVER);
         }
 
         // Nếu lỗi (400, 500...), thử đọc message lỗi từ server trả về
         try
         {
-            var errorResult = await response.Content.ReadFromJsonAsync<ApiResponse<T>>();
+            var errorResult = await response.Content.ReadFromJsonAsync<ApiResponse<T>>(_options);
             return errorResult ?? ResponseFactory.Failure<T>(StatusCodeResponse.Error, response.ReasonPhrase ?? MessageResponse.ERROR_IN_SERVER);
         }
         catch

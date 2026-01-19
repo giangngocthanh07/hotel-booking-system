@@ -7,10 +7,12 @@
 @layout AdminLayout
 @inject IManagementService _service
 @inject ILogger<BedTypeManager> Logger
+@inject ISnackbar _snackbar
 @implements IDisposable
 
-<MasterDetailLayout TItem="BedTypeVM" Items="_items" Model="_model" OnSubmit="SaveData" OnEdit="OnEditItem"
-    OnDelete="HandleDelete" OnCancel="ResetForm">
+<MasterDetailLayout TItem="BedTypeVM" Items="items" Model="_model" PageIndex="_paging.PageIndex ?? 1"
+    TotalPages="totalPages" TotalCount="totalCount" OnPageChanged="HandlePageChanged" OnSubmit="SaveData"
+    OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm">
 
     @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
     <SidebarTopContent>
@@ -59,9 +61,15 @@
     [Parameter] public int? TypeId { get; set; }
 
     // --- STATE ---
-    private List<BedTypeVM> _items;
+    private List<BedTypeVM> items;
     private BedTypeVM _model = new();
     private bool _isUpdate = false;
+
+    // --- PHÂN TRANG ---
+    private PagingRequest _paging = new() { PageIndex = 1, PageSize = 10 };
+    private int totalPages = 0;
+    private int totalCount = 0;
+
 
     // Biến kiểm soát vòng đời & Re-render
     private Guid _instanceId = Guid.NewGuid();
@@ -77,37 +85,54 @@
         await Task.Yield();
         await LoadData();
     }
+    // --- XỬ LÝ CHUYỂN TRANG ---
+    private async Task HandlePageChanged(int newPage)
+    {
+        _paging.PageIndex = newPage;
+        await LoadData();
+    }
     private async Task LoadData()
     {
-        if (_items == null)
+        if (items == null)
         {
             // Chỉ hiện loading lần đầu
-            _items = null;
+            items = null;
             // InvokeAsync(StateHasChanged); // Không cần thiết ở OnInit
         }
 
         try
         {
             // Gọi API dành riêng cho Non-Type (Lấy tất cả)
-            var res = await _service.GetBedTypes();
+            var res = await _service.GetBedTypes(_paging);
 
             if (!_disposed)
             {
                 if (res.StatusCode == StatusCodeResponse.Success && res.Content != null)
                 {
-                    // Lấy Items trực tiếp
-                    _items = res.Content;
+                    // Map kết quả phân trang
+                    items = res.Content.Items;
+                    totalPages = res.Content.TotalPages;
+                    totalCount = res.Content.TotalCount;
                 }
                 else
                 {
-                    _items = new List<BedTypeVM>();
+                    // Nếu lỗi thì hiện thông báo (trừ khi là danh sách rỗng hợp lệ)
+                    if (res.StatusCode != StatusCodeResponse.Success)
+                    {
+                        SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
+                    }
+
+                    items = new List<BedTypeVM>();
+                    totalPages = 0;
+                    totalCount = 0;
                 }
             }
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Lỗi load data bedtype");
-            _items = new List<BedTypeVM>(); // Hết lỗi để UI hiện bảng trống}
+            SnackbarHelper.Show(_snackbar, StatusCodeResponse.Error, MessageResponse.ERROR_IN_SERVER);
+            items = new List<BedTypeVM>(); // Hết lỗi để UI hiện bảng trống}
         }
     }
 
@@ -130,6 +155,9 @@
         // Gọi API xóa thực tế
         var res = await _service.DeleteBedType(item.Id);
 
+        // Hiển thị thông báo
+        SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
+
         if (res.StatusCode == StatusCodeResponse.Success)
         {
             // Xóa thành công thì load lại bảng
@@ -145,10 +173,19 @@
 
     private async Task SaveData()
     {
-        if (_isUpdate) await _service.UpdateBedType(_model);
-        else await _service.CreateBedType(_model);
-        await LoadData();
-        ResetForm();
+        ApiResponse<BedTypeVM> res;
+
+        if (_isUpdate) res = await _service.UpdateBedType(_model);
+        else res = await _service.CreateBedType(_model);
+
+        // Hiển thị thông báo
+        SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
+
+        if (res.StatusCode == StatusCodeResponse.Success)
+        {
+            await LoadData();
+            ResetForm();
+        }
     }
 
     // Hàm hủy (Implement IDisposable nếu cần, hoặc dùng biến cờ đơn giản)

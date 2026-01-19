@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 public interface IUserService
 {
-    public Task<User?> GetByIdAsync(int id);
+    public Task<UserDetailDTO> GetByIdAsync(int id);
     public Task<ApiResponse<RegisterResponseDTO>> RegisterAdmin(RegisterAdminDTO newAdmin);
     public Task<ApiResponse<RegisterResponseDTO>> RegisterCustomer(RegisterCustomerDTO newCustomer);
     public Task<ApiResponse<LoginResponseDTO>> LoginUser(LoginUserDTO userLogin);
@@ -33,11 +33,27 @@ public class UserService : IUserService
         _dbu = dbu;
     }
 
-    public async Task<User?> GetByIdAsync(int id)
+    public async Task<UserDetailDTO> GetByIdAsync(int id)
     {
-        return await _context.Users
-            .FirstOrDefaultAsync(u => u.Id == id && (u.IsDeleted == false));
-        // lọc IsDeleted = false nếu bạn đang dùng soft delete
+        var user = await _userRepository.GetByIdAsync(id);
+        if (user == null) return null;
+
+        var userWithRoles = await _userRepository.GetUserWithRoles(u => u.UserName == user.UserName || u.Email == user.Email);
+        var userDetailDTO = new UserDetailDTO
+        {
+            Id = userWithRoles.Id,
+            UserName = userWithRoles.UserName,
+            FullName = userWithRoles.FullName,
+            Email = userWithRoles.Email,
+            PhoneNumber = userWithRoles.PhoneNumber,
+            DateOfBirth = userWithRoles.DateOfBirth,
+            AvatarUrl = userWithRoles.AvatarUrl,
+            IsActive = userWithRoles.IsActive,
+            IsDeleted = userWithRoles.IsDeleted,
+            CreatedAt = userWithRoles.CreatedAt,
+            Roles = userWithRoles.UserRoles.Select(ur => ur.Role.Name).ToList()
+        };
+        return userDetailDTO;
     }
 
     public async Task<ApiResponse<RegisterResponseDTO>> RegisterAdmin(RegisterAdminDTO newAdmin)
