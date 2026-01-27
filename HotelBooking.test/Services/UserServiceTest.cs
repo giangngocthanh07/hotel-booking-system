@@ -1,9 +1,10 @@
 using Xunit;
 using Moq;
 using System.Threading.Tasks;
+using FluentAssertions;
 
 // 1. Using DTO và Service từ tầng Application
-using HotelBooking.application.Services; // Nơi chứa UserService
+using HotelBooking.application.Services.Domains.UserManagement; // Nơi chứa UserService
 
 // 2. Using Entity và Interface Repo từ tầng Infrastructure
 using HotelBooking.infrastructure.Models;
@@ -11,11 +12,10 @@ using System.Linq.Expressions; // Nơi chứa class User, Room...
 
 namespace HotelBooking.Tests.Services
 {
-    public class UserServiceTest
+    public class UserServiceTest : BaseServiceTest
     {
         // 1. Khai báo các Mock cần thiết
         private readonly Mock<IUserRepository> _mockUserRepo;
-        private readonly Mock<IUnitOfWork> _mockUnitOfWork;
 
         // Khai báo thêm các Mock còn thiếu theo đúng Constructor của bạn
         private readonly Mock<IUserRoleRepository> _mockUserRoleRepo;
@@ -28,7 +28,6 @@ namespace HotelBooking.Tests.Services
         {
             // 2. Khởi tạo các Mock
             _mockUserRepo = new Mock<IUserRepository>();
-            _mockUnitOfWork = new Mock<IUnitOfWork>();
             _mockUserRoleRepo = new Mock<IUserRoleRepository>();
             _mockUpgradeRepo = new Mock<IUpgradeRequestRepository>();
 
@@ -59,31 +58,34 @@ namespace HotelBooking.Tests.Services
                 FullName = "New User"
             };
 
+            // 2. Dùng Helper Generic của cha
             // Giả lập DB trả về null (nghĩa là chưa có ai trùng Username hay Email cả)
-            _mockUserRepo.Setup(x => x.SingleOrDefaultAsync(It.IsAny<Expression<Func<User, bool>>>()))
-                     .ReturnsAsync((User?)null);
+            // Truyền vào Mock Repo User và kết quả mong muốn (null)
+            MockRepo_Find_Returns<IUserRepository, User>(_mockUserRepo, null);
 
-            // Giả lập SaveChangesAsync trả về 1 (lưu thành công)
-            _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
-
+            // (Lưu ý: Không cần setup SaveChangesAsync nữa vì Base Test làm rồi)
             // 2. ACT
             var result = await _userService.RegisterCustomer(input);
 
-            // 3. ASSERT
-            // Bước 1: Khẳng định nó không được null
-            Assert.NotNull(result.Content);
+            // 3. ASSERT VỚI FLUENT ASSERTIONS
+            // Đọc như văn nói: "Result StatusCode nên là Success"
+            result.StatusCode.Should().Be(StatusCodeResponse.Success);
 
-            // Bước 2: Sau đó mới kiểm tra tiếp -> Hết Warning
-            Assert.True(result.Content.IsSuccess);
-            Assert.Equal(StatusCodeResponse.Success, result.StatusCode);
-            Assert.Equal(MessageRegister.REGISTER_SUCCESS, result.Message);
+            // Check message
+            result.Message.Should().Be(MessageRegister.REGISTER_SUCCESS);
+
+            // 1. Check null trước
+            result.Content.Should().NotBeNull();
+
+            // 2. IsSuccess phải là true
+            result.Content.IsSuccess.Should().BeTrue();
 
             // Quan trọng: Kiểm tra xem hàm AddAsync có được gọi đúng 1 lần không?
-            _mockUserRepo.Verify(x => x.AddAsync(It.IsAny<User>()), Times.Once);
+            Verify_Repo_AddAsync<IUserRepository, User>(_mockUserRepo, 1);
 
             // Kiểm tra SaveChangesAsync có được gọi 2 lần không? 
             // (Trong code của bạn gọi 2 lần: 1 lần lưu User, 1 lần lưu Role)
-            _mockUnitOfWork.Verify(x => x.SaveChangesAsync(), Times.Exactly(2));
+            Verify_Saved(2);
         }
 
         // ==========================================================
@@ -101,23 +103,24 @@ namespace HotelBooking.Tests.Services
                 FullName = "User Test"
             };
 
+            // 2. Dùng Helper Generic của cha
             // Giả lập DB tìm thấy 1 thằng trùng Username
+            // Truyền vào Mock Repo User và kết quả mong muốn (null)
             var existingUser = new User { UserName = "trung_ten", Email = "old@gmail.com" };
 
-            _mockUserRepo.Setup(x => x.SingleOrDefaultAsync(It.IsAny<Expression<Func<User, bool>>>()))
-                     .ReturnsAsync(existingUser);
+            MockRepo_Find_Returns(_mockUserRepo, existingUser);
 
             // 2. ACT
             var result = await _userService.RegisterCustomer(input);
 
-            // 3. ASSERT
+            // 3. FLUENTASSERTIONS
             // QUAN TRỌNG: Vì ResponseFactory trả về default!, nên Content phải là NULL
-            Assert.Null(result.Content);
-            Assert.Equal(StatusCodeResponse.Conflict, result.StatusCode);
-            Assert.Equal(MessageRegister.USERNAME_EXIST, result.Message); // Check đúng thông báo trùng user
+            result.Content.Should().BeNull();
+            result.Message.Should().Be(MessageRegister.USERNAME_EXIST);
+            result.StatusCode.Should().Be(StatusCodeResponse.Conflict);
 
             // Đảm bảo KHÔNG bao giờ gọi hàm lưu
-            _mockUserRepo.Verify(x => x.AddAsync(It.IsAny<User>()), Times.Never);
+            Verify_Repo_Never_AddAsync<IUserRepository, User>(_mockUserRepo);
         }
 
         // ==========================================================
@@ -135,22 +138,24 @@ namespace HotelBooking.Tests.Services
                 FullName = "User Test"
             };
 
+            // 2. Dùng Helper Generic của cha
             // Giả lập DB tìm thấy 1 thằng trùng Email
+            // Truyền vào Mock Repo User và kết quả mong muốn (null)
             var existingUser = new User { UserName = "old_user", Email = "trung_email@gmail.com" };
 
-            _mockUserRepo.Setup(x => x.SingleOrDefaultAsync(It.IsAny<Expression<Func<User, bool>>>()))
-                     .ReturnsAsync(existingUser);
+            MockRepo_Find_Returns(_mockUserRepo, existingUser);
 
             // 2. ACT
             var result = await _userService.RegisterCustomer(input);
 
-            // 3. ASSERT
+            // 3. FLUENTASSERTIONS
             // QUAN TRỌNG: Vì ResponseFactory trả về default!, nên Content phải là NULL
-            Assert.Null(result.Content);
-            Assert.Equal(StatusCodeResponse.Conflict, result.StatusCode);
-            Assert.Equal(MessageRegister.EMAIL_EXIST, result.Message); // Check đúng thông báo trùng email
+            result.Content.Should().BeNull();
+            result.Message.Should().Be(MessageRegister.EMAIL_EXIST);    // Check đúng thông báo trùng email
+            result.StatusCode.Should().Be(StatusCodeResponse.Conflict);
 
-            _mockUserRepo.Verify(x => x.AddAsync(It.IsAny<User>()), Times.Never);
+            // Đảm bảo KHÔNG bao giờ gọi hàm lưu
+            Verify_Repo_Never_AddAsync<IUserRepository, User>(_mockUserRepo);
         }
 
         // ==========================================================
@@ -168,22 +173,22 @@ namespace HotelBooking.Tests.Services
                 FullName = "User Test"
             };
 
+            // 2. Dùng Helper Generic của cha
             // Giả lập chưa trùng ai cả
-            _mockUserRepo.Setup(x => x.SingleOrDefaultAsync(It.IsAny<Expression<Func<User, bool>>>()))
-                     .ReturnsAsync((User?)null);
+            MockRepo_Find_Returns<IUserRepository, User>(_mockUserRepo, null);
 
             // NHƯNG khi gọi hàm AddAsync thì DB bị sập (Throw Exception)
-            _mockUserRepo.Setup(x => x.AddAsync(It.IsAny<User>()))
-                     .ThrowsAsync(new Exception("Database connection failed"));
+            MockRepo_Add_ThrowsException<IUserRepository, User>(_mockUserRepo);
 
             // 2. ACT
             var result = await _userService.RegisterCustomer(input);
 
-            // 3. ASSERT
+            // 3. FLUENTASSERTIONS
             // QUAN TRỌNG: Vì ResponseFactory trả về default!, nên Content phải là NULL
-            Assert.Null(result.Content);
-            Assert.Equal(StatusCodeResponse.Error, result.StatusCode);
-            Assert.Equal(MessageResponse.ERROR_IN_SERVER, result.Message);
+            result.Content.Should().BeNull();
+            result.Message.Should().Be(MessageResponse.ERROR_IN_SERVER);
+            result.StatusCode.Should().Be(StatusCodeResponse.Error);
+
         }
 
         // ==========================================================
@@ -206,17 +211,14 @@ namespace HotelBooking.Tests.Services
 
             // 3. ASSERT
             // QUAN TRỌNG: Vì ResponseFactory trả về default!, nên Content phải là NULL
-            Assert.Null(result.Content);
-
-            // Kiểm tra xem message có báo lỗi đúng ko (ví dụ: "Email không hợp lệ")
-            Assert.Equal(StatusCodeResponse.BadRequest, result.StatusCode);
-            // Lưu ý: Bạn cần có constant MessageRegister.EMAIL_INVALID hoặc check string cứng
-            Assert.Equal(MessageRegister.INVALID_EMAIL, result.Message);
+            result.Content.Should().BeNull();
+            result.Message.Should().Be(MessageRegister.INVALID_EMAIL);
+            result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
 
             // QUAN TRỌNG NHẤT:
             // Vì email sai ngay từ vòng gửi xe, nên KHÔNG ĐƯỢC PHÉP gọi xuống Database
-            _mockUserRepo.Verify(x => x.SingleOrDefaultAsync(It.IsAny<Expression<Func<User, bool>>>()), Times.Never);
-            _mockUserRepo.Verify(x => x.AddAsync(It.IsAny<User>()), Times.Never);
+            Verify_Repo_Never_SingleOrDefaultAsync<IUserRepository, User>(_mockUserRepo);
+            Verify_Repo_Never_AddAsync<IUserRepository, User>(_mockUserRepo);
         }
 
         // ==========================================================
@@ -248,19 +250,15 @@ namespace HotelBooking.Tests.Services
             var result = await _userService.RegisterCustomer(input);
 
             // 3. ASSERT
-            // Kỳ vọng: Hệ thống phải trả về False và báo lỗi Bad Request (hoặc Error tùy quy định)
-            Assert.Equal(StatusCodeResponse.BadRequest, result.StatusCode);
-
-            // QUAN TRỌNG: Vì ResponseFactory trả về default!, nên Content phải là NULL
-            Assert.Null(result.Content);
-
+            result.Content.Should().BeNull();
             // QUAN TRỌNG: Giờ ta check chính xác câu thông báo lỗi
-            Assert.Equal(expectedMsg, result.Message);
+            result.Message.Should().Be(expectedMsg);
+            result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
 
             // QUAN TRỌNG NHẤT:
             // Vì password rỗng ngay từ vòng gửi xe, nên KHÔNG ĐƯỢC PHÉP gọi xuống Database
-            _mockUserRepo.Verify(x => x.SingleOrDefaultAsync(It.IsAny<Expression<Func<User, bool>>>()), Times.Never);
-            _mockUserRepo.Verify(x => x.AddAsync(It.IsAny<User>()), Times.Never);
+            Verify_Repo_Never_SingleOrDefaultAsync<IUserRepository, User>(_mockUserRepo);
+            Verify_Repo_Never_AddAsync<IUserRepository, User>(_mockUserRepo);
         }
     }
 }
