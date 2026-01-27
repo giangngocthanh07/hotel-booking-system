@@ -2,6 +2,7 @@ using HotelBooking.webapp.ViewModels.Hotel;
 
 public interface IManagementService
 {
+    void SetToken(string token);
     // ==========================================
     // 1. GET DATA
     // ==========================================
@@ -73,6 +74,19 @@ public class ManagementService : IManagementService
         _http = _httpClientFactory.CreateClient("HotelBookingAPI");
     }
 
+    public void SetToken(string token)
+    {
+        // 1. Xóa header cũ (để tránh bị trùng hoặc lỗi)
+        _http.DefaultRequestHeaders.Authorization = null;
+        
+        // 2. Gán token mới vào
+        if (!string.IsNullOrEmpty(token))
+        {
+            _http.DefaultRequestHeaders.Authorization = 
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        }
+    }
+
     // ==========================================
     // 1. GỌI API LẤY MENU (SIÊU NHẸ)
     // ==========================================
@@ -81,14 +95,23 @@ public class ManagementService : IManagementService
         try
         {
             // Backend Route: [HttpGet("manage/menu/{module}")]
-            // VD: /api/hotel/manage/menu/Service
-            var url = $"hotel/get-manage-menu/{module}";
+            var url = $"v1/admin/Management/get-manage-menu/{module}";
 
             var response = await _http.GetFromJsonAsync<ApiResponse<ManageMenuResultVM>>(url);
             return response!;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            // 2. In lỗi ra Console
+            Console.WriteLine("=== LỖI GỌI API ===");
+            Console.WriteLine($"Message: {ex.Message}");
+            Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+
+            // Nếu có InnerException thì in ra luôn
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"Inner: {ex.InnerException.Message}");
+            }
             // Xử lý lỗi kết nối (ví dụ server tắt)
             return ResponseFactory.ServerError<ManageMenuResultVM>();
         }
@@ -98,10 +121,10 @@ public class ManagementService : IManagementService
     // 1. GET: 
     // ==========================================
     // Typed Groups
-    public Task<ApiResponse<PagedManageResult<ServiceBaseVM>>> GetServicesByType(int? typeId, PagingRequest paging) => GetGenericTyped<ServiceBaseVM>("hotel/get-service-data", typeId, paging);
-    public Task<ApiResponse<PagedManageResult<PolicyVM>>> GetPoliciesByType(int? typeId, PagingRequest paging) => GetGenericTyped<PolicyVM>("hotel/get-policy-data", typeId, paging);
-    public Task<ApiResponse<PagedManageResult<AmenityVM>>> GetAmenitiesByType(int? typeId, PagingRequest paging) => GetGenericTyped<AmenityVM>("hotel/get-amenity-data", typeId, paging);
-    public Task<ApiResponse<PagedManageResult<RoomQualityVM>>> GetRoomQualitiesByType(int? typeId, PagingRequest paging) => GetGenericTyped<RoomQualityVM>("hotel/get-room-quality-data", typeId, paging);
+    public Task<ApiResponse<PagedManageResult<ServiceBaseVM>>> GetServicesByType(int? typeId, PagingRequest paging) => GetGenericTyped<ServiceBaseVM>("v1/admin/Management/get-service-data", typeId, paging);
+    public Task<ApiResponse<PagedManageResult<PolicyVM>>> GetPoliciesByType(int? typeId, PagingRequest paging) => GetGenericTyped<PolicyVM>("v1/admin/Management/get-policy-data", typeId, paging);
+    public Task<ApiResponse<PagedManageResult<AmenityVM>>> GetAmenitiesByType(int? typeId, PagingRequest paging) => GetGenericTyped<AmenityVM>("v1/admin/Management/get-amenity-data", typeId, paging);
+    public Task<ApiResponse<PagedManageResult<RoomQualityVM>>> GetRoomQualitiesByType(int? typeId, PagingRequest paging) => GetGenericTyped<RoomQualityVM>("v1/admin/Management/get-room-quality-data", typeId, paging);
 
     // Non-Typed Groups
     public Task<ApiResponse<PagedManageResult<UnitTypeVM>>> GetUnitTypes(PagingRequest paging)
@@ -192,11 +215,11 @@ public class ManagementService : IManagementService
         // 2. Ghép chuỗi tự động
         if (isUpdate)
         {
-            return $"hotel/update-{typeSlug}/{vm.Id}";
+            return $"v1/admin/Management/update-{typeSlug}/{vm.Id}";
         }
         else
         {
-            return $"hotel/create-{typeSlug}";
+            return $"v1/admin/Management/create-{typeSlug}";
         }
     }
 
@@ -204,8 +227,8 @@ public class ManagementService : IManagementService
     private async Task<ApiResponse<PagedManageResult<T>>> GetAttributePaged<T>(RoomAttributeType type, PagingRequest paging, int? typeId = null)
     {
         // Build URL: api/hotel/room-attribute/get-paged-data?type=UnitType&pageIndex=1...
-        var url = $"hotel/room-attribute/get-paged-data?type={type}&pageIndex={paging.PageIndex}&pageSize={paging.PageSize}";
-        
+        var url = $"v1/admin/Management/room-attribute/get-paged-data?type={type}&pageIndex={paging.PageIndex}&pageSize={paging.PageSize}";
+
         if (typeId.HasValue) url += $"&typeId={typeId}";
 
         return await _http.GetApiAsync<PagedManageResult<T>>(url);
@@ -230,12 +253,12 @@ public class ManagementService : IManagementService
         // Thêm tham số phân trang nếu có
         if (paging != null)
         {
-             // Sử dụng giá trị mặc định nếu null (tuy nhiên logic validate ở BE đã xử lý, ở đây cứ truyền lên)
-             // Lưu ý: Nếu paging.PageIndex là null, string interpolation sẽ ra chuỗi rỗng hoặc lỗi tùy cấu hình,
-             // nên tốt nhất check null hoặc dùng .GetValueOrDefault().
-             // Giả sử PagingRequest ở Client cũng dùng int? như Server
-             if(paging.PageIndex.HasValue) queryParams.Add($"pageIndex={paging.PageIndex}");
-             if(paging.PageSize.HasValue) queryParams.Add($"pageSize={paging.PageSize}");
+            // Sử dụng giá trị mặc định nếu null (tuy nhiên logic validate ở BE đã xử lý, ở đây cứ truyền lên)
+            // Lưu ý: Nếu paging.PageIndex là null, string interpolation sẽ ra chuỗi rỗng hoặc lỗi tùy cấu hình,
+            // nên tốt nhất check null hoặc dùng .GetValueOrDefault().
+            // Giả sử PagingRequest ở Client cũng dùng int? như Server
+            if (paging.PageIndex.HasValue) queryParams.Add($"pageIndex={paging.PageIndex}");
+            if (paging.PageSize.HasValue) queryParams.Add($"pageSize={paging.PageSize}");
         }
 
         // Nối query string vào URL
@@ -250,19 +273,19 @@ public class ManagementService : IManagementService
     private Task<ApiResponse<T>> PostGeneric<T>(string endpoint, T vm)
     {
         // URL: hotel/create-policy
-        return _http.PostApiAsync<T>($"hotel/{endpoint}", vm);
+        return _http.PostApiAsync<T>($"v1/admin/Management/{endpoint}", vm);
     }
 
     // Helper cho UPDATE
     private Task<ApiResponse<T>> PutGeneric<T>(string endpoint, int id, T vm)
     {
         // URL: hotel/update-policy/123
-        return _http.PutApiAsync<T>($"hotel/{endpoint}/{id}", vm);
+        return _http.PutApiAsync<T>($"v1/admin/Management/{endpoint}/{id}", vm);
     }
 
     // Helper cho DELETE
     private async Task<ApiResponse<bool>> DeleteGeneric(string endpoint, int id)
     {
-        return await _http.DeleteApiAsync<bool>($"hotel/{endpoint}/{id}");
+        return await _http.DeleteApiAsync<bool>($"v1/admin/Management/{endpoint}/{id}");
     }
 }

@@ -1,16 +1,16 @@
 using HotelBooking.application.Helpers;
 using HotelBooking.infrastructure.Models;
 
-public interface IRoomQualityManage : ITypedManage<RoomQualityDTO, RoomQualityGroupDTO, RoomQualityCreateOrUpdateDTO>
+public interface IRoomQualityService : ITypedManage<RoomQualityDTO, RoomQualityGroupDTO, RoomQualityCreateOrUpdateDTO>
 {
     Task<ApiResponse<List<RoomQualityDTO>>> GetAllByTypeAsync(int? typeId = null);
     Task<ApiResponse<PagedManageResult<RoomQualityDTO>>> GetRoomQualitiesByTypeAsync(int? typeId, PagingRequest paging);
 }
 
-public class RoomQualityManage : BaseManage<RoomQuality, IRoomQualityRepository, RoomQualityDTO, RoomQualityCreateOrUpdateDTO>, IRoomQualityManage
+public class RoomQualityService : BaseManage<RoomQuality, IRoomQualityRepository, RoomQualityDTO, RoomQualityCreateOrUpdateDTO>, IRoomQualityService
 {
     private readonly IRoomQualityGroupRepository _roomQualityTypeRepo;
-    public RoomQualityManage(IRoomQualityRepository repository, IUnitOfWork dbo, IRoomQualityGroupRepository roomQualityTypeRepo) : base(repository, dbo)
+    public RoomQualityService(IRoomQualityRepository repository, IUnitOfWork dbo, IRoomQualityGroupRepository roomQualityTypeRepo) : base(repository, dbo)
     {
         _roomQualityTypeRepo = roomQualityTypeRepo;
     }

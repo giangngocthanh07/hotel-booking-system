@@ -1,6 +1,8 @@
 @using HotelBooking.webapp.ViewModels.Hotel
+@using HotelBooking.webapp.Pages.Admin.Base
 
-@* File: Pages/Admin/ServiceManager.razor *@
+@inherits AdminPageBase
+@attribute [Authorize(Roles = "Admin")]
 
 @* --- 1. ĐỊNH NGHĨA ROUTING --- *@
 @page "/admin/manage/service"
@@ -8,158 +10,163 @@
 
 @* --- 2. SỬ DỤNG LAYOUT ADMIN CHUNG --- *@
 @layout AdminLayout
-@inject IManagementService _service
 @inject ILogger<ServiceManager> Logger
 @inject ISnackbar _snackbar
-@implements IDisposable
 
 @* --- 3. MASTER DETAIL LAYOUT (OPTIMIZED VERSION) --- *@
 @* Luôn hiển thị layout, Items truyền vào có thể null *@
 
-<MasterDetailLayout TItem="ServiceBaseVM" Items="items" Model="_model" PageIndex="_paging.PageIndex ?? 1"
-    TotalPages="totalPages" TotalCount="totalCount" OnPageChanged="HandlePageChanged" OnSubmit="SaveData"
-    OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm">
+@if (!ShouldRenderUI())
+{
+    <div class="p-4 text-center">Loading authentication...</div>
+}
+else
+{
+    <MasterDetailLayout TItem="ServiceBaseVM" Items="items" Model="_model" PageIndex="_paging.PageIndex ?? 1"
+        TotalPages="totalPages" TotalCount="totalCount" OnPageChanged="HandlePageChanged" OnSubmit="SaveData"
+        OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm">
 
-    @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
-    <SidebarTopContent>
-        @* NHÚNG COMPONENT MENU THÔNG MINH VÀO ĐÂY *@
-        @* Nó tự biết đường vẽ ra Dropdown *@
-        <GlobalNavMenu CurrentModule="Service" CurrentTypeId="TypeId" />
-    </SidebarTopContent>
+        @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
+        <SidebarTopContent>
+            @* NHÚNG COMPONENT MENU THÔNG MINH VÀO ĐÂY *@
+            @* Nó tự biết đường vẽ ra Dropdown *@
+            <GlobalNavMenu CurrentModule="Service" CurrentTypeId="TypeId" />
+        </SidebarTopContent>
 
-    @* --- B. CẤU HÌNH FORM --- *@
-    <FormContent Context="formData">
-        <div class="mb-3">
-            <label class="form-label fw-bold small text-muted">Name</label>
-            <InputText class="form-control" @bind-Value="formData.Name" />
-        </div>
-        <div class="mb-3">
-            <label class="form-label fw-bold small text-muted">Description</label>
-            <InputTextArea class="form-control" rows="2" @bind-Value="formData.Description" />
-        </div>
-
-        @* Form đa hình (Polymorphic Form) *@
-        @if (TypeId == 1 && formData is ServiceStandardVM stdForm)
-        {
+        @* --- B. CẤU HÌNH FORM --- *@
+        <FormContent Context="formData">
             <div class="mb-3">
-                <label class="form-label fw-bold small text-muted">Unit</label>
-                <InputText class="form-control" @bind-Value="stdForm.Unit" />
+                <label class="form-label fw-bold small text-muted">Name</label>
+                <InputText class="form-control" @bind-Value="formData.Name" />
             </div>
             <div class="mb-3">
-                <label class="form-label fw-bold small text-muted">Price</label>
-                <InputNumber class="form-control bg-light" @bind-Value="stdForm.Price" disabled />
+                <label class="form-label fw-bold small text-muted">Description</label>
+                <InputTextArea class="form-control" rows="2" @bind-Value="formData.Description" />
             </div>
-        }
-        else if (TypeId == 2 && formData is ServiceAirportTransferVM atForm)
-        {
-            <div class="row">
-                <div class="col-6 mb-3">
+
+            @* Form đa hình (Polymorphic Form) *@
+            @if (TypeId == 1 && formData is ServiceStandardVM stdForm)
+            {
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-muted">Unit</label>
+                    <InputText class="form-control" @bind-Value="stdForm.Unit" />
+                </div>
+                <div class="mb-3">
                     <label class="form-label fw-bold small text-muted">Price</label>
-                    <InputNumber class="form-control bg-light" @bind-Value="atForm.Price" disabled />
+                    <InputNumber class="form-control bg-light" @bind-Value="stdForm.Price" disabled />
                 </div>
-                <div class="col-6 mb-3">
-                    <label class="form-label fw-bold small text-muted">Fee</label>
-                    <InputNumber class="form-control bg-light" @bind-Value="atForm.AdditionalFee" disabled />
+            }
+            else if (TypeId == 2 && formData is ServiceAirportTransferVM atForm)
+            {
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <label class="form-label fw-bold small text-muted">Price</label>
+                        <InputNumber class="form-control bg-light" @bind-Value="atForm.Price" disabled />
+                    </div>
+                    <div class="col-6 mb-3">
+                        <label class="form-label fw-bold small text-muted">Fee</label>
+                        <InputNumber class="form-control bg-light" @bind-Value="atForm.AdditionalFee" disabled />
+                    </div>
+                    <div class="col-6 mb-3">
+                        <label class="form-label fw-bold small text-muted">RoundTripFee</label>
+                        <InputNumber class="form-control bg-light" @bind-Value="atForm.RoundTripPrice" disabled />
+                    </div>
                 </div>
-                <div class="col-6 mb-3">
-                    <label class="form-label fw-bold small text-muted">RoundTripFee</label>
-                    <InputNumber class="form-control bg-light" @bind-Value="atForm.RoundTripPrice" disabled />
+
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <label class="form-label fw-bold small text-muted">Max Guests</label>
+                        <InputNumber class="form-control bg-light" @bind-Value="atForm.MaxPassengers" disabled />
+                    </div>
+                    <div class="col-6 mb-3">
+                        <label class="form-label fw-bold small text-muted">Max Luggage</label>
+                        <InputNumber class="form-control bg-light" @bind-Value="atForm.MaxLuggage" disabled />
+                    </div>
                 </div>
-            </div>
 
-            <div class="row">
-                <div class="col-6 mb-3">
-                    <label class="form-label fw-bold small text-muted">Max Guests</label>
-                    <InputNumber class="form-control bg-light" @bind-Value="atForm.MaxPassengers" disabled />
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <label class="form-label fw-bold small text-muted">Fee StartTime</label>
+                        <input type="text" class="form-control bg-light" value="@atForm.AdditionalFeeStartTime" disabled />
+                    </div>
+                    <div class="col-6 mb-3">
+                        <label class="form-label fw-bold small text-muted">Fee EndTime</label>
+                        <input type="text" class="form-control bg-light" value="@atForm.AdditionalFeeEndTime" disabled />
+                    </div>
                 </div>
-                <div class="col-6 mb-3">
-                    <label class="form-label fw-bold small text-muted">Max Luggage</label>
-                    <InputNumber class="form-control bg-light" @bind-Value="atForm.MaxLuggage" disabled />
-                </div>
-            </div>
+            }
+        </FormContent>
 
-            <div class="row">
-                <div class="col-6 mb-3">
-                    <label class="form-label fw-bold small text-muted">Fee StartTime</label>
-                    <input type="text" class="form-control bg-light" value="@atForm.AdditionalFeeStartTime" disabled />
-                </div>
-                <div class="col-6 mb-3">
-                    <label class="form-label fw-bold small text-muted">Fee EndTime</label>
-                    <input type="text" class="form-control bg-light" value="@atForm.AdditionalFeeEndTime" disabled />
-                </div>
-            </div>
-        }
-    </FormContent>
+        @* --- C. CẤU HÌNH BẢNG (TABLE) --- *@
+        <TableHeader>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Description</th>
 
-    @* --- C. CẤU HÌNH BẢNG (TABLE) --- *@
-    <TableHeader>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Description</th>
+            @if (TypeId == 1) // Standard Service
+            {
+                <th>Unit</th>
+                <th>Price</th>
+            }
+            else if (TypeId == 2) // Airport Transfer
+            {
+                <th>Price</th>
+                <th>Capacity</th>
+                <th>Surcharge Info</th>
+            }
+        </TableHeader>
 
-        @if (TypeId == 1) // Standard Service
-        {
-            <th>Unit</th>
-            <th>Price</th>
-        }
-        else if (TypeId == 2) // Airport Transfer
-        {
-            <th>Price</th>
-            <th>Capacity</th>
-            <th>Surcharge Info</th>
-        }
-    </TableHeader>
+        <RowTemplate Context="row">
+            <td>@row.Id</td>
+            <td><strong>@row.Name</strong></td>
+            <td>@row.Description</td>
 
-    <RowTemplate Context="row">
-        <td>@row.Id</td>
-        <td><strong>@row.Name</strong></td>
-        <td>@row.Description</td>
+            @* --- LOGIC HIỂN THỊ ĐA HÌNH --- *@
 
-        @* --- LOGIC HIỂN THỊ ĐA HÌNH --- *@
+            @* TRƯỜNG HỢP 1: Standard Service *@
+            @if (row is ServiceStandardVM standard)
+            {
+                <td><span class="badge bg-light text-dark border">@standard.Unit</span></td>
+                <td>@standard.Price.ToString("N0") VNĐ</td>
+            }
 
-        @* TRƯỜNG HỢP 1: Standard Service *@
-        @if (row is ServiceStandardVM standard)
-        {
-            <td><span class="badge bg-light text-dark border">@standard.Unit</span></td>
-            <td>@standard.Price.ToString("N0") VNĐ</td>
-        }
+            @* TRƯỜNG HỢP 2: Airport Transfer *@
+            else if (row is ServiceAirportTransferVM at)
+            {
+                <td>@at.Price.ToString("N0") VNĐ</td>
 
-        @* TRƯỜNG HỢP 2: Airport Transfer *@
-        else if (row is ServiceAirportTransferVM at)
-        {
-            <td>@at.Price.ToString("N0") VNĐ</td>
+                <td class="p-1">
+                    <small class="d-block text-muted">Guests: @at.MaxPassengers</small>
+                    <small class="d-block text-muted">Luggage: @at.MaxLuggage</small>
+                </td>
 
-            <td class="p-1">
-                <small class="d-block text-muted">Guests: @at.MaxPassengers</small>
-                <small class="d-block text-muted">Luggage: @at.MaxLuggage</small>
-            </td>
+                <td class="p-0">
+                    <table class="table table-borderless table-sm mb-0 small text-muted">
+                        <tbody>
+                            <tr>
+                                <td class="py-0 px-2">Fee:</td>
+                                <td class="py-0 px-2 fw-bold text-danger">@(at.AdditionalFee?.ToString("N0") ?? "0")</td>
+                            </tr>
+                            <tr>
+                                <td class="py-0 px-2">RoundTripFee:</td>
+                                <td class="py-0 px-2 fw-bold text-danger">@(at.RoundTripPrice?.ToString("N0") ?? "0")</td>
+                            </tr>
+                            <tr>
+                                <td class="py-0 px-2">Time:</td>
+                                <td class="py-0 px-2">
+                                    @(at.AdditionalFeeStartTime?.ToString(@"hh\:mm") ?? "--")
+                                    -
+                                    @(at.AdditionalFeeEndTime?.ToString(@"hh\:mm") ?? "--")
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            }
+        </RowTemplate>
 
-            <td class="p-0">
-                <table class="table table-borderless table-sm mb-0 small text-muted">
-                    <tbody>
-                        <tr>
-                            <td class="py-0 px-2">Fee:</td>
-                            <td class="py-0 px-2 fw-bold text-danger">@(at.AdditionalFee?.ToString("N0") ?? "0")</td>
-                        </tr>
-                        <tr>
-                            <td class="py-0 px-2">RoundTripFee:</td>
-                            <td class="py-0 px-2 fw-bold text-danger">@(at.RoundTripPrice?.ToString("N0") ?? "0")</td>
-                        </tr>
-                        <tr>
-                            <td class="py-0 px-2">Time:</td>
-                            <td class="py-0 px-2">
-                                @(at.AdditionalFeeStartTime?.ToString(@"hh\:mm") ?? "--")
-                                -
-                                @(at.AdditionalFeeEndTime?.ToString(@"hh\:mm") ?? "--")
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </td>
-        }
-    </RowTemplate>
-
-</MasterDetailLayout>
+    </MasterDetailLayout>
+}
 
 @code {
     // --- PARAMETERS TỪ URL ---
@@ -180,43 +187,61 @@
 
     // Biến kiểm soát vòng đời & Re-render
     private int? _previousTypeId = -999;
-    private Guid _instanceId = Guid.NewGuid();
-    private bool _disposed = false;
-
-    // --- 1. QUAN TRỌNG: Dùng OnParametersSetAsync thay vì OnAfterRenderAsync ---
-    // Vì Parent đã tắt Prerender, hàm này an toàn, chạy mỗi khi TypeId thay đổi
 
     // --- LIFECYCLE ---
-    protected override void OnInitialized()
+    // --- 1. LOGIC LOAD DATA (Override từ Cha) ---
+    // Hàm này CHẮC CHẮN chạy sau khi đã có Token
+    protected override async Task LoadDataAsync()
     {
-        Logger.LogInformation("📄 [PAGE SERVICE] Init ID: {Id}", _instanceId);
-    }
+        // 1. Reset UI
+        items = null;
+        StateHasChanged();
 
-    protected override async Task OnParametersSetAsync()
-    {
-        // 1. Nếu URL không có TypeId (Vào trang gốc), set mặc định là 1 (Standard)
-        if (TypeId == null)
-        {
-            TypeId = 1;
-        }
-
-        // 2. Chặn việc gọi API lại nếu TypeId chưa đổi thật sự
-        if (TypeId == _previousTypeId) return;
-        _previousTypeId = TypeId;
-
-        // 3. Load Data
         try
         {
-            // [QUAN TRỌNG] Reset về trang 1 khi đổi loại Amenity (đổi Tab)
-            _paging.PageIndex = 1;
+            // 2. Gọi API (Lưu ý dùng Property 'Service' từ Cha)
+            var res = await Service.GetServicesByType(TypeId, _paging);
 
-            ResetForm(); // Reset form khi đổi tab
-            await LoadData();
+            if (!Disposed) // Check cờ Disposed từ Cha
+            {
+                if (res.StatusCode == StatusCodeResponse.Success && res.Content != null)
+                {
+                    items = res.Content.Items;
+                    totalPages = res.Content.TotalPages;
+                    totalCount = res.Content.TotalCount;
+                }
+                else
+                {
+                    if (res.StatusCode != StatusCodeResponse.Success)
+                        SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
+
+                    items = new List<ServiceBaseVM>();
+                }
+            }
         }
-        catch (TaskCanceledException) { }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Lỗi tải dữ liệu Service");
+            Logger.LogError(ex, "Lỗi load data");
+            items = new List<ServiceBaseVM>();
+        }
+    }
+
+    // --- 2. LOGIC CHUYỂN TAB ---
+    protected override async Task OnParametersSetAsync()
+    {
+        // [QUAN TRỌNG] Kiểm tra cờ IsJsReady từ Cha
+        // Nếu Cha chưa load xong Token thì Con chưa được phép chạy
+        if (!IsJsReady) return;
+
+        if (TypeId == null) TypeId = 1;
+
+        // Nếu TypeId đổi thì load lại
+        if (TypeId != _previousTypeId)
+        {
+            _previousTypeId = TypeId;
+            _paging.PageIndex = 1;
+            ResetForm();
+            await LoadDataAsync(); // Gọi lại hàm LoadData của chính mình
         }
     }
 
@@ -226,50 +251,10 @@
         // Cập nhật số trang mới vào Request
         _paging.PageIndex = newPage;
         // Gọi lại API
-        await LoadData();
+        await LoadDataAsync();
     }
 
-    private async Task LoadData()
-    {
-        // Set null để hiện spinner loading khi chuyển tab
-        items = null;
-        StateHasChanged(); // Ép UI cập nhật trạng thái Loading ngay
 
-        try
-        {
-            // Gọi API Service mới (chỉ lấy Data)
-            var res = await _service.GetServicesByType(TypeId, _paging);
-
-            if (!_disposed)
-            {
-                if (res.StatusCode == StatusCodeResponse.Success && res.Content != null)
-                {
-                    // Nhận dữ liệu phân trang từ API
-                    items = res.Content.Items;
-                    totalPages = res.Content.TotalPages;
-                    totalCount = res.Content.TotalCount;
-                }
-                else
-                {
-                    // Nếu lỗi thì hiện thông báo (trừ khi là danh sách rỗng hợp lệ)
-                    if (res.StatusCode != StatusCodeResponse.Success)
-                    {
-                        SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
-                    }
-
-                    items = new List<ServiceBaseVM>();
-                    totalPages = 0;
-                    totalCount = 0;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Lỗi load data service");
-            SnackbarHelper.Show(_snackbar, StatusCodeResponse.Error, MessageResponse.ERROR_IN_SERVER);
-            items = new List<ServiceBaseVM>(); // Hết lỗi để UI hiện bảng trống}
-        }
-    }
 
     // --- CRUD METHODS ---
     // Logic Reset form dựa trên TypeId hiện tại
@@ -299,12 +284,12 @@
 
     private async Task HandleDelete(ServiceBaseVM item)
     {
-        var res = await _service.DeleteService(item.Id);
-        
+        var res = await Service.DeleteService(item.Id);
+
         // Hiển thị thông báo
         SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
 
-        if (res.StatusCode == StatusCodeResponse.Success) await LoadData();
+        if (res.StatusCode == StatusCodeResponse.Success) await LoadDataAsync();
     }
 
     private async Task SaveData()
@@ -312,23 +297,16 @@
         if (TypeId.HasValue) _model.ServiceTypeId = TypeId.Value;
 
         ApiResponse<ServiceBaseVM> res;
-        if (_isUpdate) res = await _service.UpdateService(_model);
-        else res = await _service.CreateService(_model);
+        if (_isUpdate) res = await Service.UpdateService(_model);
+        else res = await Service.CreateService(_model);
 
         // Hiển thị thông báo
         SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
 
         if (res.StatusCode == StatusCodeResponse.Success)
         {
-            await LoadData();
+            await LoadDataAsync();
             ResetForm();
         }
-    }
-
-    // Hàm hủy (Implement IDisposable nếu cần, hoặc dùng biến cờ đơn giản)
-    public void Dispose()
-    {
-        _disposed = true;
-        Console.WriteLine($"[CHẾT ĐI] Component ID: {_instanceId} - Tạm biệt!");
     }
 }

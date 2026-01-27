@@ -1,12 +1,5 @@
 using System.Linq.Expressions;
 
-public interface INamedEntity
-{
-    int Id { get; set; }
-    string Name { get; set; }
-    bool IsDeleted { get; set; }
-}
-
 public class ValidationResult
 {
     public bool IsValid { get; set; }

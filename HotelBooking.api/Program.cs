@@ -1,7 +1,10 @@
 using System.Security.Claims;
 using System.Text;
-using AutoMapper;
 using HotelBooking.application.Services;
+using HotelBooking.application.Services.Domains.AdminManagement;
+using HotelBooking.application.Services.Domains.HotelManagement;
+using HotelBooking.application.Services.Domains.UserManagement;
+using HotelBooking.application.Services.Domains.RequestManagement;
 using HotelBooking.infrastructure.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -64,17 +67,23 @@ builder.Services.AddScoped<IHotelService, HotelService>();
 builder.Services.AddScoped<IUpgradeRequestService, UpgradeRequestService>();
 builder.Services.AddScoped<IPhotoService, PhotoService>();
 
-builder.Services.AddScoped<IAmenityManage, AmenityManage>();
-builder.Services.AddScoped<IPolicyManage, PolicyManage>();
-builder.Services.AddScoped<IServiceManage, ServiceManage>();
-builder.Services.AddScoped<IRoomQualityManage, RoomQualityManage>();
+// DI for Admin Management Services
+builder.Services.AddScoped<IManagementAdminService, ManagementAdminService>();
+builder.Services.AddScoped<IAmenityService, AmenityService>();
+builder.Services.AddScoped<IPolicyService, PolicyService>();
+builder.Services.AddScoped<IServiceService, ServiceService>();
 
-builder.Services.AddScoped<IRoomViewManage, RoomViewManage>();
-builder.Services.AddScoped<IBedTypeManage, BedTypeManage>();
-builder.Services.AddScoped<IUnitTypeManage, UnitTypeManage>();
+builder.Services.AddScoped<IAmenityService, AmenityService>();
+builder.Services.AddScoped<IPolicyService, PolicyService>();
+builder.Services.AddScoped<IServiceService, ServiceService>();
+builder.Services.AddScoped<IRoomQualityService, RoomQualityService>();
+
+builder.Services.AddScoped<IRoomViewService, RoomViewService>();
+builder.Services.AddScoped<IBedTypeService, BedTypeService>();
+builder.Services.AddScoped<IUnitTypeService, UnitTypeService>();
 
 builder.Services.AddScoped<IRoomAttributeFacade, RoomAttributeFacade>();
-builder.Services.AddScoped<IManagementAdmin, ManagementAdmin>();
+builder.Services.AddScoped<IManagementAdminService, ManagementAdminService>();
 
 // DI for Helpers
 builder.Services.AddSingleton<IImageHelper, ImageHelper>();

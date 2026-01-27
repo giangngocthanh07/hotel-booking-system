@@ -1,4 +1,6 @@
-@* File: Pages/Admin/AmenityManager.razor *@
+@using HotelBooking.webapp.Pages.Admin.Base
+@inherits AdminPageBase
+@attribute [Authorize(Roles = "Admin")]
 
 @* --- 1. ĐỊNH NGHĨA ROUTING --- *@
 @page "/admin/manage/amenity"
@@ -6,42 +8,51 @@
 
 @* --- 2. SỬ DỤNG LAYOUT ADMIN CHUNG --- *@
 @layout AdminLayout
-@inject IManagementService _service
 @inject ILogger<AmenityManager> Logger
 @inject ISnackbar _snackbar
-@implements IDisposable
 
-<MasterDetailLayout TItem="AmenityVM" Items="_items" Model="_model" PageIndex="_paging.PageIndex ?? 1"
-    TotalPages="_totalPages" TotalCount="_totalCount" OnPageChanged="HandlePageChanged" OnSubmit="SaveData"
-    OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm">
+@* --- 3. UI LOADING (Check cờ từ Cha) --- *@
+@if (!ShouldRenderUI())
+{
+    <div class="d-flex justify-content-center align-items-center p-5">
+        <div class="spinner-border text-primary me-2"></div>
+        <span>Đang tải dữ liệu...</span>
+    </div>
+}
+else
+{
+    <MasterDetailLayout TItem="AmenityVM" Items="_items" Model="_model" PageIndex="_paging.PageIndex ?? 1"
+        TotalPages="_totalPages" TotalCount="_totalCount" OnPageChanged="HandlePageChanged" OnSubmit="SaveData"
+        OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm">
 
-    @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
-    <SidebarTopContent>
-        @* NHÚNG COMPONENT MENU THÔNG MINH VÀO ĐÂY *@
-        @* Nó tự biết đường vẽ ra Dropdown *@
-        <GlobalNavMenu CurrentModule="Amenity" CurrentTypeId="TypeId" />
-    </SidebarTopContent>
+        @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
+        <SidebarTopContent>
+            @* NHÚNG COMPONENT MENU THÔNG MINH VÀO ĐÂY *@
+            @* Nó tự biết đường vẽ ra Dropdown *@
+            <GlobalNavMenu CurrentModule="Amenity" CurrentTypeId="TypeId" />
+        </SidebarTopContent>
 
-    @* --- B. CẤU HÌNH FORM --- *@
-    <FormContent Context="formData">
-        <div class="mb-3">
-            <label class="form-label fw-bold small text-muted">Name</label>
-            <InputText class="form-control" @bind-Value="formData.Name" />
-        </div>
-    </FormContent>
+        @* --- B. CẤU HÌNH FORM --- *@
+        <FormContent Context="formData">
+            <div class="mb-3">
+                <label class="form-label fw-bold small text-muted">Name</label>
+                <InputText class="form-control" @bind-Value="formData.Name" />
+            </div>
+        </FormContent>
 
-    @* --- C. CẤU HÌNH BẢNG (TABLE) --- *@
-    <TableHeader>
-        <th>ID</th>
-        <th>Name</th>
-    </TableHeader>
+        @* --- C. CẤU HÌNH BẢNG (TABLE) --- *@
+        <TableHeader>
+            <th>ID</th>
+            <th>Name</th>
+        </TableHeader>
 
-    <RowTemplate Context="row">
-        <td>@row.Id</td>
-        <td><strong>@row.Name</strong></td>
-    </RowTemplate>
+        <RowTemplate Context="row">
+            <td>@row.Id</td>
+            <td><strong>@row.Name</strong></td>
+        </RowTemplate>
 
-</MasterDetailLayout>
+    </MasterDetailLayout>
+}
 
 
 @code {
@@ -64,40 +75,60 @@
 
     // Biến kiểm soát vòng đời & Re-render
     private int? _previousTypeId = -999;
-    // Mỗi khi tạo mới class này, C# sẽ sinh ra một cái ID ngẫu nhiên cho nó
-    private Guid _instanceId = Guid.NewGuid();
-    private bool _disposed = false;
 
     // --- LIFECYCLE ---
-    protected override void OnInitialized()
+    // --- 1. LOAD DATA (Override từ Cha) ---
+    protected override async Task LoadDataAsync()
     {
-        // Hàm này chỉ chạy khi component SINH RA
-        Console.WriteLine($"[SINH RA] Component ID: {_instanceId} - Lúc: {DateTime.Now.ToString("mm:ss.fff")}");
-    }
-    protected override async Task OnParametersSetAsync()
-    {
-        // 1. Nếu URL không có TypeId (Vào trang gốc), set mặc định là 1002 (InRoom)
-        if (TypeId == null)
-        {
-            TypeId = 1;
-        }
-
-        // 2. Chặn trùng
-        if (TypeId == _previousTypeId) return;
-        _previousTypeId = TypeId;
+        // Reset UI loading
+        _items = null;
+        StateHasChanged();
 
         try
         {
-            // [QUAN TRỌNG] Reset về trang 1 khi đổi loại Amenity (đổi Tab)
-            _paging.PageIndex = 1;
+            // Gọi API (Dùng 'Service' của Cha)
+            var res = await Service.GetAmenitiesByType(TypeId, _paging);
 
-            ResetForm(); // Reset form khi đổi tab
-            await LoadData();
+            if (!Disposed) // Check cờ 'Disposed' của Cha
+            {
+                if (res.StatusCode == StatusCodeResponse.Success && res.Content != null)
+                {
+                    _items = res.Content.Items;
+                    _totalPages = res.Content.TotalPages;
+                    _totalCount = res.Content.TotalCount;
+                }
+                else
+                {
+                    if (res.StatusCode != StatusCodeResponse.Success)
+                        SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
+
+                    _items = new List<AmenityVM>();
+                }
+            }
         }
-        catch (TaskCanceledException) { }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Lỗi tải dữ liệu Amenity");
+            Logger.LogError(ex, "Lỗi load data amenity");
+            _items = new List<AmenityVM>();
+        }
+    }
+
+    // 2. OnAfterRenderAsync: Nơi DUY NHẤT an toàn để gọi LocalStorage lần đầu
+    // --- 2. XỬ LÝ CHUYỂN TAB ---
+    protected override async Task OnParametersSetAsync()
+    {
+        // [QUAN TRỌNG] Nếu Cha chưa load Token xong thì Con chưa được chạy
+        if (!IsJsReady) return;
+
+        if (TypeId == null) TypeId = 1;
+
+        // Nếu TypeId thay đổi thì mới load lại
+        if (TypeId != _previousTypeId)
+        {
+            _previousTypeId = TypeId;
+            _paging.PageIndex = 1;
+            ResetForm();
+            await LoadDataAsync();
         }
     }
 
@@ -107,49 +138,7 @@
         // Cập nhật số trang mới vào Request
         _paging.PageIndex = newPage;
         // Gọi lại API
-        await LoadData();
-    }
-
-    private async Task LoadData()
-    {
-        _items = null; // Kích hoạt loading
-        StateHasChanged();
-
-        try
-        {
-            // Gọi API Mới (Chỉ lấy Data)
-            var res = await _service.GetAmenitiesByType(TypeId, _paging);
-
-            if (!_disposed)
-            {
-                if (res.StatusCode == StatusCodeResponse.Success && res.Content != null)
-                {
-                    // Nhận dữ liệu phân trang từ API
-                    _items = res.Content.Items;
-                    _totalPages = res.Content.TotalPages;
-                    _totalCount = res.Content.TotalCount;
-                }
-                else
-                {
-                    // Nếu lỗi thì hiện thông báo (trừ khi là danh sách rỗng hợp lệ)
-                    if (res.StatusCode != StatusCodeResponse.Success)
-                    {
-                        SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
-                    }
-
-                    _items = new List<AmenityVM>();
-                    _totalPages = 0;
-                    _totalCount = 0;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Lỗi load data amenity");
-            SnackbarHelper.Show(_snackbar, StatusCodeResponse.Error, MessageResponse.ERROR_IN_SERVER);
-            _items = new List<AmenityVM>(); // Hết lỗi để UI hiện bảng trống}
-        }
-
+        await LoadDataAsync();
     }
 
     // --- CRUD METHODS ---
@@ -162,7 +151,7 @@
     private async Task HandleDelete(AmenityVM item)
     {
         // Gọi API xóa thực tế
-        var res = await _service.DeleteAmenity(item.Id);
+        var res = await Service.DeleteAmenity(item.Id);
 
         // Hiển thị thông báo
         SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
@@ -170,7 +159,7 @@
         if (res.StatusCode == StatusCodeResponse.Success)
         {
             // Xóa thành công thì load lại bảng
-            await LoadData();
+            await LoadDataAsync();
         }
     }
 
@@ -190,22 +179,16 @@
         }
 
         ApiResponse<AmenityVM> res;
-        if (_isUpdate) res = await _service.UpdateAmenity(_model);
-        else res = await _service.CreateAmenity(_model);
+        if (_isUpdate) res = await Service.UpdateAmenity(_model);
+        else res = await Service.CreateAmenity(_model);
 
         // Hiển thị thông báo
         SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
 
         if (res.StatusCode == StatusCodeResponse.Success)
         {
-            await LoadData();
+            await LoadDataAsync();
             ResetForm();
         }
-    }
-
-    // Hàm hủy (Implement IDisposable nếu cần, hoặc dùng biến cờ đơn giản)
-    public void Dispose()
-    {
-        _disposed = true;
     }
 }

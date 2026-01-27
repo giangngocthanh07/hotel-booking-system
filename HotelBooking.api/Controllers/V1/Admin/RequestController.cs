@@ -1,24 +1,28 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-//using HotelBooking.api.Models;
+using HotelBooking.application.Services.Domains.RequestManagement;
 
-namespace HotelBooking.api.Controllers
+namespace HotelBooking.api.Controllers.V1.Admin
 {
-    [Route("api/[controller]")]
+    /// <summary>
+    /// Admin Requests Controller - Admin quản lý các đơn yêu cầu từ khách hàng
+    /// </summary>
+    [Route("api/v1/admin/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class RequestController : ControllerBase
     {
         private readonly IUpgradeRequestService _upgradeRequestService;
+
         public RequestController(IUpgradeRequestService upgradeRequestService)
         {
             _upgradeRequestService = upgradeRequestService;
         }
 
+        /// <summary>
+        /// Lấy danh sách tất cả đơn yêu cầu (có lọc theo status)
+        /// </summary>
         [HttpGet("get-user-upgrade")]
         [Authorize(Roles = "Customer")]
         public async Task<IActionResult> GetUserForUpgrade()

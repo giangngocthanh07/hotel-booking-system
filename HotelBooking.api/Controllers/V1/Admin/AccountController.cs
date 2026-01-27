@@ -1,16 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
 using HotelBooking.application.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using HotelBooking.application.Services.Domains.UserManagement;
 
-
-namespace HotelBooking.api.Controllers
+namespace HotelBooking.api.Controllers.V1.Admin
 {
-    [Route("api/[controller]")]
+    [Route("api/v1/admin/[controller]")]
     [ApiController]
     public class AccountController : ControllerBase
     {

@@ -1,10 +1,17 @@
-namespace HotelBooking.api.Controllers
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using HotelBooking.application.Services.Domains.AdminManagement;
+
+namespace HotelBooking.api.Controllers.V1.Admin
 {
 
-    using Microsoft.AspNetCore.Mvc;
+    /// <summary>
+    /// Admin Roles Controller - Quản lý vai trò trong hệ thống
+    /// </summary>
 
-    [Route("api/[controller]")]
+    [Route("api/v1/admin/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class RoleController : ControllerBase
     {
         IRoleService _roleService;

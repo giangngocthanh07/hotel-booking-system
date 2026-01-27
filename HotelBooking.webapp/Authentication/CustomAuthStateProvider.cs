@@ -5,8 +5,6 @@ using System.Text.Json;                         // Xử lý dữ liệu JSON
 using Microsoft.AspNetCore.Components.Authorization; // Quản lý xác thực
 using Blazored.LocalStorage;                    // Lưu trữ token cục bộ
 using System.IdentityModel.Tokens.Jwt;          // Giải mã và xử lý JWT
-using System.Threading.Tasks;
-using System;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;                              // Xử lý tác vụ bất đồng bộ
 namespace HotelBooking.Client;

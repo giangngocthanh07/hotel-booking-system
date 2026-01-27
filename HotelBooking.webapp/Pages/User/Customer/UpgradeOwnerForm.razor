@@ -104,7 +104,7 @@ else
         if (!string.IsNullOrEmpty(userId))
         {
             userInfo = await _httpClient.GetFromJsonAsync<UserForUpgradeVM>(
-            $"Account/get-user-by-id?userId={userId}");
+            $"v1/admin/Account/get-user-by-id?userId={userId}");
         }
     }
 
@@ -121,7 +121,7 @@ else
         _httpClient.DefaultRequestHeaders.Authorization =
         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-        var response = await _httpClient.PostAsJsonAsync("Request/create-request", requestModel);
+        var response = await _httpClient.PostAsJsonAsync("v1/admin/Request/create-request", requestModel);
         if (response.IsSuccessStatusCode)
         {
             message = "Request created successfully. Please wait for admin approval.";

@@ -46,38 +46,81 @@ else if (_isLoading)
 
     // --- STATE ---
     private List<ManageTypeVM>? _types;
+
+    // Thêm biến để lưu Module cũ
+    private string _prevModule = "";
+
+
+    // Thêm biến cờ
+    private bool _isJsReady = false;
     private bool _isLoading = false;
 
     // --- LIFECYCLE ---
     protected override async Task OnInitializedAsync()
     {
-        await LoadMenuData();
+
+    }
+
+    // 3. OnAfterRenderAsync: Nơi gọi API an toàn
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _isJsReady = true; // Đánh dấu JS đã sẵn sàng
+            await LoadMenuData(); // Load lần đầu
+            StateHasChanged();
+        }
     }
 
     // Khi tham số từ cha đổi (VD: User bấm link khác), menu cũng phải update theo
     protected override async Task OnParametersSetAsync()
     {
-        // Nếu module đổi thì load lại list Type
-        // Logic check cache đơn giản để tránh gọi API thừa
-        if (_types == null)
+        // 1. Chặn nếu JS chưa sẵn sàng
+        if (!_isJsReady) return;
+
+        // Nếu module thay đổi thì mới load lại
+        if (CurrentModule != _prevModule)
         {
+            _types = null;
             await LoadMenuData();
         }
     }
 
     private async Task LoadMenuData()
     {
+        // Nếu JS chưa sẵn sàng thì chặn ngay
+        if (!_isJsReady) return;
+
+        // Lưu lại vết lần đầu chạy (để tránh load 2 lần)
+        _prevModule = CurrentModule;
+
         _isLoading = true;
-        // Parse String sang Enum (Giả sử bạn có Enum ManageModuleEnum)
-        if (Enum.TryParse<ManageModuleEnum>(CurrentModule, out var moduleEnum))
+        StateHasChanged();
+
+        try
         {
-            var res = await _manageService.GetManageModuleTypesOnly(moduleEnum);
-            if (res.StatusCode == StatusCodeResponse.Success)
+            if (Enum.TryParse<ManageModuleEnum>(CurrentModule, out var moduleEnum))
             {
-                _types = res.Content?.Types;
+                var res = await _manageService.GetManageModuleTypesOnly(moduleEnum);
+                if (res.StatusCode == StatusCodeResponse.Success)
+                {
+                    _types = res.Content?.Types;
+                }
+            }
+            else
+            {
+                _types = new List<ManageTypeVM>();
             }
         }
-        _isLoading = false;
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Lỗi load menu");
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
     }
 
     // --- EVENTS ---

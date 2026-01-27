@@ -2,40 +2,51 @@ using System.Text.Json;
 using HotelBooking.application.Helpers;
 using HotelBooking.infrastructure.Models;
 
-public interface IRoomViewManage : IStandardManage<RoomViewDTO, RoomViewCreateOrUpdateDTO>
+public interface IUnitTypeService : IStandardManage<UnitTypeDTO, UnitTypeCreateOrUpdateDTO>
 {
-    Task<ApiResponse<PagedManageResult<RoomViewDTO>>> GetPagedListAsync(PagingRequest paging);
+    Task<ApiResponse<PagedManageResult<UnitTypeDTO>>> GetPagedListAsync(PagingRequest paging);
 }
 
-public class RoomViewManage : BaseManage<RoomView, IRoomViewRepository, RoomViewDTO, RoomViewCreateOrUpdateDTO>, IRoomViewManage
+public class UnitTypeService : BaseManage<UnitType, IUnitTypeRepository, UnitTypeDTO, UnitTypeCreateOrUpdateDTO>, IUnitTypeService
 {
-    public RoomViewManage(IRoomViewRepository repo, IUnitOfWork dbu) : base(repo, dbu)
+    public UnitTypeService(IUnitTypeRepository repo, IUnitOfWork dbu) : base(repo, dbu)
     {
     }
 
-    protected override RoomViewDTO MapToDto(RoomView entity)
+    // Map Entity -> DTO (Hiển thị ra UI)
+    protected override UnitTypeDTO MapToDto(UnitType entity)
     {
-        return new RoomViewDTO
+        return new UnitTypeDTO
         {
             Id = entity.Id,
-            Name = entity.Name
+            Name = entity.Name,
+            // Field riêng của UnitType
+            IsEntirePlace = entity.IsEntirePlace
         };
     }
 
-    protected override RoomView MapToEntity(RoomViewCreateOrUpdateDTO createDto)
+    // Map CreateDTO -> Entity (Tạo mới)
+    protected override UnitType MapToEntity(UnitTypeCreateOrUpdateDTO createDto)
     {
-        return new RoomView { Name = createDto.Name };
+        return new UnitType
+        {
+            Name = createDto.Name,
+            IsDeleted = false,
+            IsEntirePlace = createDto.IsEntirePlace
+        };
     }
 
-    protected override void MapToEntity(RoomViewCreateOrUpdateDTO updateDto, RoomView entity)
+    // Map UpdateDTO -> Entity (Cập nhật)
+    protected override void MapToEntity(UnitTypeCreateOrUpdateDTO updateDto, UnitType entity)
     {
         entity.Name = updateDto.Name;
+        entity.IsEntirePlace = updateDto.IsEntirePlace;
     }
 
     // Validation
-    protected override async Task<ValidationResult> ValidateAsync(RoomViewCreateOrUpdateDTO dto, int? id = null)
+    protected override async Task<ValidationResult> ValidateAsync(UnitTypeCreateOrUpdateDTO dto, int? id = null)
     {
-        var basicValidation = ValidateFactory.ValidateFullAsync<RoomView>(
+        var basicValidation = ValidateFactory.ValidateFullAsync<UnitType>(
             _repo,
             dto.Name,
             id,
@@ -44,32 +55,30 @@ public class RoomViewManage : BaseManage<RoomView, IRoomViewRepository, RoomView
             isDeletedSelector: x => x.IsDeleted,
             nameSelector: x => x.Name);
         return await basicValidation;
-
     }
 
-    public async Task<ApiResponse<List<RoomViewDTO>>> GetAllAsync()
+    public async Task<ApiResponse<List<UnitTypeDTO>>> GetAllAsync()
     {
-        var rvList = await _repo.WhereAsync(rv => rv.IsDeleted == false);
+        var utList = await _repo.WhereAsync(ut => ut.IsDeleted == false);
 
-        if (rvList == null || rvList.Count() == 0)
+        if (utList == null || utList.Count() == 0)
         {
-            return ResponseFactory.Failure<List<RoomViewDTO>>(StatusCodeResponse.NotFound, MessageResponse.EMPTY_LIST);
+            return ResponseFactory.Failure<List<UnitTypeDTO>>(StatusCodeResponse.NotFound, MessageResponse.EMPTY_LIST);
         }
 
         try
         {
-            var result = rvList.Select(rv => MapToDto(rv)).ToList();
-
+            var result = utList.Select(ut => MapToDto(ut)).ToList();
             return ResponseFactory.Success(result, MessageResponse.GET_SUCCESSFULLY);
         }
         catch (Exception)
         {
-            return ResponseFactory.ServerError<List<RoomViewDTO>>();
+            return ResponseFactory.ServerError<List<UnitTypeDTO>>();
         }
     }
 
     // --- IMPLEMENT HÀM: LẤY DANH SÁCH PHÂN TRANG ---
-    public async Task<ApiResponse<PagedManageResult<RoomViewDTO>>> GetPagedListAsync(PagingRequest paging)
+    public async Task<ApiResponse<PagedManageResult<UnitTypeDTO>>> GetPagedListAsync(PagingRequest paging)
     {
         try
         {
@@ -77,7 +86,7 @@ public class RoomViewManage : BaseManage<RoomView, IRoomViewRepository, RoomView
             var pagingCheck = ValidateFactory.ValidatePaging(paging);
             if (!pagingCheck.IsValid)
             {
-                return ResponseFactory.Failure<PagedManageResult<RoomViewDTO>>(
+                return ResponseFactory.Failure<PagedManageResult<UnitTypeDTO>>(
                     pagingCheck.StatusCode,
                     pagingCheck.Message);
             }
@@ -98,7 +107,7 @@ public class RoomViewManage : BaseManage<RoomView, IRoomViewRepository, RoomView
 
             // 4. Đóng gói kết quả
             // [QUAN TRỌNG] Chỉ cần truyền TotalCount và PageSize, TotalPages sẽ tự động được tính
-            var result = new PagedManageResult<RoomViewDTO>(
+            var result = new PagedManageResult<UnitTypeDTO>(
                 dtos,
                 totalCount,
                 paging.PageIndex.Value,
@@ -111,7 +120,7 @@ public class RoomViewManage : BaseManage<RoomView, IRoomViewRepository, RoomView
         catch (Exception)
         {
             // Log lỗi nếu cần thiết
-            return ResponseFactory.ServerError<PagedManageResult<RoomViewDTO>>();
+            return ResponseFactory.ServerError<PagedManageResult<UnitTypeDTO>>();
         }
     }
 }

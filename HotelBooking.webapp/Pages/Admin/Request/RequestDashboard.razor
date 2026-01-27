@@ -73,7 +73,7 @@
         try
         {
             // Gọi API để lấy danh sách requests
-            var response = await _httpClient.GetAsync("Request/get-all-requests");
+            var response = await _httpClient.GetAsync("v1/admin/Request/get-all-requests");
             if (response.IsSuccessStatusCode)
             {
                 recentRequests = await response.Content.ReadFromJsonAsync<List<UpgradeRequestVM>>() ?? new

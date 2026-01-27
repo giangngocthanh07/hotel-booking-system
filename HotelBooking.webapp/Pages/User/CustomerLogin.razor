@@ -77,7 +77,7 @@
     {
         try
         {
-            var response = await _httpClient.PostAsJsonAsync("Account/login", userLogin);
+            var response = await _httpClient.PostAsJsonAsync("v1/admin/Account/login", userLogin);
             if (response.IsSuccessStatusCode)
             {
                 var loginResponse = await response.Content.ReadFromJsonAsync<ApiResponse<LoginResponseDTO>>();

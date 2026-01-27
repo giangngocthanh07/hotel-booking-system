@@ -48,7 +48,11 @@ public static class ManagementAdminHelper
         int? typeId,
         PagingRequest paging, // 1. Nhận tham số phân trang
 
+        // Nếu user không truyền typeId -> chạy logic lấy ID mặc định này
+        // Logic lấy ID mặc định (nếu typeId == null)
         Func<Task<int?>> getDefaultIdFunc,
+
+        // Nếu user có truyền typeId -> chạy logic kiểm tra tồn tại này
         // Logic kiểm tra ID có tồn tại trong DB không (Input: int -> Output: bool)
         Func<int, Task<bool>> checkTypeExistsFunc,
 

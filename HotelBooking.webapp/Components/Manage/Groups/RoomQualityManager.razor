@@ -1,4 +1,6 @@
-@* File: Pages/Admin/RoomQualityManager.razor *@
+@using HotelBooking.webapp.Pages.Admin.Base
+@inherits AdminPageBase
+@attribute [Authorize(Roles = "Admin")]
 
 @* --- 1. ĐỊNH NGHĨA ROUTING --- *@
 @page "/admin/manage/roomquality"
@@ -6,48 +8,57 @@
 
 @* --- 2. SỬ DỤNG LAYOUT ADMIN CHUNG --- *@
 @layout AdminLayout
-@inject IManagementService _service
 @inject ILogger<RoomQualityManager> Logger
 @inject ISnackbar _snackbar
-@implements IDisposable
 
-<MasterDetailLayout TItem="RoomQualityVM" Items="_items" Model="_model" PageIndex="_paging.PageIndex ?? 1"
-    TotalPages="_totalPages" TotalCount="_totalCount" OnPageChanged="HandlePageChanged" OnSubmit="SaveData"
-    OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm">
+@* --- 3. UI LOADING (Kiểm soát bởi Class Cha) --- *@
+@if (!ShouldRenderUI())
+{
+    <div class="d-flex justify-content-center align-items-center p-5">
+        <div class="spinner-border text-primary me-2"></div>
+        <span>Đang tải dữ liệu...</span>
+    </div>
+}
+else
+{
+    <MasterDetailLayout TItem="RoomQualityVM" Items="_items" Model="_model" PageIndex="_paging.PageIndex ?? 1"
+        TotalPages="_totalPages" TotalCount="_totalCount" OnPageChanged="HandlePageChanged" OnSubmit="SaveData"
+        OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm">
 
-    @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
-    <SidebarTopContent>
-        @* NHÚNG COMPONENT MENU THÔNG MINH VÀO ĐÂY *@
-        @* Nó tự biết đường vẽ ra Dropdown *@
-        <GlobalNavMenu CurrentModule="RoomQuality" CurrentTypeId="TypeId" />
-    </SidebarTopContent>
+        @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
+        <SidebarTopContent>
+            @* NHÚNG COMPONENT MENU THÔNG MINH VÀO ĐÂY *@
+            @* Nó tự biết đường vẽ ra Dropdown *@
+            <GlobalNavMenu CurrentModule="RoomQuality" CurrentTypeId="TypeId" />
+        </SidebarTopContent>
 
-    @* --- B. CẤU HÌNH FORM --- *@
-    <FormContent Context="formData">
-        <div class="mb-3">
-            <label class="form-label fw-bold small text-muted">Name</label>
-            <InputText class="form-control" @bind-Value="formData.Name" />
-        </div>
-        <div class="mb-3">
-            <label class="form-label fw-bold small text-muted">Sort Order</label>
-            <InputNumber class="form-control" @bind-Value="formData.SortOrder" />
-        </div>
-    </FormContent>
+        @* --- B. CẤU HÌNH FORM --- *@
+        <FormContent Context="formData">
+            <div class="mb-3">
+                <label class="form-label fw-bold small text-muted">Name</label>
+                <InputText class="form-control" @bind-Value="formData.Name" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold small text-muted">Sort Order</label>
+                <InputNumber class="form-control" @bind-Value="formData.SortOrder" />
+            </div>
+        </FormContent>
 
-    @* --- C. CẤU HÌNH BẢNG (TABLE) --- *@
-    <TableHeader>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Sort Order</th>
-    </TableHeader>
+        @* --- C. CẤU HÌNH BẢNG (TABLE) --- *@
+        <TableHeader>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Sort Order</th>
+        </TableHeader>
 
-    <RowTemplate Context="row">
-        <td>@row.Id</td>
-        <td><strong>@row.Name</strong></td>
-        <td>@row.SortOrder</td>
-    </RowTemplate>
+        <RowTemplate Context="row">
+            <td>@row.Id</td>
+            <td><strong>@row.Name</strong></td>
+            <td>@row.SortOrder</td>
+        </RowTemplate>
 
-</MasterDetailLayout>
+    </MasterDetailLayout>
+}
 
 @code {
     // --- PARAMETERS TỪ URL ---
@@ -69,40 +80,59 @@
 
     // Biến kiểm soát vòng đời & Re-render
     private int? _previousTypeId = -999;
-    // Mỗi khi tạo mới class này, C# sẽ sinh ra một cái ID ngẫu nhiên cho nó
-    private Guid _instanceId = Guid.NewGuid();
-    private bool _disposed = false;
 
     // --- LIFECYCLE ---
-    protected override void OnInitialized()
+    // --- 1. LOAD DATA (Override từ Cha) ---
+    protected override async Task LoadDataAsync()
     {
-        // Hàm này chỉ chạy khi component SINH RA
-        Console.WriteLine($"[SINH RA] Component ID: {_instanceId} - Lúc: {DateTime.Now.ToString("mm:ss.fff")}");
-    }
-    protected override async Task OnParametersSetAsync()
-    {
-        // 1. Nếu URL không có TypeId (Vào trang gốc), set mặc định là 1002 (Economy)
-        if (TypeId == null)
-        {
-            TypeId = 1;
-        }
-
-        // 2. Chặn trùng
-        if (TypeId == _previousTypeId) return;
-        _previousTypeId = TypeId;
+        // Reset UI Loading
+        _items = null;
+        StateHasChanged();
 
         try
         {
-            // [QUAN TRỌNG] Reset về trang 1 khi đổi loại Amenity (đổi Tab)
-            _paging.PageIndex = 1;
+            // Gọi API (Dùng 'Service' của Cha)
+            var res = await Service.GetRoomQualitiesByType(TypeId, _paging);
 
-            ResetForm(); // Reset form khi đổi tab
-            await LoadData();
+            if (!Disposed) // Check cờ Disposed từ Cha
+            {
+                if (res.StatusCode == StatusCodeResponse.Success && res.Content != null)
+                {
+                    _items = res.Content.Items;
+                    _totalPages = res.Content.TotalPages;
+                    _totalCount = res.Content.TotalCount;
+                }
+                else
+                {
+                    if (res.StatusCode != StatusCodeResponse.Success)
+                    {
+                        SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
+                    }
+                    _items = new List<RoomQualityVM>();
+                }
+            }
         }
-        catch (TaskCanceledException) { }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Lỗi tải dữ liệu RoomQuality");
+            Logger.LogError(ex, "Lỗi load data roomquality");
+            _items = new List<RoomQualityVM>();
+        }
+    }
+
+    // --- 2. XỬ LÝ CHUYỂN TAB ---
+    protected override async Task OnParametersSetAsync()
+    {
+        // [QUAN TRỌNG] Nếu Cha chưa load Token thì Con chưa được chạy
+        if (!IsJsReady) return;
+
+        if (TypeId == null) TypeId = 1;
+
+        if (TypeId != _previousTypeId)
+        {
+            _previousTypeId = TypeId;
+            _paging.PageIndex = 1;
+            ResetForm();
+            await LoadDataAsync();
         }
     }
 
@@ -112,48 +142,7 @@
         // Cập nhật số trang mới vào Request
         _paging.PageIndex = newPage;
         // Gọi lại API
-        await LoadData();
-    }
-
-    private async Task LoadData()
-    {
-        _items = null; // Kích hoạt Spinner
-        StateHasChanged();
-
-        try
-        {
-            // Gọi API Mới (GetRoomQualitiesByType)
-            var res = await _service.GetRoomQualitiesByType(TypeId, _paging);
-
-            if (!_disposed)
-            {
-                if (res.StatusCode == StatusCodeResponse.Success && res.Content != null)
-                {
-                    // Nhận dữ liệu phân trang từ API
-                    _items = res.Content.Items;
-                    _totalPages = res.Content.TotalPages;
-                    _totalCount = res.Content.TotalCount;
-                }
-                else
-                {
-                    // Nếu lỗi thì hiện thông báo (trừ khi là danh sách rỗng hợp lệ)
-                    if (res.StatusCode != StatusCodeResponse.Success)
-                    {
-                        SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
-                    }
-
-                    _items = new List<RoomQualityVM>();
-                    _totalPages = 0;
-                    _totalCount = 0;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Lỗi load data roomquality");
-            SnackbarHelper.Show(_snackbar, StatusCodeResponse.Error, MessageResponse.ERROR_IN_SERVER);
-            _items = new List<RoomQualityVM>(); // Hết lỗi để UI hiện bảng trống}
-        }
+        await LoadDataAsync();
     }
 
     // --- CRUD METHODS ---
@@ -166,7 +155,7 @@
     private async Task HandleDelete(RoomQualityVM item)
     {
         // Gọi API xóa thực tế
-        var res = await _service.DeleteRoomQuality(item.Id);
+        var res = await Service.DeleteRoomQuality(item.Id);
 
         // Hiển thị thông báo
         SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
@@ -174,7 +163,7 @@
         if (res.StatusCode == StatusCodeResponse.Success)
         {
             // Xóa thành công thì load lại bảng
-            await LoadData();
+            await LoadDataAsync();
         }
     }
 
@@ -192,22 +181,16 @@
         }
 
         ApiResponse<RoomQualityVM> res;
-        if (_isUpdate) res = await _service.UpdateRoomQuality(_model);
-        else res = await _service.CreateRoomQuality(_model);
-        
+        if (_isUpdate) res = await Service.UpdateRoomQuality(_model);
+        else res = await Service.CreateRoomQuality(_model);
+
         // Hiển thị thông báo
         SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
 
         if (res.StatusCode == StatusCodeResponse.Success)
         {
-            await LoadData();
+            await LoadDataAsync();
             ResetForm();
         }
-    }
-
-    // Hàm hủy (Implement IDisposable nếu cần, hoặc dùng biến cờ đơn giản)
-    public void Dispose()
-    {
-        _disposed = true;
     }
 }

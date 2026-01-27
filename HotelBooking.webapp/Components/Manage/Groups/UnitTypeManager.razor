@@ -1,69 +1,80 @@
-@* File: Pages/Admin/UnitTypeManager.razor *@
+@using HotelBooking.webapp.Pages.Admin.Base
+@inherits AdminPageBase
+@attribute [Authorize(Roles = "Admin")]
 
 @* --- 1. ĐỊNH NGHĨA ROUTING --- *@
 @page "/admin/manage/unittype"
 
 @* --- 2. SỬ DỤNG LAYOUT ADMIN CHUNG --- *@
 @layout AdminLayout
-@inject IManagementService _service
 @inject ILogger<UnitTypeManager> Logger
 @inject ISnackbar _snackbar
-@implements IDisposable
 
-<MasterDetailLayout TItem="UnitTypeVM" Items="items" Model="_model" PageIndex="_paging.PageIndex ?? 1"
-    TotalPages="totalPages" TotalCount="totalCount" OnPageChanged="HandlePageChanged" OnSubmit="SaveData"
-    OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm">
+@* --- 3. UI LOADING --- *@
+@if (!ShouldRenderUI())
+{
+    <div class="d-flex justify-content-center align-items-center p-5">
+        <div class="spinner-border text-primary me-2"></div>
+        <span>Đang tải dữ liệu...</span>
+    </div>
+}
+else
+{
+    <MasterDetailLayout TItem="UnitTypeVM" Items="items" Model="_model" PageIndex="_paging.PageIndex ?? 1"
+        TotalPages="totalPages" TotalCount="totalCount" OnPageChanged="HandlePageChanged" OnSubmit="SaveData"
+        OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm">
 
-    @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
-    <SidebarTopContent>
-        @* NHÚNG COMPONENT MENU THÔNG MINH VÀO ĐÂY *@
-        @* Nó tự biết đường vẽ ra Dropdown *@
-        <GlobalNavMenu CurrentModule="UnitType" CurrentTypeId="TypeId" />
-    </SidebarTopContent>
+        @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
+        <SidebarTopContent>
+            @* NHÚNG COMPONENT MENU THÔNG MINH VÀO ĐÂY *@
+            @* Nó tự biết đường vẽ ra Dropdown *@
+            <GlobalNavMenu CurrentModule="UnitType" CurrentTypeId="TypeId" />
+        </SidebarTopContent>
 
-    @* --- B. CẤU HÌNH FORM --- *@
-    <FormContent Context="formData">
-        <div class="mb-3">
-            <label class="form-label fw-bold small text-muted">Name</label>
-            <InputText class="form-control" @bind-Value="formData.Name" />
-        </div>
-        <div class="mb-3">
-            <label class="form-label fw-bold small text-muted">IsEntirePlace</label>
-            <input type="checkbox" class="form-check-input" checked="@(formData.IsEntirePlace == true)"
-                @onchange="@(e => formData.IsEntirePlace = (bool?)e.Value)" />
-        </div>
-
-        @if (formData.IsEntirePlace == true)
-        {
-            <div class="alert alert-info py-2 small">
-                <i class="fa-solid fa-house"></i> Đây là loại hình cho thuê nguyên căn.
+        @* --- B. CẤU HÌNH FORM --- *@
+        <FormContent Context="formData">
+            <div class="mb-3">
+                <label class="form-label fw-bold small text-muted">Name</label>
+                <InputText class="form-control" @bind-Value="formData.Name" />
             </div>
-        }
-    </FormContent>
+            <div class="mb-3">
+                <label class="form-label fw-bold small text-muted">IsEntirePlace</label>
+                <input type="checkbox" class="form-check-input" checked="@(formData.IsEntirePlace == true)"
+                    @onchange="@(e => formData.IsEntirePlace = (bool?)e.Value)" />
+            </div>
 
-    @* --- C. CẤU HÌNH BẢNG (TABLE) --- *@
-    <TableHeader>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Is Entire Place</th>
-    </TableHeader>
-
-    <RowTemplate Context="row">
-        <td>@row.Id</td>
-        <td><strong>@row.Name</strong></td>
-        <td class="text-center">
-            @if (row.IsEntirePlace == true)
+            @if (formData.IsEntirePlace == true)
             {
-                <span class="badge bg-success"><i class="fa-solid fa-check"></i> Yes</span>
+                <div class="alert alert-info py-2 small">
+                    <i class="fa-solid fa-house"></i> Đây là loại hình cho thuê nguyên căn.
+                </div>
             }
-            else
-            {
-                <span class="text-muted small">-</span>
-            }
-        </td>
-    </RowTemplate>
+        </FormContent>
 
-</MasterDetailLayout>
+        @* --- C. CẤU HÌNH BẢNG (TABLE) --- *@
+        <TableHeader>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Is Entire Place</th>
+        </TableHeader>
+
+        <RowTemplate Context="row">
+            <td>@row.Id</td>
+            <td><strong>@row.Name</strong></td>
+            <td class="text-center">
+                @if (row.IsEntirePlace == true)
+                {
+                    <span class="badge bg-success"><i class="fa-solid fa-check"></i> Yes</span>
+                }
+                else
+                {
+                    <span class="text-muted small">-</span>
+                }
+            </td>
+        </RowTemplate>
+
+    </MasterDetailLayout>
+}
 
 
 @code {
@@ -81,69 +92,57 @@
     private int totalPages = 0;
     private int totalCount = 0;
 
-    // Biến kiểm soát vòng đời & Re-render
-    private Guid _instanceId = Guid.NewGuid();
-    private bool _disposed = false;
 
-    protected override async Task OnInitializedAsync()
+    // --- 1. LOAD DATA (Override từ Cha) ---
+    protected override async Task LoadDataAsync()
     {
-        // Hàm này chỉ chạy khi component SINH RA
-        Console.WriteLine($"[SINH RA] Component ID: {_instanceId} - Lúc: {DateTime.Now.ToString("mm:ss.fff")}");
-        // 1. Nhường quyền cho UI vẽ cái Spinner "Loading..." lên màn hình trước đã
-        // Lệnh này cực quan trọng để Navigation Manager biết là "À, trang đã load xong rồi"
-        await Task.Yield();
-        await LoadData();
-    }
-    // --- XỬ LÝ CHUYỂN TRANG ---
-    private async Task HandlePageChanged(int newPage)
-    {
-        _paging.PageIndex = newPage;
-        await LoadData();
-    }
-    private async Task LoadData()
-    {
-        if (items == null)
-        {
-            // Chỉ hiện loading lần đầu
-            items = null;
-            // InvokeAsync(StateHasChanged); // Không cần thiết ở OnInit
-        }
+        // Reset UI Loading
+        items = null;
+        StateHasChanged();
 
         try
         {
-            // Gọi API dành riêng cho Non-Type (Lấy tất cả)
-            var res = await _service.GetUnitTypes(_paging);
+            // Gọi API Lấy tất cả (Non-Type)
+            var res = await Service.GetUnitTypes(_paging);
 
-            if (!_disposed)
+            if (!Disposed)
             {
                 if (res.StatusCode == StatusCodeResponse.Success && res.Content != null)
                 {
-                    // Map kết quả phân trang
                     items = res.Content.Items;
                     totalPages = res.Content.TotalPages;
                     totalCount = res.Content.TotalCount;
                 }
                 else
                 {
-                    // Nếu lỗi thì hiện thông báo (trừ khi là danh sách rỗng hợp lệ)
                     if (res.StatusCode != StatusCodeResponse.Success)
                     {
                         SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
                     }
-
                     items = new List<UnitTypeVM>();
-                    totalPages = 0;
-                    totalCount = 0;
                 }
             }
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Lỗi load data unittype");
-            SnackbarHelper.Show(_snackbar, StatusCodeResponse.Error, MessageResponse.ERROR_IN_SERVER);
-            items = new List<UnitTypeVM>(); // Hết lỗi để UI hiện bảng trống}
+            items = new List<UnitTypeVM>();
         }
     }
+
+    // --- 2. XỬ LÝ PARAMETERS ---
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!IsJsReady) return;
+        // UnitType là danh sách chung, không cần load lại khi đổi TypeId
+    }
+    // --- XỬ LÝ CHUYỂN TRANG ---
+    private async Task HandlePageChanged(int newPage)
+    {
+        _paging.PageIndex = newPage;
+        await LoadDataAsync();
+    }
+
 
     // --- CRUD METHODS ---
     private void OnEditItem(UnitTypeVM item)
@@ -155,7 +154,7 @@
     private async Task HandleDelete(UnitTypeVM item)
     {
         // Gọi API xóa thực tế
-        var res = await _service.DeleteUnitType(item.Id);
+        var res = await Service.DeleteUnitType(item.Id);
 
         // Hiển thị thông báo
         SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
@@ -163,7 +162,7 @@
         if (res.StatusCode == StatusCodeResponse.Success)
         {
             // Xóa thành công thì load lại bảng
-            await LoadData();
+            await LoadDataAsync();
         }
     }
 
@@ -176,22 +175,16 @@
     private async Task SaveData()
     {
         ApiResponse<UnitTypeVM> res;
-        if (_isUpdate) res = await _service.UpdateUnitType(_model);
-        else res = await _service.CreateUnitType(_model);
+        if (_isUpdate) res = await Service.UpdateUnitType(_model);
+        else res = await Service.CreateUnitType(_model);
 
         // Hiển thị thông báo
         SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
 
         if (res.StatusCode == StatusCodeResponse.Success)
         {
-            await LoadData();
+            await LoadDataAsync();
             ResetForm();
         }
-    }
-
-    // Hàm hủy (Implement IDisposable nếu cần, hoặc dùng biến cờ đơn giản)
-    public void Dispose()
-    {
-        _disposed = true;
     }
 }

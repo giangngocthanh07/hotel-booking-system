@@ -1,59 +1,69 @@
-@* File: Pages/Admin/BedTypeManager.razor *@
+@using HotelBooking.webapp.Pages.Admin.Base
+@inherits AdminPageBase
+@attribute [Authorize(Roles = "Admin")]
 
 @* --- 1. ĐỊNH NGHĨA ROUTING --- *@
 @page "/admin/manage/bedtype"
 
 @* --- 2. SỬ DỤNG LAYOUT ADMIN CHUNG --- *@
 @layout AdminLayout
-@inject IManagementService _service
 @inject ILogger<BedTypeManager> Logger
 @inject ISnackbar _snackbar
-@implements IDisposable
 
-<MasterDetailLayout TItem="BedTypeVM" Items="items" Model="_model" PageIndex="_paging.PageIndex ?? 1"
-    TotalPages="totalPages" TotalCount="totalCount" OnPageChanged="HandlePageChanged" OnSubmit="SaveData"
-    OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm">
+@* --- 3. UI LOADING --- *@
+@if (!ShouldRenderUI())
+{
+    <div class="d-flex justify-content-center align-items-center p-5">
+        <div class="spinner-border text-primary me-2"></div>
+        <span>Đang tải dữ liệu...</span>
+    </div>
+}
+else
+{
+    <MasterDetailLayout TItem="BedTypeVM" Items="items" Model="_model" PageIndex="_paging.PageIndex ?? 1"
+        TotalPages="totalPages" TotalCount="totalCount" OnPageChanged="HandlePageChanged" OnSubmit="SaveData"
+        OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm">
 
-    @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
-    <SidebarTopContent>
-        @* NHÚNG COMPONENT MENU THÔNG MINH VÀO ĐÂY *@
-        @* Nó tự biết đường vẽ ra Dropdown *@
-        <GlobalNavMenu CurrentModule="BedType" CurrentTypeId="TypeId" />
-    </SidebarTopContent>
+        @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
+        <SidebarTopContent>
+            @* NHÚNG COMPONENT MENU THÔNG MINH VÀO ĐÂY *@
+            @* Nó tự biết đường vẽ ra Dropdown *@
+            <GlobalNavMenu CurrentModule="BedType" CurrentTypeId="TypeId" />
+        </SidebarTopContent>
 
-    @* --- B. CẤU HÌNH FORM --- *@
-    <FormContent Context="formData">
-        <div class="mb-3">
-            <label class="form-label fw-bold small text-muted">Name</label>
-            <InputText class="form-control" @bind-Value="formData.Name" />
-        </div>
-        <div class="mb-3">
-            <label class="form-label fw-bold small text-muted">Default Capacity</label>
-            <InputNumber class="form-control" @bind-Value="formData.DefaultCapacity" />
-        </div>
-        <div class="mb-3">
-            <label class="form-label fw-bold small text-muted">Description</label>
-            <InputTextArea class="form-control" @bind-Value="formData.Description" />
-        </div>
-    </FormContent>
+        @* --- B. CẤU HÌNH FORM --- *@
+        <FormContent Context="formData">
+            <div class="mb-3">
+                <label class="form-label fw-bold small text-muted">Name</label>
+                <InputText class="form-control" @bind-Value="formData.Name" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold small text-muted">Default Capacity</label>
+                <InputNumber class="form-control" @bind-Value="formData.DefaultCapacity" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold small text-muted">Description</label>
+                <InputTextArea class="form-control" @bind-Value="formData.Description" />
+            </div>
+        </FormContent>
 
-    @* --- C. CẤU HÌNH BẢNG (TABLE) --- *@
-    <TableHeader>
-        <th>ID</th>
-        <th>Name</th>
-        <th>DefaultCapacity</th>
-        <th>Description</th>
-    </TableHeader>
+        @* --- C. CẤU HÌNH BẢNG (TABLE) --- *@
+        <TableHeader>
+            <th>ID</th>
+            <th>Name</th>
+            <th>DefaultCapacity</th>
+            <th>Description</th>
+        </TableHeader>
 
-    <RowTemplate Context="row">
-        <td>@row.Id</td>
-        <td><strong>@row.Name</strong></td>
-        <td>@row.DefaultCapacity</td>
-        <td>@row.Description</td>
-    </RowTemplate>
+        <RowTemplate Context="row">
+            <td>@row.Id</td>
+            <td><strong>@row.Name</strong></td>
+            <td>@row.DefaultCapacity</td>
+            <td>@row.Description</td>
+        </RowTemplate>
 
-</MasterDetailLayout>
-
+    </MasterDetailLayout>
+}
 
 @code {
     // --- PARAMETERS TỪ URL ---
@@ -70,70 +80,58 @@
     private int totalPages = 0;
     private int totalCount = 0;
 
-
-    // Biến kiểm soát vòng đời & Re-render
-    private Guid _instanceId = Guid.NewGuid();
-    private bool _disposed = false;
-
-    protected override async Task OnInitializedAsync()
+    // --- 1. LOAD DATA (Override từ Cha) ---
+    protected override async Task LoadDataAsync()
     {
-        // Hàm này chỉ chạy khi component SINH RA
-        Console.WriteLine($"[SINH RA] Component ID: {_instanceId} - Lúc: {DateTime.Now.ToString("mm:ss.fff")}");
-
-        // 1. Nhường quyền cho UI vẽ cái Spinner "Loading..." lên màn hình trước đã
-        // Lệnh này cực quan trọng để Navigation Manager biết là "À, trang đã load xong rồi"
-        await Task.Yield();
-        await LoadData();
-    }
-    // --- XỬ LÝ CHUYỂN TRANG ---
-    private async Task HandlePageChanged(int newPage)
-    {
-        _paging.PageIndex = newPage;
-        await LoadData();
-    }
-    private async Task LoadData()
-    {
-        if (items == null)
-        {
-            // Chỉ hiện loading lần đầu
-            items = null;
-            // InvokeAsync(StateHasChanged); // Không cần thiết ở OnInit
-        }
+        // Reset UI Loading
+        items = null;
+        StateHasChanged();
 
         try
         {
-            // Gọi API dành riêng cho Non-Type (Lấy tất cả)
-            var res = await _service.GetBedTypes(_paging);
+            // Gọi API Lấy tất cả (Non-Type)
+            var res = await Service.GetBedTypes(_paging);
 
-            if (!_disposed)
+            if (!Disposed) // Check cờ Disposed từ Cha
             {
                 if (res.StatusCode == StatusCodeResponse.Success && res.Content != null)
                 {
-                    // Map kết quả phân trang
                     items = res.Content.Items;
                     totalPages = res.Content.TotalPages;
                     totalCount = res.Content.TotalCount;
                 }
                 else
                 {
-                    // Nếu lỗi thì hiện thông báo (trừ khi là danh sách rỗng hợp lệ)
                     if (res.StatusCode != StatusCodeResponse.Success)
                     {
                         SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
                     }
-
                     items = new List<BedTypeVM>();
-                    totalPages = 0;
-                    totalCount = 0;
                 }
             }
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Lỗi load data bedtype");
-            SnackbarHelper.Show(_snackbar, StatusCodeResponse.Error, MessageResponse.ERROR_IN_SERVER);
-            items = new List<BedTypeVM>(); // Hết lỗi để UI hiện bảng trống}
+            items = new List<BedTypeVM>();
         }
+    }
+
+    // --- 2. XỬ LÝ PARAMETERS ---
+    // Với trang Non-Type, ta không cần override OnParametersSetAsync phức tạp
+    // Vì dữ liệu không đổi theo TypeId.
+    // Tuy nhiên, có thể thêm check IsJsReady để an toàn.
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!IsJsReady) return;
+        // Không cần load lại data khi TypeId đổi vì BedType chỉ có 1 danh sách chung
+    }
+
+    // --- XỬ LÝ CHUYỂN TRANG ---
+    private async Task HandlePageChanged(int newPage)
+    {
+        _paging.PageIndex = newPage;
+        await LoadDataAsync();
     }
 
     // --- CRUD METHODS ---
@@ -153,7 +151,7 @@
     private async Task HandleDelete(BedTypeVM item)
     {
         // Gọi API xóa thực tế
-        var res = await _service.DeleteBedType(item.Id);
+        var res = await Service.DeleteBedType(item.Id);
 
         // Hiển thị thông báo
         SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
@@ -161,7 +159,7 @@
         if (res.StatusCode == StatusCodeResponse.Success)
         {
             // Xóa thành công thì load lại bảng
-            await LoadData();
+            await LoadDataAsync();
         }
     }
 
@@ -175,22 +173,16 @@
     {
         ApiResponse<BedTypeVM> res;
 
-        if (_isUpdate) res = await _service.UpdateBedType(_model);
-        else res = await _service.CreateBedType(_model);
+        if (_isUpdate) res = await Service.UpdateBedType(_model);
+        else res = await Service.CreateBedType(_model);
 
         // Hiển thị thông báo
         SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
 
         if (res.StatusCode == StatusCodeResponse.Success)
         {
-            await LoadData();
+            await LoadDataAsync();
             ResetForm();
         }
-    }
-
-    // Hàm hủy (Implement IDisposable nếu cần, hoặc dùng biến cờ đơn giản)
-    public void Dispose()
-    {
-        _disposed = true;
     }
 }

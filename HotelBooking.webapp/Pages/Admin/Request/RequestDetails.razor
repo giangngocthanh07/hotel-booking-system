@@ -125,7 +125,7 @@
 
         try
         {
-            request = await _httpClient.GetFromJsonAsync<UpgradeRequestVM>($"Request/request-detail/{RequestId}");
+            request = await _httpClient.GetFromJsonAsync<UpgradeRequestVM>($"v1/admin/Request/request-detail/{RequestId}");
 
             if (request == null)
             {
@@ -159,7 +159,7 @@
 
     private async Task ApproveRequest()
     {
-        var response = await _httpClient.PostAsync($"Request/approve/{RequestId}", null);
+        var response = await _httpClient.PostAsync($"v1/admin/Request/approve/{RequestId}", null);
         if (response.IsSuccessStatusCode)
         {
             request.Status = "Approved";
@@ -175,7 +175,7 @@
 
     private async Task RejectRequest()
     {
-        var response = await _httpClient.PostAsync($"Request/reject/{RequestId}", null);
+        var response = await _httpClient.PostAsync($"v1/admin/Request/reject/{RequestId}", null);
         if (response.IsSuccessStatusCode)
         {
             request.Status = "Rejected";

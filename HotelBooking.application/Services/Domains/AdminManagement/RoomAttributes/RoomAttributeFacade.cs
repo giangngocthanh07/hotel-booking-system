@@ -3,10 +3,10 @@ using HotelBooking.application.Helpers;
 public interface IRoomAttributeFacade
 {
     // Gom nhóm 1: Các thuộc tính cơ bản
-    IUnitTypeManage UnitTypeManage { get; }
-    IBedTypeManage BedTypeManage { get; }
-    IRoomViewManage RoomViewManage { get; }
-    IRoomQualityManage RoomQualityManage { get; }
+    IUnitTypeService UnitTypeService { get; }
+    IBedTypeService BedTypeService { get; }
+    IRoomViewService RoomViewService { get; }
+    IRoomQualityService RoomQualityService { get; }
 
     // --- HÀM: LẤY DANH SÁCH PHÂN TRANG THEO ENUM ---
     Task<ApiResponse<PagedManageResult<RoomAttributeDTO>>> GetPagedByTypeAsync(
@@ -18,17 +18,17 @@ public interface IRoomAttributeFacade
 
 public class RoomAttributeFacade : IRoomAttributeFacade
 {
-    public IUnitTypeManage UnitTypeManage { get; private set; }
-    public IBedTypeManage BedTypeManage { get; private set; }
-    public IRoomViewManage RoomViewManage { get; private set; }
-    public IRoomQualityManage RoomQualityManage { get; private set; }
+    public IUnitTypeService UnitTypeService { get; private set; }
+    public IBedTypeService BedTypeService { get; private set; }
+    public IRoomViewService RoomViewService { get; private set; }
+    public IRoomQualityService RoomQualityService { get; private set; }
 
-    public RoomAttributeFacade(IUnitTypeManage unitTypeManage, IBedTypeManage bedTypeManage, IRoomViewManage roomViewManage, IRoomQualityManage roomQualityManage)
+    public RoomAttributeFacade(IUnitTypeService unitTypeService, IBedTypeService bedTypeService, IRoomViewService roomViewService, IRoomQualityService roomQualityService)
     {
-        UnitTypeManage = unitTypeManage;
-        BedTypeManage = bedTypeManage;
-        RoomViewManage = roomViewManage;
-        RoomQualityManage = roomQualityManage;
+        UnitTypeService = unitTypeService;
+        BedTypeService = bedTypeService;
+        RoomViewService = roomViewService;
+        RoomQualityService = roomQualityService;
     }
 
     public async Task<ApiResponse<PagedManageResult<RoomAttributeDTO>>> GetPagedByTypeAsync(
@@ -89,21 +89,21 @@ public class RoomAttributeFacade : IRoomAttributeFacade
             {
                 case RoomAttributeType.UnitType:
                     // Gọi Manager con
-                    var r1 = await UnitTypeManage.GetPagedListAsync(paging);
+                    var r1 = await UnitTypeService.GetPagedListAsync(paging);
                     // Convert kết quả con sang kết quả cha (xem hàm Helper bên dưới)
                     return ConvertToBasePagedResult(r1);
 
                 case RoomAttributeType.BedType:
-                    var r2 = await BedTypeManage.GetPagedListAsync(paging);
+                    var r2 = await BedTypeService.GetPagedListAsync(paging);
                     return ConvertToBasePagedResult(r2);
 
                 case RoomAttributeType.RoomView:
-                    var r3 = await RoomViewManage.GetPagedListAsync(paging);
+                    var r3 = await RoomViewService.GetPagedListAsync(paging);
                     return ConvertToBasePagedResult(r3);
 
                 case RoomAttributeType.RoomQuality:
                     // RoomQuality cần TypeId
-                    var r4 = await RoomQualityManage.GetRoomQualitiesByTypeAsync(typeId, paging);
+                    var r4 = await RoomQualityService.GetRoomQualitiesByTypeAsync(typeId, paging);
                     return ConvertToBasePagedResult(r4);
 
                 default:

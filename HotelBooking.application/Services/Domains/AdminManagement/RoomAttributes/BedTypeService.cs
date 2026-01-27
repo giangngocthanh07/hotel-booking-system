@@ -2,51 +2,57 @@ using System.Text.Json;
 using HotelBooking.application.Helpers;
 using HotelBooking.infrastructure.Models;
 
-public interface IUnitTypeManage : IStandardManage<UnitTypeDTO, UnitTypeCreateOrUpdateDTO>
+
+public interface IBedTypeService : IStandardManage<BedTypeDTO, BedTypeCreateOrUpdateDTO>
 {
-    Task<ApiResponse<PagedManageResult<UnitTypeDTO>>> GetPagedListAsync(PagingRequest paging);
+    Task<ApiResponse<PagedManageResult<BedTypeDTO>>> GetPagedListAsync(PagingRequest paging);
 }
 
-public class UnitTypeManage : BaseManage<UnitType, IUnitTypeRepository, UnitTypeDTO, UnitTypeCreateOrUpdateDTO>, IUnitTypeManage
+public class BedTypeService : BaseManage<BedType, IBedTypeRepository, BedTypeDTO, BedTypeCreateOrUpdateDTO>, IBedTypeService
 {
-    public UnitTypeManage(IUnitTypeRepository repo, IUnitOfWork dbu) : base(repo, dbu)
+    public BedTypeService(IBedTypeRepository repo, IUnitOfWork dbu) : base(repo, dbu)
     {
     }
 
     // Map Entity -> DTO (Hiển thị ra UI)
-    protected override UnitTypeDTO MapToDto(UnitType entity)
+    protected override BedTypeDTO MapToDto(BedType entity)
     {
-        return new UnitTypeDTO
+        return new BedTypeDTO
         {
             Id = entity.Id,
             Name = entity.Name,
-            // Field riêng của UnitType
-            IsEntirePlace = entity.IsEntirePlace
+            Description = entity.Description,
+            // Field riêng
+            DefaultCapacity = entity.DefaultCapacity ?? 1
         };
     }
 
     // Map CreateDTO -> Entity (Tạo mới)
-    protected override UnitType MapToEntity(UnitTypeCreateOrUpdateDTO createDto)
+    protected override BedType MapToEntity(BedTypeCreateOrUpdateDTO createDto)
     {
-        return new UnitType
+        return new BedType
         {
             Name = createDto.Name,
             IsDeleted = false,
-            IsEntirePlace = createDto.IsEntirePlace
+            Description = createDto.Description,
+            // Field riêng
+            DefaultCapacity = createDto.DefaultCapacity
         };
     }
 
     // Map UpdateDTO -> Entity (Cập nhật)
-    protected override void MapToEntity(UnitTypeCreateOrUpdateDTO updateDto, UnitType entity)
+    protected override void MapToEntity(BedTypeCreateOrUpdateDTO updateDto, BedType entity)
     {
         entity.Name = updateDto.Name;
-        entity.IsEntirePlace = updateDto.IsEntirePlace;
+        entity.Description = updateDto.Description;
+        // Field riêng
+        entity.DefaultCapacity = updateDto.DefaultCapacity;
     }
 
     // Validation
-    protected override async Task<ValidationResult> ValidateAsync(UnitTypeCreateOrUpdateDTO dto, int? id = null)
+    protected override async Task<ValidationResult> ValidateAsync(BedTypeCreateOrUpdateDTO dto, int? id = null)
     {
-        var basicValidation = ValidateFactory.ValidateFullAsync<UnitType>(
+        var basicValidation = ValidateFactory.ValidateFullAsync<BedType>(
             _repo,
             dto.Name,
             id,
@@ -57,28 +63,29 @@ public class UnitTypeManage : BaseManage<UnitType, IUnitTypeRepository, UnitType
         return await basicValidation;
     }
 
-    public async Task<ApiResponse<List<UnitTypeDTO>>> GetAllAsync()
+    public async Task<ApiResponse<List<BedTypeDTO>>> GetAllAsync()
     {
-        var utList = await _repo.WhereAsync(ut => ut.IsDeleted == false);
+        var btList = await _repo.WhereAsync(bt => bt.IsDeleted == false);
 
-        if (utList == null || utList.Count() == 0)
+        if (btList == null || btList.Count() == 0)
         {
-            return ResponseFactory.Failure<List<UnitTypeDTO>>(StatusCodeResponse.NotFound, MessageResponse.EMPTY_LIST);
+            return ResponseFactory.Failure<List<BedTypeDTO>>(StatusCodeResponse.NotFound, MessageResponse.EMPTY_LIST);
         }
 
         try
         {
-            var result = utList.Select(ut => MapToDto(ut)).ToList();
+            var result = btList.Select(bt => MapToDto(bt)).ToList();
+
             return ResponseFactory.Success(result, MessageResponse.GET_SUCCESSFULLY);
         }
         catch (Exception)
         {
-            return ResponseFactory.ServerError<List<UnitTypeDTO>>();
+            return ResponseFactory.ServerError<List<BedTypeDTO>>();
         }
     }
 
     // --- IMPLEMENT HÀM: LẤY DANH SÁCH PHÂN TRANG ---
-    public async Task<ApiResponse<PagedManageResult<UnitTypeDTO>>> GetPagedListAsync(PagingRequest paging)
+    public async Task<ApiResponse<PagedManageResult<BedTypeDTO>>> GetPagedListAsync(PagingRequest paging)
     {
         try
         {
@@ -86,7 +93,7 @@ public class UnitTypeManage : BaseManage<UnitType, IUnitTypeRepository, UnitType
             var pagingCheck = ValidateFactory.ValidatePaging(paging);
             if (!pagingCheck.IsValid)
             {
-                return ResponseFactory.Failure<PagedManageResult<UnitTypeDTO>>(
+                return ResponseFactory.Failure<PagedManageResult<BedTypeDTO>>(
                     pagingCheck.StatusCode,
                     pagingCheck.Message);
             }
@@ -107,7 +114,7 @@ public class UnitTypeManage : BaseManage<UnitType, IUnitTypeRepository, UnitType
 
             // 4. Đóng gói kết quả
             // [QUAN TRỌNG] Chỉ cần truyền TotalCount và PageSize, TotalPages sẽ tự động được tính
-            var result = new PagedManageResult<UnitTypeDTO>(
+            var result = new PagedManageResult<BedTypeDTO>(
                 dtos,
                 totalCount,
                 paging.PageIndex.Value,
@@ -120,7 +127,7 @@ public class UnitTypeManage : BaseManage<UnitType, IUnitTypeRepository, UnitType
         catch (Exception)
         {
             // Log lỗi nếu cần thiết
-            return ResponseFactory.ServerError<PagedManageResult<UnitTypeDTO>>();
+            return ResponseFactory.ServerError<PagedManageResult<BedTypeDTO>>();
         }
     }
 }

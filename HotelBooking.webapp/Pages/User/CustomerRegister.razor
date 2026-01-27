@@ -98,7 +98,7 @@
         try
         {
             var client = HttpClientFactory.CreateClient("HotelBookingAPI");
-            var response = await client.PostAsJsonAsync("Account/register-customer", new
+            var response = await client.PostAsJsonAsync("v1/admin/Account/register-customer", new
             {
                 Username = userRegister.Username,
                 Email = userRegister.Email,

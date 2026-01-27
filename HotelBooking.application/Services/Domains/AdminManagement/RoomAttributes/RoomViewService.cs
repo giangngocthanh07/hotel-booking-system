@@ -2,57 +2,40 @@ using System.Text.Json;
 using HotelBooking.application.Helpers;
 using HotelBooking.infrastructure.Models;
 
-
-public interface IBedTypeManage : IStandardManage<BedTypeDTO, BedTypeCreateOrUpdateDTO>
+public interface IRoomViewService : IStandardManage<RoomViewDTO, RoomViewCreateOrUpdateDTO>
 {
-    Task<ApiResponse<PagedManageResult<BedTypeDTO>>> GetPagedListAsync(PagingRequest paging);
+    Task<ApiResponse<PagedManageResult<RoomViewDTO>>> GetPagedListAsync(PagingRequest paging);
 }
 
-public class BedTypeManage : BaseManage<BedType, IBedTypeRepository, BedTypeDTO, BedTypeCreateOrUpdateDTO>, IBedTypeManage
+public class RoomViewService : BaseManage<RoomView, IRoomViewRepository, RoomViewDTO, RoomViewCreateOrUpdateDTO>, IRoomViewService
 {
-    public BedTypeManage(IBedTypeRepository repo, IUnitOfWork dbu) : base(repo, dbu)
+    public RoomViewService(IRoomViewRepository repo, IUnitOfWork dbu) : base(repo, dbu)
     {
     }
 
-    // Map Entity -> DTO (Hiển thị ra UI)
-    protected override BedTypeDTO MapToDto(BedType entity)
+    protected override RoomViewDTO MapToDto(RoomView entity)
     {
-        return new BedTypeDTO
+        return new RoomViewDTO
         {
             Id = entity.Id,
-            Name = entity.Name,
-            Description = entity.Description,
-            // Field riêng
-            DefaultCapacity = entity.DefaultCapacity ?? 1
+            Name = entity.Name
         };
     }
 
-    // Map CreateDTO -> Entity (Tạo mới)
-    protected override BedType MapToEntity(BedTypeCreateOrUpdateDTO createDto)
+    protected override RoomView MapToEntity(RoomViewCreateOrUpdateDTO createDto)
     {
-        return new BedType
-        {
-            Name = createDto.Name,
-            IsDeleted = false,
-            Description = createDto.Description,
-            // Field riêng
-            DefaultCapacity = createDto.DefaultCapacity
-        };
+        return new RoomView { Name = createDto.Name };
     }
 
-    // Map UpdateDTO -> Entity (Cập nhật)
-    protected override void MapToEntity(BedTypeCreateOrUpdateDTO updateDto, BedType entity)
+    protected override void MapToEntity(RoomViewCreateOrUpdateDTO updateDto, RoomView entity)
     {
         entity.Name = updateDto.Name;
-        entity.Description = updateDto.Description;
-        // Field riêng
-        entity.DefaultCapacity = updateDto.DefaultCapacity;
     }
 
     // Validation
-    protected override async Task<ValidationResult> ValidateAsync(BedTypeCreateOrUpdateDTO dto, int? id = null)
+    protected override async Task<ValidationResult> ValidateAsync(RoomViewCreateOrUpdateDTO dto, int? id = null)
     {
-        var basicValidation = ValidateFactory.ValidateFullAsync<BedType>(
+        var basicValidation = ValidateFactory.ValidateFullAsync<RoomView>(
             _repo,
             dto.Name,
             id,
@@ -61,31 +44,32 @@ public class BedTypeManage : BaseManage<BedType, IBedTypeRepository, BedTypeDTO,
             isDeletedSelector: x => x.IsDeleted,
             nameSelector: x => x.Name);
         return await basicValidation;
+
     }
 
-    public async Task<ApiResponse<List<BedTypeDTO>>> GetAllAsync()
+    public async Task<ApiResponse<List<RoomViewDTO>>> GetAllAsync()
     {
-        var btList = await _repo.WhereAsync(bt => bt.IsDeleted == false);
+        var rvList = await _repo.WhereAsync(rv => rv.IsDeleted == false);
 
-        if (btList == null || btList.Count() == 0)
+        if (rvList == null || rvList.Count() == 0)
         {
-            return ResponseFactory.Failure<List<BedTypeDTO>>(StatusCodeResponse.NotFound, MessageResponse.EMPTY_LIST);
+            return ResponseFactory.Failure<List<RoomViewDTO>>(StatusCodeResponse.NotFound, MessageResponse.EMPTY_LIST);
         }
 
         try
         {
-            var result = btList.Select(bt => MapToDto(bt)).ToList();
+            var result = rvList.Select(rv => MapToDto(rv)).ToList();
 
             return ResponseFactory.Success(result, MessageResponse.GET_SUCCESSFULLY);
         }
         catch (Exception)
         {
-            return ResponseFactory.ServerError<List<BedTypeDTO>>();
+            return ResponseFactory.ServerError<List<RoomViewDTO>>();
         }
     }
 
     // --- IMPLEMENT HÀM: LẤY DANH SÁCH PHÂN TRANG ---
-    public async Task<ApiResponse<PagedManageResult<BedTypeDTO>>> GetPagedListAsync(PagingRequest paging)
+    public async Task<ApiResponse<PagedManageResult<RoomViewDTO>>> GetPagedListAsync(PagingRequest paging)
     {
         try
         {
@@ -93,7 +77,7 @@ public class BedTypeManage : BaseManage<BedType, IBedTypeRepository, BedTypeDTO,
             var pagingCheck = ValidateFactory.ValidatePaging(paging);
             if (!pagingCheck.IsValid)
             {
-                return ResponseFactory.Failure<PagedManageResult<BedTypeDTO>>(
+                return ResponseFactory.Failure<PagedManageResult<RoomViewDTO>>(
                     pagingCheck.StatusCode,
                     pagingCheck.Message);
             }
@@ -114,7 +98,7 @@ public class BedTypeManage : BaseManage<BedType, IBedTypeRepository, BedTypeDTO,
 
             // 4. Đóng gói kết quả
             // [QUAN TRỌNG] Chỉ cần truyền TotalCount và PageSize, TotalPages sẽ tự động được tính
-            var result = new PagedManageResult<BedTypeDTO>(
+            var result = new PagedManageResult<RoomViewDTO>(
                 dtos,
                 totalCount,
                 paging.PageIndex.Value,
@@ -127,7 +111,7 @@ public class BedTypeManage : BaseManage<BedType, IBedTypeRepository, BedTypeDTO,
         catch (Exception)
         {
             // Log lỗi nếu cần thiết
-            return ResponseFactory.ServerError<PagedManageResult<BedTypeDTO>>();
+            return ResponseFactory.ServerError<PagedManageResult<RoomViewDTO>>();
         }
     }
 }
