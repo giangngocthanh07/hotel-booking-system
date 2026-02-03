@@ -1,29 +1,27 @@
 @typeparam TItem
+@typeparam TModel where TModel : BaseCreateOrUpdateAdminVM
 @using System.ComponentModel.DataAnnotations
 
-<div class="container p-0 ">
-    @* [UPDATE 1] Thêm align-items-stretch để 2 cột cao bằng nhau *@
-    <div class="row g-4 align-items-stretch">
+@* --- CONTAINER BAO NGOÀI: Full chiều cao (vh-100 trừ đi header nếu có) --- *@
+<div class="container-fluid p-0 overflow-hidden-lg" style="min-height: 100vh; height: auto;">
+    <div class="row g-3" style="height: auto; min-height: calc(100vh - 80px);">
 
-        @* --- LEFT SIDEBAR (FORM) --- *@
-        @* [UPDATE 2] d-flex flex-column để cột này thành flex container *@
-        <div class="col-12 col-lg-3 d-flex flex-column">
-            @* [UPDATE 3] h-100 để card cao full cột *@
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body bg-light rounded d-flex flex-column">
-
-                    @* HEADER SIDEBAR *@
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="fw-bold text-uppercase text-muted mb-0">
-                            <i class="bi bi-sliders me-1"></i> Bộ lọc & Cấu hình
+        @* --- CỘT TRÁI: SIDEBAR (col-lg-3) --- *@
+        <div class="col-12 col-lg-3 order-2 order-lg-1">
+            <div class="card shadow-sm border-0 mb-3 mb-lg-0 h-100-lg d-flex flex-column">
+                <div class="card-body bg-white rounded d-flex flex-column overflow-auto custom-scroll">
+                    @* Header & Menu Sidebar... *@
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                        <h6 class="fw-bold text-uppercase text-secondary mb-0">
+                            <i class="bi bi-gear-fill me-2"></i>Cấu hình
                         </h6>
                         @if (_isEditMode)
                         {
-                            <span class="badge bg-warning text-dark">Editing mode</span>
+                            <span class="badge bg-warning text-dark">Đang sửa</span>
                         }
                     </div>
 
-                    @* DROPDOWN CONTENT *@
+                    @* MENU MODULE *@
                     <div class="mb-3">
                         @if (SidebarTopContent != null)
                         {
@@ -31,111 +29,88 @@
                         }
                     </div>
 
-                    <hr class="my-2" />
-
-                    @* TITLE FORM *@
-                    <h5 class="@(_isEditMode ? "text-warning" : "text-success") fw-bold my-3">
-                        @(_isEditMode ? "CẬP NHẬT" : "THÊM MỚI")
-                    </h5>
-
-                    @* FORM INPUT *@
-                    @* flex-grow-1 để đẩy nút bấm xuống dưới nếu muốn, hoặc để form giãn ra *@
-                    <div class="flex-grow-1">
-                        <EditForm Model="Model" OnValidSubmit="HandleSubmit">
+                    @* Form Nhập liệu nằm gọn trong Sidebar *@
+                    <div class="mt-auto pt-3 border-top">
+                        <h6 class="@(_isEditMode ? "text-warning" : "text-primary") fw-bold mb-3">
+                            @(_isEditMode ? "CẬP NHẬT DỮ LIỆU" : "THÊM MỚI")
+                        </h6>
+                        <EditForm Model="@Model" OnValidSubmit="HandleSubmit" @ref="_internalForm">
                             <DataAnnotationsValidator />
 
+                            @* --- PHẦN DÙNG CHUNG CỐ ĐỊNH TẠI LAYOUT --- *@
+                            <div class="mb-4">
+                                <label class="form-label fw-bold small text-muted text-uppercase">Tên gọi</label>
+                                <input type="text" class="form-control border-primary shadow-sm" value="@Model.Name"
+                                    @oninput="@(e => HandleCommonChange(e.Value?.ToString(), "Name"))"
+                                    @onblur="HandleNameBlur" placeholder="Nhập tên..." />
+                                <ValidationMessage For="() => Model.Name" class="val-msg" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small text-muted text-uppercase">Mô tả chi tiết</label>
+                                <textarea class="form-control shadow-sm" rows="3" value="@Model.Description"
+                                    @oninput="@(e => HandleCommonChange(e.Value?.ToString(), "Description"))"
+                                    placeholder="Nhập mô tả..."></textarea>
+                                <ValidationMessage For="() => Model.Description" class="val-msg" />
+                            </div>
+                            <div class="form-text small mt-1">Dùng để giải thích quy trình hoặc lưu ý đặc biệt.</div>
+
+                            <hr class="my-4 opacity-50" />
+
+                            @* FormContent trả về Context là TModel *@
                             @if (FormContent != null)
                             {
                                 @FormContent(Model)
                             }
 
-                            @* BUTTON ACTION *@
-                            <div class="mt-4 d-grid gap-2">
+                            <div class="d-grid gap-2 mt-4">
                                 <button type="submit"
-                                    class="btn @(_isEditMode ? "btn-warning text-white" : "btn-success") shadow-sm fw-bold">
-                                    <i class="fa-solid @(_isEditMode ? "fa-save" : "fa-plus") me-2"></i>
-                                    @(_isEditMode ? "LƯU THAY ĐỔI" : "TẠO MỚI")
-                                </button>
-
+                                    class="btn @(_isEditMode ? "btn-warning" : "btn-primary") fw-bold shadow-sm">Lưu</button>
                                 @if (_isEditMode)
                                 {
-                                    <button type="button" class="btn btn-outline-secondary" @onclick="CancelEdit">
-                                        <i class="fa-solid fa-xmark me-2"></i> HỦY BỎ
-                                    </button>
+                                    <button type="button" class="btn btn-light border" @onclick="CancelEdit">Hủy</button>
                                 }
                             </div>
                         </EditForm>
                     </div>
                 </div>
             </div>
-        </div>
+        </div> @* Đóng cột lg-3 *@
 
-        @* --- RIGHT CONTENT (TABLE LIST) --- *@
-        @* [UPDATE 4] d-flex flex-column *@
-        <div class="col-12 col-lg-9 d-flex flex-column">
-            @* [UPDATE 5] h-100 và d-flex flex-column *@
-            <div class="card shadow-sm border-0 h-100 d-flex flex-column overflow-hidden">
-
-                @* HEADER CARD *@
+        @* --- CỘT PHẢI: DANH SÁCH (col-lg-9) - NẰM NGOÀI CỘT TRÁI --- *@
+        <div class="col-12 col-lg-9 order-1 order-lg-2 h-100-lg">
+            <div class="card shadow-sm border-0 h-100 d-flex flex-column">
                 <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold text-dark">Data List</h5>
-                    <div>
-                        <span class="badge bg-light text-dark border me-2">Page: @PageIndex / @(TotalPages == 0 ? 1 :
-                                                        TotalPages)</span>
-                        <span class="badge bg-primary rounded-pill">Total: @TotalCount</span>
+                    <h5 class="mb-0 fw-bold text-dark">Danh sách dữ liệu</h5>
+                    <div class="text-muted small">Hiển thị <strong>@Items?.Count</strong> / <strong>@TotalCount</strong>
                     </div>
                 </div>
 
-                @* CARD BODY: Chứa Table + Empty State *@
-                @* [UPDATE 6] flex-grow-1 và overflow-hidden để scroll nội bộ *@
                 <div class="card-body p-0 d-flex flex-column flex-grow-1 overflow-hidden position-relative">
-
-                    @if (Items == null)
-                    {
-                        @* LOADING STATE *@
-                        <div class="d-flex flex-column align-items-center justify-content-center flex-grow-1">
-                            <div class="spinner-border text-primary mb-2" role="status"></div>
-                            <div class="text-muted small">Đang tải dữ liệu...</div>
-                        </div>
-                    }
-                    else if (!Items.Any())
-                    {
-                        @* EMPTY STATE *@
-                        <div
-                            class="d-flex flex-column align-items-center justify-content-center flex-grow-1 text-muted bg-light bg-opacity-25">
-                            <i class="fa-solid fa-inbox fa-3x mb-3 opacity-25"></i>
-                            <p class="mb-0 fw-bold">Chưa có dữ liệu nào</p>
-                        </div>
-                    }
+                    @if (Items == null) { /* Spinner... */ }
+                    else if (!Items.Any()) { /* Empty State... */ }
                     else
                     {
-                        @* TABLE DATA CONTAINER *@
-                        @* [UPDATE 7] overflow-y-auto để cuộn dọc bảng, flex-grow-1 để chiếm hết chỗ trống *@
-                        <div class="table-responsive flex-grow-1" style="overflow-y: auto;">
-                            <table class="table table-hover align-middle mb-0">
-                                @* Sticky Header: Dính đầu bảng khi cuộn *@
-                                <thead class="table-light text-secondary text-uppercase small fw-bold"
-                                    style="position: sticky; top: 0; z-index: 10;">
+                        <div class="table-responsive flex-grow-1 custom-scroll" style="overflow-y: auto;">
+                            <table class="table table-hover table-striped table-sm-mobile align-middle mb-0">
+                                <thead class="bg-light text-secondary text-uppercase small fw-bold sticky-top"
+                                    style="z-index: 5;">
                                     <tr>
                                         @TableHeader
-                                        <th class="text-center text-nowrap bg-light"
-                                            style="width: 100px; position: sticky; right: 0;">Action</th>
+                                        <th class="text-center bg-light shadow-sm"
+                                            style="width: 120px; position: sticky; right: 0;">Thao tác</th>
                                     </tr>
                                 </thead>
-                                <tbody class="border-top-0">
+                                <tbody>
                                     @foreach (var item in Items)
                                     {
                                         <tr>
                                             @RowTemplate(item)
-                                            <td class="text-center">
-                                                <button class="btn btn-sm btn-link text-warning p-0 me-2"
-                                                    @onclick="() => EditItem(item)" title="Edit">
-                                                    <i class="fa-solid fa-pen-to-square"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-link text-danger p-0"
-                                                    @onclick="() => RequestDelete(item)" title="Delete">
-                                                    <i class="fa-solid fa-trash"></i>
-                                                </button>
+                                            <td class="text-center bg-white border-start" style="position: sticky; right: 0;">
+                                                <button class="btn btn-sm btn-outline-primary border-0 me-1"
+                                                    @onclick="() => EditItem(item)"><i class="bi bi-pencil-square"></i></button>
+                                                <button class="btn btn-sm btn-outline-danger border-0"
+                                                    @onclick="() => RequestDelete(item)"><i class="bi bi-trash"></i></button>
                                             </td>
                                         </tr>
                                     }
@@ -145,39 +120,26 @@
                     }
                 </div>
 
-                @* PAGINATION FOOTER *@
-                @* [UPDATE 8] Footer nằm ngoài vùng scroll của table, luôn dính đáy card *@
+                @* FOOTER: PHÂN TRANG (Luôn dính đáy) *@
                 @if (TotalPages > 1)
                 {
-                    <div class="card-footer bg-white border-top py-3 mt-auto">
-                        <nav aria-label="Page navigation">
-                            <ul class="pagination justify-content-center mb-0">
-                                @* Previous *@
+                    <div class="card-footer bg-white py-2 border-top">
+                        <nav>
+                            <ul class="pagination justify-content-center pagination-sm mb-0">
                                 <li class="page-item @(PageIndex <= 1 ? "disabled" : "")">
-                                    <button class="page-link border-0" @onclick="() => HandlePageChange(PageIndex - 1)">
-                                        <i class="fa-solid fa-chevron-left"></i>
-                                    </button>
+                                    <button class="page-link"
+                                        @onclick="() => HandlePageChange(PageIndex - 1)">&laquo;</button>
                                 </li>
-
-                                @* Page Numbers logic (rút gọn nếu quá nhiều trang) *@
                                 @for (int i = 1; i <= TotalPages; i++)
                                 {
                                     var p = i;
                                     <li class="page-item @(PageIndex == p ? "active" : "")">
-                                        <button
-                                            class="page-link border-0 rounded-circle mx-1 @(PageIndex == p ? "shadow-sm" : "")"
-                                            style="@(PageIndex == p ? "background-color: var(--bs-primary);" : "color: #555;")"
-                                            @onclick="() => HandlePageChange(p)">
-                                            @p
-                                        </button>
+                                        <button class="page-link" @onclick="() => HandlePageChange(p)">@p</button>
                                     </li>
                                 }
-
-                                @* Next *@
                                 <li class="page-item @(PageIndex >= TotalPages ? "disabled" : "")">
-                                    <button class="page-link border-0" @onclick="() => HandlePageChange(PageIndex + 1)">
-                                        <i class="fa-solid fa-chevron-right"></i>
-                                    </button>
+                                    <button class="page-link"
+                                        @onclick="() => HandlePageChange(PageIndex + 1)">&raquo;</button>
                                 </li>
                             </ul>
                         </nav>
@@ -188,39 +150,79 @@
     </div>
 </div>
 
-@* --- CHÈN CSS TRỰC TIẾP TẠI ĐÂY --- *@
+
+@* --- CSS TÙY CHỈNH THANH CUỘN --- *@
 <style>
-    /* 1. Tùy chỉnh thanh cuộn cho bảng (nhỏ gọn, đẹp hơn) */
-    .table-responsive::-webkit-scrollbar {
+    /* Desktop: Màn hình từ 992px trở lên */
+    @@media (min-width: 992px) {
+        .h-100-lg {
+            height: 100% !important;
+        }
+
+        .overflow-hidden-lg {
+            overflow: hidden !important;
+        }
+
+        /* Cố định chiều cao vùng bảng để cuộn riêng biệt */
+        .table-responsive {
+            max-height: calc(100vh - 250px);
+        }
+    }
+
+    /* Mobile: Màn hình dưới 992px */
+    @@media (max-width: 991.98px) {
+
+        /* Cho phép bảng giãn theo nội dung để cuộn toàn trang */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Tối ưu kích thước nút cho màn hình nhỏ */
+        .btn-sm {
+            padding: 0.25rem 0.4rem;
+        }
+    }
+
+    /* Định dạng thanh cuộn (Dùng chung) */
+    .custom-scroll::-webkit-scrollbar {
         width: 6px;
         height: 6px;
     }
 
-    /* Màu nền của đường ray cuộn */
-    .table-responsive::-webkit-scrollbar-track {
+    .custom-scroll::-webkit-scrollbar-track {
         background: #f1f1f1;
+    }
+
+    .custom-scroll::-webkit-scrollbar-thumb {
+        background: #ced4da;
         border-radius: 3px;
     }
 
-    /* Màu của thanh trượt */
-    .table-responsive::-webkit-scrollbar-thumb {
-        background: #c1c1c1;
-        border-radius: 3px;
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+        background: #adb5bd;
     }
 
-    /* Màu khi di chuột vào thanh trượt */
-    .table-responsive::-webkit-scrollbar-thumb:hover {
-        background: #a8a8a8;
+    /* Giữ header bảng luôn dính trên cùng khi cuộn */
+    thead.sticky-top th {
+        position: sticky;
+        top: 0;
+        background-color: #f8f9fa;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        z-index: 5;
     }
 
-    /* 2. Hiệu ứng hover cho nút phân trang */
-    .page-link {
-        transition: transform 0.1s ease-in-out, background-color 0.2s;
-    }
-
-    .page-link:active {
-        transform: scale(0.95);
-        /* Nhấn xuống nhẹ khi click */
+    @* ----- CSS cho Validation Message -----*@
+    .val-msg {
+        display: inline-block;
+        margin-top: 0.4rem;
+        padding: 0.2rem 0.6rem;
+        font-size: 0.75rem;
+        font-weight: bold;
+        color: #dc3545;
+        background-color: rgba(220, 53, 69, 0.08);
+        border-left: 3px solid darkred;
+        border-radius: 4px;
     }
 </style>
 
@@ -230,11 +232,11 @@
 @code {
     // --- DATA ---
     [Parameter] public List<TItem> Items { get; set; }
-    [Parameter] public TItem Model { get; set; }
+    [Parameter] public TModel Model { get; set; }
 
     // --- UI FRAGMENTS ---
     [Parameter] public RenderFragment SidebarTopContent { get; set; } // Chứa Dropdown Module/Type
-    [Parameter] public RenderFragment<TItem> FormContent { get; set; }
+    [Parameter] public RenderFragment<TModel> FormContent { get; set; }
     [Parameter] public RenderFragment TableHeader { get; set; }
     [Parameter] public RenderFragment<TItem> RowTemplate { get; set; }
 
@@ -252,6 +254,7 @@
     [Parameter] public EventCallback OnCancel { get; set; }
     [Parameter] public EventCallback<TItem> OnEdit { get; set; }
     [Parameter] public EventCallback<TItem> OnDelete { get; set; }
+    [Parameter] public EventCallback OnNameBlur { get; set; }
 
     // --- LOGIC ---
     private bool _isEditMode = false;
@@ -262,7 +265,30 @@
     // 2. Biến lưu tạm item đang muốn xóa
     private TItem _itemToDelete;
 
-    // [NEW] Xử lý chuyển trang
+    private EditForm? _internalForm;
+    // Hàm này sẽ kiểm tra toàn bộ lỗi dựa trên DataAnnotations của Model hiện tại
+    public void TriggerValidate()
+    {
+        // EditContext.Validate() trả về true nếu không có lỗi, false nếu có lỗi
+        _internalForm?.EditContext?.Validate();
+    }
+
+    // Hàm xử lý chung ngay tại Layout để giữ State
+    private void HandleCommonChange(string? val, string prop)
+    {
+        if (prop == "Name") Model.Name = val ?? "";
+        else if (prop == "Description") Model.Description = val;
+
+        // Trigger validate để hiện/ẩn lỗi real-time
+        _internalForm?.EditContext?.Validate();
+    }
+
+    private async Task HandleNameBlur()
+    {
+        await OnNameBlur.InvokeAsync();
+    }
+
+    // Xử lý chuyển trang
     private async Task HandlePageChange(int newPage)
     {
         // Guard clause: Chặn click bậy
@@ -297,12 +323,12 @@
         await OnDelete.InvokeAsync(_itemToDelete); // Gọi sự kiện xóa
 
         // Nếu đang sửa đúng thằng bị xóa thì reset form
-        if (_isEditMode && Model.Equals(_itemToDelete))
+        if (_isEditMode)
         {
             await CancelEdit();
         }
         // Không cần gọi _confirmModal.Hide() vì nó tự đóng rồi
-        _itemToDelete = default;
+        _itemToDelete = default!;
     }
 
     private async Task HandleSubmit()

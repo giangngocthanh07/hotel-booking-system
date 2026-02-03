@@ -20,7 +20,7 @@
 }
 else
 {
-    <MasterDetailLayout TItem="BedTypeVM" Items="items" Model="_model" PageIndex="_paging.PageIndex ?? 1"
+    <MasterDetailLayout TItem="BedTypeVM" TModel="BaseCreateOrUpdateAdminVM" Items="items" Model="@(_isUpdate ? (BaseCreateOrUpdateAdminVM)_updateModel : (BaseCreateOrUpdateAdminVM)_createModel)" PageIndex="_paging.PageIndex ?? 1"
         TotalPages="totalPages" TotalCount="totalCount" OnPageChanged="HandlePageChanged" OnSubmit="SaveData"
         OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm">
 
@@ -31,35 +31,174 @@ else
             <GlobalNavMenu CurrentModule="BedType" CurrentTypeId="TypeId" />
         </SidebarTopContent>
 
-        @* --- B. CẤU HÌNH FORM --- *@
-        <FormContent Context="formData">
+        @* --- B. CẤU HÌNH FORM (Đã Việt hóa & Thêm chú thích) --- *@
+        <FormContent>
+
+            @* 1. TÊN LOẠI GIƯỜNG *@
             <div class="mb-3">
-                <label class="form-label fw-bold small text-muted">Name</label>
-                <InputText class="form-control" @bind-Value="formData.Name" />
+                <label class="form-label fw-bold small text-muted text-uppercase">Tên loại giường</label>
+                @if (_isUpdate)
+                {
+                    <InputText class="form-control" @bind-Value="_updateModel.Name" placeholder="VD: King Bed, Queen Bed..." />
+                    <ValidationMessage For="() => _updateModel.Name" />
+                }
+                else
+                {
+                    <InputText class="form-control" @bind-Value="_createModel.Name" placeholder="VD: King Bed, Queen Bed..." />
+                    <ValidationMessage For="() => _createModel.Name" />
+                }
             </div>
+
+            @* 2. SỨC CHỨA *@
             <div class="mb-3">
-                <label class="form-label fw-bold small text-muted">Default Capacity</label>
-                <InputNumber class="form-control" @bind-Value="formData.DefaultCapacity" />
+                <label class="form-label fw-bold small text-muted text-uppercase">Sức chứa (Người)</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="fa-solid fa-user-group text-muted"></i></span>
+                    @if (_isUpdate)
+                    {
+                        <InputNumber class="form-control" @bind-Value="_updateModel.DefaultCapacity" min="1" />
+                    }
+                    else
+                    {
+                        <InputNumber class="form-control" @bind-Value="_createModel.DefaultCapacity" min="1" />
+                    }
+                </div>
+                <div class="form-text small text-muted">
+                    Số người tối đa mặc định cho loại giường này.
+                </div>
             </div>
+
+            @* 3. THIẾT LẬP KÍCH THƯỚC *@
+            @* Lấy giá trị hiện tại để Binding UI *@
+            @{
+                bool isVarying = _isUpdate ? _updateModel.IsVaryingSize : _createModel.IsVaryingSize;
+            }
+            
+            <div class="mb-4 p-3 bg-light rounded border shadow-sm">
+                <label class="form-label fw-bold small d-block mb-2 text-primary">THIẾT LẬP KÍCH THƯỚC</label>
+
+                <div class="form-check form-switch custom-switch mb-3">
+                    @* Switch cho Update *@
+                    @if (_isUpdate)
+                    {
+                    <input type="checkbox" class="form-check-input" role="switch" id="swVarying" 
+                            checked="@_updateModel.IsVaryingSize" 
+                            @onchange="@(e => { 
+                                    _updateModel.IsVaryingSize = (bool)(e.Value ?? false); 
+                                    // Logic: Nếu tắt Varying mà size đang = 0 thì gợi ý size chuẩn
+                                    if(!_updateModel.IsVaryingSize && _updateModel.MinWidth == 0) {
+                                        _updateModel.MinWidth = 39; 
+                                        _updateModel.MaxWidth = 75;
+                                    }
+                            })" />
+                    }
+                    @* Switch cho Create *@
+                    else
+                    {
+                        <input type="checkbox" class="form-check-input" role="switch" id="swVarying" 
+                            checked="@_createModel.IsVaryingSize" 
+                            @onchange="@(e => { 
+                                    _createModel.IsVaryingSize = (bool)(e.Value ?? false); 
+                                    if(!_createModel.IsVaryingSize && _createModel.MinWidth == 0) {
+                                        _createModel.MinWidth = 39; 
+                                        _createModel.MaxWidth = 75;
+                                    }
+                            })" />
+                    }
+
+                    <label class="form-check-label ms-2 small fw-bold" for="swVarying">
+                        @(isVarying ? "Kích thước đa dạng" : "Kích thước cố định")
+                    </label>
+                </div>
+
+                @if (!isVarying)
+                {
+                    <div class="p-1 rounded bg-primary bg-opacity-10 border border-primary border-opacity-25 shadow-sm">
+                        <label class="fw-bold text-muted text-uppercase mb-1"
+                            style="font-size: 0.62rem; letter-spacing: 0.5px;">
+                            CHIỀU RỘNG (INCHES)
+                        </label>
+                        <div class="d-flex align-items-center gap-2">
+                            @if (_isUpdate)
+                            {
+                                <InputNumber class="form-control form-control-sm fw-bold text-primary shadow-sm" style="width: 85px;" @bind-Value="_updateModel.MinWidth" />
+                                <span class="text-muted small">-</span>
+                                <InputNumber class="form-control form-control-sm fw-bold text-primary shadow-sm" style="width: 85px;" @bind-Value="_updateModel.MaxWidth" />
+                            }
+                            else
+                            {
+                                <InputNumber class="form-control form-control-sm fw-bold text-primary shadow-sm" style="width: 85px;" @bind-Value="_createModel.MinWidth" />
+                                <span class="text-muted small">-</span>
+                                <InputNumber class="form-control form-control-sm fw-bold text-primary shadow-sm" style="width: 85px;" @bind-Value="_createModel.MaxWidth" />
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @* 4. MÔ TẢ *@
             <div class="mb-3">
-                <label class="form-label fw-bold small text-muted">Description</label>
-                <InputTextArea class="form-control" @bind-Value="formData.Description" />
+                <label class="form-label fw-bold small text-muted text-uppercase">Mô tả</label>
+                @if (_isUpdate)
+                {
+                    <InputTextArea class="form-control" @bind-Value="_updateModel.Description" rows="3" placeholder="Nhập mô tả để Owner tham khảo..."/>
+                }
+                else
+                {
+                    <InputTextArea class="form-control" @bind-Value="_createModel.Description" rows="3" placeholder="Nhập mô tả để Owner tham khảo..."/>
+                }
             </div>
         </FormContent>
 
         @* --- C. CẤU HÌNH BẢNG (TABLE) --- *@
         <TableHeader>
-            <th>ID</th>
-            <th>Name</th>
-            <th>DefaultCapacity</th>
-            <th>Description</th>
+            <th class="text-center" style="width: 50px;">ID</th>
+            <th class="text-center" style="width: 150px;">Loại giường</th>
+            <th class="text-center" style="width: 120px;">Sức chứa</th>
+            <th class="text-center" style="width: 180px;">Kích thước (Inch)</th>
+            <th class="text-center">Mô tả</th>
         </TableHeader>
 
         <RowTemplate Context="row">
-            <td>@row.Id</td>
-            <td><strong>@row.Name</strong></td>
-            <td>@row.DefaultCapacity</td>
-            <td>@row.Description</td>
+            <td class="text-center text-muted small">@row.Id</td>
+            <td class="text-center align-middle text-primary">@row.Name</td>
+
+            @* Căn giữa nội dung & Dùng Badge hiển thị số lượng *@
+            <td class="text-center">
+                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary px-3 py-2">
+                    <span class="fs-6 fw-bold me-1">@row.DefaultCapacity</span>
+                    <i class="fa-solid fa-user ms-1 opacity-50" style="font-size: 0.8em;"></i>
+                </span>
+            </td>
+
+            <td class="text-center align-middle">
+                @if (row.IsVaryingSize)
+                {
+                    <span class="text-muted small fst-italic">Đa dạng (Varying)</span>
+                }
+                else
+                {
+                    <div class="badge bg-primary bg-opacity-10 text-primary border border-primary shadow-sm px-2 py-1">
+                        <i class="fa-solid fa-ruler-horizontal me-1"></i> @row.MinWidth - @row.MaxWidth"
+                    </div>
+                }
+            </td>
+
+            @* Cắt gọn mô tả nếu quá dài *@
+            <td class="text-center align-middle text-muted small text-truncate" style="max-width: 250px;"
+                title="@row.Description">
+                @if (string.IsNullOrWhiteSpace(row.Description))
+                {
+                    <span class="text-muted opacity-50">---</span>
+                }
+                else
+                {
+                    @* Giới hạn width để không đẩy bảng *@
+                    <div class="text-muted small text-truncate mx-auto" style="max-width: 250px;" title="@row.Description">
+                        @row.Description
+                    </div>
+                }
+            </td>
         </RowTemplate>
 
     </MasterDetailLayout>
@@ -71,8 +210,13 @@ else
     [Parameter] public int? TypeId { get; set; }
 
     // --- STATE ---
-    private List<BedTypeVM> items;
-    private BedTypeVM _model = new();
+    private List<BedTypeVM>? items;
+
+    // Tách Model
+    private BedTypeCreateVM _createModel = new BedTypeCreateVM();
+    private BedTypeUpdateVM _updateModel = new BedTypeUpdateVM();
+    
+    private int _currentEditingId = 0;
     private bool _isUpdate = false;
 
     // --- PHÂN TRANG ---
@@ -84,7 +228,7 @@ else
     protected override async Task LoadDataAsync()
     {
         // Reset UI Loading
-        items = null;
+        items = null!;
         StateHasChanged();
 
         try
@@ -102,11 +246,12 @@ else
                 }
                 else
                 {
+                    items = new List<BedTypeVM>();
+
                     if (res.StatusCode != StatusCodeResponse.Success)
                     {
-                        SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
+                        SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
                     }
-                    items = new List<BedTypeVM>();
                 }
             }
         }
@@ -117,14 +262,24 @@ else
         }
     }
 
+    protected override void OnInitialized()
+    {
+        // Ép Model đúng kiểu ngay khi component vừa được tạo ra
+        ResetForm();
+    }
+
     // --- 2. XỬ LÝ PARAMETERS ---
     // Với trang Non-Type, ta không cần override OnParametersSetAsync phức tạp
     // Vì dữ liệu không đổi theo TypeId.
     // Tuy nhiên, có thể thêm check IsJsReady để an toàn.
     protected override async Task OnParametersSetAsync()
     {
-        if (!IsJsReady) return;
-        // Không cần load lại data khi TypeId đổi vì BedType chỉ có 1 danh sách chung
+        ResetForm(); 
+
+        if (IsJsReady) 
+        {
+            await LoadDataAsync();
+        }
     }
 
     // --- XỬ LÝ CHUYỂN TRANG ---
@@ -138,14 +293,16 @@ else
     private void OnEditItem(BedTypeVM item)
     {
         _isUpdate = true;
-        _model = new BedTypeVM
+        _currentEditingId = item.Id;
+
+        // Dùng Helper để map sang UpdateVM
+        var updateModel = RoomAttributeHelper.MapToUpdateVM(item);
+    
+        // Ép kiểu về đúng loại để gán vào _updateModel
+        if (updateModel is BedTypeUpdateVM mapped)
         {
-            Id = item.Id,
-            Name = item.Name,
-            DefaultCapacity = item.DefaultCapacity,
-            Description =
-        item.Description
-        };
+            _updateModel = mapped;
+        }
     }
 
     private async Task HandleDelete(BedTypeVM item)
@@ -154,7 +311,7 @@ else
         var res = await Service.DeleteBedType(item.Id);
 
         // Hiển thị thông báo
-        SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
+        SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
 
         if (res.StatusCode == StatusCodeResponse.Success)
         {
@@ -166,18 +323,34 @@ else
     private void ResetForm()
     {
         _isUpdate = false;
-        _model = new();
+        _currentEditingId = 0;
+        
+        // Reset CreateVM
+        if (RoomAttributeHelper.CreateNewCreateModel(RoomAttributeType.BedType) is BedTypeCreateVM newModel)
+        {
+            _createModel = newModel;
+        }
+
+        _updateModel = new BedTypeUpdateVM();
+
+        StateHasChanged();
     }
 
     private async Task SaveData()
     {
         ApiResponse<BedTypeVM> res;
 
-        if (_isUpdate) res = await Service.UpdateBedType(_model);
-        else res = await Service.CreateBedType(_model);
+        if (_isUpdate)
+        {
+            res = await Service.UpdateBedType(_currentEditingId, _updateModel);
+        }
+        else
+        {
+            res = await Service.CreateBedType(_createModel);
+        }
 
         // Hiển thị thông báo
-        SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
+        SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
 
         if (res.StatusCode == StatusCodeResponse.Success)
         {

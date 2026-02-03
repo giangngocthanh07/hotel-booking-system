@@ -1,4 +1,5 @@
 using System.Text.Json;
+using FluentValidation;
 using HotelBooking.application.Helpers;
 using HotelBooking.infrastructure.Models;
 
@@ -7,20 +8,22 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
     /// <summary>
     /// Interface cho quản lý Amenity - các tiện nghi của khách sạn
     /// </summary>
-    public interface IAmenityService : ITypedManage<AmenityDTO, AmenityTypeDTO, AmenityCreateOrUpdateDTO>
+    public interface IAmenityService : ITypedManage<AmenityDTO, AmenityTypeDTO, AmenityCreateDTO, AmenityUpdateDTO>
     {
         Task<ApiResponse<PagedManageResult<AmenityDTO>>> GetAmenitiesByTypeAsync(int? typeId, PagingRequest paging);
     }
 
-    public class AmenityService : BaseManage<Amenity, IAmenityRepository, AmenityDTO, AmenityCreateOrUpdateDTO>, IAmenityService
+    public class AmenityService : BaseManage<Amenity, IAmenityRepository, AmenityDTO, AmenityCreateDTO, AmenityUpdateDTO>, IAmenityService
     {
         private readonly IAmenityTypeRepository _amenityTypeRepo;
 
         public AmenityService(
             IAmenityRepository repository,
             IAmenityTypeRepository amenityTypeRepository,
-            IUnitOfWork unitOfWork)
-            : base(repository, unitOfWork)
+            IUnitOfWork unitOfWork,
+            IValidator<AmenityCreateDTO> createValidator,
+        IValidator<AmenityUpdateDTO> updateValidator)
+            : base(repository, unitOfWork, createValidator, updateValidator)
         {
             _amenityTypeRepo = amenityTypeRepository;
         }
@@ -40,7 +43,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
             };
         }
 
-        protected override void MapToEntity(AmenityCreateOrUpdateDTO updateDto, Amenity entity)
+        protected override void MapUpdateToEntity(AmenityUpdateDTO updateDto, Amenity entity)
         {
             entity.Name = updateDto.Name;
             entity.Additional = JsonSerializer.Serialize(new
@@ -49,7 +52,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
             });
         }
 
-        protected override Amenity MapToEntity(AmenityCreateOrUpdateDTO createDto)
+        protected override Amenity MapCreateToEntity(AmenityCreateDTO createDto)
         {
             var additional = JsonSerializer.Serialize(new
             { Description = createDto.Description });
@@ -63,17 +66,39 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
             };
         }
 
-        protected override async Task<ValidationResult> ValidateAsync(AmenityCreateOrUpdateDTO dto, int? id = null)
+        // Override hàm check Logic (Thay vì Expression Tree)
+        // Override Logic Create: Check trùng tên (chung chung)
+        protected override async Task<ValidationResult> ValidateCreateLogicAsync(AmenityCreateDTO dto)
         {
-            var basicValidation = ValidateFactory.ValidateFullAsync<Amenity>(
-                _repo,
-                dto.Name,
-                id,
-                dto.TypeId,
-                getEntityIsDeletedFunc: x => x.IsDeleted,
-                isDeletedSelector: x => x.IsDeleted,
-                nameSelector: x => x.Name);
-            return await basicValidation;
+            bool exists = await _repo.AnyAsync(x => x.Name == dto.Name && x.IsDeleted == false);
+            if (exists) return ValidationResult.Fail(MessageResponse.AdminManagement.Amenity.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
+
+            return ValidationResult.Success();
+        }
+
+        // Override Logic Update: Check trùng tên (Trừ ID hiện tại ra)
+        protected override async Task<ValidationResult> ValidateUpdateLogicAsync(AmenityUpdateDTO dto, int id)
+        {
+            {
+                // BƯỚC 1: Lấy TypeId gốc từ DB (Vì DTO không có, và ta không tin user)
+                // Dùng AsNoTracking để tối ưu vì chỉ cần đọc TypeId
+                var currentEntity = await _repo.GetByIdAsync(id);
+
+                if (currentEntity == null) return ValidationResult.Success(); // Để hàm Update chính xử lý lỗi 404 sau
+
+                // BƯỚC 2: Check trùng tên nhưng phải cùng TypeId GỐC
+                bool isDuplicate = await _repo.AnyAsync(x =>
+                    x.Name == dto.Name &&
+                    x.TypeId == currentEntity.TypeId && // Lấy từ DB, không lấy từ DTO
+                    x.IsDeleted == false &&
+                    x.Id != id
+                );
+
+                if (isDuplicate)
+                    return ValidationResult.Fail(MessageResponse.AdminManagement.Amenity.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
+
+                return ValidationResult.Success();
+            }
         }
 
         public async Task<ApiResponse<List<AmenityTypeDTO>>> GetTypeDataAsync()
@@ -86,7 +111,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
                 {
                     return ResponseFactory.Failure<List<AmenityTypeDTO>>(
                         StatusCodeResponse.NotFound,
-                        MessageResponse.EMPTY_LIST);
+                        MessageResponse.Common.EMPTY_LIST);
                 }
 
                 var result = amenityTypes.Select(a =>
@@ -106,7 +131,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
                     };
                 }).ToList();
 
-                return ResponseFactory.Success(result, MessageResponse.GET_SUCCESSFULLY);
+                return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
             }
             catch (Exception)
             {

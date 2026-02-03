@@ -1,3 +1,4 @@
+using FluentValidation;
 using HotelBooking.application.Helpers;
 using HotelBooking.infrastructure.Models;
 
@@ -6,59 +7,106 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
     /// <summary>
     /// Interface cho quản lý Service - các dịch vụ của khách sạn
     /// </summary>
-    public interface IServiceService : ITypedManage<ServiceBaseDTO, ServiceTypeDTO, ServiceCreateOrUpdateDTO>
+    public interface IServiceService : ITypedManage<ServiceDTO, ServiceTypeDTO, ServiceCreateDTO, ServiceUpdateDTO>
     {
-        Task<ApiResponse<PagedManageResult<ServiceBaseDTO>>> GetServicesByTypeAsync(int? typeId, PagingRequest paging);
+        Task<ApiResponse<PagedManageResult<ServiceDTO>>> GetServicesByTypeAsync(int? typeId, PagingRequest paging);
     }
 
-    public class ServiceService : BaseManage<Service, IServiceRepository, ServiceBaseDTO, ServiceCreateOrUpdateDTO>, IServiceService
+    public class ServiceService : BaseManage<Service, IServiceRepository, ServiceDTO, ServiceCreateDTO, ServiceUpdateDTO>, IServiceService
     {
         private readonly IServiceTypeRepository _serviceTypeRepo;
+        private readonly IValidator<PagingRequest> _pagingValidator;
 
         public ServiceService(
             IServiceRepository repository,
             IUnitOfWork unitOfWork,
-            IServiceTypeRepository serviceTypeRepo)
-            : base(repository, unitOfWork)
+            IServiceTypeRepository serviceTypeRepo,
+            IValidator<ServiceCreateDTO> createVal,
+            IValidator<ServiceUpdateDTO> updateVal,
+            IValidator<PagingRequest> pagingValidator)
+            : base(repository, unitOfWork, createVal, updateVal)
         {
             _serviceTypeRepo = serviceTypeRepo;
+            _pagingValidator = pagingValidator;
         }
 
-        protected override ServiceBaseDTO MapToDto(Service entity)
+        protected override ServiceDTO MapToDto(Service entity)
         {
             var dto = ServiceHelper.MapToServiceDTO(entity);
             return dto!;
         }
 
-        protected override void MapToEntity(ServiceCreateOrUpdateDTO updateDto, Service entity)
+        protected override void MapUpdateToEntity(ServiceUpdateDTO updateDto, Service entity)
         {
             entity.Name = updateDto.Name;
             entity.Description = updateDto.Description;
-            entity.Additional = ServiceHelper.MapToAdditionalJson(updateDto, entity.Additional);
+
+            // [LOGIC NGHIỆP VỤ GIÁ TIỀN]
+            entity.Price = updateDto.Price;
+
+            if (updateDto is ServiceAirportUpdateDTO airDto)
+            {
+                // Nếu Admin bỏ tick "Phí 1 chiều" -> Giá về 0
+                entity.Price = airDto.IsOneWayPaid ? airDto.Price : 0;
+            }
+
+            // Dùng Helper overload cho Update
+            entity.Additional = ServiceHelper.MapToAdditionalJson(updateDto);
+
+            // LƯU Ý: Tuyệt đối KHÔNG map TypeId ở đây để tránh đổi loại dịch vụ
         }
 
-        protected override Service MapToEntity(ServiceCreateOrUpdateDTO createDto)
+        protected override Service MapCreateToEntity(ServiceCreateDTO createDto)
         {
-            return new Service
+            var entity = new Service
             {
                 Name = createDto.Name,
                 Description = createDto.Description,
+                Price = createDto.Price,
                 TypeId = createDto.TargetTypeId,
+                IsDeleted = false,
                 Additional = ServiceHelper.MapToAdditionalJson(createDto)
             };
+
+            // Logic phụ: Nếu là Airport và không tính phí 1 chiều -> Price = 0
+            if (createDto is ServiceAirportCreateDTO airDto && !airDto.IsOneWayPaid)
+            {
+                entity.Price = 0;
+            }
+
+            return entity;
         }
 
-        protected override async Task<ValidationResult> ValidateAsync(ServiceCreateOrUpdateDTO dto, int? id = null)
+        // --- 2. VALIDATION (Tách biệt Create/Update) ---
+        protected override async Task<ValidationResult> ValidateCreateLogicAsync(ServiceCreateDTO dto)
         {
-            var basicValidation = ValidateFactory.ValidateFullAsync<Service>(
-                _repo,
-                dto.Name,
-                id,
-                typeId: dto.TargetTypeId,
-                getEntityIsDeletedFunc: x => x.IsDeleted,
-                isDeletedSelector: x => x.IsDeleted,
-                nameSelector: x => x.Name);
-            return await basicValidation;
+            // Check trùng tên trong cùng loại (TargetTypeId)
+            bool isDuplicate = await _repo.AnyAsync(x =>
+                x.Name == dto.Name &&
+                x.TypeId == dto.TargetTypeId &&
+                x.IsDeleted == false);
+
+            if (isDuplicate) return ValidationResult.Fail(MessageResponse.AdminManagement.Service.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
+
+            return ValidationResult.Success();
+        }
+
+        protected override async Task<ValidationResult> ValidateUpdateLogicAsync(ServiceUpdateDTO dto, int id)
+        {
+            // UpdateDTO không có TypeId -> Phải lấy từ DB ra để biết scope check trùng
+            var currentEntity = await _repo.GetByIdAsync(id);
+            if (currentEntity == null) return ValidationResult.Success(); // Để hàm chính xử lý 404
+
+            bool isDuplicate = await _repo.AnyAsync(x =>
+                x.Name == dto.Name &&
+                x.TypeId == currentEntity.TypeId && // Check theo TypeId gốc
+                x.Id != id &&
+                x.IsDeleted == false);
+
+            if (isDuplicate)
+                return ValidationResult.Fail(MessageResponse.AdminManagement.Service.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
+
+            return ValidationResult.Success();
         }
 
         public async Task<ApiResponse<List<ServiceTypeDTO>>> GetTypeDataAsync()
@@ -71,7 +119,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
                 {
                     return ResponseFactory.Failure<List<ServiceTypeDTO>>(
                         StatusCodeResponse.NotFound,
-                        MessageResponse.EMPTY_LIST);
+                        MessageResponse.Common.EMPTY_LIST);
                 }
 
                 var result = svTypes.Select(sv => new ServiceTypeDTO
@@ -81,7 +129,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
                     IsDeleted = sv.IsDeleted
                 }).ToList();
 
-                return ResponseFactory.Success(result, MessageResponse.GET_SUCCESSFULLY);
+                return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
             }
             catch (Exception)
             {
@@ -89,9 +137,9 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
             }
         }
 
-        public async Task<ApiResponse<PagedManageResult<ServiceBaseDTO>>> GetServicesByTypeAsync(int? typeId, PagingRequest paging)
+        public async Task<ApiResponse<PagedManageResult<ServiceDTO>>> GetServicesByTypeAsync(int? typeId, PagingRequest paging)
         {
-            return await ManagementAdminHelper.GetDataByTypeAsync<Service, ServiceBaseDTO>(
+            return await ManagementAdminHelper.GetDataByTypeAsync<Service, ServiceDTO>(
                 typeId,
                 paging,
 

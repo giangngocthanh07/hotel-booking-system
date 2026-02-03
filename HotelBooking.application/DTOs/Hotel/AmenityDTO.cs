@@ -16,7 +16,15 @@ public class AmenityDTO : BaseAdminDTO
 }
 
 // 2. DTO Thêm/Sửa
-public class AmenityCreateOrUpdateDTO : BaseCreateOrUpdateAdminDTO
+// 1. DTO dùng cho TẠO MỚI (Cần TypeId) -> Kế thừa Base để lấy Name, Description
+public class AmenityCreateDTO : BaseCreateOrUpdateAdminDTO
 {
+    [Required(ErrorMessage = "Loại tiện nghi không được để trống")]
     public int TypeId { get; set; }
+}
+
+// 2. DTO dùng cho CẬP NHẬT (Không có TypeId) -> Sạch bóng trên Swagger!
+public class AmenityUpdateDTO : BaseCreateOrUpdateAdminDTO
+{
+    // Rỗng, chỉ lấy Name và Description từ Base
 }

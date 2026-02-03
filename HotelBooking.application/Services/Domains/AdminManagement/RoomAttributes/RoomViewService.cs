@@ -1,16 +1,21 @@
 using System.Text.Json;
+using FluentValidation;
 using HotelBooking.application.Helpers;
 using HotelBooking.infrastructure.Models;
 
-public interface IRoomViewService : IStandardManage<RoomViewDTO, RoomViewCreateOrUpdateDTO>
+public interface IRoomViewService : IStandardManage<RoomViewDTO, RoomViewCreateDTO, RoomViewUpdateDTO>
 {
     Task<ApiResponse<PagedManageResult<RoomViewDTO>>> GetPagedListAsync(PagingRequest paging);
 }
 
-public class RoomViewService : BaseManage<RoomView, IRoomViewRepository, RoomViewDTO, RoomViewCreateOrUpdateDTO>, IRoomViewService
+public class RoomViewService : BaseManage<RoomView, IRoomViewRepository, RoomViewDTO, RoomViewCreateDTO, RoomViewUpdateDTO>, IRoomViewService
 {
-    public RoomViewService(IRoomViewRepository repo, IUnitOfWork dbu) : base(repo, dbu)
+    private readonly IValidator<PagingRequest> _pagingValidator;
+
+    public RoomViewService(IRoomViewRepository repo, IUnitOfWork dbu, IValidator<RoomViewCreateDTO> createVal,
+            IValidator<RoomViewUpdateDTO> updateVal, IValidator<PagingRequest> pagingValidator) : base(repo, dbu, createVal, updateVal)
     {
+        _pagingValidator = pagingValidator;
     }
 
     protected override RoomViewDTO MapToDto(RoomView entity)
@@ -18,33 +23,46 @@ public class RoomViewService : BaseManage<RoomView, IRoomViewRepository, RoomVie
         return new RoomViewDTO
         {
             Id = entity.Id,
-            Name = entity.Name
+            Name = entity.Name,
+            Description = entity.Description,
+            IsDeleted = entity.IsDeleted
         };
     }
 
-    protected override RoomView MapToEntity(RoomViewCreateOrUpdateDTO createDto)
+    protected override RoomView MapCreateToEntity(RoomViewCreateDTO createDto)
     {
-        return new RoomView { Name = createDto.Name };
+        return new RoomView { Name = createDto.Name, Description = createDto.Description, IsDeleted = false };
     }
 
-    protected override void MapToEntity(RoomViewCreateOrUpdateDTO updateDto, RoomView entity)
+    protected override void MapUpdateToEntity(RoomViewUpdateDTO updateDto, RoomView entity)
     {
         entity.Name = updateDto.Name;
+        entity.Description = updateDto.Description;
     }
 
     // Validation
-    protected override async Task<ValidationResult> ValidateAsync(RoomViewCreateOrUpdateDTO dto, int? id = null)
+    protected override async Task<ValidationResult> ValidateCreateLogicAsync(RoomViewCreateDTO dto)
     {
-        var basicValidation = ValidateFactory.ValidateFullAsync<RoomView>(
-            _repo,
-            dto.Name,
-            id,
-            typeId: null,
-            getEntityIsDeletedFunc: x => x.IsDeleted,
-            isDeletedSelector: x => x.IsDeleted,
-            nameSelector: x => x.Name);
-        return await basicValidation;
+        bool exists = await _repo.AnyAsync(x =>
+            x.Name == dto.Name &&
+            x.IsDeleted == false);
 
+        if (exists) return ValidationResult.Fail(MessageResponse.AdminManagement.RoomAttribute.RoomView.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
+
+        return ValidationResult.Success();
+    }
+
+    protected override async Task<ValidationResult> ValidateUpdateLogicAsync(RoomViewUpdateDTO dto, int id)
+    {
+        bool exists = await _repo.AnyAsync(x =>
+            x.Name == dto.Name &&
+            x.Id != id &&
+            x.IsDeleted == false);
+
+        if (exists)
+            return ValidationResult.Fail(MessageResponse.AdminManagement.RoomAttribute.RoomView.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
+
+        return ValidationResult.Success();
     }
 
     public async Task<ApiResponse<List<RoomViewDTO>>> GetAllAsync()
@@ -53,14 +71,14 @@ public class RoomViewService : BaseManage<RoomView, IRoomViewRepository, RoomVie
 
         if (rvList == null || rvList.Count() == 0)
         {
-            return ResponseFactory.Failure<List<RoomViewDTO>>(StatusCodeResponse.NotFound, MessageResponse.EMPTY_LIST);
+            return ResponseFactory.Failure<List<RoomViewDTO>>(StatusCodeResponse.NotFound, MessageResponse.Common.EMPTY_LIST);
         }
 
         try
         {
             var result = rvList.Select(rv => MapToDto(rv)).ToList();
 
-            return ResponseFactory.Success(result, MessageResponse.GET_SUCCESSFULLY);
+            return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
         }
         catch (Exception)
         {
@@ -73,13 +91,16 @@ public class RoomViewService : BaseManage<RoomView, IRoomViewRepository, RoomVie
     {
         try
         {
-            // 1. Validate tham số phân trang (Trang 1, Size 10...)
-            var pagingCheck = ValidateFactory.ValidatePaging(paging);
-            if (!pagingCheck.IsValid)
+            // [BƯỚC 1] Dùng FluentValidation
+            // ValidateAsync check cả null, > 0, max size... cực sạch sẽ
+            var validationResult = await _pagingValidator.ValidateAsync(paging);
+
+            if (!validationResult.IsValid)
             {
+                // Lấy lỗi đầu tiên trả về
                 return ResponseFactory.Failure<PagedManageResult<RoomViewDTO>>(
-                    pagingCheck.StatusCode,
-                    pagingCheck.Message);
+                    StatusCodeResponse.BadRequest,
+                    validationResult.Errors[0].ErrorMessage);
             }
 
             // 2. Gọi Repository lấy dữ liệu phân trang
@@ -106,7 +127,7 @@ public class RoomViewService : BaseManage<RoomView, IRoomViewRepository, RoomVie
                 null // SelectedTypeId = null
             );
 
-            return ResponseFactory.Success(result, MessageResponse.GET_SUCCESSFULLY);
+            return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
         }
         catch (Exception)
         {

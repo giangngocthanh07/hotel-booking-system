@@ -49,8 +49,13 @@ namespace HotelBooking.api.Controllers.V1.Admin
         [HttpGet("get-manage-menu/{module}")]
         public async Task<IActionResult> GetManageMenu(ManageModuleEnum module)
         {
-            var result = await _managementAdminService.GetManageMenuAsync(module);
-            return Ok(result);
+            // 2. Tự tạo Request Object để truyền xuống Service (để Service chạy FluentValidation)
+            var request = new ManageMenuRequest
+            {
+                Module = module
+            };
+            var result = await _managementAdminService.GetManageMenuAsync(request);
+            return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
         // ==========================================
@@ -93,7 +98,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         /// 
         [Authorize(Roles = "Admin")]
         [HttpPost("create-amenity")]
-        public async Task<IActionResult> CreateAmenity([FromBody] AmenityCreateOrUpdateDTO dto)
+        public async Task<IActionResult> CreateAmenity([FromBody] AmenityCreateDTO dto)
         {
             var result = await _amenityService.CreateAsync(dto);
             return ApiResponseHandlerHelper.HandleResponse(result);
@@ -105,7 +110,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         /// 
         [Authorize(Roles = "Admin")]
         [HttpPut("update-amenity/{id}")]
-        public async Task<IActionResult> UpdateAmenity(int id, [FromBody] AmenityCreateOrUpdateDTO dto)
+        public async Task<IActionResult> UpdateAmenity(int id, [FromBody] AmenityUpdateDTO dto)
         {
             var result = await _amenityService.UpdateAsync(id, dto);
             return ApiResponseHandlerHelper.HandleResponse(result);
@@ -161,7 +166,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         /// 
         [Authorize(Roles = "Admin")]
         [HttpPost("create-policy")]
-        public async Task<IActionResult> CreatePolicy([FromBody] PolicyCreateOrUpdateDTO dto)
+        public async Task<IActionResult> CreatePolicy([FromBody] PolicyCreateDTO dto)
         {
             var result = await _policyService.CreateAsync(dto);
             return ApiResponseHandlerHelper.HandleResponse(result);
@@ -173,7 +178,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         /// 
         [Authorize(Roles = "Admin")]
         [HttpPut("update-policy/{id}")]
-        public async Task<IActionResult> UpdatePolicy(int id, [FromBody] PolicyCreateOrUpdateDTO dto)
+        public async Task<IActionResult> UpdatePolicy(int id, [FromBody] PolicyUpdateDTO dto)
         {
             var result = await _policyService.UpdateAsync(id, dto);
             return ApiResponseHandlerHelper.HandleResponse(result);
@@ -230,7 +235,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
 
         [Authorize(Roles = "Admin")]
         [HttpPost("create-standard-service")]
-        public async Task<IActionResult> CreateStandardServiceAsync([FromBody] StdServiceCreateOrUpdateDTO newService)
+        public async Task<IActionResult> CreateStandardServiceAsync([FromBody] ServiceStandardCreateDTO newService)
         {
             var result = await _serviceService.CreateAsync(newService);
             return ApiResponseHandlerHelper.HandleResponse(result);
@@ -238,7 +243,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
 
         [Authorize(Roles = "Admin")]
         [HttpPost("create-airport-transfer-service")]
-        public async Task<IActionResult> CreateAirportTransferServiceAsync([FromBody] AirportTransServiceCreateOrUpdateDTO newService)
+        public async Task<IActionResult> CreateAirportTransferServiceAsync([FromBody] ServiceAirportCreateDTO newService)
         {
             var result = await _serviceService.CreateAsync(newService);
             return ApiResponseHandlerHelper.HandleResponse(result);
@@ -250,7 +255,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
 
         [Authorize(Roles = "Admin")]
         [HttpPut("update-standard-service/{id}")]
-        public async Task<IActionResult> UpdateStandardServiceAsync(int id, [FromBody] StdServiceCreateOrUpdateDTO updatedService)
+        public async Task<IActionResult> UpdateStandardServiceAsync(int id, [FromBody] ServiceStandardUpdateDTO updatedService)
         {
             var result = await _serviceService.UpdateAsync(id, updatedService);
             return ApiResponseHandlerHelper.HandleResponse(result);
@@ -258,7 +263,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
 
         [Authorize(Roles = "Admin")]
         [HttpPut("update-airport-transfer-service/{id}")]
-        public async Task<IActionResult> UpdateAirportTransferServiceAsync(int id, [FromBody] AirportTransServiceCreateOrUpdateDTO updatedService)
+        public async Task<IActionResult> UpdateAirportTransferServiceAsync(int id, [FromBody] ServiceAirportUpdateDTO updatedService)
         {
             var result = await _serviceService.UpdateAsync(id, updatedService);
             return ApiResponseHandlerHelper.HandleResponse(result);
@@ -289,14 +294,14 @@ namespace HotelBooking.api.Controllers.V1.Admin
         }
 
         [HttpPost("create-room-quality")]
-        public async Task<IActionResult> CreateRoomQualityAsync([FromBody] RoomQualityCreateOrUpdateDTO newRoomQuality)
+        public async Task<IActionResult> CreateRoomQualityAsync([FromBody] RoomQualityCreateDTO newRoomQuality)
         {
             var result = await _rqService.CreateAsync(newRoomQuality);
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
         [HttpPut("update-room-quality/{id}")]
-        public async Task<IActionResult> UpdateRoomQualityAsync(int id, [FromBody] RoomQualityCreateOrUpdateDTO rq)
+        public async Task<IActionResult> UpdateRoomQualityAsync(int id, [FromBody] RoomQualityUpdateDTO rq)
         {
 
             var result = await _rqService.UpdateAsync(id, rq);
@@ -318,11 +323,23 @@ namespace HotelBooking.api.Controllers.V1.Admin
             [FromQuery] int pageSize = 10,
             [FromQuery] int? typeId = null)     // Chỉ dùng cho RoomQuality
         {
-            // 1. Tạo request phân trang
-            var paging = new PagingRequest { PageIndex = pageIndex, PageSize = pageSize };
+            // 1. Tạo đối tượng PagingRequest từ tham số rời rạc
+            var pagingRequest = new PagingRequest
+            {
+                PageIndex = pageIndex,
+                PageSize = pageSize
+            };
 
-            // 2. Gọi Facade (Nó tự biết switch-case vào đúng Manager)
-            var result = await _roomAttributeFacade.GetPagedByTypeAsync(type, paging, typeId);
+            // 2. Tạo Request Object để gói dữ liệu lại (Chuẩn bị cho FluentValidation bên trong)
+            var request = new GetRoomAttributeRequest
+            {
+                Type = type,
+                Paging = pagingRequest, // Gán đối tượng vừa tạo vào đây
+                TypeId = typeId
+            };
+
+            // 3. Gọi Facade (LƯU Ý: Truyền đúng biến 'request' vào)
+            var result = await _roomAttributeFacade.GetPagedByTypeAsync(request);
 
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
@@ -339,7 +356,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
 
         [Authorize(Roles = "Admin")]
         [HttpPost("create-unit-type")]
-        public async Task<IActionResult> CreateUnitTypeAsync([FromBody] UnitTypeCreateOrUpdateDTO newUnitType)
+        public async Task<IActionResult> CreateUnitTypeAsync([FromBody] UnitTypeCreateDTO newUnitType)
         {
             var result = await _roomAttributeFacade.UnitTypeService.CreateAsync(newUnitType);
             return ApiResponseHandlerHelper.HandleResponse(result);
@@ -347,7 +364,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
 
         [Authorize(Roles = "Admin")]
         [HttpPut("update-unit-type/{id}")]
-        public async Task<IActionResult> UpdateUnitTypeAsync(int id, [FromBody] UnitTypeCreateOrUpdateDTO ut)
+        public async Task<IActionResult> UpdateUnitTypeAsync(int id, [FromBody] UnitTypeUpdateDTO ut)
         {
 
             var result = await _roomAttributeFacade.UnitTypeService.UpdateAsync(id, ut);
@@ -375,7 +392,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
 
         [Authorize(Roles = "Admin")]
         [HttpPost("create-bed-type")]
-        public async Task<IActionResult> CreateBedTypeAsync([FromBody] BedTypeCreateOrUpdateDTO newBedType)
+        public async Task<IActionResult> CreateBedTypeAsync([FromBody] BedTypeCreateDTO newBedType)
         {
             var result = await _roomAttributeFacade.BedTypeService.CreateAsync(newBedType);
             return ApiResponseHandlerHelper.HandleResponse(result);
@@ -383,7 +400,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
 
         [Authorize(Roles = "Admin")]
         [HttpPut("update-bed-type/{id}")]
-        public async Task<IActionResult> UpdateBedTypeAsync(int id, [FromBody] BedTypeCreateOrUpdateDTO bt)
+        public async Task<IActionResult> UpdateBedTypeAsync(int id, [FromBody] BedTypeUpdateDTO bt)
         {
 
             var result = await _roomAttributeFacade.BedTypeService.UpdateAsync(id, bt);
@@ -412,7 +429,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
 
         [Authorize(Roles = "Admin")]
         [HttpPost("create-room-view")]
-        public async Task<IActionResult> CreateRoomViewAsync([FromBody] RoomViewCreateOrUpdateDTO newRoomView)
+        public async Task<IActionResult> CreateRoomViewAsync([FromBody] RoomViewCreateDTO newRoomView)
         {
             var result = await _roomAttributeFacade.RoomViewService.CreateAsync(newRoomView);
             return ApiResponseHandlerHelper.HandleResponse(result);
@@ -420,7 +437,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
 
         [Authorize(Roles = "Admin")]
         [HttpPut("update-room-view/{id}")]
-        public async Task<IActionResult> UpdateRoomViewAsync(int id, [FromBody] RoomViewCreateOrUpdateDTO rv)
+        public async Task<IActionResult> UpdateRoomViewAsync(int id, [FromBody] RoomViewUpdateDTO rv)
         {
 
             var result = await _roomAttributeFacade.RoomViewService.UpdateAsync(id, rv);

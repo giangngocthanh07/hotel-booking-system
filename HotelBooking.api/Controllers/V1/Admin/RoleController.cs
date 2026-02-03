@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using HotelBooking.application.Services.Domains.AdminManagement;
+// Note: RoleMessage được consolidate vào MessageResponse.AdminManagement.Role
+// Dùng MessageResponse.AdminManagement.Role.* cho code mới hoặc RoleMessage untuk backward compatible
 
 namespace HotelBooking.api.Controllers.V1.Admin
 {
@@ -26,9 +28,9 @@ namespace HotelBooking.api.Controllers.V1.Admin
             var response = await _roleService.AddAsync(newRole);
             if (response)
             {
-                return Ok(RoleMessage.ROLE_ADD_SUCCESS);
+                return Ok();
             }
-            return BadRequest(RoleMessage.ROLE_ADD_FAILED);
+            return BadRequest();
         }
     }
 }

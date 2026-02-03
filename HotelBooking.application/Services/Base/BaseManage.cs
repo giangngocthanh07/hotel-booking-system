@@ -1,22 +1,32 @@
-using System.Linq.Expressions;
+using FluentValidation;
 using HotelBooking.application.Helpers;
 
-public interface IBaseManage<TEntity, TRepo, TDto, TCreateOrUpdateDTO> : ICommonManage<TDto, TCreateOrUpdateDTO>
+public interface IBaseManage<TEntity, TRepo, TDto, TCreateDTO, TUpdateDTO> : ICommonManage<TDto, TCreateDTO, TUpdateDTO>
 {
 }
 
-public abstract class BaseManage<TEntity, TRepo, TDto, TCreateOrUpdateDTO> : IBaseManage<TEntity, TRepo, TDto, TCreateOrUpdateDTO>
+public abstract class BaseManage<TEntity, TRepo, TDto, TCreateDTO, TUpdateDTO> : IBaseManage<TEntity, TRepo, TDto, TCreateDTO, TUpdateDTO>
     where TEntity : class
     where TRepo : IRepository<TEntity>
+    where TCreateDTO : class
+    where TUpdateDTO : class
 {
     // Implementation of base management functionalities
     protected readonly TRepo _repo;
     protected readonly IUnitOfWork _dbu;
 
-    public BaseManage(TRepo repo, IUnitOfWork dbu)
+    // Inject Validator (Cho phép null - Optional)
+    // Inject 2 Validator riêng biệt (Có thể null)
+    protected readonly IValidator<TCreateDTO>? _createValidator;
+    protected readonly IValidator<TUpdateDTO>? _updateValidator;
+
+    public BaseManage(TRepo repo, IUnitOfWork dbu, IValidator<TCreateDTO>? createValidator = null,
+        IValidator<TUpdateDTO>? updateValidator = null)
     {
         _repo = repo;
         _dbu = dbu;
+        _createValidator = createValidator;
+        _updateValidator = updateValidator;
     }
 
     // --- ĐỊNH NGHĨA 3 HÀM BẮT BUỘC CON PHẢI LÀM ---
@@ -27,14 +37,24 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateOrUpdateDTO> : IBa
     protected abstract TDto MapToDto(TEntity entity);
 
     // 2. Map từ CreateDTO -> Entity (Dùng cho Create)
-    protected abstract TEntity MapToEntity(TCreateOrUpdateDTO createDto);
+    protected abstract TEntity MapCreateToEntity(TCreateDTO createDto);
 
     // 3. Map từ UpdateDTO vào Entity CÓ SẴN (Dùng cho Update, Deleted)
-    protected abstract void MapToEntity(TCreateOrUpdateDTO updateDto, TEntity entity);
+    protected abstract void MapUpdateToEntity(TUpdateDTO updateDto, TEntity entity);
 
     // 4. --- VALIDATION METHOD ---
-    // Hook method để Validate dữ liệu trước khi Create/Update
-    protected abstract Task<ValidationResult> ValidateAsync(TCreateOrUpdateDTO dto, int? id = null); 
+
+    // Validate Business Logic cho Create (VD: Check trùng tên khi tạo mới)
+    protected virtual async Task<ValidationResult> ValidateCreateLogicAsync(TCreateDTO dto)
+    {
+        return new ValidationResult(); // Mặc định hợp lệ
+    }
+
+    // Validate Business Logic cho Update (VD: Check trùng tên nhưng trừ ID hiện tại)
+    protected virtual async Task<ValidationResult> ValidateUpdateLogicAsync(TUpdateDTO dto, int id)
+    {
+        return new ValidationResult(); // Mặc định hợp lệ
+    }
 
     public virtual async Task<ApiResponse<TDto>> GetByIdAsync(int id)
     {
@@ -43,12 +63,12 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateOrUpdateDTO> : IBa
             var entity = await _repo.GetByIdAsync(id);
             if (entity == null)
             {
-                return ResponseFactory.Failure<TDto>(StatusCodeResponse.NotFound, MessageResponse.NOT_FOUND);
+                return ResponseFactory.Failure<TDto>(StatusCodeResponse.NotFound, MessageResponse.Common.NOT_FOUND);
             }
             // Mapping logic from TEntity to TDto should be implemented here
             TDto dto = MapToDto(entity);
 
-            return ResponseFactory.Success(dto, MessageResponse.GET_SUCCESSFULLY);
+            return ResponseFactory.Success(dto, MessageResponse.Common.GET_SUCCESSFULLY);
         }
         catch (Exception)
         {
@@ -56,28 +76,36 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateOrUpdateDTO> : IBa
         }
     }
 
-    public virtual async Task<ApiResponse<TDto>> CreateAsync(TCreateOrUpdateDTO createDto)
+    public virtual async Task<ApiResponse<TDto>> CreateAsync(TCreateDTO createDto)
     {
         try
         {
             // [BƯỚC 1] Gọi Validate
-            var validateResult = await ValidateAsync(createDto);
-
-            // Nếu toang -> Trả về lỗi ngay lập tức
-            if (!validateResult.IsValid)
+            // A. Chạy FluentValidation (Check format tĩnh)
+            // A. Fluent Validation (Tĩnh) -> Dùng _createValidator
+            if (_createValidator != null)
             {
-                return ResponseFactory.Failure<TDto>(validateResult.StatusCode, validateResult.Message);
+                var valResult = await _createValidator.ValidateAsync(createDto);
+                if (!valResult.IsValid)
+                    return ResponseFactory.Failure<TDto>(StatusCodeResponse.BadRequest, valResult.Errors[0].ErrorMessage);
+            }
+
+            // B. Chạy Business Logic (Check DB động)
+            var logicResult = await ValidateCreateLogicAsync(createDto);
+            if (!logicResult.IsValid)
+            {
+                return ResponseFactory.Failure<TDto>(logicResult.StatusCode, logicResult.Message);
             }
 
             // [BƯỚC 2] Logic lưu DB bình thường
-            var entity = MapToEntity(createDto);
+            var entity = MapCreateToEntity(createDto);
             await _repo.AddAsync(entity);
             await _dbu.SaveChangesAsync();
 
             // Mapping logic from TEntity to TDto should be implemented here
             TDto dto = MapToDto(entity);
 
-            return ResponseFactory.Success(dto, MessageResponse.CREATE_SUCCESSFULLY);
+            return ResponseFactory.Success(dto, MessageResponse.Common.CREATE_SUCCESSFULLY);
         }
         catch (Exception)
         {
@@ -85,29 +113,38 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateOrUpdateDTO> : IBa
         }
     }
 
-    public virtual async Task<ApiResponse<TDto>> UpdateAsync(int id, TCreateOrUpdateDTO updateDto)
+    public virtual async Task<ApiResponse<TDto>> UpdateAsync(int id, TUpdateDTO updateDto)
     {
         try
         {
+
+            // A. Check Tồn tại
             var entity = await _repo.GetByIdAsync(id);
+            if (entity == null)
+                return ResponseFactory.Failure<TDto>(StatusCodeResponse.NotFound, MessageResponse.Common.NOT_FOUND);
 
-            // [BƯỚC 1] Gọi Hook Validate Update (Truyền ID để check logic trùng lặp ngoại trừ chính nó)
-            var validateResult = await ValidateAsync(updateDto, id);
-
-            if (!validateResult.IsValid)
+            // B. Fluent Validation (Tĩnh) -> Dùng _updateValidator [Lưu ý dùng updateDto]
+            if (_updateValidator != null)
             {
-                return ResponseFactory.Failure<TDto>(validateResult.StatusCode, validateResult.Message);
+                var valResult = await _updateValidator.ValidateAsync(updateDto);
+                if (!valResult.IsValid)
+                    return ResponseFactory.Failure<TDto>(StatusCodeResponse.BadRequest, valResult.Errors[0].ErrorMessage);
             }
 
+            // C. Business Logic
+            var logicResult = await ValidateUpdateLogicAsync(updateDto, id);
+            if (!logicResult.IsValid)
+                return ResponseFactory.Failure<TDto>(logicResult.StatusCode, logicResult.Message);
+
             // [BƯỚC 2] Update logic bình thường
-            MapToEntity(updateDto, entity);
+            MapUpdateToEntity(updateDto, entity);
             await _repo.UpdateAsync(entity);
             await _dbu.SaveChangesAsync();
 
             // Mapping logic from TEntity to TDto should be implemented here
             TDto dto = MapToDto(entity);
 
-            return ResponseFactory.Success(dto, MessageResponse.UPDATE_SUCCESSFULLY);
+            return ResponseFactory.Success(dto, MessageResponse.Common.UPDATE_SUCCESSFULLY);
         }
         catch (Exception)
         {
@@ -122,7 +159,7 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateOrUpdateDTO> : IBa
             var entity = await _repo.GetByIdAsync(id);
             if (entity == null)
             {
-                return ResponseFactory.Failure<bool>(StatusCodeResponse.NotFound, MessageResponse.NOT_FOUND);
+                return ResponseFactory.Failure<bool>(StatusCodeResponse.NotFound, MessageResponse.Common.NOT_FOUND);
             }
 
             // Check xem entity có phải là ISoftDelete không
@@ -141,14 +178,14 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateOrUpdateDTO> : IBa
                 await _repo.UpdateAsync(entity);
                 await _dbu.SaveChangesAsync();
 
-                return ResponseFactory.Success(true, MessageResponse.DELETE_SUCCESSFULLY);
+                return ResponseFactory.Success(true, MessageResponse.Common.DELETE_SUCCESSFULLY);
             }
             else
             {
                 // --- KHÔNG XÓA CỨNG ---
                 // Nếu bảng không có cột IsDeleted, ta trả về lỗi báo cho Developer biết
                 // để tránh việc xóa nhầm dữ liệu quan trọng.
-                return ResponseFactory.Failure<bool>(StatusCodeResponse.BadRequest, MessageResponse.DELETE_FAILED);
+                return ResponseFactory.Failure<bool>(StatusCodeResponse.BadRequest, MessageResponse.Common.DELETE_FAILED);
             }
         }
         catch (Exception)

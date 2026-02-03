@@ -1,6 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
-using MudBlazor;
+
 
 public static class HttpClientExtensions
 {
@@ -21,35 +21,41 @@ public static class HttpClientExtensions
         }
         catch (Exception)
         {
-            return ResponseFactory.Failure<T>(StatusCodeResponse.Error, MessageResponse.ERROR_IN_SERVER);
+            return ResponseFactory.Failure<T>(StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
         }
     }
 
-    // 2. POST Helper
-    public static async Task<ApiResponse<T>> PostApiAsync<T>(this HttpClient client, string url, T data)
+    // --- 2. POST: Nhận TResponse (đầu ra) và TRequest (đầu vào) ---
+    public static async Task<ApiResponse<TResponse>> PostApiAsync<TResponse, TRequest>(
+        this HttpClient client,
+        string url,
+        TRequest data) // <--- Type Safe tuyệt đối ở đây
     {
         try
         {
-            var response = await client.PostAsJsonAsync(url, data);
-            return await HandleResponse<T>(response);
+            var response = await client.PostAsJsonAsync(url, data, _options);
+            return await HandleResponse<TResponse>(response);
         }
         catch
         {
-            return ResponseFactory.Failure<T>(StatusCodeResponse.Error, MessageResponse.ERROR_IN_SERVER);
+            return ResponseFactory.Failure<TResponse>(StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
         }
     }
 
-    // 3. PUT Helper
-    public static async Task<ApiResponse<T>> PutApiAsync<T>(this HttpClient client, string url, T data)
+    // --- 3. PUT: Nhận TResponse (đầu ra) và TRequest (đầu vào) ---
+    public static async Task<ApiResponse<TResponse>> PutApiAsync<TResponse, TRequest>(
+        this HttpClient client,
+        string url,
+        TRequest data) // <--- Type Safe tuyệt đối ở đây
     {
         try
         {
-            var response = await client.PutAsJsonAsync(url, data);
-            return await HandleResponse<T>(response);
+            var response = await client.PutAsJsonAsync(url, data, _options);
+            return await HandleResponse<TResponse>(response);
         }
         catch
         {
-            return ResponseFactory.Failure<T>(StatusCodeResponse.Error, MessageResponse.ERROR_IN_SERVER);
+            return ResponseFactory.Failure<TResponse>(StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
         }
     }
 
@@ -63,7 +69,7 @@ public static class HttpClientExtensions
         }
         catch
         {
-            return ResponseFactory.Failure<T>(StatusCodeResponse.Error, MessageResponse.ERROR_IN_SERVER);
+            return ResponseFactory.Failure<T>(StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
         }
     }
     // --- Private Helpers để xử lý chung việc đọc JSON ---
@@ -74,18 +80,18 @@ public static class HttpClientExtensions
         if (response.IsSuccessStatusCode)
         {
             var result = await response.Content.ReadFromJsonAsync<ApiResponse<T>>(_options);
-            return result ?? ResponseFactory.Failure<T>(StatusCodeResponse.Error, MessageResponse.ERROR_IN_SERVER);
+            return result ?? ResponseFactory.Failure<T>(StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
         }
 
         // Nếu lỗi (400, 500...), thử đọc message lỗi từ server trả về
         try
         {
             var errorResult = await response.Content.ReadFromJsonAsync<ApiResponse<T>>(_options);
-            return errorResult ?? ResponseFactory.Failure<T>(StatusCodeResponse.Error, response.ReasonPhrase ?? MessageResponse.ERROR_IN_SERVER);
+            return errorResult ?? ResponseFactory.Failure<T>(StatusCodeResponse.Error, response.ReasonPhrase ?? MessageResponse.Common.ERROR_IN_SERVER);
         }
         catch
         {
-            return ResponseFactory.Failure<T>(StatusCodeResponse.Error, MessageResponse.ERROR_IN_SERVER);
+            return ResponseFactory.Failure<T>(StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
         }
     }
 }

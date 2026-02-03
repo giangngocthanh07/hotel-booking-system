@@ -20,9 +20,10 @@
 }
 else
 {
-    <MasterDetailLayout TItem="UnitTypeVM" Items="items" Model="_model" PageIndex="_paging.PageIndex ?? 1"
-        TotalPages="totalPages" TotalCount="totalCount" OnPageChanged="HandlePageChanged" OnSubmit="SaveData"
-        OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm">
+    <MasterDetailLayout TItem="UnitTypeVM" TModel="BaseCreateOrUpdateAdminVM" Items="items"
+        Model="@(_isUpdate ? (BaseCreateOrUpdateAdminVM)_updateModel : (BaseCreateOrUpdateAdminVM)_createModel)"
+        PageIndex="_paging.PageIndex ?? 1" TotalPages="totalPages" TotalCount="totalCount" OnPageChanged="HandlePageChanged"
+        OnSubmit="SaveData" OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm">
 
         @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
         <SidebarTopContent>
@@ -31,44 +32,161 @@ else
             <GlobalNavMenu CurrentModule="UnitType" CurrentTypeId="TypeId" />
         </SidebarTopContent>
 
-        @* --- B. CẤU HÌNH FORM --- *@
-        <FormContent Context="formData">
-            <div class="mb-3">
-                <label class="form-label fw-bold small text-muted">Name</label>
-                <InputText class="form-control" @bind-Value="formData.Name" />
-            </div>
-            <div class="mb-3">
-                <label class="form-label fw-bold small text-muted">IsEntirePlace</label>
-                <input type="checkbox" class="form-check-input" checked="@(formData.IsEntirePlace == true)"
-                    @onchange="@(e => formData.IsEntirePlace = (bool?)e.Value)" />
+        @* --- B. CẤU HÌNH FORM (CHUẨN BOOKING.COM) --- *@
+        <FormContent>
+
+            @* 1. TÊN LOẠI PHÒNG *@
+            <div class="mb-4">
+                <label class="form-label fw-bold small text-muted text-uppercase">Tên loại phòng / căn</label>
+                @if (_isUpdate)
+                {
+                    <InputText class="form-control" @bind-Value="_updateModel.Name" placeholder="VD: Căn hộ 2 phòng ngủ..." />
+                    <ValidationMessage For="() => _updateModel.Name" />
+                }
+                else
+                {
+                    <InputText class="form-control" @bind-Value="_createModel.Name" placeholder="VD: Căn hộ 2 phòng ngủ..." />
+                    <ValidationMessage For="() => _createModel.Name" />
+                }
+                <div class="form-text small">Tên này sẽ hiển thị cho khách khi đặt phòng.</div>
             </div>
 
-            @if (formData.IsEntirePlace == true)
-            {
-                <div class="alert alert-info py-2 small">
-                    <i class="fa-solid fa-house"></i> Đây là loại hình cho thuê nguyên căn.
-                </div>
+            @* 2. MÔ TẢ *@
+            <div class="mb-3">
+                <label class="form-label fw-bold small text-muted text-uppercase">Mô tả</label>
+                @if (_isUpdate)
+                {
+                    <InputTextArea class="form-control" @bind-Value="_updateModel.Description" rows="3"
+                        placeholder="Mô tả đặc điểm..." />
+                }
+                else
+                {
+                    <InputTextArea class="form-control" @bind-Value="_createModel.Description" rows="3"
+                        placeholder="Mô tả đặc điểm..." />
+                }
+            </div>
+
+            @* 3. CẤU HÌNH LOẠI HÌNH (IS ENTIRE PLACE) *@
+            @* Lấy giá trị hiện tại để hiển thị UI Visual *@
+            @{
+                bool isEntire = _isUpdate
+                ? (_updateModel.IsEntirePlace ?? false)
+                : (_createModel.IsEntirePlace ?? false);
             }
+
+            <div class="card bg-white border mb-3">
+                <div class="card-header bg-light py-2">
+                    <h6 class="mb-0 fw-bold small text-uppercase text-muted">Cấu hình loại hình</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <label class="form-label fw-bold text-dark mb-0">Đây là cho thuê nguyên căn?</label>
+
+                        @* Switch Toggle *@
+                        <div class="form-check form-switch">
+                            @if (_isUpdate)
+                            {
+                                <input class="form-check-input" type="checkbox" role="switch"
+                                    checked="@_updateModel.IsEntirePlace"
+                                    @onchange="@(e => _updateModel.IsEntirePlace = (bool)(e.Value ?? false))"
+                                    style="cursor: pointer; width: 3em; height: 1.5em;">
+                            }
+                            else
+                            {
+                                <input class="form-check-input" type="checkbox" role="switch"
+                                    checked="@_createModel.IsEntirePlace"
+                                    @onchange="@(e => _createModel.IsEntirePlace = (bool)(e.Value ?? false))"
+                                    style="cursor: pointer; width: 3em; height: 1.5em;">
+                            }
+                        </div>
+                    </div>
+
+                    @* MÔ TẢ TRỰC QUAN THEO BOOKING.COM *@
+                    <div
+                        class="p-3 rounded border @(isEntire ? "bg-success bg-opacity-10 border-success" : "bg-light border-secondary")">
+                        @if (isEntire)
+                        {
+                            // TRƯỜNG HỢP: NGUYÊN CĂN
+                            <div class="d-flex animate__animated animate__fadeIn">
+                                <div class="me-3">
+                                    <span class="badge bg-success rounded-circle p-2">
+                                        <i class="fa-solid fa-key fs-5 text-white"></i>
+                                    </span>
+                                </div>
+                                <div>
+                                    <strong class="text-success">Nguyên căn (Entire Place)</strong>
+                                    <p class="mb-0 small text-muted mt-1">
+                                        Khách sẽ có không gian riêng tư hoàn toàn (bao gồm bếp, lối đi, phòng khách...).
+                                        <br />
+                                        <em>Phù hợp với: Căn hộ (Apartment), Biệt thự (Villa), Studio, Nhà nghỉ dưỡng.</em>
+                                    </p>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            // TRƯỜNG HỢP: PHÒNG RIÊNG (KHÁCH SẠN)
+                            <div class="d-flex animate__animated animate__fadeIn">
+                                <div class="me-3">
+                                    <span class="badge bg-secondary rounded-circle p-2">
+                                        <i class="fa-solid fa-bed fs-5 text-white"></i>
+                                    </span>
+                                </div>
+                                <div>
+                                    <strong class="text-dark">Phòng riêng / Phòng khách sạn</strong>
+                                    <p class="mb-0 small text-muted mt-1">
+                                        Khách thuê phòng ngủ riêng biệt với phòng tắm (thường là khép kín).
+                                        <br />
+                                        <em>Phù hợp với: Khách sạn, Resort, Nhà nghỉ (B&B).</em>
+                                    </p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
         </FormContent>
 
         @* --- C. CẤU HÌNH BẢNG (TABLE) --- *@
         <TableHeader>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Is Entire Place</th>
+            <th class="text-center" style="width: 50px;">Id</th>
+            <th class=" text-center" style="width: 250px;">Name</th>
+            <th class="text-center">Mô tả</th>
+            @* 1. Đổi tên cột và căn giữa tiêu đề *@
+            <th class="text-center" style="width: 250px;">Loại hình cho thuê</th>
         </TableHeader>
 
         <RowTemplate Context="row">
-            <td>@row.Id</td>
-            <td><strong>@row.Name</strong></td>
-            <td class="text-center">
-                @if (row.IsEntirePlace == true)
+            <td class="text-center text-muted small">@row.Id</td>
+            <td class="text-center align-middle text-primary">@row.Name</td>
+
+            <td class="text-center align-middle text-muted small text-truncate" style="max-width: 250px;"
+                title="@row.Description">
+                @if (string.IsNullOrWhiteSpace(row.Description))
                 {
-                    <span class="badge bg-success"><i class="fa-solid fa-check"></i> Yes</span>
+                    <span class="text-muted opacity-50">---</span>
                 }
                 else
                 {
-                    <span class="text-muted small">-</span>
+                    @* Giới hạn width để không đẩy bảng *@
+                    <div class="text-muted small text-truncate mx-auto" style="max-width: 500px;" title="@row.Description">
+                        @row.Description
+                    </div>
+                }
+            </td>
+
+            <td class="text-center">
+                @if (row.IsEntirePlace == true)
+                {
+                    <span class="badge rounded-pill bg-success px-3">
+                        <i class="fa-solid fa-key me-1"></i>Nguyên căn
+                    </span>
+                }
+                else
+                {
+                    <span class="badge rounded-pill bg-light text-dark border px-3">
+                        <i class="fa-solid fa-bed me-1"></i>Phòng riêng
+                    </span>
                 }
             </td>
         </RowTemplate>
@@ -83,8 +201,12 @@ else
     [Parameter] public int? TypeId { get; set; }
 
     // --- STATE ---
-    private List<UnitTypeVM> items;
-    private UnitTypeVM _model = new();
+    private List<UnitTypeVM>? items;
+    // Tách Model
+    private UnitTypeCreateVM _createModel = new UnitTypeCreateVM();
+    private UnitTypeUpdateVM _updateModel = new UnitTypeUpdateVM();
+
+    private int _currentEditingId = 0;
     private bool _isUpdate = false;
 
     // --- PHÂN TRANG ---
@@ -115,11 +237,13 @@ else
                 }
                 else
                 {
+                    items = new List<UnitTypeVM>();
+
                     if (res.StatusCode != StatusCodeResponse.Success)
                     {
-                        SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
+                        SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
                     }
-                    items = new List<UnitTypeVM>();
+
                 }
             }
         }
@@ -130,11 +254,21 @@ else
         }
     }
 
+    protected override void OnInitialized()
+    {
+        // Ép Model đúng kiểu ngay khi component vừa được tạo ra
+        ResetForm();
+    }
+
     // --- 2. XỬ LÝ PARAMETERS ---
     protected override async Task OnParametersSetAsync()
     {
-        if (!IsJsReady) return;
-        // UnitType là danh sách chung, không cần load lại khi đổi TypeId
+        ResetForm();
+
+        if (IsJsReady)
+        {
+            await LoadDataAsync();
+        }
     }
     // --- XỬ LÝ CHUYỂN TRANG ---
     private async Task HandlePageChanged(int newPage)
@@ -148,7 +282,15 @@ else
     private void OnEditItem(UnitTypeVM item)
     {
         _isUpdate = true;
-        _model = new UnitTypeVM { Id = item.Id, Name = item.Name, IsEntirePlace = item.IsEntirePlace };
+        _currentEditingId = item.Id;
+
+        // Map sang UpdateVM
+        _updateModel = new UnitTypeUpdateVM
+        {
+            Name = item.Name,
+            Description = item.Description,
+            IsEntirePlace = item.IsEntirePlace
+        };
     }
 
     private async Task HandleDelete(UnitTypeVM item)
@@ -157,7 +299,7 @@ else
         var res = await Service.DeleteUnitType(item.Id);
 
         // Hiển thị thông báo
-        SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
+        SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
 
         if (res.StatusCode == StatusCodeResponse.Success)
         {
@@ -169,17 +311,30 @@ else
     private void ResetForm()
     {
         _isUpdate = false;
-        _model = new();
+        _currentEditingId = 0;
+
+        // Reset CreateVM
+        _createModel = new UnitTypeCreateVM { IsEntirePlace = false };
+        _updateModel = new UnitTypeUpdateVM();
+
+        StateHasChanged();
     }
 
     private async Task SaveData()
     {
         ApiResponse<UnitTypeVM> res;
-        if (_isUpdate) res = await Service.UpdateUnitType(_model);
-        else res = await Service.CreateUnitType(_model);
+
+        if (_isUpdate)
+        {
+            res = await Service.UpdateUnitType(_currentEditingId, _updateModel);
+        }
+        else
+        {
+            res = await Service.CreateUnitType(_createModel);
+        }
 
         // Hiển thị thông báo
-        SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
+        SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
 
         if (res.StatusCode == StatusCodeResponse.Success)
         {

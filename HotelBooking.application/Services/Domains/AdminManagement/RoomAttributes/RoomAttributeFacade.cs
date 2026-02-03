@@ -1,3 +1,4 @@
+using FluentValidation;
 using HotelBooking.application.Helpers;
 
 public interface IRoomAttributeFacade
@@ -10,9 +11,7 @@ public interface IRoomAttributeFacade
 
     // --- HÀM: LẤY DANH SÁCH PHÂN TRANG THEO ENUM ---
     Task<ApiResponse<PagedManageResult<RoomAttributeDTO>>> GetPagedByTypeAsync(
-        RoomAttributeType type,
-        PagingRequest paging,
-        int? typeId = null);
+        GetRoomAttributeRequest request);
 }
 
 
@@ -23,93 +22,59 @@ public class RoomAttributeFacade : IRoomAttributeFacade
     public IRoomViewService RoomViewService { get; private set; }
     public IRoomQualityService RoomQualityService { get; private set; }
 
-    public RoomAttributeFacade(IUnitTypeService unitTypeService, IBedTypeService bedTypeService, IRoomViewService roomViewService, IRoomQualityService roomQualityService)
+    private readonly IValidator<GetRoomAttributeRequest> _validator;
+
+    public RoomAttributeFacade(IUnitTypeService unitTypeService, IBedTypeService bedTypeService, IRoomViewService roomViewService, IRoomQualityService roomQualityService, IValidator<GetRoomAttributeRequest> validator)
     {
         UnitTypeService = unitTypeService;
         BedTypeService = bedTypeService;
         RoomViewService = roomViewService;
         RoomQualityService = roomQualityService;
+
+        _validator = validator;
     }
 
     public async Task<ApiResponse<PagedManageResult<RoomAttributeDTO>>> GetPagedByTypeAsync(
-        RoomAttributeType type,
-        PagingRequest paging,
-        int? typeId = null)
+        GetRoomAttributeRequest request)
     {
         // --- BƯỚC 1: VALIDATION ĐẦU VÀO ---
-        // Sử dụng chuỗi check liên hoàn. Nếu cái đầu null (OK) thì check cái sau.
-        // Nếu có lỗi, biến validationError sẽ giữ lỗi đó.
-        var validationError = ValidateFactory.BasicCheck(
-            // 1. Check Module có hợp lệ trong Enum không
-            ValidateFactory.Require(type, x => Enum.IsDefined(typeof(RoomAttributeType), x),
-                MessageResponse.BAD_REQUEST,
-                StatusCodeResponse.BadRequest)
-            ,
-            // 2. Check typeId: Nếu có giá trị thì phải > 0
-            ValidateFactory.Require(typeId, x => x == null || x > 0,
-                MessageResponse.BAD_REQUEST,
-                StatusCodeResponse.BadRequest)
-            ,
+        var validationResult = await _validator.ValidateAsync(request);
 
-            // 3. Check RoomAttributeType có typeId hay không
-            ValidateFactory.Require(type, x =>
-            {
-                // Chỉ những loại này mới cần typeId
-                var typesRequiringTypeId = new List<RoomAttributeType>
-                {
-                    RoomAttributeType.RoomQuality
-                };
-                if (typesRequiringTypeId.Contains(x))
-                {
-                    return typeId == null || typeId > 0;
-                }
-                else
-                {
-                    // TRƯỜNG HỢP 2: Nếu là loại 1, 2, 3 -> BẮT BUỘC typeId phải là NULL
-                    // Nếu người dùng nhập typeId vào -> Lỗi
-                    return typeId == null;
-                }
-            },
-                MessageResponse.BAD_REQUEST,
-                StatusCodeResponse.BadRequest)
-        );
-
-        // Nếu phát hiện lỗi -> Return ngay lập tức
-        if (!validationError.IsValid)
+        if (!validationResult.IsValid)
         {
             return ResponseFactory.Failure<PagedManageResult<RoomAttributeDTO>>(
-                validationError.StatusCode,
-                validationError.Message
+                StatusCodeResponse.BadRequest,
+                validationResult.Errors[0].ErrorMessage
             );
         }
 
         try
         {
-            switch (type)
+            switch (request.Type)
             {
                 case RoomAttributeType.UnitType:
                     // Gọi Manager con
-                    var r1 = await UnitTypeService.GetPagedListAsync(paging);
+                    var r1 = await UnitTypeService.GetPagedListAsync(request.Paging);
                     // Convert kết quả con sang kết quả cha (xem hàm Helper bên dưới)
                     return ConvertToBasePagedResult(r1);
 
                 case RoomAttributeType.BedType:
-                    var r2 = await BedTypeService.GetPagedListAsync(paging);
+                    var r2 = await BedTypeService.GetPagedListAsync(request.Paging);
                     return ConvertToBasePagedResult(r2);
 
                 case RoomAttributeType.RoomView:
-                    var r3 = await RoomViewService.GetPagedListAsync(paging);
+                    var r3 = await RoomViewService.GetPagedListAsync(request.Paging);
                     return ConvertToBasePagedResult(r3);
 
                 case RoomAttributeType.RoomQuality:
                     // RoomQuality cần TypeId
-                    var r4 = await RoomQualityService.GetRoomQualitiesByTypeAsync(typeId, paging);
+                    var r4 = await RoomQualityService.GetRoomQualitiesByTypeAsync(request.TypeId, request.Paging);
                     return ConvertToBasePagedResult(r4);
 
                 default:
                     return ResponseFactory.Failure<PagedManageResult<RoomAttributeDTO>>(
                        StatusCodeResponse.BadRequest,
-                       MessageResponse.BAD_REQUEST);
+                       MessageResponse.Common.BAD_REQUEST);
             }
         }
         catch (Exception)

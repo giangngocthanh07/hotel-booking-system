@@ -1,16 +1,20 @@
 using System.Text.Json;
+using FluentValidation;
 using HotelBooking.application.Helpers;
 using HotelBooking.infrastructure.Models;
 
-public interface IUnitTypeService : IStandardManage<UnitTypeDTO, UnitTypeCreateOrUpdateDTO>
+public interface IUnitTypeService : IStandardManage<UnitTypeDTO, UnitTypeCreateDTO, UnitTypeUpdateDTO>
 {
     Task<ApiResponse<PagedManageResult<UnitTypeDTO>>> GetPagedListAsync(PagingRequest paging);
 }
 
-public class UnitTypeService : BaseManage<UnitType, IUnitTypeRepository, UnitTypeDTO, UnitTypeCreateOrUpdateDTO>, IUnitTypeService
+public class UnitTypeService : BaseManage<UnitType, IUnitTypeRepository, UnitTypeDTO, UnitTypeCreateDTO, UnitTypeUpdateDTO>, IUnitTypeService
 {
-    public UnitTypeService(IUnitTypeRepository repo, IUnitOfWork dbu) : base(repo, dbu)
+    private readonly IValidator<PagingRequest> _pagingValidator;
+
+    public UnitTypeService(IUnitTypeRepository repo, IUnitOfWork dbu, IValidator<UnitTypeCreateDTO> createVal, IValidator<UnitTypeUpdateDTO> updateVal, IValidator<PagingRequest> pagingValidator) : base(repo, dbu, createVal, updateVal)
     {
+        _pagingValidator = pagingValidator;
     }
 
     // Map Entity -> DTO (Hiển thị ra UI)
@@ -20,41 +24,56 @@ public class UnitTypeService : BaseManage<UnitType, IUnitTypeRepository, UnitTyp
         {
             Id = entity.Id,
             Name = entity.Name,
+            Description = entity.Description,
+            IsDeleted = entity.IsDeleted,
             // Field riêng của UnitType
             IsEntirePlace = entity.IsEntirePlace
         };
     }
 
     // Map CreateDTO -> Entity (Tạo mới)
-    protected override UnitType MapToEntity(UnitTypeCreateOrUpdateDTO createDto)
+    protected override UnitType MapCreateToEntity(UnitTypeCreateDTO createDto)
     {
         return new UnitType
         {
             Name = createDto.Name,
+            Description = createDto.Description,
             IsDeleted = false,
             IsEntirePlace = createDto.IsEntirePlace
         };
     }
 
     // Map UpdateDTO -> Entity (Cập nhật)
-    protected override void MapToEntity(UnitTypeCreateOrUpdateDTO updateDto, UnitType entity)
+    protected override void MapUpdateToEntity(UnitTypeUpdateDTO updateDto, UnitType entity)
     {
         entity.Name = updateDto.Name;
+        entity.Description = updateDto.Description;
         entity.IsEntirePlace = updateDto.IsEntirePlace;
     }
 
     // Validation
-    protected override async Task<ValidationResult> ValidateAsync(UnitTypeCreateOrUpdateDTO dto, int? id = null)
+    protected override async Task<ValidationResult> ValidateCreateLogicAsync(UnitTypeCreateDTO dto)
     {
-        var basicValidation = ValidateFactory.ValidateFullAsync<UnitType>(
-            _repo,
-            dto.Name,
-            id,
-            typeId: null,
-            getEntityIsDeletedFunc: x => x.IsDeleted,
-            isDeletedSelector: x => x.IsDeleted,
-            nameSelector: x => x.Name);
-        return await basicValidation;
+        bool exists = await _repo.AnyAsync(x =>
+            x.Name == dto.Name &&
+            x.IsDeleted == false);
+
+        if (exists) return ValidationResult.Fail(MessageResponse.AdminManagement.RoomAttribute.UnitType.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
+
+        return ValidationResult.Success();
+    }
+
+    protected override async Task<ValidationResult> ValidateUpdateLogicAsync(UnitTypeUpdateDTO dto, int id)
+    {
+        bool exists = await _repo.AnyAsync(x =>
+            x.Name == dto.Name &&
+            x.Id != id &&
+            x.IsDeleted == false);
+
+        if (exists)
+            return ValidationResult.Fail(MessageResponse.AdminManagement.RoomAttribute.UnitType.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
+
+        return ValidationResult.Success();
     }
 
     public async Task<ApiResponse<List<UnitTypeDTO>>> GetAllAsync()
@@ -63,13 +82,13 @@ public class UnitTypeService : BaseManage<UnitType, IUnitTypeRepository, UnitTyp
 
         if (utList == null || utList.Count() == 0)
         {
-            return ResponseFactory.Failure<List<UnitTypeDTO>>(StatusCodeResponse.NotFound, MessageResponse.EMPTY_LIST);
+            return ResponseFactory.Failure<List<UnitTypeDTO>>(StatusCodeResponse.NotFound, MessageResponse.Common.EMPTY_LIST);
         }
 
         try
         {
             var result = utList.Select(ut => MapToDto(ut)).ToList();
-            return ResponseFactory.Success(result, MessageResponse.GET_SUCCESSFULLY);
+            return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
         }
         catch (Exception)
         {
@@ -82,13 +101,16 @@ public class UnitTypeService : BaseManage<UnitType, IUnitTypeRepository, UnitTyp
     {
         try
         {
-            // 1. Validate tham số phân trang (Trang 1, Size 10...)
-            var pagingCheck = ValidateFactory.ValidatePaging(paging);
-            if (!pagingCheck.IsValid)
+            // [BƯỚC 1] Dùng FluentValidation
+            // ValidateAsync check cả null, > 0, max size... cực sạch sẽ
+            var validationResult = await _pagingValidator.ValidateAsync(paging);
+
+            if (!validationResult.IsValid)
             {
+                // Lấy lỗi đầu tiên trả về
                 return ResponseFactory.Failure<PagedManageResult<UnitTypeDTO>>(
-                    pagingCheck.StatusCode,
-                    pagingCheck.Message);
+                    StatusCodeResponse.BadRequest,
+                    validationResult.Errors[0].ErrorMessage);
             }
 
             // 2. Gọi Repository lấy dữ liệu phân trang
@@ -115,7 +137,7 @@ public class UnitTypeService : BaseManage<UnitType, IUnitTypeRepository, UnitTyp
                 null // SelectedTypeId = null
             );
 
-            return ResponseFactory.Success(result, MessageResponse.GET_SUCCESSFULLY);
+            return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
         }
         catch (Exception)
         {

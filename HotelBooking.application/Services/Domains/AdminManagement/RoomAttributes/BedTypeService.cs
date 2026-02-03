@@ -1,34 +1,46 @@
 using System.Text.Json;
+using FluentValidation;
 using HotelBooking.application.Helpers;
 using HotelBooking.infrastructure.Models;
 
 
-public interface IBedTypeService : IStandardManage<BedTypeDTO, BedTypeCreateOrUpdateDTO>
+public interface IBedTypeService : IStandardManage<BedTypeDTO, BedTypeCreateDTO, BedTypeUpdateDTO>
 {
     Task<ApiResponse<PagedManageResult<BedTypeDTO>>> GetPagedListAsync(PagingRequest paging);
 }
 
-public class BedTypeService : BaseManage<BedType, IBedTypeRepository, BedTypeDTO, BedTypeCreateOrUpdateDTO>, IBedTypeService
+public class BedTypeService : BaseManage<BedType, IBedTypeRepository, BedTypeDTO, BedTypeCreateDTO, BedTypeUpdateDTO>, IBedTypeService
 {
-    public BedTypeService(IBedTypeRepository repo, IUnitOfWork dbu) : base(repo, dbu)
+    private readonly IValidator<PagingRequest> _pagingValidator;
+
+    public BedTypeService(IBedTypeRepository repo, IUnitOfWork dbu, IValidator<BedTypeCreateDTO> createVal,
+            IValidator<BedTypeUpdateDTO> updateVal,
+            IValidator<PagingRequest> pagingValidator) : base(repo, dbu, createVal, updateVal)
     {
+        _pagingValidator = pagingValidator;
     }
 
     // Map Entity -> DTO (Hiển thị ra UI)
     protected override BedTypeDTO MapToDto(BedType entity)
     {
+        // Gọi Helper để giải nén
+        var extraData = BedTypeHelper.MapToAdditionalData(entity.Additional);
+
         return new BedTypeDTO
         {
             Id = entity.Id,
             Name = entity.Name,
             Description = entity.Description,
             // Field riêng
-            DefaultCapacity = entity.DefaultCapacity ?? 1
+            DefaultCapacity = entity.DefaultCapacity ?? 1,
+            // Map thông số từ JSON
+            MinWidth = extraData.MinWidth,
+            MaxWidth = extraData.MaxWidth
         };
     }
 
     // Map CreateDTO -> Entity (Tạo mới)
-    protected override BedType MapToEntity(BedTypeCreateOrUpdateDTO createDto)
+    protected override BedType MapCreateToEntity(BedTypeCreateDTO createDto)
     {
         return new BedType
         {
@@ -36,31 +48,48 @@ public class BedTypeService : BaseManage<BedType, IBedTypeRepository, BedTypeDTO
             IsDeleted = false,
             Description = createDto.Description,
             // Field riêng
-            DefaultCapacity = createDto.DefaultCapacity
+            DefaultCapacity = createDto.DefaultCapacity,
+            // Đóng gói thông số vào JSON Additional
+            Additional = BedTypeHelper.MapToAdditionalJson(createDto)
         };
     }
 
     // Map UpdateDTO -> Entity (Cập nhật)
-    protected override void MapToEntity(BedTypeCreateOrUpdateDTO updateDto, BedType entity)
+    protected override void MapUpdateToEntity(BedTypeUpdateDTO updateDto, BedType entity)
     {
         entity.Name = updateDto.Name;
         entity.Description = updateDto.Description;
         // Field riêng
         entity.DefaultCapacity = updateDto.DefaultCapacity;
+        // Cập nhật lại chuỗi JSON
+        entity.Additional = BedTypeHelper.MapToAdditionalJson(updateDto);
     }
 
     // Validation
-    protected override async Task<ValidationResult> ValidateAsync(BedTypeCreateOrUpdateDTO dto, int? id = null)
+    protected override async Task<ValidationResult> ValidateCreateLogicAsync(BedTypeCreateDTO dto)
     {
-        var basicValidation = ValidateFactory.ValidateFullAsync<BedType>(
-            _repo,
-            dto.Name,
-            id,
-            typeId: null,
-            getEntityIsDeletedFunc: x => x.IsDeleted,
-            isDeletedSelector: x => x.IsDeleted,
-            nameSelector: x => x.Name);
-        return await basicValidation;
+        // Check trùng tên (Chỉ trong nhóm BedType)
+        bool isDuplicate = await _repo.AnyAsync(x =>
+            x.Name == dto.Name &&
+            x.IsDeleted == false);
+
+        if (isDuplicate) return ValidationResult.Fail(MessageResponse.AdminManagement.RoomAttribute.BedType.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
+
+        return ValidationResult.Success();
+    }
+
+    protected override async Task<ValidationResult> ValidateUpdateLogicAsync(BedTypeUpdateDTO dto, int id)
+    {
+        // Check trùng tên (Chỉ trong nhóm BedType, trừ chính nó)
+        bool isDuplicate = await _repo.AnyAsync(x =>
+            x.Name == dto.Name &&
+            x.Id != id &&
+            x.IsDeleted == false);
+
+        if (isDuplicate)
+            return ValidationResult.Fail(MessageResponse.AdminManagement.RoomAttribute.BedType.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
+
+        return ValidationResult.Success();
     }
 
     public async Task<ApiResponse<List<BedTypeDTO>>> GetAllAsync()
@@ -69,14 +98,14 @@ public class BedTypeService : BaseManage<BedType, IBedTypeRepository, BedTypeDTO
 
         if (btList == null || btList.Count() == 0)
         {
-            return ResponseFactory.Failure<List<BedTypeDTO>>(StatusCodeResponse.NotFound, MessageResponse.EMPTY_LIST);
+            return ResponseFactory.Failure<List<BedTypeDTO>>(StatusCodeResponse.NotFound, MessageResponse.Common.EMPTY_LIST);
         }
 
         try
         {
             var result = btList.Select(bt => MapToDto(bt)).ToList();
 
-            return ResponseFactory.Success(result, MessageResponse.GET_SUCCESSFULLY);
+            return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
         }
         catch (Exception)
         {
@@ -89,16 +118,19 @@ public class BedTypeService : BaseManage<BedType, IBedTypeRepository, BedTypeDTO
     {
         try
         {
-            // 1. Validate tham số phân trang (Trang 1, Size 10...)
-            var pagingCheck = ValidateFactory.ValidatePaging(paging);
-            if (!pagingCheck.IsValid)
+            // [BƯỚC 1] Dùng FluentValidation
+            // ValidateAsync check cả null, > 0, max size... cực sạch sẽ
+            var validationResult = await _pagingValidator.ValidateAsync(paging);
+
+            if (!validationResult.IsValid)
             {
+                // Lấy lỗi đầu tiên trả về
                 return ResponseFactory.Failure<PagedManageResult<BedTypeDTO>>(
-                    pagingCheck.StatusCode,
-                    pagingCheck.Message);
+                    StatusCodeResponse.BadRequest,
+                    validationResult.Errors[0].ErrorMessage);
             }
 
-            // 2. Gọi Repository lấy dữ liệu phân trang
+            // [BƯỚC 2] Gọi Repository lấy dữ liệu phân trang
             // Filter: Lấy tất cả cái chưa xóa (!IsDeleted)
             // OrderBy: Sắp xếp theo ID giảm dần (Mới nhất lên đầu)
             var (items, totalCount) = await _repo.GetPagedAsync(
@@ -108,11 +140,11 @@ public class BedTypeService : BaseManage<BedType, IBedTypeRepository, BedTypeDTO
                 orderBy: q => q.OrderByDescending(x => x.Id)
             );
 
-            // 3. Map Entity sang DTO
+            // [Bước 3] Map Entity sang DTO
             // Sử dụng hàm MapToDto đã viết sẵn trong class này
             var dtos = items.Select(MapToDto).ToList();
 
-            // 4. Đóng gói kết quả
+            // [Bước 4] Đóng gói kết quả
             // [QUAN TRỌNG] Chỉ cần truyền TotalCount và PageSize, TotalPages sẽ tự động được tính
             var result = new PagedManageResult<BedTypeDTO>(
                 dtos,
@@ -122,7 +154,7 @@ public class BedTypeService : BaseManage<BedType, IBedTypeRepository, BedTypeDTO
                 null // SelectedTypeId = null
             );
 
-            return ResponseFactory.Success(result, MessageResponse.GET_SUCCESSFULLY);
+            return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
         }
         catch (Exception)
         {

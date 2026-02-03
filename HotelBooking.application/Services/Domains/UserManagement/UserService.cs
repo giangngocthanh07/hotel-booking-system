@@ -2,6 +2,9 @@ using HotelBooking.application.Helpers;
 using HotelBooking.application.Services;
 using HotelBooking.infrastructure.Models;
 using System.Net.Mail;
+// Note: MessageRegister, MessageLogin được consolidate vào MessageResponse tại Helpers/Messages/
+// Dùng MessageResponse.UserManagement.Register.* và MessageResponse.UserManagement.Login.* cho code mới
+// Hoặc vẫn dùng MessageRegister/MessageLogin để backward compatible
 
 namespace HotelBooking.application.Services.Domains.UserManagement
 {
@@ -72,7 +75,7 @@ namespace HotelBooking.application.Services.Domains.UserManagement
                             IsSuccess = false,
 
                         },
-                        Message = checkAdmin.UserName == newAdmin.Username ? MessageRegister.USERNAME_EXIST : MessageRegister.EMAIL_EXIST
+                        Message = checkAdmin.UserName == newAdmin.Username ? MessageResponse.UserManagement.Register.USERNAME_EXIST : MessageResponse.UserManagement.Register.EMAIL_EXIST
                     };
                 }
 
@@ -115,7 +118,7 @@ namespace HotelBooking.application.Services.Domains.UserManagement
                         Email = user.Email
                     },
 
-                    Message = MessageRegister.REGISTER_SUCCESS
+                    Message = MessageResponse.UserManagement.Register.SUCCESS
                 };
             }
             catch (Exception)
@@ -128,7 +131,7 @@ namespace HotelBooking.application.Services.Domains.UserManagement
                         IsSuccess = false,
 
                     },
-                    Message = MessageRegister.REGISTER_FAIL,
+                    Message = MessageResponse.UserManagement.Register.FAIL,
                 };
             }
         }
@@ -140,38 +143,38 @@ namespace HotelBooking.application.Services.Domains.UserManagement
                 // --- 1. VALIDATE INPUT (THÊM ĐOẠN NÀY) ---
                 if (!IsValidEmail(newCustomer.Email))
                 {
-                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, MessageRegister.INVALID_EMAIL);
+                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, MessageResponse.UserManagement.Register.INVALID_EMAIL);
                 }
 
                 // --- 2. VALIDATE PASSWORD (THÊM ĐOẠN NÀY) ---
                 // 1. Check Rỗng trước
                 if (string.IsNullOrWhiteSpace(newCustomer.Password))
                 {
-                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, MessageRegister.EMPTY_PASSWORD);
+                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, MessageResponse.UserManagement.Register.EMPTY_PASSWORD);
                 }
 
                 // 2. Check độ dài
                 if (newCustomer.Password.Length <= 8)
                 {
-                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, MessageRegister.SHORT_PASSWORD);
+                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, MessageResponse.UserManagement.Register.SHORT_PASSWORD);
                 }
 
                 // 3. Check chữ hoa (Dùng LINQ cho gọn, khỏi cần Regex phức tạp)
                 if (!newCustomer.Password.Any(char.IsUpper))
                 {
-                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, MessageRegister.UPPERCASE_LETTER_PASSWORD);
+                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, MessageResponse.UserManagement.Register.UPPERCASE_LETTER_PASSWORD);
                 }
 
                 // 4. Check chữ thường
                 if (!newCustomer.Password.Any(char.IsLower))
                 {
-                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, MessageRegister.LOWERCASE_LETTER_PASSWORD);
+                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, MessageResponse.UserManagement.Register.LOWERCASE_LETTER_PASSWORD);
                 }
 
                 // 5. Check ký tự đặc biệt
                 if (!newCustomer.Password.Any(ch => !char.IsLetterOrDigit(ch)))
                 {
-                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, MessageRegister.SPECIAL_CHARACTER_PASSWORD);
+                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, MessageResponse.UserManagement.Register.SPECIAL_CHARACTER_PASSWORD);
                 }
 
                 // --- 3. CHECK TRÙNG (Code cũ của bạn) ---
@@ -184,7 +187,7 @@ namespace HotelBooking.application.Services.Domains.UserManagement
                 // 2. Nếu tìm thấy (khác null) thì TRẢ VỀ LỖI NGAY LẬP TỨC
                 if (checkCustomer != null)
                 {
-                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.Conflict, checkCustomer.UserName == newCustomer.Username ? MessageRegister.USERNAME_EXIST : MessageRegister.EMAIL_EXIST);
+                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.Conflict, checkCustomer.UserName == newCustomer.Username ? MessageResponse.UserManagement.Register.USERNAME_EXIST : MessageResponse.UserManagement.Register.EMAIL_EXIST);
                 }
 
                 var user = new User
@@ -216,13 +219,13 @@ namespace HotelBooking.application.Services.Domains.UserManagement
                 // Lưu thay đổi vào database
                 await _dbu.SaveChangesAsync();
 
-                return ResponseFactory.Success<RegisterResponseDTO>(new RegisterResponseDTO
+                return ResponseFactory.Success(new RegisterResponseDTO
                 {
                     IsSuccess = true,
 
                     FullName = user.FullName,
                     Email = user.Email
-                }, MessageRegister.REGISTER_SUCCESS);
+                }, MessageResponse.UserManagement.Register.SUCCESS);
             }
             catch (Exception)
             {
@@ -237,20 +240,20 @@ namespace HotelBooking.application.Services.Domains.UserManagement
                 var user = await _userRepository.GetUserWithRoles(u => u.UserName == userLogin.UsernameOrEmail || u.Email == userLogin.UsernameOrEmail);
                 if (user == null)
                 {
-                    return new ApiResponse<LoginResponseDTO> { StatusCode = StatusCodeResponse.NotFound, Message = MessageLogin.USER_NOT_FOUND, Content = null };
+                    return new ApiResponse<LoginResponseDTO> { StatusCode = StatusCodeResponse.NotFound, Message = MessageResponse.UserManagement.Login.USER_NOT_FOUND, Content = null };
                 }
 
                 // Kiểm tra mật khẩu
                 if (!PasswordHelper.VerifyPassword(userLogin.Password, user.PasswordHash))
                 {
-                    return new ApiResponse<LoginResponseDTO> { StatusCode = StatusCodeResponse.NotFound, Message = MessageLogin.PASSWORD_INCORRECT, Content = null };
+                    return new ApiResponse<LoginResponseDTO> { StatusCode = StatusCodeResponse.NotFound, Message = MessageResponse.UserManagement.Login.PASSWORD_INCORRECT, Content = null };
                 }
                 var token = _jwtAuthService.GenerateToken(user);
                 var roles = user.UserRoles.Select(ur => ur.Role.Name).ToList();
                 return new ApiResponse<LoginResponseDTO>
                 {
                     StatusCode = StatusCodeResponse.Success,
-                    Message = MessageLogin.LOGIN_SUCCESS,
+                    Message = MessageResponse.UserManagement.Login.SUCCESS,
                     Content = new LoginResponseDTO
                     {
                         AccessToken = token,
@@ -262,7 +265,7 @@ namespace HotelBooking.application.Services.Domains.UserManagement
             }
             catch (Exception)
             {
-                return new ApiResponse<LoginResponseDTO> { StatusCode = StatusCodeResponse.Error, Message = MessageLogin.ERROR_IN_SERVER, Content = null };
+                return new ApiResponse<LoginResponseDTO> { StatusCode = StatusCodeResponse.Error, Message = MessageResponse.UserManagement.Login.ERROR_IN_SERVER, Content = null };
             }
         }
 

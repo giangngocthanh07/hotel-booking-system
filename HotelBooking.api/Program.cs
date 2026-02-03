@@ -11,6 +11,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using HotelBooking.application.Interfaces;
 using Microsoft.OpenApi.Models;
+using FluentValidation;
+using HotelBooking.application.Validators.AdminManagement.Amenity;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -89,6 +91,9 @@ builder.Services.AddScoped<IManagementAdminService, ManagementAdminService>();
 builder.Services.AddSingleton<IImageHelper, ImageHelper>();
 builder.Services.AddScoped<IFileHelper, FileHelper>();
 
+// Quét toàn bộ Assembly chứa class Validator này và đăng ký hết
+builder.Services.AddValidatorsFromAssemblyContaining<AmenityCreateValidator>();
+
 //Use map controller
 builder.Services.AddControllers();
 
@@ -157,7 +162,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
         ValidAudience = Audience, // Biến `Audience` chứa giá trị của Audience hợp lệ
                                   // Kiểm tra và xác nhận khóa bí mật được sử dụng để ký token
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(privateKey)),
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(privateKey!)),
         // Sử dụng khóa bí mật (`privateKey`) để tạo SymmetricSecurityKey nhằm xác thực chữ ký của token
         // Giảm độ trễ (skew time) của token xuống 0, đảm bảo token hết hạn chính xác
         ClockSkew = TimeSpan.Zero,

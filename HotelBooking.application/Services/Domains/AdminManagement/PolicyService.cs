@@ -1,3 +1,4 @@
+using FluentValidation;
 using HotelBooking.application.Helpers;
 using HotelBooking.infrastructure.Models;
 
@@ -6,20 +7,22 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
     /// <summary>
     /// Interface cho quản lý Policy - các chính sách của khách sạn
     /// </summary>
-    public interface IPolicyService : ITypedManage<PolicyDTO, PolicyTypeDTO, PolicyCreateOrUpdateDTO>
+    public interface IPolicyService : ITypedManage<PolicyDTO, PolicyTypeDTO, PolicyCreateDTO, PolicyUpdateDTO>
     {
         Task<ApiResponse<PagedManageResult<PolicyDTO>>> GetPoliciesByTypeAsync(int? typeId, PagingRequest paging);
     }
 
-    public class PolicyService : BaseManage<Policy, IPolicyRepository, PolicyDTO, PolicyCreateOrUpdateDTO>, IPolicyService
+    public class PolicyService : BaseManage<Policy, IPolicyRepository, PolicyDTO, PolicyCreateDTO, PolicyUpdateDTO>, IPolicyService
     {
         private readonly IPolicyTypeRepository _policyTypeRepo;
 
         public PolicyService(
             IPolicyRepository repository,
             IUnitOfWork unitOfWork,
-            IPolicyTypeRepository policyTypeRepo)
-            : base(repository, unitOfWork)
+            IPolicyTypeRepository policyTypeRepo,
+            IValidator<PolicyCreateDTO> createVal,
+        IValidator<PolicyUpdateDTO> updateVal)
+            : base(repository, unitOfWork, createVal, updateVal)
         {
             _policyTypeRepo = policyTypeRepo;
         }
@@ -43,7 +46,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
             };
         }
 
-        protected override void MapToEntity(PolicyCreateOrUpdateDTO updateDto, Policy entity)
+        protected override void MapUpdateToEntity(PolicyUpdateDTO updateDto, Policy entity)
         {
             entity.Name = updateDto.Name;
             entity.Description = updateDto.Description;
@@ -56,35 +59,71 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
             entity.Amount = updateDto.Amount;
             entity.Percent = updateDto.Percent;
             entity.BoolValue = updateDto.BoolValue;
+
+            // Sau khi map xong, chạy Sanitize để xóa các field thừa nếu user cố tình gửi lên
+            PolicyHelper.SanitizeEntity(entity);
         }
 
-        protected override Policy MapToEntity(PolicyCreateOrUpdateDTO createDto)
+        protected override Policy MapCreateToEntity(PolicyCreateDTO createDto)
         {
             var entity = new Policy
             {
                 Name = createDto.Name,
                 Description = createDto.Description,
                 IsDeleted = false,
-                TypeId = createDto.TypeId
+                TypeId = createDto.TypeId,
+
+                // Map Generic
+                TimeFrom = createDto.TimeFrom,
+                TimeTo = createDto.TimeTo,
+                IntValue1 = createDto.IntValue1,
+                IntValue2 = createDto.IntValue2,
+                Amount = createDto.Amount,
+                Percent = createDto.Percent,
+                BoolValue = createDto.BoolValue
             };
 
-            PolicyHelper.ApplyStrictBusinessRules(entity);
+            PolicyHelper.SanitizeEntity(entity);
             return entity;
         }
 
-        protected override async Task<ValidationResult> ValidateAsync(PolicyCreateOrUpdateDTO dto, int? id = null)
+        // --- VALIDATION LOGIC (Quan trọng) ---
+
+        protected override async Task<ValidationResult> ValidateCreateLogicAsync(PolicyCreateDTO dto)
         {
-            var basicValidation = ValidateFactory.ValidateFullAsync<Policy>(
-                _repo,
-                dto.Name,
-                id,
-                dto.TypeId,
-                getEntityIsDeletedFunc: x => x.IsDeleted,
-                isDeletedSelector: x => x.IsDeleted,
-                nameSelector: x => x.Name);
-            return await basicValidation;
+            // 1. Check trùng tên trong cùng TypeId
+            bool exists = await _repo.AnyAsync(x => x.Name == dto.Name && x.TypeId == dto.TypeId && x.IsDeleted == false);
+            if (exists) return ValidationResult.Fail(MessageResponse.AdminManagement.Policy.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
+
+            // 2. Check Logic nghiệp vụ (Giờ check-in < check-out, v.v...)
+            // Vì đây là Create, ta có dto.TypeId trực tiếp
+            // return PolicyHelper.ValidateBusinessRules(dto.TypeId, dto); 
+            // (Cần viết hàm Helper nhận DTO chung hoặc map sang entity giả để check)
+
+            return ValidationResult.Success();
         }
 
+        protected override async Task<ValidationResult> ValidateUpdateLogicAsync(PolicyUpdateDTO dto, int id)
+        {
+            // 1. Lấy Entity gốc để biết TypeId là gì (Vì DTO không có TypeId)
+            var currentEntity = await _repo.GetByIdAsync(id);
+            if (currentEntity == null) return ValidationResult.Success(); // Để hàm chính xử lý 404
+
+            // 2. Check trùng tên (Dùng TypeId từ DB)
+            bool exists = await _repo.AnyAsync(x =>
+                x.Name == dto.Name &&
+                x.TypeId == currentEntity.TypeId && // Lấy TypeId gốc
+                x.IsDeleted == false &&
+                x.Id != id
+            );
+            if (exists) return ValidationResult.Fail(MessageResponse.AdminManagement.Policy.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
+
+            // 3. Check Logic nghiệp vụ
+            // Kết hợp TypeId từ DB + Dữ liệu mới từ DTO để validate
+            // Ví dụ: Nếu TypeId là CheckInTime (1002), kiểm tra dto.TimeFrom có hợp lệ không
+
+            return ValidationResult.Success();
+        }
         public async Task<ApiResponse<List<PolicyTypeDTO>>> GetTypeDataAsync()
         {
             try
@@ -95,7 +134,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
                 {
                     return ResponseFactory.Failure<List<PolicyTypeDTO>>(
                         StatusCodeResponse.NotFound,
-                        MessageResponse.EMPTY_LIST);
+                        MessageResponse.Common.EMPTY_LIST);
                 }
 
                 var result = policyTypes.Select(pt => new PolicyTypeDTO
@@ -105,7 +144,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
                     IsDeleted = pt.IsDeleted
                 }).ToList();
 
-                return ResponseFactory.Success(result, MessageResponse.GET_SUCCESSFULLY);
+                return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
             }
             catch (Exception)
             {

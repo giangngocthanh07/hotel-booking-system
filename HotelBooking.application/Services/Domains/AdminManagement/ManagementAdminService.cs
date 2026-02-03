@@ -1,3 +1,4 @@
+using FluentValidation;
 using HotelBooking.application.Helpers;
 using HotelBooking.infrastructure.Models;
 
@@ -11,7 +12,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
         /// <summary>
         /// Lấy cấu trúc Menu (Modules + Types) cho từng module quản lý
         /// </summary>
-        Task<ApiResponse<ManageMenuResult>> GetManageMenuAsync(ManageModuleEnum module);
+        Task<ApiResponse<ManageMenuResult>> GetManageMenuAsync(ManageMenuRequest request);
     }
 
     public class ManagementAdminService : IManagementAdminService
@@ -20,6 +21,8 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
         private readonly IServiceTypeRepository _serviceTypeRepo;
         private readonly IPolicyTypeRepository _policyTypeRepo;
         private readonly IRoomQualityGroupRepository _roomQualityRepo;
+
+        private readonly IValidator<ManageMenuRequest> _validator;
 
         // Tối ưu Validation: Dùng Static HashSet để tra cứu cực nhanh (O(1))
         private static readonly HashSet<ManageModuleEnum> _modulesWithTypeId = new()
@@ -34,39 +37,36 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
             IAmenityTypeRepository amenityTypeRepo,
             IServiceTypeRepository serviceTypeRepo,
             IPolicyTypeRepository policyTypeRepo,
-            IRoomQualityGroupRepository roomQualityRepo)
+            IRoomQualityGroupRepository roomQualityRepo,
+            IValidator<ManageMenuRequest> validator)
         {
             _amenityTypeRepo = amenityTypeRepo;
             _serviceTypeRepo = serviceTypeRepo;
             _policyTypeRepo = policyTypeRepo;
             _roomQualityRepo = roomQualityRepo;
+            _validator = validator;
         }
 
-        public async Task<ApiResponse<ManageMenuResult>> GetManageMenuAsync(ManageModuleEnum module)
+        public async Task<ApiResponse<ManageMenuResult>> GetManageMenuAsync(ManageMenuRequest request)
         {
             // --- A. VALIDATION ĐẦU VÀO ---
 
             // Sử dụng chuỗi check liên hoàn. Nếu cái đầu null (OK) thì check cái sau.
             // Nếu có lỗi, biến validationError sẽ giữ lỗi đó.
-            var validationError = ValidateFactory.BasicCheck(
-                ValidateFactory.Require(module, x => Enum.IsDefined(typeof(ManageModuleEnum), x),
-                    MessageResponse.BAD_REQUEST,
-                    StatusCodeResponse.BadRequest)
-            );
+            var validationResult = await _validator.ValidateAsync(request);
 
-            // Nếu phát hiện lỗi -> Return ngay lập tức
-            if (!validationError.IsValid)
+            if (!validationResult.IsValid)
             {
                 return ResponseFactory.Failure<ManageMenuResult>(
-                    validationError.StatusCode,
-                    validationError.Message
+                    StatusCodeResponse.BadRequest,
+                    validationResult.Errors[0].ErrorMessage
                 );
             }
 
             try
             {
                 // Switch Case để chọn đúng Repo cho từng Module
-                switch (module)
+                switch (request.Module)
                 {
                     case ManageModuleEnum.Service:
                         return await ManagementAdminHelper.GetTypesForMenuAsync<ServiceType, IServiceTypeRepository>(
@@ -108,14 +108,14 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
                         return ResponseFactory.Success(new ManageMenuResult(), null);
 
                     default:
-                        return ResponseFactory.Failure<ManageMenuResult>(StatusCodeResponse.BadRequest, MessageResponse.BAD_REQUEST);
+                        return ResponseFactory.Failure<ManageMenuResult>(StatusCodeResponse.BadRequest, MessageResponse.Common.BAD_REQUEST);
                 }
             }
             catch (Exception)
             {
                 return ResponseFactory.Failure<ManageMenuResult>(
                     StatusCodeResponse.Error,
-                    MessageResponse.ERROR_IN_SERVER
+                    MessageResponse.Common.ERROR_IN_SERVER
                 );
             }
         }

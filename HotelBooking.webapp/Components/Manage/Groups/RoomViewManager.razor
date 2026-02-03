@@ -20,9 +20,10 @@
 }
 else
 {
-    <MasterDetailLayout TItem="RoomViewVM" Items="items" Model="_model" PageIndex="_paging.PageIndex ?? 1"
-        TotalPages="totalPages" TotalCount="totalCount" OnPageChanged="HandlePageChanged" OnSubmit="SaveData"
-        OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm">
+    <MasterDetailLayout TItem="RoomViewVM" TModel="BaseCreateOrUpdateAdminVM" Items="items"
+        Model="@(_isUpdate ? (BaseCreateOrUpdateAdminVM)_updateModel : (BaseCreateOrUpdateAdminVM)_createModel)"
+        PageIndex="_paging.PageIndex ?? 1" TotalPages="totalPages" TotalCount="totalCount" OnPageChanged="HandlePageChanged"
+        OnSubmit="SaveData" OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm">
 
         @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
         <SidebarTopContent>
@@ -31,23 +32,121 @@ else
             <GlobalNavMenu CurrentModule="RoomView" CurrentTypeId="TypeId" />
         </SidebarTopContent>
 
-        @* --- B. CẤU HÌNH FORM --- *@
-        <FormContent Context="formData">
-            <div class="mb-3">
-                <label class="form-label fw-bold small text-muted">Name</label>
-                <InputText class="form-control" @bind-Value="formData.Name" />
+        @* --- B. CẤU HÌNH FORM (Đã tút tát lại) --- *@
+        <FormContent>
+
+            @* 1. TÊN HƯỚNG NHÌN *@
+            <div class="mb-4">
+                <div class="mb-4 pb-3 border-bottom border-light">
+                    <label class="form-label fw-bold small text-muted text-uppercase">Tên hướng nhìn</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white"><i class="fa-solid fa-binoculars text-primary"></i></span>
+                        @if (_isUpdate)
+                        {
+                            <InputText class="form-control" @bind-Value="_updateModel.Name" placeholder="VD: Sea View..." />
+                        }
+                        else
+                        {
+                            <InputText class="form-control" @bind-Value="_createModel.Name" placeholder="VD: Sea View..." />
+                        }
+                    </div>
+
+                    @if (_isUpdate)
+                    {
+                        <ValidationMessage For="() => _updateModel.Name" />
+                    }
+                    else
+                    {
+                        <ValidationMessage For="() => _createModel.Name" />
+                    }
+
+                    <div class="form-text small mt-2">
+                        <i class="fa-solid fa-circle-info me-1"></i>
+                        Tên hướng nhìn sẽ hiển thị trên trang chi tiết phòng.
+                    </div>
+                </div>
+
+                @* 2. MÔ TẢ *@
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-muted text-uppercase">Mô tả</label>
+                    @if (_isUpdate)
+                    {
+                        <InputTextArea class="form-control" @bind-Value="_updateModel.Description" rows="3"
+                            placeholder="Mô tả..." />
+                    }
+                    else
+                    {
+                        <InputTextArea class="form-control" @bind-Value="_createModel.Description" rows="3"
+                            placeholder="Mô tả..." />
+                    }
+                </div>
             </div>
+
+            @* 3. PREVIEW ICON *@
+            @* Lấy tên hiện tại để preview *@
+            @{
+                string currentName = _isUpdate ? _updateModel.Name : _createModel.Name;
+            }
+            @if (!string.IsNullOrEmpty(currentName))
+            {
+                <div class="alert alert-light border d-flex align-items-center">
+                    <div class="me-3">
+                        @* Gọi hàm Helper bên dưới để lấy icon *@
+                        <div class="rounded-circle bg-white border d-flex align-items-center justify-content-center shadow-sm"
+                            style="width: 40px; height: 40px;">
+                            <i class="@GetViewIcon(currentName) text-primary"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <small class="text-muted d-block">Minh họa hiển thị:</small>
+                        <strong class="text-dark">@currentName</strong>
+                    </div>
+                </div>
+            }
         </FormContent>
 
-        @* --- C. CẤU HÌNH BẢNG (TABLE) --- *@
+        @* --- C. CẤU HÌNH BẢNG (Thêm cột Icon & Trạng thái) --- *@
         <TableHeader>
-            <th>ID</th>
-            <th>Name</th>
+            <th class="text-center" style="width: 50px;">Id</th>
+            <th class="text-center" style="width: 80px;">Icon</th> @* Cột mới *@
+            <th class="text-center" style="width: 320px;">Tên hướng nhìn</th>
+            <th class="text-center">Mô tả</th>
+            <th class="text-center" style="width: 150px;">Trạng thái</th> @* Cột lấp chỗ trống *@
         </TableHeader>
 
         <RowTemplate Context="row">
-            <td>@row.Id</td>
-            <td><strong>@row.Name</strong></td>
+            <td class="text-center text-muted small">@row.Id</td>
+
+            @* Cột Icon tự động *@
+            <td class="text-center">
+                <i class="@GetViewIcon(row.Name) fs-5 text-secondary opacity-75"></i>
+            </td>
+
+            <td class="text-center align-middle text-primary">
+                @row.Name
+            </td>
+
+            <td class="text-center align-middle text-muted small text-truncate" style="max-width: 500px;"
+                title="@row.Description">
+                @if (string.IsNullOrWhiteSpace(row.Description))
+                {
+                    <span class="text-muted opacity-50">---</span>
+                }
+                else
+                {
+                    @* Giới hạn width để không đẩy bảng *@
+                    <div class="text-muted small text-truncate mx-auto" style="max-width: 500px;" title="@row.Description">
+                        @row.Description
+                    </div>
+                }
+            </td>
+
+            @* Cột trạng thái giả lập (cho đỡ trống) *@
+            <td class="text-center">
+                <span class="badge bg-success bg-opacity-10 text-success border border-success px-2 rounded-pill">
+                    Hoạt động
+                </span>
+            </td>
         </RowTemplate>
 
     </MasterDetailLayout>
@@ -60,14 +159,43 @@ else
     [Parameter] public int? TypeId { get; set; }
 
     // --- STATE ---
-    private List<RoomViewVM> items;
-    private RoomViewVM _model = new();
+    private List<RoomViewVM>? items;
+
+    // Tách Model
+    private RoomViewCreateVM _createModel = new RoomViewCreateVM();
+    private RoomViewUpdateVM _updateModel = new RoomViewUpdateVM();
+
+    private int _currentEditingId = 0;
     private bool _isUpdate = false;
     // --- PHÂN TRANG ---
     private PagingRequest _paging = new() { PageIndex = 1, PageSize = 10 };
     private int totalPages = 0;
     private int totalCount = 0;
 
+    // --- HELPER: Tự động chọn Icon dựa trên tên ---
+    private string GetViewIcon(string? name)
+    {
+        if (string.IsNullOrEmpty(name)) return "fa-solid fa-image"; // Mặc định
+
+        name = name.ToLower();
+
+        // 1. Biển / Hồ / Nước
+        if (name.Contains("sea") || name.Contains("ocean") || name.Contains("lake") || name.Contains("pool") ||
+        name.Contains("biển") || name.Contains("hồ"))
+            return "fa-solid fa-water";
+
+        // 2. Vườn / Cây / Rừng / Núi
+        if (name.Contains("garden") || name.Contains("forest") || name.Contains("mountain") || name.Contains("hill") ||
+        name.Contains("vườn") || name.Contains("núi"))
+            return "fa-solid fa-tree";
+
+        // 3. Thành phố / Phố
+        if (name.Contains("city") || name.Contains("street") || name.Contains("landmark") || name.Contains("phố"))
+            return "fa-solid fa-city";
+
+        // 4. Mặc định
+        return "fa-solid fa-street-view";
+    }
 
     // --- 1. LOAD DATA (Override từ Cha) ---
     protected override async Task LoadDataAsync()
@@ -91,11 +219,12 @@ else
                 }
                 else
                 {
+                    items = new List<RoomViewVM>();
+
                     if (res.StatusCode != StatusCodeResponse.Success)
                     {
-                        SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
+                        SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
                     }
-                    items = new List<RoomViewVM>();
                 }
             }
         }
@@ -106,13 +235,21 @@ else
         }
     }
 
+    protected override void OnInitialized()
+    {
+        // Ép Model đúng kiểu ngay khi component vừa được tạo ra
+        ResetForm();
+    }
+
     // --- 2. XỬ LÝ PARAMETERS ---
     protected override async Task OnParametersSetAsync()
     {
-        // Chặn nếu Cha chưa load xong Token
-        if (!IsJsReady) return;
+        ResetForm();
 
-        // Không cần load lại khi TypeId đổi vì RoomView là danh sách chung
+        if (IsJsReady)
+        {
+            await LoadDataAsync();
+        }
     }
     // --- XỬ LÝ CHUYỂN TRANG ---
     private async Task HandlePageChanged(int newPage)
@@ -125,7 +262,14 @@ else
     private void OnEditItem(RoomViewVM item)
     {
         _isUpdate = true;
-        _model = new RoomViewVM { Id = item.Id, Name = item.Name };
+        _currentEditingId = item.Id;
+
+        // Map sang UpdateVM
+        _updateModel = new RoomViewUpdateVM
+        {
+            Name = item.Name,
+            Description = item.Description
+        };
     }
 
     private async Task HandleDelete(RoomViewVM item)
@@ -134,7 +278,7 @@ else
         var res = await Service.DeleteRoomView(item.Id);
 
         // Hiển thị thông báo
-        SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
+        SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
 
         if (res.StatusCode == StatusCodeResponse.Success)
         {
@@ -146,17 +290,23 @@ else
     private void ResetForm()
     {
         _isUpdate = false;
-        _model = new();
+        _currentEditingId = 0;
+
+        // Reset CreateVM
+        _createModel = new RoomViewCreateVM();
+        _updateModel = new RoomViewUpdateVM();
+
+        StateHasChanged();
     }
 
     private async Task SaveData()
     {
         ApiResponse<RoomViewVM> res;
-        if (_isUpdate) res = await Service.UpdateRoomView(_model);
-        else res = await Service.CreateRoomView(_model);
+        if (_isUpdate) res = await Service.UpdateRoomView(_currentEditingId, _updateModel);
+        else res = await Service.CreateRoomView(_createModel);
 
         // Hiển thị thông báo
-        SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message);
+        SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
 
         if (res.StatusCode == StatusCodeResponse.Success)
         {

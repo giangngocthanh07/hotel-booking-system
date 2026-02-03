@@ -24,29 +24,34 @@ namespace HotelBooking.webapp.Pages.Admin.Base
         {
             if (firstRender)
             {
-                // A. Lấy Token từ LocalStorage (Thủ công nhưng chắc ăn)
-                var token = await LocalStorage.GetItemAsync<string>("accessToken");
-
-                // B. Nếu có token -> Bơm vào Service (Scoped)
-                if (!string.IsNullOrEmpty(token))
+                try
                 {
+                    // 1. Lấy Token từ LocalStorage (Thủ công nhưng chắc ăn)
+                    var token = await LocalStorage.GetItemAsync<string>("accessToken");
+
+                    if (string.IsNullOrEmpty(token))
+                    {
+                        Navigation.NavigateTo("/login", true);
+                        return;
+                    }
+
+                    // 2. Bơm vào service
                     Service.SetToken(token);
+
+                    // 3. Đánh dấu sẵn sàng
+                    IsJsReady = true;
+
+                    // D. Gọi hàm LoadData của con
+                    await LoadDataAsync();
+
+                    // E. Vẽ lại giao diện
+                    StateHasChanged();
                 }
-                else
+                catch (Exception ex)
                 {
-                    // Nếu không có token -> Đá về Login (Tùy chọn)
-                    // Navigation.NavigateTo("/login");
-                    // return;
+                    Console.WriteLine($"[AdminPageBase Error] {ex}");
+                    // Có thể hiện thông báo lỗi lên UI nếu muốn
                 }
-
-                // C. Đánh dấu đã sẵn sàng
-                IsJsReady = true;
-
-                // D. Gọi hàm LoadData của con
-                await LoadDataAsync();
-
-                // E. Vẽ lại giao diện
-                StateHasChanged();
             }
         }
 

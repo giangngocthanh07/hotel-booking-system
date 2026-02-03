@@ -1,5 +1,7 @@
+using FluentValidation;
 using System.Linq.Expressions;
 using HotelBooking.application.Helpers;
+using HotelBooking.application.Validators.Common;
 
 public static class ManagementAdminHelper
 {
@@ -67,27 +69,30 @@ public static class ManagementAdminHelper
     {
         try
         {
-            int currentTypeId;
+            // [BƯỚC 1] Validate Phân trang bằng Validator bạn vừa tạo
+            // Vì Helper là static, ta khởi tạo Validator trực tiếp (Safe & Fast)
+            var pagingValidator = new PagingRequestValidator();
+            var validationResult = await pagingValidator.ValidateAsync(paging);
 
-            // --- VALIDATION: Phân trang ---
-            var pagingCheck = ValidateFactory.ValidatePaging(paging);
-
-            if (!pagingCheck.IsValid)
+            if (!validationResult.IsValid)
             {
+                // Lấy lỗi đầu tiên trả về
                 return ResponseFactory.Failure<PagedManageResult<TDto>>(
-                    pagingCheck.StatusCode, // Trả về 400 (BadRequest)
-                    pagingCheck.Message     // Ví dụ: "PageIndex must be greater than 1"
+                    StatusCodeResponse.BadRequest,
+                    validationResult.Errors[0].ErrorMessage
                 );
             }
 
-            // --- VALIDATION: Check số âm hoặc bằng 0 ---
+            // [BƯỚC 2] Validate TypeId (Logic đơn giản check thủ công cho lẹ)
             if (typeId.HasValue && typeId <= 0)
             {
                 return ResponseFactory.Failure<PagedManageResult<TDto>>(
                     StatusCodeResponse.BadRequest,
-                    "TypeId must be greater than 0"
+                    "TypeId phải lớn hơn 0"
                 );
             }
+
+            int currentTypeId;
 
             // --- XỬ LÝ CHỌN ID ---
             if (typeId.HasValue)

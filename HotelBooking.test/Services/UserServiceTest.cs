@@ -43,6 +43,7 @@ namespace HotelBooking.Tests.Services
             );
         }
 
+        #region RegisterCustomer Tests
         // ==========================================================
         // TEST CASE 1: ĐĂNG KÝ THÀNH CÔNG (HAPPY PATH)
         // ==========================================================
@@ -261,4 +262,5 @@ namespace HotelBooking.Tests.Services
             Verify_Repo_Never_AddAsync<IUserRepository, User>(_mockUserRepo);
         }
     }
+    #endregion
 }

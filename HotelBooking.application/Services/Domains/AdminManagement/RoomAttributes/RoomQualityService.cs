@@ -1,16 +1,18 @@
+using FluentValidation;
 using HotelBooking.application.Helpers;
 using HotelBooking.infrastructure.Models;
 
-public interface IRoomQualityService : ITypedManage<RoomQualityDTO, RoomQualityGroupDTO, RoomQualityCreateOrUpdateDTO>
+public interface IRoomQualityService : ITypedManage<RoomQualityDTO, RoomQualityGroupDTO, RoomQualityCreateDTO, RoomQualityUpdateDTO>
 {
     Task<ApiResponse<List<RoomQualityDTO>>> GetAllByTypeAsync(int? typeId = null);
     Task<ApiResponse<PagedManageResult<RoomQualityDTO>>> GetRoomQualitiesByTypeAsync(int? typeId, PagingRequest paging);
 }
 
-public class RoomQualityService : BaseManage<RoomQuality, IRoomQualityRepository, RoomQualityDTO, RoomQualityCreateOrUpdateDTO>, IRoomQualityService
+public class RoomQualityService : BaseManage<RoomQuality, IRoomQualityRepository, RoomQualityDTO, RoomQualityCreateDTO, RoomQualityUpdateDTO>, IRoomQualityService
 {
     private readonly IRoomQualityGroupRepository _roomQualityTypeRepo;
-    public RoomQualityService(IRoomQualityRepository repository, IUnitOfWork dbo, IRoomQualityGroupRepository roomQualityTypeRepo) : base(repository, dbo)
+    public RoomQualityService(IRoomQualityRepository repository, IUnitOfWork dbo, IRoomQualityGroupRepository roomQualityTypeRepo, IValidator<RoomQualityCreateDTO> createVal,
+            IValidator<RoomQualityUpdateDTO> updateVal) : base(repository, dbo, createVal, updateVal)
     {
         _roomQualityTypeRepo = roomQualityTypeRepo;
     }
@@ -21,43 +23,65 @@ public class RoomQualityService : BaseManage<RoomQuality, IRoomQualityRepository
         {
             Id = entity.Id,
             Name = entity.Name,
-            SortOrder = entity.SortOrder,
+            Description = entity.Description,
+            SortOrder = entity.SortOrder ?? 0,
             IsDeleted = entity.IsDeleted,
             TypeId = entity.TypeId
         };
     }
 
-    protected override void MapToEntity(RoomQualityCreateOrUpdateDTO updateDto, RoomQuality entity)
+    protected override void MapUpdateToEntity(RoomQualityUpdateDTO updateDto, RoomQuality entity)
     {
         entity.Name = updateDto.Name;
+        entity.Description = updateDto.Description;
         entity.SortOrder = updateDto.SortOrder;
     }
 
-    protected override RoomQuality MapToEntity(RoomQualityCreateOrUpdateDTO createDto)
+    protected override RoomQuality MapCreateToEntity(RoomQualityCreateDTO createDto)
     {
         return new RoomQuality
         {
             Name = createDto.Name,
+            Description = createDto.Description,
             SortOrder = createDto.SortOrder,
             IsDeleted = false,
             TypeId = createDto.TypeId
-
         };
     }
 
     // Validation
-    protected override async Task<ValidationResult> ValidateAsync(RoomQualityCreateOrUpdateDTO dto, int? id = null)
+    protected override async Task<ValidationResult> ValidateCreateLogicAsync(RoomQualityCreateDTO dto)
     {
-        var basicValidation = ValidateFactory.ValidateFullAsync<RoomQuality>(
-            _repo,
-            dto.Name,
-            id,
-            dto.TypeId,
-            getEntityIsDeletedFunc: x => x.IsDeleted,
-            isDeletedSelector: x => x.IsDeleted,
-            nameSelector: x => x.Name);
-        return await basicValidation;
+        // Check trùng tên TRONG CÙNG NHÓM (TypeId)
+        bool exists = await _repo.AnyAsync(x =>
+            x.Name == dto.Name &&
+            x.TypeId == dto.TypeId &&
+            x.IsDeleted == false);
+
+        if (exists) return ValidationResult.Fail(MessageResponse.AdminManagement.Amenity.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
+
+        return ValidationResult.Success();
     }
+
+    protected override async Task<ValidationResult> ValidateUpdateLogicAsync(RoomQualityUpdateDTO dto, int id)
+    {
+        // Lấy Entity gốc để biết nó đang thuộc nhóm nào
+        var currentEntity = await _repo.GetByIdAsync(id);
+        if (currentEntity == null) return ValidationResult.Success();
+
+        // Check trùng tên (Dùng TypeId gốc từ DB)
+        bool exists = await _repo.AnyAsync(x =>
+            x.Name == dto.Name &&
+            x.TypeId == currentEntity.TypeId && // Lấy TypeId từ DB
+            x.Id != id &&
+            x.IsDeleted == false);
+
+        if (exists)
+            return ValidationResult.Fail(MessageResponse.AdminManagement.RoomAttribute.RoomQuality.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
+
+        return ValidationResult.Success();
+    }
+
 
     // Hàm này dùng cho RoomAttributeFacade.cs
     public async Task<ApiResponse<List<RoomQualityDTO>>> GetAllByTypeAsync(int? typeId = null)
@@ -70,7 +94,7 @@ public class RoomQualityService : BaseManage<RoomQuality, IRoomQualityRepository
                 var types = await _roomQualityTypeRepo.WhereAsync(rq => rq.IsDeleted == false);
                 if (types == null || !types.Any())
                 {
-                    return ResponseFactory.Failure<List<RoomQualityDTO>>(StatusCodeResponse.NotFound, MessageResponse.EMPTY_LIST);
+                    return ResponseFactory.Failure<List<RoomQualityDTO>>(StatusCodeResponse.NotFound, MessageResponse.Common.EMPTY_LIST);
                 }
 
                 typeId = types.First().Id;
@@ -80,12 +104,12 @@ public class RoomQualityService : BaseManage<RoomQuality, IRoomQualityRepository
 
             if (roomQualities == null || !roomQualities.Any())
             {
-                return ResponseFactory.Failure<List<RoomQualityDTO>>(StatusCodeResponse.NotFound, MessageResponse.EMPTY_LIST);
+                return ResponseFactory.Failure<List<RoomQualityDTO>>(StatusCodeResponse.NotFound, MessageResponse.Common.EMPTY_LIST);
             }
 
             var result = roomQualities.Select(rq => MapToDto(rq)).ToList();
 
-            return ResponseFactory.Success(result, MessageResponse.GET_SUCCESSFULLY);
+            return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
         }
         catch (Exception)
         {
@@ -102,7 +126,7 @@ public class RoomQualityService : BaseManage<RoomQuality, IRoomQualityRepository
 
             if (rqTypes == null || !rqTypes.Any())
             {
-                return ResponseFactory.Failure<List<RoomQualityGroupDTO>>(StatusCodeResponse.NotFound, MessageResponse.EMPTY_LIST);
+                return ResponseFactory.Failure<List<RoomQualityGroupDTO>>(StatusCodeResponse.NotFound, MessageResponse.Common.EMPTY_LIST);
             }
 
             var result = rqTypes.Select(rq => new RoomQualityGroupDTO
@@ -113,7 +137,7 @@ public class RoomQualityService : BaseManage<RoomQuality, IRoomQualityRepository
                 IsDeleted = rq.IsDeleted
             }).ToList();
 
-            return ResponseFactory.Success(result, MessageResponse.GET_SUCCESSFULLY);
+            return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
         }
         catch (Exception)
         {

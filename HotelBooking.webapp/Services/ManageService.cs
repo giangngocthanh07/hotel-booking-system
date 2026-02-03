@@ -1,72 +1,56 @@
-using HotelBooking.webapp.ViewModels.Hotel;
 
 public interface IManagementService
 {
     void SetToken(string token);
-    // ==========================================
-    // 1. GET DATA
-    // ==========================================
 
     // 1. GET MENU
     Task<ApiResponse<ManageMenuResultVM>> GetManageModuleTypesOnly(ManageModuleEnum module);
 
-    // 2. GET DATA (TYPED)
-    Task<ApiResponse<PagedManageResult<ServiceBaseVM>>> GetServicesByType(int? typeId, PagingRequest paging);
+    // 2. GET DATA LIST (PAGING)
+    // --- Nhóm Typed (Có TypeId) ---
+    Task<ApiResponse<PagedManageResult<ServiceVM>>> GetServicesByType(int? typeId, PagingRequest paging);
     Task<ApiResponse<PagedManageResult<PolicyVM>>> GetPoliciesByType(int? typeId, PagingRequest paging);
     Task<ApiResponse<PagedManageResult<AmenityVM>>> GetAmenitiesByType(int? typeId, PagingRequest paging);
     Task<ApiResponse<PagedManageResult<RoomQualityVM>>> GetRoomQualitiesByType(int? typeId, PagingRequest paging);
 
-    // 3. GET DATA (NON-TYPED)
+    // --- Nhóm Attributes (Không TypeId - Đã tách API riêng) ---
     Task<ApiResponse<PagedManageResult<UnitTypeVM>>> GetUnitTypes(PagingRequest paging);
     Task<ApiResponse<PagedManageResult<BedTypeVM>>> GetBedTypes(PagingRequest paging);
     Task<ApiResponse<PagedManageResult<RoomViewVM>>> GetRoomViews(PagingRequest paging);
 
-
-    // ==========================================
-    // 2. DELETE (Xóa) - Trả về bool
-    // ==========================================
+    // 3. DELETE
+    Task<ApiResponse<bool>> DeleteService(int id);
     Task<ApiResponse<bool>> DeletePolicy(int id);
     Task<ApiResponse<bool>> DeleteAmenity(int id);
     Task<ApiResponse<bool>> DeleteRoomQuality(int id);
-    Task<ApiResponse<bool>> DeleteService(int id);
     Task<ApiResponse<bool>> DeleteUnitType(int id);
     Task<ApiResponse<bool>> DeleteBedType(int id);
     Task<ApiResponse<bool>> DeleteRoomView(int id);
 
-    // ==========================================
-    // 3. CREATE (Tạo mới) - Trả về chính Object đó
-    // ==========================================
-    // ServiceBaseVM dùng logic riêng
-    Task<ApiResponse<ServiceBaseVM>> CreateService(ServiceBaseVM vm);
+    // 4. CREATE (Nhận CreateVM, Trả về OutputVM)
+    Task<ApiResponse<ServiceVM>> CreateService(ServiceCreateVM vm);
+    Task<ApiResponse<PolicyVM>> CreatePolicy(PolicyCreateVM vm);
+    Task<ApiResponse<AmenityVM>> CreateAmenity(AmenityCreateVM vm);
+    Task<ApiResponse<RoomQualityVM>> CreateRoomQuality(RoomQualityCreateVM vm);
+    Task<ApiResponse<UnitTypeVM>> CreateUnitType(UnitTypeCreateVM vm);
+    Task<ApiResponse<BedTypeVM>> CreateBedType(BedTypeCreateVM vm);
+    Task<ApiResponse<RoomViewVM>> CreateRoomView(RoomViewCreateVM vm);
 
-    // Các loại khác dùng Generic
-    Task<ApiResponse<PolicyVM>> CreatePolicy(PolicyVM vm);
-    Task<ApiResponse<AmenityVM>> CreateAmenity(AmenityVM vm);
-    Task<ApiResponse<RoomQualityVM>> CreateRoomQuality(RoomQualityVM vm);
-    Task<ApiResponse<UnitTypeVM>> CreateUnitType(UnitTypeVM vm);
-    Task<ApiResponse<BedTypeVM>> CreateBedType(BedTypeVM vm);
-    Task<ApiResponse<RoomViewVM>> CreateRoomView(RoomViewVM vm);
-
-    // ==========================================
-    // 4. UPDATE (Cập nhật) - Trả về chính Object đó
-    // ==========================================
-    // ServiceBaseVM dùng logic riêng
-    Task<ApiResponse<ServiceBaseVM>> UpdateService(ServiceBaseVM vm);
-
-    // Các loại khác dùng Generic
-    Task<ApiResponse<PolicyVM>> UpdatePolicy(PolicyVM vm);
-    Task<ApiResponse<AmenityVM>> UpdateAmenity(AmenityVM vm);
-    Task<ApiResponse<RoomQualityVM>> UpdateRoomQuality(RoomQualityVM vm);
-    Task<ApiResponse<UnitTypeVM>> UpdateUnitType(UnitTypeVM vm);
-    Task<ApiResponse<BedTypeVM>> UpdateBedType(BedTypeVM vm);
-    Task<ApiResponse<RoomViewVM>> UpdateRoomView(RoomViewVM vm);
-
+    // 5. UPDATE (Nhận ID và UpdateVM, Trả về OutputVM)
+    Task<ApiResponse<ServiceVM>> UpdateService(int id, ServiceUpdateVM vm);
+    Task<ApiResponse<PolicyVM>> UpdatePolicy(int id, PolicyUpdateVM vm);
+    Task<ApiResponse<AmenityVM>> UpdateAmenity(int id, AmenityUpdateVM vm);
+    Task<ApiResponse<RoomQualityVM>> UpdateRoomQuality(int id, RoomQualityUpdateVM vm);
+    Task<ApiResponse<UnitTypeVM>> UpdateUnitType(int id, UnitTypeUpdateVM vm);
+    Task<ApiResponse<BedTypeVM>> UpdateBedType(int id, BedTypeUpdateVM vm);
+    Task<ApiResponse<RoomViewVM>> UpdateRoomView(int id, RoomViewUpdateVM vm);
 }
 
 public class ManagementService : IManagementService
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly HttpClient _http;
+    private const string BaseUrl = "v1/admin/Management";
 
     public ManagementService(IHttpClientFactory httpClientFactory)
     {
@@ -76,66 +60,52 @@ public class ManagementService : IManagementService
 
     public void SetToken(string token)
     {
-        // 1. Xóa header cũ (để tránh bị trùng hoặc lỗi)
         _http.DefaultRequestHeaders.Authorization = null;
-        
-        // 2. Gán token mới vào
         if (!string.IsNullOrEmpty(token))
         {
-            _http.DefaultRequestHeaders.Authorization = 
+            _http.DefaultRequestHeaders.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
         }
     }
 
     // ==========================================
-    // 1. GỌI API LẤY MENU (SIÊU NHẸ)
+    // 1. MENU & TYPED DATA
     // ==========================================
     public async Task<ApiResponse<ManageMenuResultVM>> GetManageModuleTypesOnly(ManageModuleEnum module)
     {
-        try
-        {
-            // Backend Route: [HttpGet("manage/menu/{module}")]
-            var url = $"v1/admin/Management/get-manage-menu/{module}";
-
-            var response = await _http.GetFromJsonAsync<ApiResponse<ManageMenuResultVM>>(url);
-            return response!;
-        }
-        catch (Exception ex)
-        {
-            // 2. In lỗi ra Console
-            Console.WriteLine("=== LỖI GỌI API ===");
-            Console.WriteLine($"Message: {ex.Message}");
-            Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-
-            // Nếu có InnerException thì in ra luôn
-            if (ex.InnerException != null)
-            {
-                Console.WriteLine($"Inner: {ex.InnerException.Message}");
-            }
-            // Xử lý lỗi kết nối (ví dụ server tắt)
-            return ResponseFactory.ServerError<ManageMenuResultVM>();
-        }
+        // Gửi Request Object qua Query String (Nếu BE đã sửa dùng DTO cho Menu)
+        // Nếu BE vẫn dùng enum path param: "get-manage-menu/{module}" -> Giữ nguyên
+        // Nếu BE đổi sang DTO: "get-manage-menu?module=1" -> Cần sửa lại
+        // Giả sử BE vẫn giữ nguyên Route cũ:
+        return await _http.GetApiAsync<ManageMenuResultVM>($"v1/admin/Management/get-manage-menu/{module}");
     }
 
-    // ==========================================
-    // 1. GET: 
-    // ==========================================
-    // Typed Groups
-    public Task<ApiResponse<PagedManageResult<ServiceBaseVM>>> GetServicesByType(int? typeId, PagingRequest paging) => GetGenericTyped<ServiceBaseVM>("v1/admin/Management/get-service-data", typeId, paging);
-    public Task<ApiResponse<PagedManageResult<PolicyVM>>> GetPoliciesByType(int? typeId, PagingRequest paging) => GetGenericTyped<PolicyVM>("v1/admin/Management/get-policy-data", typeId, paging);
-    public Task<ApiResponse<PagedManageResult<AmenityVM>>> GetAmenitiesByType(int? typeId, PagingRequest paging) => GetGenericTyped<AmenityVM>("v1/admin/Management/get-amenity-data", typeId, paging);
-    public Task<ApiResponse<PagedManageResult<RoomQualityVM>>> GetRoomQualitiesByType(int? typeId, PagingRequest paging) => GetGenericTyped<RoomQualityVM>("v1/admin/Management/get-room-quality-data", typeId, paging);
+    public Task<ApiResponse<PagedManageResult<ServiceVM>>> GetServicesByType(int? typeId, PagingRequest paging)
+        => GetGenericTyped<ServiceVM>("v1/admin/Management/get-service-data", typeId, paging);
 
-    // Non-Typed Groups
+    public Task<ApiResponse<PagedManageResult<PolicyVM>>> GetPoliciesByType(int? typeId, PagingRequest paging)
+        => GetGenericTyped<PolicyVM>("v1/admin/Management/get-policy-data", typeId, paging);
+
+    public Task<ApiResponse<PagedManageResult<AmenityVM>>> GetAmenitiesByType(int? typeId, PagingRequest paging)
+        => GetGenericTyped<AmenityVM>("v1/admin/Management/get-amenity-data", typeId, paging);
+
+    public Task<ApiResponse<PagedManageResult<RoomQualityVM>>> GetRoomQualitiesByType(int? typeId, PagingRequest paging)
+        => GetGenericTyped<RoomQualityVM>("v1/admin/Management/get-room-quality-data", typeId, paging);
+
+    // ==========================================
+    // 2. NON-TYPED DATA (ROOM ATTRIBUTES)
+    // ==========================================
     public Task<ApiResponse<PagedManageResult<UnitTypeVM>>> GetUnitTypes(PagingRequest paging)
         => GetAttributePaged<UnitTypeVM>(RoomAttributeType.UnitType, paging);
+
     public Task<ApiResponse<PagedManageResult<BedTypeVM>>> GetBedTypes(PagingRequest paging)
         => GetAttributePaged<BedTypeVM>(RoomAttributeType.BedType, paging);
+
     public Task<ApiResponse<PagedManageResult<RoomViewVM>>> GetRoomViews(PagingRequest paging)
         => GetAttributePaged<RoomViewVM>(RoomAttributeType.RoomView, paging);
 
     // ==========================================
-    // 2. DELETE: Xóa dữ liệu
+    // 3. DELETE
     // ==========================================
     public Task<ApiResponse<bool>> DeleteService(int id) => DeleteGeneric("delete-service", id);
     public Task<ApiResponse<bool>> DeletePolicy(int id) => DeleteGeneric("delete-policy", id);
@@ -145,147 +115,131 @@ public class ManagementService : IManagementService
     public Task<ApiResponse<bool>> DeleteBedType(int id) => DeleteGeneric("delete-bed-type", id);
     public Task<ApiResponse<bool>> DeleteUnitType(int id) => DeleteGeneric("delete-unit-type", id);
 
+    // =========================================================================
+    // 4. CREATE (Dùng CreateVM)
+    // =========================================================================
+    public Task<ApiResponse<ServiceVM>> CreateService(ServiceCreateVM vm)
+        => PostGenericWithSlug<ServiceVM, ServiceCreateVM>(vm, isService: true);
+
+    public Task<ApiResponse<PolicyVM>> CreatePolicy(PolicyCreateVM vm)
+        => PostGeneric<PolicyVM, PolicyCreateVM>("create-policy", vm);
+
+    public Task<ApiResponse<AmenityVM>> CreateAmenity(AmenityCreateVM vm)
+        => PostGeneric<AmenityVM, AmenityCreateVM>("create-amenity", vm);
+
+    public Task<ApiResponse<RoomQualityVM>> CreateRoomQuality(RoomQualityCreateVM vm)
+        => PostGeneric<RoomQualityVM, RoomQualityCreateVM>("create-room-quality", vm);
+
+    public Task<ApiResponse<UnitTypeVM>> CreateUnitType(UnitTypeCreateVM vm)
+        => PostGeneric<UnitTypeVM, UnitTypeCreateVM>("create-unit-type", vm);
+
+    public Task<ApiResponse<BedTypeVM>> CreateBedType(BedTypeCreateVM vm)
+        => PostGeneric<BedTypeVM, BedTypeCreateVM>("create-bed-type", vm);
+
+    public Task<ApiResponse<RoomViewVM>> CreateRoomView(RoomViewCreateVM vm)
+        => PostGeneric<RoomViewVM, RoomViewCreateVM>("create-room-view", vm);
+
+    // =========================================================================
+    // 5. UPDATE (Dùng UpdateVM + ID)
+    // =========================================================================
+    public Task<ApiResponse<ServiceVM>> UpdateService(int id, ServiceUpdateVM vm)
+        => PutGenericWithSlug<ServiceVM, ServiceUpdateVM>(id, vm, isService: true);
+
+    public Task<ApiResponse<PolicyVM>> UpdatePolicy(int id, PolicyUpdateVM vm)
+        => PutGeneric<PolicyVM, PolicyUpdateVM>("update-policy", id, vm);
+
+    public Task<ApiResponse<AmenityVM>> UpdateAmenity(int id, AmenityUpdateVM vm)
+        => PutGeneric<AmenityVM, AmenityUpdateVM>("update-amenity", id, vm);
+
+    public Task<ApiResponse<RoomQualityVM>> UpdateRoomQuality(int id, RoomQualityUpdateVM vm)
+        => PutGeneric<RoomQualityVM, RoomQualityUpdateVM>("update-room-quality", id, vm);
+
+    public Task<ApiResponse<UnitTypeVM>> UpdateUnitType(int id, UnitTypeUpdateVM vm)
+        => PutGeneric<UnitTypeVM, UnitTypeUpdateVM>("update-unit-type", id, vm);
+
+    public Task<ApiResponse<BedTypeVM>> UpdateBedType(int id, BedTypeUpdateVM vm)
+        => PutGeneric<BedTypeVM, BedTypeUpdateVM>("update-bed-type", id, vm);
+
+    public Task<ApiResponse<RoomViewVM>> UpdateRoomView(int id, RoomViewUpdateVM vm)
+        => PutGeneric<RoomViewVM, RoomViewUpdateVM>("update-room-view", id, vm);
 
     // ==========================================
-    // 3. CREATE: Tạo mới
+    // 6. PRIVATE HELPERS
     // ==========================================
-    // Lưu ý: Helper của bạn yêu cầu Input và Output cùng kiểu T
 
-    // [ĐẶC BIỆT] ServiceBaseVM có logic URL phức tạp (Đa hình) -> Không dùng Generic Helper chung được
-    public async Task<ApiResponse<ServiceBaseVM>> CreateService(ServiceBaseVM vm)
+    // Helper: Ghép chuỗi lấy danh sách Typed
+    private Task<ApiResponse<PagedManageResult<T>>> GetGenericTyped<T>(string endpoint, int? typeId, PagingRequest paging)
     {
-        try
-        {
-            string url = GetServiceUrl(vm, isUpdate: false);
-            // Tự động hiểu T là ServiceBaseDTO
-            return await _http.PostApiAsync(url, vm);
-        }
-        catch (Exception ex)
-        {
-            return ResponseFactory.Failure<ServiceBaseVM>(StatusCodeResponse.Error, ex.Message);
-        }
+        var queryParams = new List<string>();
+
+        if (typeId.HasValue) queryParams.Add($"typeId={typeId}");
+
+        // Paging luôn có giá trị mặc định ở ViewModel, nhưng check cho an toàn
+        queryParams.Add($"pageIndex={paging.PageIndex}");
+        queryParams.Add($"pageSize={paging.PageSize}");
+
+        var url = $"{endpoint}?{string.Join("&", queryParams)}";
+        return _http.GetApiAsync<PagedManageResult<T>>(url);
     }
 
-    // [CƠ BẢN] Các hàm Create đơn giản -> Dùng PostGeneric cho gọn
-    // [CƠ BẢN] Các hàm Create đơn giản -> Dùng PostGeneric cho gọn
-    public Task<ApiResponse<PolicyVM>> CreatePolicy(PolicyVM vm) => PostGeneric("create-policy", vm);
-    public Task<ApiResponse<AmenityVM>> CreateAmenity(AmenityVM vm) => PostGeneric("create-amenity", vm);
-    public Task<ApiResponse<RoomQualityVM>> CreateRoomQuality(RoomQualityVM vm) => PostGeneric("create-room-quality", vm);
-    public Task<ApiResponse<UnitTypeVM>> CreateUnitType(UnitTypeVM vm) => PostGeneric("create-unit-type", vm);
-    public Task<ApiResponse<BedTypeVM>> CreateBedType(BedTypeVM vm) => PostGeneric("create-bed-type", vm);
-    public Task<ApiResponse<RoomViewVM>> CreateRoomView(RoomViewVM vm) => PostGeneric("create-room-view", vm);
-
-    // ==========================================
-    // 4. UPDATE: Cập nhật
-    // ==========================================
-    // [ĐẶC BIỆT] ServiceBaseVM có logic URL phức tạp -> Giữ nguyên logic riêng
-    public async Task<ApiResponse<ServiceBaseVM>> UpdateService(ServiceBaseVM vm)
+    // Helper: Ghép chuỗi lấy danh sách Non-Typed (Room Attributes)
+    private Task<ApiResponse<PagedManageResult<T>>> GetAttributePaged<T>(RoomAttributeType type, PagingRequest paging, int? typeId = null)
     {
-        try
-        {
-            string url = GetServiceUrl(vm, isUpdate: true);
-            return await _http.PutApiAsync<ServiceBaseVM>(url, vm);
-        }
-        catch (Exception ex)
-        {
-            return ResponseFactory.Failure<ServiceBaseVM>(StatusCodeResponse.Error, ex.Message);
-        }
-    }
-
-    // [CƠ BẢN] Các hàm Update đơn giản -> Dùng PutGeneric cho gọn
-    public Task<ApiResponse<PolicyVM>> UpdatePolicy(PolicyVM vm) => PutGeneric("update-policy", vm.Id, vm);
-    public Task<ApiResponse<AmenityVM>> UpdateAmenity(AmenityVM vm) => PutGeneric("update-amenity", vm.Id, vm);
-    public Task<ApiResponse<RoomQualityVM>> UpdateRoomQuality(RoomQualityVM vm) => PutGeneric("update-room-quality", vm.Id, vm);
-    public Task<ApiResponse<UnitTypeVM>> UpdateUnitType(UnitTypeVM vm) => PutGeneric("update-unit-type", vm.Id, vm);
-    public Task<ApiResponse<BedTypeVM>> UpdateBedType(BedTypeVM vm) => PutGeneric("update-bed-type", vm.Id, vm);
-    public Task<ApiResponse<RoomViewVM>> UpdateRoomView(RoomViewVM vm) => PutGeneric("update-room-view", vm.Id, vm);
-
-
-    // --- Helper chọn URL riêng trong Service này ---
-    private string GetServiceUrl(ServiceBaseVM vm, bool isUpdate)
-    {
-        // 1. Xác định "Slug" (tên định danh) của loại dịch vụ
-        string typeSlug = vm switch
-        {
-            ServiceStandardVM => "standard-service",
-            ServiceAirportTransferVM => "airport-transfer-service",
-            _ => throw new NotSupportedException($"Chưa cấu hình cho: {vm.GetType().Name}")
-        };
-
-        // 2. Ghép chuỗi tự động
-        if (isUpdate)
-        {
-            return $"v1/admin/Management/update-{typeSlug}/{vm.Id}";
-        }
-        else
-        {
-            return $"v1/admin/Management/create-{typeSlug}";
-        }
-    }
-
-    // Helper 1: Gọi API Phân trang (Get Paged Data)
-    private async Task<ApiResponse<PagedManageResult<T>>> GetAttributePaged<T>(RoomAttributeType type, PagingRequest paging, int? typeId = null)
-    {
-        // Build URL: api/hotel/room-attribute/get-paged-data?type=UnitType&pageIndex=1...
-        var url = $"v1/admin/Management/room-attribute/get-paged-data?type={type}&pageIndex={paging.PageIndex}&pageSize={paging.PageSize}";
+        // Đây là chỗ quan trọng nhất cần sửa để khớp với BE mới
+        var url = $"v1/admin/Management/room-attribute/get-paged-data" +
+                  $"?type={(int)type}" +
+                  $"&pageIndex={paging.PageIndex}" +
+                  $"&pageSize={paging.PageSize}";
 
         if (typeId.HasValue) url += $"&typeId={typeId}";
 
-        return await _http.GetApiAsync<PagedManageResult<T>>(url);
-    }
-
-    // ==========================================
-    // 5. PRIVATE GENERIC HELPERS (Nồi dùng chung)
-    // ==========================================
-    private Task<ApiResponse<PagedManageResult<T>>> GetGenericTyped<T>(string endpoint, int? typeId, PagingRequest paging)
-    {
-        // Xây dựng Query String
-        // Bắt đầu với endpoint
-        var url = endpoint;
-        var queryParams = new List<string>();
-
-        // Thêm typeId nếu có
-        if (typeId.HasValue)
-        {
-            queryParams.Add($"typeId={typeId}");
-        }
-
-        // Thêm tham số phân trang nếu có
-        if (paging != null)
-        {
-            // Sử dụng giá trị mặc định nếu null (tuy nhiên logic validate ở BE đã xử lý, ở đây cứ truyền lên)
-            // Lưu ý: Nếu paging.PageIndex là null, string interpolation sẽ ra chuỗi rỗng hoặc lỗi tùy cấu hình,
-            // nên tốt nhất check null hoặc dùng .GetValueOrDefault().
-            // Giả sử PagingRequest ở Client cũng dùng int? như Server
-            if (paging.PageIndex.HasValue) queryParams.Add($"pageIndex={paging.PageIndex}");
-            if (paging.PageSize.HasValue) queryParams.Add($"pageSize={paging.PageSize}");
-        }
-
-        // Nối query string vào URL
-        if (queryParams.Any())
-        {
-            url += "?" + string.Join("&", queryParams);
-        }
-
         return _http.GetApiAsync<PagedManageResult<T>>(url);
     }
-    // Helper cho CREATE
-    private Task<ApiResponse<T>> PostGeneric<T>(string endpoint, T vm)
+
+    // Helper: Logic Slug đặc biệt cho Service
+    private string GetServiceSlug<T>(T vm)
     {
-        // URL: hotel/create-policy
-        return _http.PostApiAsync<T>($"v1/admin/Management/{endpoint}", vm);
+        return vm switch
+        {
+            // Gom tất cả những gì liên quan đến Standard về 1 slug duy nhất
+            ServiceStandardVM _ or
+            ServiceStandardCreateVM _ or
+            ServiceStandardUpdateVM _ => "standard-service",
+
+            // Gom tất cả những gì liên quan đến Airport về 1 slug duy nhất
+            ServiceAirportTransferVM _ or
+            ServiceAirportCreateVM _ or
+            ServiceAirportUpdateVM _ => "airport-transfer-service",
+            _ => throw new NotSupportedException($"Chưa hỗ trợ loại service: {vm?.GetType().Name}")
+        };
     }
 
-    // Helper cho UPDATE
-    private Task<ApiResponse<T>> PutGeneric<T>(string endpoint, int id, T vm)
+    // 1. Helper Post/Put đặc biệt cho Service (có xử lý slug)
+    private Task<ApiResponse<TResponse>> PostGenericWithSlug<TResponse, TRequest>(TRequest vm, bool isService)
     {
-        // URL: hotel/update-policy/123
-        return _http.PutApiAsync<T>($"v1/admin/Management/{endpoint}/{id}", vm);
+        var slug = isService ? GetServiceSlug(vm) : "";
+        var url = string.IsNullOrEmpty(slug) ? $"{BaseUrl}/create" : $"{BaseUrl}/create-{slug}";
+
+        // [TYPE SAFE] Truyền cả TResponse và TRequest vào
+        return _http.PostApiAsync<TResponse, TRequest>(url, vm);
     }
 
-    // Helper cho DELETE
-    private async Task<ApiResponse<bool>> DeleteGeneric(string endpoint, int id)
+    private Task<ApiResponse<TResponse>> PutGenericWithSlug<TResponse, TRequest>(int id, TRequest vm, bool isService)
     {
-        return await _http.DeleteApiAsync<bool>($"v1/admin/Management/{endpoint}/{id}");
+        var slug = isService ? GetServiceSlug(vm) : "";
+        var url = string.IsNullOrEmpty(slug) ? $"{BaseUrl}/update/{id}" : $"{BaseUrl}/update-{slug}/{id}";
+
+        // [TYPE SAFE] Truyền cả TResponse và TRequest vào
+        return _http.PutApiAsync<TResponse, TRequest>(url, vm);
     }
+
+    // Helper Generic chuẩn
+    private Task<ApiResponse<TResponse>> PostGeneric<TResponse, TRequest>(string endpoint, TRequest vm)
+     => _http.PostApiAsync<TResponse, TRequest>($"{BaseUrl}/{endpoint}", vm);
+
+    private Task<ApiResponse<TResponse>> PutGeneric<TResponse, TRequest>(string endpoint, int id, TRequest vm)
+     => _http.PutApiAsync<TResponse, TRequest>($"{BaseUrl}/{endpoint}/{id}", vm);
+
+    private Task<ApiResponse<bool>> DeleteGeneric(string endpoint, int id)
+        => _http.DeleteApiAsync<bool>($"v1/admin/Management/{endpoint}/{id}");
 }
