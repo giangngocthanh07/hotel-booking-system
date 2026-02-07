@@ -79,8 +79,8 @@ public static class MessageResponse
             public const string LONG_UNIT = "Đơn vị tính quá dài (tối đa 20 ký tự)!";
             public const string MIN_PASSENGERS = "Số lượng khách tối thiểu phải lớn hơn 0!";
             public const string MIN_LUGGAGE = "Số lượng hành lý không được âm!";
-            public const string INVALID_ROUND_TRIP_PRICE = "Giá khứ hồi không hợp lệ, phải lớn hơn 0!";
-            public const string INVALID_ADDITIONAL_FEE = "Phụ phí đêm phải lớn hơn 0!";
+            public const string INVALID_ROUND_TRIP_PRICE = "Giá khứ hồi không hợp lệ, phải lớn hơn 1000!";
+            public const string INVALID_ADDITIONAL_FEE = "Phụ phí đêm phải lớn hơn 1000!";
             public const string MISSING_ADDITIONAL_FEE_START_TIME = "Vui lòng nhập giờ bắt đầu phụ phí đêm!";
             public const string MISSING_ADDITIONAL_FEE_END_TIME = "Vui lòng nhập giờ kết thúc phụ phí đêm!";
             public const string INVALID_ADDITIONAL_FEE_START_END_TIME = "Giờ bắt đầu và kết thúc không được trùng nhau.";

@@ -21,9 +21,8 @@
 }
 else
 {
-    <MasterDetailLayout TItem="AmenityVM" TModel="BaseCreateOrUpdateAdminVM" Items="_items"
-        Model="@(_isUpdate ? (BaseCreateOrUpdateAdminVM)_updateModel : (BaseCreateOrUpdateAdminVM)_createModel)"
-        PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
+    <MasterDetailLayout @ref="_layoutRef" TItem="AmenityVM" TModel="BaseCreateOrUpdateAdminVM" Items="_items"
+        Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
         OnPageChanged="HandlePageChanged" OnSubmit="SaveData" OnEdit="OnEditItem" OnDelete="HandleDelete"
         OnCancel="ResetForm">
 
@@ -35,51 +34,21 @@ else
         </SidebarTopContent>
 
         @* --- B. CẤU HÌNH FORM (Tiện nghi mặc định MIỄN PHÍ) --- *@
-        <FormContent>
-            @if (_isUpdate)
-            {
-                <div class="mb-3">
-                    <label class="form-label fw-bold small text-muted text-uppercase">Tên tiện nghi</label>
-                    <div class="input-group shadow-sm">
-                        <span class="input-group-text bg-white">
-                            <i class="@GetAmenityIcon(_updateModel.Name) text-success"></i>
-                        </span>
-                        <InputText class="form-control fw-bold" @bind-Value="_updateModel.Name"
-                            placeholder="VD: WiFi, Khăn tắm..." />
-                    </div>
-                    <ValidationMessage For="() => _updateModel.Name" />
-                </div>
+        <FormContent Context="m">
 
-                <div class="mb-3">
-                    <label class="form-label fw-bold small text-muted text-uppercase">Mô tả / Ghi chú</label>
-                    <InputTextArea class="form-control border-primary" @bind-Value="_updateModel.Description" rows="3"
-                        placeholder="Chỉnh sửa mô tả..." />
-                    <ValidationMessage For="() => _updateModel.Description" />
+            @* --- 1. ICON PREVIEW --- *@
+            @* Vì Layout không có chỗ hiện Icon cạnh ô Name, ta hiện 1 bản preview nhỏ ở đây *@
+            <div
+                class="d-flex align-items-center mb-3 p-2 border rounded bg-light shadow-sm animate__animated animate__fadeIn">
+                <div class="rounded-circle bg-white d-flex align-items-center justify-content-center shadow-sm me-3"
+                    style="width: 45px; height: 45px;">
+                    <i class="@GetAmenityIcon(m.Name) fs-4 text-success"></i>
                 </div>
-            }
-            else
-            {
-                // --- FORM CREATE (Bind vào _createModel) ---
-                <div class="mb-3">
-                    <label class="form-label fw-bold small text-muted text-uppercase">Tên tiện nghi</label>
-                    <div class="input-group shadow-sm">
-                        <span class="input-group-text bg-white">
-                            <i class="@GetAmenityIcon(_createModel.Name) text-success"></i>
-                        </span>
-                        <InputText class="form-control fw-bold" @bind-Value="_createModel.Name"
-                            placeholder="VD: WiFi, Khăn tắm..." />
-                    </div>
-                    <ValidationMessage For="() => _createModel.Name" />
+                <div>
+                    <div class="extra-small text-muted fw-bold text-uppercase">Icon nhận diện</div>
+                    <div class="small fw-bold text-dark">@(string.IsNullOrEmpty(m.Name) ? "Đang chờ tên..." : m.Name)</div>
                 </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-bold small text-muted text-uppercase">Mô tả / Ghi chú</label>
-                    <InputTextArea class="form-control" @bind-Value="_createModel.Description" rows="3"
-                        placeholder="Nhập mô tả để Owner tham khảo..." />
-                    <ValidationMessage For="() => _createModel.Description" />
-                    <div class="form-text small">Mô tả này giúp chủ khách sạn hiểu rõ tiêu chuẩn của tiện nghi.</div>
-                </div>
-            }
+            </div>
 
             <div class="card border-success bg-success bg-opacity-10 mb-3">
                 <div class="card-body py-2 d-flex align-items-center">
@@ -201,6 +170,11 @@ else
         return "fa-solid fa-check-circle"; // Mặc định
     }
 
+    private BaseCreateOrUpdateAdminVM GetModel() => _isUpdate ? (BaseCreateOrUpdateAdminVM)_updateModel :
+    (BaseCreateOrUpdateAdminVM)_createModel;
+
+    private MasterDetailLayout<AmenityVM, BaseCreateOrUpdateAdminVM>? _layoutRef;
+
     // --- LIFECYCLE ---
     // --- 1. LOAD DATA (Override từ Cha) ---
     protected override async Task LoadDataAsync()
@@ -284,6 +258,11 @@ else
             Description = item.Description
             // Không map TypeId vì UpdateVM không có chứa nó
         };
+
+        StateHasChanged();
+
+        // Đảm bảo khi mở form Edit, các lỗi cũ không bị "nhảy" ra
+        _layoutRef?.TriggerValidate();
     }
 
     private async Task HandleDelete(AmenityVM item)
@@ -314,6 +293,9 @@ else
         _updateModel = new AmenityUpdateVM();
 
         StateHasChanged();
+
+        // Xóa sạch dấu vết lỗi của lần nhập trước
+        _layoutRef?.TriggerValidate();
     }
 
     private async Task SaveData()

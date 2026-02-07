@@ -125,6 +125,24 @@ namespace HotelBooking.webapp.Helpers
                     }
                 },
 
+                (hasRT, isPaid, rtPrice) =>
+                {
+                    if (model is ServiceAirportCreateVM air)
+                    {
+                        // 1. Chỉ tự bật switch nếu người dùng chưa đụng vào (HasRoundTrip đang tắt)
+                        if (!air.HasRoundTrip)
+                        {
+                            air.HasRoundTrip = hasRT;
+                            air.IsRoundTripPaid = isPaid;
+                        }
+                        // 2. Chỉ điền giá nếu giá đang trống hoặc là giá mặc định cũ (300k)
+                        if (air.RoundTripPrice == 0 || air.RoundTripPrice == null || air.RoundTripPrice == 300000)
+                        {
+                            air.RoundTripPrice = rtPrice;
+                        }
+                    }
+                },
+
                 // 4. Phí đêm
                 (nightFeeOrNot, fee, start, end) =>
                 {
@@ -148,20 +166,34 @@ namespace HotelBooking.webapp.Helpers
                  v => { if (model.Price == 0) model.Price = v; },
                  v => { if (model is ServiceStandardUpdateVM std && string.IsNullOrEmpty(std.Unit)) std.Unit = v; },
                  (pax, lug) => { if (model is ServiceAirportUpdateVM air) { air.MaxPassengers = pax; air.MaxLuggage = lug; } },
-                 (nightFeeOrNot, fee, start, end) =>
-                 {
-                     if (model is ServiceAirportUpdateVM air)
-                     {
-                         if (air.AdditionalFee == 0 || air.AdditionalFee == null) air.AdditionalFee = fee;
-                     }
-                 }
+
+                (hasRT, isPaid, rtPrice) =>
+                {
+                    if (model is ServiceAirportUpdateVM air)
+                    {
+                        if (!air.HasRoundTrip)
+                        {
+                            air.HasRoundTrip = hasRT;
+                            air.IsRoundTripPaid = isPaid;
+                        }
+                        if (air.RoundTripPrice == 0 || air.RoundTripPrice == null) air.RoundTripPrice = rtPrice;
+                    }
+                },
+
+                (nightFeeOrNot, fee, start, end) =>
+                {
+                    if (model is ServiceAirportUpdateVM air)
+                    {
+                        if (air.AdditionalFee == 0 || air.AdditionalFee == null) air.AdditionalFee = fee;
+                    }
+                }
              );
         }
 
         // --- 3. LOGIC NGHIỆP VỤ TRUNG TÂM (Private) ---
         private static void ApplyLogic(int typeId, string nameCheck,
             Action<decimal> setPrice, Action<string> setUnit,
-            Action<int, int> setCapacity, Action<bool, decimal, TimeOnly, TimeOnly> setNightFee)
+            Action<int, int> setCapacity, Action<bool, bool, decimal> setRoundTripFee, Action<bool, decimal, TimeOnly, TimeOnly> setNightFee)
         {
             string name = nameCheck.ToLower();
             switch (typeId)
@@ -174,10 +206,11 @@ namespace HotelBooking.webapp.Helpers
                     break;
 
                 case 2: // Airport
-                    if (name.Contains("7 chỗ")) { setPrice(500000); setCapacity(7, 4); }
-                    else if (name.Contains("16 chỗ")) { setPrice(850000); setCapacity(16, 10); }
-                    else { setPrice(350000); setCapacity(4, 2); }
+                    if (name.Contains("7 chỗ")) { setPrice(500000); setCapacity(7, 4); setRoundTripFee(true, true, 900000); }
+                    else if (name.Contains("16 chỗ")) { setPrice(850000); setCapacity(16, 10); setRoundTripFee(true, true, 1600000); }
+                    else { setPrice(350000); setCapacity(4, 2); setRoundTripFee(true, true, 650000); }
 
+                    setRoundTripFee(true, true, 500000);
                     setNightFee(true, 200000, new TimeOnly(22, 0), new TimeOnly(5, 0));
                     break;
             }

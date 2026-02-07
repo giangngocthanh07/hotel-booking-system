@@ -18,8 +18,8 @@ public enum ServiceTypeEnum
 [JsonDerivedType(typeof(ServiceAirportTransferVM), typeDiscriminator: "airportTransfer")]
 public abstract class ServiceVM : BaseAdminVM
 {
-    [Range(1000, double.MaxValue, ErrorMessage = "Dịch vụ phải có giá từ 1,000đ trở lên!")]
-    public decimal Price { get; set; } = 0;
+    [Range(1000, double.MaxValue, ErrorMessage = "Vui lòng nhập giá tiền (tối thiểu 1,000đ)")]
+    public decimal Price { get; set; }
 
     [Required(ErrorMessage = "Loại dịch vụ không được để trống!")]
     public int TypeId { get; set; }
@@ -40,10 +40,12 @@ public class ServiceAirportTransferVM : ServiceVM
     // Câu hỏi: Có hỗ trợ 2 chiều không?
     public bool HasRoundTrip { get; set; }
     public bool IsRoundTripPaid { get; set; }
+    [Range(1000, double.MaxValue, ErrorMessage = "Vui lòng nhập giá khứ hồi (tối thiểu 1,000đ)")]
     public decimal? RoundTripPrice { get; set; }
 
     // Câu hỏi: Có phụ phí đêm không?
     public bool HasNightFee { get; set; }
+    [Range(1000, double.MaxValue, ErrorMessage = "Vui lòng nhập phụ phí đêm (tối thiểu 1,000đ)")]
     public decimal? AdditionalFee { get; set; }
     public TimeOnly? AdditionalFeeStartTime { get; set; }
     public TimeOnly? AdditionalFeeEndTime { get; set; }
@@ -61,7 +63,7 @@ public class ServiceAirportTransferVM : ServiceVM
 // DTO Thêm/Sửa dịch vụ
 public abstract class ServiceCreateVM : BaseCreateOrUpdateAdminVM
 {
-    [Range(1000, double.MaxValue, ErrorMessage = "Dịch vụ phải có giá từ 1,000đ trở lên!")]
+    [Range(1000, double.MaxValue, ErrorMessage = "Vui lòng nhập giá tiền (tối thiểu 1,000đ)")]
     public decimal Price { get; set; } = 0;
 
     // Property trừu tượng để UI binding (VD: Standard = 1, Airport = 2)
@@ -91,13 +93,13 @@ public class ServiceAirportCreateVM : ServiceCreateVM
     public bool HasRoundTrip { get; set; }
     public bool IsRoundTripPaid { get; set; }
 
-    [Range(0, double.MaxValue, ErrorMessage = "Giá khứ hồi không hợp lệ")]
+    [Range(1000, double.MaxValue, ErrorMessage = "Vui lòng nhập giá khứ hồi (tối thiểu 1,000đ)")]
     public decimal? RoundTripPrice { get; set; }
 
     // Logic phụ phí đêm
     public bool HasNightFee { get; set; }
 
-    [Range(0, double.MaxValue)]
+    [Range(1000, double.MaxValue, ErrorMessage = "Vui lòng nhập phụ phí đêm (tối thiểu 1,000đ)")]
     public decimal? AdditionalFee { get; set; }
     public TimeOnly? AdditionalFeeStartTime { get; set; }
     public TimeOnly? AdditionalFeeEndTime { get; set; }
@@ -135,15 +137,14 @@ public class ServiceAirportUpdateVM : ServiceUpdateVM
     public bool HasRoundTrip { get; set; }
     public bool IsRoundTripPaid { get; set; }
 
-    [Range(0, double.MaxValue)]
+    [Range(1000, double.MaxValue, ErrorMessage = "Vui lòng nhập giá khứ hồi (tối thiểu 1,000đ)")]
     public decimal? RoundTripPrice { get; set; }
 
     public bool HasNightFee { get; set; }
 
-    [Range(0, double.MaxValue)]
+    [Range(1000, double.MaxValue, ErrorMessage = "Vui lòng nhập phụ phí đêm (tối thiểu 1,000đ)")]
     public decimal? AdditionalFee { get; set; }
 
-    
     [Required(ErrorMessage = "Vui lòng nhập giờ bắt đầu")]
     public TimeOnly? AdditionalFeeStartTime { get; set; }
     [Required(ErrorMessage = "Vui lòng nhập giờ kết thúc")]

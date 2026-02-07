@@ -16,7 +16,7 @@ public class PolicyVM : BaseAdminVM
     public int? IntValue1 { get; set; }
     public int? IntValue2 { get; set; }
 
-    [Range(0, double.MaxValue, ErrorMessage = "Số tiền phải lớn hơn hoặc bằng 0!")]
+    [Range(1000, double.MaxValue, ErrorMessage = "Số tiền phải phải tối thiểu là 1000!")]
     public decimal? Amount { get; set; }
     [Range(0, 100, ErrorMessage = "Tỷ lệ phần trăm phải từ 0 đến 100!")]
 
@@ -42,7 +42,7 @@ public class PolicyCreateVM : BaseCreateOrUpdateAdminVM
     [Range(0, int.MaxValue, ErrorMessage = "Giá trị không được âm!")]
     public int? IntValue2 { get; set; }
 
-    [Range(0, double.MaxValue, ErrorMessage = "Số tiền phải lớn hơn hoặc bằng 0!")]
+    [Range(1000, double.MaxValue, ErrorMessage = "Số tiền phải phải tối thiểu là 1000!")]
     public decimal? Amount { get; set; }
 
     [Range(0, 100, ErrorMessage = "Phần trăm phải từ 0 đến 100!")]
@@ -64,11 +64,10 @@ public class PolicyUpdateVM : BaseCreateOrUpdateAdminVM
     [Range(0, int.MaxValue, ErrorMessage = "Giá trị nguyên không được âm!")]
     public int? IntValue2 { get; set; }
 
-    [Range(0, double.MaxValue, ErrorMessage = "Số tiền phải lớn hơn hoặc bằng 0!")]
+    [Range(1000, double.MaxValue, ErrorMessage = "Số tiền phải phải tối thiểu là 1000!")]
     public decimal? Amount { get; set; }
 
     [Range(0, 100, ErrorMessage = "Phần trăm phải từ 0 đến 100!")]
     public double? Percent { get; set; }
-
     public bool? BoolValue { get; set; }
 }

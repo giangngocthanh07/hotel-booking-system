@@ -138,16 +138,16 @@ public class ServiceAirportUpdateValidator : AbstractValidator<ServiceAirportUpd
             .GreaterThan(0).When(x => x.MaxPassengers.HasValue).WithMessage(MessageResponse.AdminManagement.Service.MIN_PASSENGERS);
 
         RuleFor(x => x.MaxLuggage)
-            .GreaterThanOrEqualTo(0).When(x => x.MaxLuggage.HasValue).WithMessage(MessageResponse.AdminManagement.Service.MIN_LUGGAGE);
+            .GreaterThan(0).When(x => x.MaxLuggage.HasValue).WithMessage(MessageResponse.AdminManagement.Service.MIN_LUGGAGE);
 
         RuleFor(x => x.RoundTripPrice)
-            .GreaterThan(0)
+            .GreaterThanOrEqualTo(1000)
             .When(x => x.HasRoundTrip && x.IsRoundTripPaid)
             .WithMessage(MessageResponse.AdminManagement.Service.INVALID_ROUND_TRIP_PRICE);
 
         When(x => x.HasNightFee, () =>
         {
-            RuleFor(x => x.AdditionalFee).NotNull().GreaterThan(0).WithMessage(MessageResponse.AdminManagement.Service.INVALID_ADDITIONAL_FEE);
+            RuleFor(x => x.AdditionalFee).NotNull().GreaterThanOrEqualTo(1000).WithMessage(MessageResponse.AdminManagement.Service.INVALID_ADDITIONAL_FEE);
             RuleFor(x => x.AdditionalFeeStartTime).NotNull().WithMessage(MessageResponse.AdminManagement.Service.MISSING_ADDITIONAL_FEE_START_TIME);
             RuleFor(x => x.AdditionalFeeEndTime).NotNull().WithMessage(MessageResponse.AdminManagement.Service.MISSING_ADDITIONAL_FEE_END_TIME);
         });

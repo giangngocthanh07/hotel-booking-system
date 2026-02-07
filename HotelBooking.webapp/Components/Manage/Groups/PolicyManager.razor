@@ -62,6 +62,7 @@ else
                 @* ----- SET TRẠNG THÁI CHO PHẦN AMOUNT -----*@
                 // Lấy giá trị hiện tại để xác định trạng thái Switch
                 decimal currentAmt = _isUpdate ? (_updateModel.Amount ?? 0) : (_createModel.Amount ?? 0);
+
                 bool isPaid = currentAmt > 0;
 
                 @* ----- SET TRẠNG THÁI CHO PHẦN KHUNG GIỜ -----*@
@@ -742,6 +743,7 @@ else
     {
         decimal val = isEnabled ? 150000 : 0;
         if (_isUpdate) _updateModel.Amount = val; else _createModel.Amount = val;
+        
         StateHasChanged();
         _layoutRef?.TriggerValidate();
     }
