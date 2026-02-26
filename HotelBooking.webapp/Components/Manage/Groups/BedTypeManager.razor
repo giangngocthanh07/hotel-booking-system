@@ -20,9 +20,9 @@
 }
 else
 {
-    <MasterDetailLayout TItem="BedTypeVM" TModel="BaseCreateOrUpdateAdminVM" Items="items" Model="@(_isUpdate ? (BaseCreateOrUpdateAdminVM)_updateModel : (BaseCreateOrUpdateAdminVM)_createModel)" PageIndex="_paging.PageIndex ?? 1"
-        TotalPages="totalPages" TotalCount="totalCount" OnPageChanged="HandlePageChanged" OnSubmit="SaveData"
-        OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm">
+    <MasterDetailLayout TItem="BedTypeVM" TModel="BaseCreateOrUpdateAdminVM" Items="items" Model="@GetModel()"
+                        PageIndex="_paging.PageIndex ?? 1" TotalPages="totalPages" TotalCount="totalCount" OnPageChanged="HandlePageChanged"
+                        OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm">
 
         @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
         <SidebarTopContent>
@@ -32,79 +32,69 @@ else
         </SidebarTopContent>
 
         @* --- B. CẤU HÌNH FORM (Đã Việt hóa & Thêm chú thích) --- *@
-        <FormContent>
+        <FormContent Context="m">
+            @* --- 1. LOGIC TÍNH TOÁN ĐẦU KHỐI --- *@
+            @{
+                // Lấy model đang active để dùng chung cho ngắn
+                var activeModel = GetModel();
 
-            @* 1. TÊN LOẠI GIƯỜNG *@
-            <div class="mb-3">
-                <label class="form-label fw-bold small text-muted text-uppercase">Tên loại giường</label>
-                @if (_isUpdate)
-                {
-                    <InputText class="form-control" @bind-Value="_updateModel.Name" placeholder="VD: King Bed, Queen Bed..." />
-                    <ValidationMessage For="() => _updateModel.Name" />
-                }
-                else
-                {
-                    <InputText class="form-control" @bind-Value="_createModel.Name" placeholder="VD: King Bed, Queen Bed..." />
-                    <ValidationMessage For="() => _createModel.Name" />
-                }
-            </div>
+                double? currentCapacity = _isUpdate ? _updateModel.DefaultCapacity : _createModel.DefaultCapacity;
 
-            @* 2. SỨC CHỨA *@
+                // Render lỗi cho các trường riêng của BedType
+                RenderFragment RenderVal(string prop) => __builder =>
+                {
+                    if (prop == "Capacity")
+                    {
+                        if (_isUpdate)
+                        {
+                            <ValidationMessage For="() => _updateModel.DefaultCapacity" class="val-msg" />
+                        }
+                        else
+                        {
+                            <ValidationMessage For="() => _createModel.DefaultCapacity" class="val-msg" />
+                        }
+                    }
+                    else if (prop == "Width")
+                    {
+                        if (_isUpdate)
+                        {
+                            <ValidationMessage For="() => _updateModel.MinWidth" class="val-msg" />
+                        }
+                        else
+                        {
+                            <ValidationMessage For="() => _createModel.MinWidth" class="val-msg" />
+                        }
+                    }
+                };
+            }
+
+            @* --- 1. SỨC CHỨA --- *@
             <div class="mb-3">
                 <label class="form-label fw-bold small text-muted text-uppercase">Sức chứa (Người)</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-light"><i class="fa-solid fa-user-group text-muted"></i></span>
-                    @if (_isUpdate)
-                    {
-                        <InputNumber class="form-control" @bind-Value="_updateModel.DefaultCapacity" min="1" />
-                    }
-                    else
-                    {
-                        <InputNumber class="form-control" @bind-Value="_createModel.DefaultCapacity" min="1" />
-                    }
+                <div class="input-group shadow-sm">
+                    <span class="input-group-text bg-white"><i class="fa-solid fa-user-group text-muted"></i></span>
+                    <input type="number" class="form-control fw-bold" min="1" value="@currentCapacity"
+                           @oninput="@(e => HandleNumericInput(e.Value?.ToString(), "Capacity"))" />
                 </div>
-                <div class="form-text small text-muted">
-                    Số người tối đa mặc định cho loại giường này.
-                </div>
+                @RenderVal("Capacity")
+                <div class="form-text extra-small mt-1">Số người tối đa mặc định cho loại giường này.</div>
             </div>
 
-            @* 3. THIẾT LẬP KÍCH THƯỚC *@
+            @* 2. THIẾT LẬP KÍCH THƯỚC *@
             @* Lấy giá trị hiện tại để Binding UI *@
             @{
                 bool isVarying = _isUpdate ? _updateModel.IsVaryingSize : _createModel.IsVaryingSize;
+                double currentMinWidth = _isUpdate ? _updateModel.MinWidth : _createModel.MinWidth;
+                double currentMaxWidth = _isUpdate ? _updateModel.MaxWidth : _createModel.MaxWidth;
             }
-            
+
             <div class="mb-4 p-3 bg-light rounded border shadow-sm">
                 <label class="form-label fw-bold small d-block mb-2 text-primary">THIẾT LẬP KÍCH THƯỚC</label>
 
                 <div class="form-check form-switch custom-switch mb-3">
-                    @* Switch cho Update *@
-                    @if (_isUpdate)
-                    {
-                    <input type="checkbox" class="form-check-input" role="switch" id="swVarying" 
-                            checked="@_updateModel.IsVaryingSize" 
-                            @onchange="@(e => { 
-                                    _updateModel.IsVaryingSize = (bool)(e.Value ?? false); 
-                                    // Logic: Nếu tắt Varying mà size đang = 0 thì gợi ý size chuẩn
-                                    if(!_updateModel.IsVaryingSize && _updateModel.MinWidth == 0) {
-                                        _updateModel.MinWidth = 39; 
-                                        _updateModel.MaxWidth = 75;
-                                    }
-                            })" />
-                    }
-                    @* Switch cho Create *@
-                    else
-                    {
-                        <input type="checkbox" class="form-check-input" role="switch" id="swVarying" 
-                            checked="@_createModel.IsVaryingSize" 
-                            @onchange="@(e => { 
-                                    _createModel.IsVaryingSize = (bool)(e.Value ?? false); 
-                                    if(!_createModel.IsVaryingSize && _createModel.MinWidth == 0) {
-                                        _createModel.MinWidth = 39; 
-                                        _createModel.MaxWidth = 75;
-                                    }
-                            })" />
-                    }
+                    <input type="checkbox" class="form-check-input" role="switch" id="swVarying" checked="@isVarying"
+                           @onchange="@(e => HandleToggleVarying((bool)(e.Value ?? false)))"
+                           style="cursor: pointer; width: 2.5rem; height: 1.25rem;" />
 
                     <label class="form-check-label ms-2 small fw-bold" for="swVarying">
                         @(isVarying ? "Kích thước đa dạng" : "Kích thước cố định")
@@ -115,37 +105,31 @@ else
                 {
                     <div class="p-1 rounded bg-primary bg-opacity-10 border border-primary border-opacity-25 shadow-sm">
                         <label class="fw-bold text-muted text-uppercase mb-1"
-                            style="font-size: 0.62rem; letter-spacing: 0.5px;">
+                               style="font-size: 0.62rem; letter-spacing: 0.5px;">
                             CHIỀU RỘNG (INCHES)
                         </label>
                         <div class="d-flex align-items-center gap-2">
                             @if (_isUpdate)
                             {
-                                <InputNumber class="form-control form-control-sm fw-bold text-primary shadow-sm" style="width: 85px;" @bind-Value="_updateModel.MinWidth" />
+                                <InputNumber class="form-control form-control-sm fw-bold text-primary shadow-sm"
+                                             style="width: 85px;" @bind-Value="_updateModel.MinWidth" />
                                 <span class="text-muted small">-</span>
-                                <InputNumber class="form-control form-control-sm fw-bold text-primary shadow-sm" style="width: 85px;" @bind-Value="_updateModel.MaxWidth" />
+                                <InputNumber class="form-control form-control-sm fw-bold text-primary shadow-sm"
+                                             style="width: 85px;" @bind-Value="_updateModel.MaxWidth" />
                             }
                             else
                             {
-                                <InputNumber class="form-control form-control-sm fw-bold text-primary shadow-sm" style="width: 85px;" @bind-Value="_createModel.MinWidth" />
+                                <input type="number" class="form-control form-control-sm fw-bold text-primary text-center"
+                                       style="width: 85px;" value="@currentMinWidth"
+                                       @oninput="@(e => HandleNumericInput(e.Value?.ToString(), "Min"))" />
                                 <span class="text-muted small">-</span>
-                                <InputNumber class="form-control form-control-sm fw-bold text-primary shadow-sm" style="width: 85px;" @bind-Value="_createModel.MaxWidth" />
+                                <input type="number" class="form-control form-control-sm fw-bold text-primary text-center"
+                                       style="width: 85px;" value="@currentMaxWidth"
+                                       @oninput="@(e => HandleNumericInput(e.Value?.ToString(), "Max"))" />
                             }
                         </div>
+                        @RenderVal("Width")
                     </div>
-                }
-            </div>
-
-            @* 4. MÔ TẢ *@
-            <div class="mb-3">
-                <label class="form-label fw-bold small text-muted text-uppercase">Mô tả</label>
-                @if (_isUpdate)
-                {
-                    <InputTextArea class="form-control" @bind-Value="_updateModel.Description" rows="3" placeholder="Nhập mô tả để Owner tham khảo..."/>
-                }
-                else
-                {
-                    <InputTextArea class="form-control" @bind-Value="_createModel.Description" rows="3" placeholder="Nhập mô tả để Owner tham khảo..."/>
                 }
             </div>
         </FormContent>
@@ -153,7 +137,7 @@ else
         @* --- C. CẤU HÌNH BẢNG (TABLE) --- *@
         <TableHeader>
             <th class="text-center" style="width: 50px;">ID</th>
-            <th class="text-center" style="width: 150px;">Loại giường</th>
+            <th class="text-center" style="width: 150px;">Tên loại giường</th>
             <th class="text-center" style="width: 120px;">Sức chứa</th>
             <th class="text-center" style="width: 180px;">Kích thước (Inch)</th>
             <th class="text-center">Mô tả</th>
@@ -215,7 +199,7 @@ else
     // Tách Model
     private BedTypeCreateVM _createModel = new BedTypeCreateVM();
     private BedTypeUpdateVM _updateModel = new BedTypeUpdateVM();
-    
+
     private int _currentEditingId = 0;
     private bool _isUpdate = false;
 
@@ -223,6 +207,51 @@ else
     private PagingRequest _paging = new() { PageIndex = 1, PageSize = 10 };
     private int totalPages = 0;
     private int totalCount = 0;
+
+    private BaseCreateOrUpdateAdminVM GetModel() => _isUpdate ? _updateModel : _createModel;
+
+    private MasterDetailLayout<BedTypeVM, BaseCreateOrUpdateAdminVM>? _layoutRef;
+
+    // --- HÀM XỬ LÝ NHẬP SỐ (REACTIVE & TRỰC QUAN) ---
+    private async Task HandleNumericInput(string? val, string field)
+    {
+        double.TryParse(val, out var num);
+
+        if (_isUpdate)
+        {
+            if (field == "Capacity") _updateModel.DefaultCapacity = (int)num;
+            else if (field == "Min") _updateModel.MinWidth = num;
+            else if (field == "Max") _updateModel.MaxWidth = num;
+        }
+        else
+        {
+            if (field == "Capacity") _createModel.DefaultCapacity = (int)num;
+            else if (field == "Min") _createModel.MinWidth = num;
+            else if (field == "Max") _createModel.MaxWidth = num;
+        }
+
+        StateHasChanged();
+        _layoutRef?.TriggerValidate(); // Xóa lỗi đỏ ngay khi gõ đúng
+    }
+
+    private async Task HandleToggleVarying(bool val)
+    {
+        // Khi set val = true, ViewModel của bạn tự động đưa Width về 0
+        if (_isUpdate)
+        {
+            _updateModel.IsVaryingSize = val;
+            // Mồi kích thước chuẩn (Twin bed) nếu vừa tắt "Đa dạng" và đang bằng 0
+            if (!val && _updateModel.MinWidth <= 0) { _updateModel.MinWidth = 38; _updateModel.MaxWidth = 75; }
+        }
+        else
+        {
+            _createModel.IsVaryingSize = val;
+            if (!val && _createModel.MinWidth <= 0) { _createModel.MinWidth = 38; _createModel.MaxWidth = 75; }
+        }
+
+        StateHasChanged();
+        _layoutRef?.TriggerValidate();
+    }
 
     // --- 1. LOAD DATA (Override từ Cha) ---
     protected override async Task LoadDataAsync()
@@ -274,9 +303,9 @@ else
     // Tuy nhiên, có thể thêm check IsJsReady để an toàn.
     protected override async Task OnParametersSetAsync()
     {
-        ResetForm(); 
+        ResetForm();
 
-        if (IsJsReady) 
+        if (IsJsReady)
         {
             await LoadDataAsync();
         }
@@ -297,12 +326,15 @@ else
 
         // Dùng Helper để map sang UpdateVM
         var updateModel = RoomAttributeHelper.MapToUpdateVM(item);
-    
+
         // Ép kiểu về đúng loại để gán vào _updateModel
         if (updateModel is BedTypeUpdateVM mapped)
         {
             _updateModel = mapped;
         }
+
+        StateHasChanged();
+        _layoutRef?.TriggerValidate();
     }
 
     private async Task HandleDelete(BedTypeVM item)
@@ -324,7 +356,7 @@ else
     {
         _isUpdate = false;
         _currentEditingId = 0;
-        
+
         // Reset CreateVM
         if (RoomAttributeHelper.CreateNewCreateModel(RoomAttributeType.BedType) is BedTypeCreateVM newModel)
         {
@@ -334,6 +366,7 @@ else
         _updateModel = new BedTypeUpdateVM();
 
         StateHasChanged();
+        _layoutRef?.TriggerValidate();
     }
 
     private async Task SaveData()
@@ -349,13 +382,19 @@ else
             res = await Service.CreateBedType(_createModel);
         }
 
-        // Hiển thị thông báo
-        SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
 
         if (res.StatusCode == StatusCodeResponse.Success)
         {
+            // Hiển thị thông báo
+            SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
             await LoadDataAsync();
             ResetForm();
+        }
+        else
+        {
+            // KHÔNG gọi ResetForm() nếu có lỗi từ Server (như trùng tên)
+            // Dữ liệu vẫn nằm nguyên trong _updateModel để Admin sửa tiếp
+            SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
         }
     }
 }

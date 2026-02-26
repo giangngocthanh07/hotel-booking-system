@@ -55,8 +55,7 @@ public class UnitTypeService : BaseManage<UnitType, IUnitTypeRepository, UnitTyp
     protected override async Task<ValidationResult> ValidateCreateLogicAsync(UnitTypeCreateDTO dto)
     {
         bool exists = await _repo.AnyAsync(x =>
-            x.Name == dto.Name &&
-            x.IsDeleted == false);
+            x.Name == dto.Name);
 
         if (exists) return ValidationResult.Fail(MessageResponse.AdminManagement.RoomAttribute.UnitType.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
 

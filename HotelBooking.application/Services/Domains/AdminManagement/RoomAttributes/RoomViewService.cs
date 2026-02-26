@@ -44,8 +44,7 @@ public class RoomViewService : BaseManage<RoomView, IRoomViewRepository, RoomVie
     protected override async Task<ValidationResult> ValidateCreateLogicAsync(RoomViewCreateDTO dto)
     {
         bool exists = await _repo.AnyAsync(x =>
-            x.Name == dto.Name &&
-            x.IsDeleted == false);
+            x.Name == dto.Name);
 
         if (exists) return ValidationResult.Fail(MessageResponse.AdminManagement.RoomAttribute.RoomView.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
 

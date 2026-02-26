@@ -18,17 +18,13 @@ public enum ServiceTypeEnum
 [JsonDerivedType(typeof(ServiceAirportTransferDTO), typeDiscriminator: "airportTransfer")]
 public abstract class ServiceDTO : BaseAdminDTO
 {
-    [Range(1000, double.MaxValue, ErrorMessage = "Dịch vụ phải có giá từ 1,000đ trở lên!")]
     public decimal Price { get; set; } = 0;
-    [Required(ErrorMessage = "Loại dịch vụ không được để trống!")]
     public int TypeId { get; set; }
 }
 
 public class ServiceStandardDTO : ServiceDTO
 {
     // Thêm vào trường Additional bên DB
-    [Required(ErrorMessage = "Đơn vị tính không được để trống!")]
-    [MaxLength(20, ErrorMessage = "Đơn vị tính quá dài (tối đa 20 ký tự)!")]
     public string Unit { get; set; } = string.Empty;
 
 }
@@ -51,9 +47,7 @@ public class ServiceAirportTransferDTO : ServiceDTO
     public TimeOnly? AdditionalFeeEndTime { get; set; }
 
     // Thông số cơ bản
-    [Range(1, 45, ErrorMessage = "Số hành khách phải từ 1 đến 45!")]
     public int? MaxPassengers { get; set; }
-    [Range(1, 45, ErrorMessage = "Số hành lý phải từ 1 đến 45!")]
     public int? MaxLuggage { get; set; }
 
 }
@@ -86,7 +80,6 @@ public class ServiceAirportAdditionalData
 // DTO Thêm/Sửa dịch vụ
 public abstract class ServiceCreateDTO : BaseCreateOrUpdateAdminDTO
 {
-    [Range(1000, double.MaxValue, ErrorMessage = "Dịch vụ phải có giá từ 1,000đ trở lên!")]
     public decimal Price { get; set; } = 0;
 
     // Getter ảo để backend biết đang tạo loại gì
@@ -97,8 +90,6 @@ public abstract class ServiceCreateDTO : BaseCreateOrUpdateAdminDTO
 public class ServiceStandardCreateDTO : ServiceCreateDTO
 {
     public override int TargetTypeId => (int)ServiceTypeEnum.Standard;
-    [Required(ErrorMessage = "Vui lòng nhập đơn vị đo lường")]
-    [MaxLength(20, ErrorMessage = "Đơn vị tính quá dài (tối đa 20 ký tự)!")]
     public string Unit { get; set; } = string.Empty;
 }
 
@@ -121,9 +112,7 @@ public class ServiceAirportCreateDTO : ServiceCreateDTO
     public TimeOnly? AdditionalFeeEndTime { get; set; }
 
     // Thông số cơ bản
-    [Range(1, 45, ErrorMessage = "Số hành khách phải từ 1 đến 45!")]
     public int? MaxPassengers { get; set; }
-    [Range(1, 45, ErrorMessage = "Số hành lý phải từ 1 đến 45!")]
     public int? MaxLuggage { get; set; }
 }
 
@@ -132,7 +121,6 @@ public class ServiceAirportCreateDTO : ServiceCreateDTO
 [JsonDerivedType(typeof(ServiceAirportUpdateDTO), typeDiscriminator: "airport")]
 public abstract class ServiceUpdateDTO : BaseCreateOrUpdateAdminDTO
 {
-    [Range(1000, double.MaxValue, ErrorMessage = "Dịch vụ phải có giá từ 1,000đ trở lên!")]
     public decimal Price { get; set; }
 
     // Không có TargetTypeId -> Không thể đổi loại dịch vụ
@@ -141,8 +129,6 @@ public abstract class ServiceUpdateDTO : BaseCreateOrUpdateAdminDTO
 // 1. Update Standard
 public class ServiceStandardUpdateDTO : ServiceUpdateDTO
 {
-    [Required]
-    [MaxLength(20)]
     public string Unit { get; set; } = string.Empty;
 }
 
@@ -158,10 +144,8 @@ public class ServiceAirportUpdateDTO : ServiceUpdateDTO
     public decimal? AdditionalFee { get; set; }
     public TimeOnly? AdditionalFeeStartTime { get; set; }
     public TimeOnly? AdditionalFeeEndTime { get; set; }
-
-    [Range(1, 45, ErrorMessage = "Số hành khách phải từ 1 đến 45!")]
+    // Thông số cơ bản
     public int? MaxPassengers { get; set; }
-    [Range(1, 45, ErrorMessage = "Số hành lý phải từ 1 đến 45!")]
     public int? MaxLuggage { get; set; }
 }
 

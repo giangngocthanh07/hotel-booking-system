@@ -37,7 +37,7 @@ public static class ManagementAdminHelper
             // Lấy cái đầu tiên làm gợi ý cho FE (nếu cần)
             menuResult.DefaultSelectedId = menuResult.Types.FirstOrDefault()?.Id;
 
-            return ResponseFactory.Success(menuResult, MessageResponse.GET_SUCCESSFULLY);
+            return ResponseFactory.Success(menuResult, MessageResponse.Common.GET_SUCCESSFULLY);
         }
         catch (Exception)
         {
@@ -88,7 +88,7 @@ public static class ManagementAdminHelper
             {
                 return ResponseFactory.Failure<PagedManageResult<TDto>>(
                     StatusCodeResponse.BadRequest,
-                    "TypeId phải lớn hơn 0"
+                    MessageResponse.Validation.INVALID_TYPE_ID
                 );
             }
 
@@ -105,7 +105,7 @@ public static class ManagementAdminHelper
                     // --- VALIDATION 2: ID không tồn tại trong DB ---
                     return ResponseFactory.Failure<PagedManageResult<TDto>>(
                         StatusCodeResponse.NotFound,
-                        MessageResponse.NOT_FOUND
+                        MessageResponse.Common.NOT_FOUND
                     );
                 }
 
@@ -126,7 +126,7 @@ public static class ManagementAdminHelper
                     // Trường hợp không có Type nào trong DB -> Trả về rỗng
                     return ResponseFactory.Success(
                         new PagedManageResult<TDto>(new List<TDto>(), 0, paging.PageIndex.Value, paging.PageSize.Value, null),
-                        MessageResponse.EMPTY_LIST
+                        MessageResponse.Common.EMPTY_LIST
                     );
                 }
             }
@@ -141,7 +141,7 @@ public static class ManagementAdminHelper
             // Truyền currentTypeId vào để FE biết đường highlight menu
             var result = new PagedManageResult<TDto>(dtos, totalCount, paging.PageIndex.Value, paging.PageSize.Value, currentTypeId);
 
-            return ResponseFactory.Success(result, MessageResponse.GET_SUCCESSFULLY);
+            return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
         }
         catch (Exception)
         {
@@ -149,3 +149,4 @@ public static class ManagementAdminHelper
         }
     }
 }
+

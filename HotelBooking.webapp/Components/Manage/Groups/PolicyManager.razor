@@ -23,7 +23,7 @@ else
 {
     <MasterDetailLayout @ref="_layoutRef" TItem="PolicyVM" TModel="BaseCreateOrUpdateAdminVM" Items="items" Model="@GetModel()"
         PageIndex="_paging.PageIndex ?? 1" TotalPages="totalPages" TotalCount="totalCount" OnPageChanged="HandlePageChanged"
-        OnSubmit="SaveData" OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm" OnNameBlur="SuggestDefaultValues">
+        OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm" OnNameBlur="SuggestDefaultValues">
 
         @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
         <SidebarTopContent>
@@ -882,6 +882,10 @@ else
             Percent = item.Percent,
             BoolValue = item.BoolValue
         };
+
+        StateHasChanged();
+
+        _layoutRef?.TriggerValidate();
     }
 
     private async Task HandleDelete(PolicyVM item)
@@ -922,11 +926,11 @@ else
         // Helper này giờ đã hỗ trợ nhận vào PolicyCreateVM nhờ overload chúng ta vừa viết
         PolicyHelper.ApplyDefaultValues(_createModel, currentTypeId);
 
-        // 5. [QUAN TRỌNG] Xóa các thông báo lỗi đỏ từ phiên làm việc trước
-        _layoutRef?.TriggerValidate();
-
-        // 6. Báo cho giao diện vẽ lại
+        // 5. Báo cho giao diện vẽ lại
         StateHasChanged();
+
+        // 6. [QUAN TRỌNG] Xóa các thông báo lỗi đỏ từ phiên làm việc trước
+        _layoutRef?.TriggerValidate();
     }
 
     private async Task SaveData()
@@ -994,13 +998,18 @@ else
             res = await Service.CreatePolicy(_createModel);
         }
 
-        // Hiển thị thông báo
-        SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
-
         if (res.StatusCode == StatusCodeResponse.Success)
         {
+            // Hiển thị thông báo
+            SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
             await LoadDataAsync();
             ResetForm();
+        }
+        else
+        {
+            // KHÔNG gọi ResetForm() nếu có lỗi từ Server (như trùng tên)
+            // Dữ liệu vẫn nằm nguyên trong _updateModel để Admin sửa tiếp
+            SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
         }
     }
 }

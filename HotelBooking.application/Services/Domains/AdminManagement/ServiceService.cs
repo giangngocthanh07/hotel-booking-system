@@ -40,6 +40,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
         {
             entity.Name = updateDto.Name;
             entity.Description = updateDto.Description;
+            entity.TypeId = entity.TypeId; // Giữ nguyên TypeId
 
             // [LOGIC NGHIỆP VỤ GIÁ TIỀN]
             entity.Price = updateDto.Price;
@@ -81,12 +82,10 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
         protected override async Task<ValidationResult> ValidateCreateLogicAsync(ServiceCreateDTO dto)
         {
             // Check trùng tên trong cùng loại (TargetTypeId)
-            bool isDuplicate = await _repo.AnyAsync(x =>
-                x.Name == dto.Name &&
-                x.TypeId == dto.TargetTypeId &&
-                x.IsDeleted == false);
+            bool isDuplicateName = await _repo.AnyAsync(x =>
+                x.Name == dto.Name);
 
-            if (isDuplicate) return ValidationResult.Fail(MessageResponse.AdminManagement.Service.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
+            if (isDuplicateName) return ValidationResult.Fail(MessageResponse.AdminManagement.Service.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
 
             return ValidationResult.Success();
         }
@@ -94,9 +93,30 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
         protected override async Task<ValidationResult> ValidateUpdateLogicAsync(ServiceUpdateDTO dto, int id)
         {
             // UpdateDTO không có TypeId -> Phải lấy từ DB ra để biết scope check trùng
+            // 1. Lấy dữ liệu hiện tại trong DB
             var currentEntity = await _repo.GetByIdAsync(id);
-            if (currentEntity == null) return ValidationResult.Success(); // Để hàm chính xử lý 404
+            // Nếu entity null hoặc đã bị IsDeleted = true thì báo NotFound
+            if (currentEntity == null || currentEntity.IsDeleted == true)
+            {
+                return ValidationResult.Fail(
+                    MessageResponse.Common.NOT_FOUND,
+                    StatusCodeResponse.NotFound
+                );
+            }
 
+            // 2. Lấy TypeId mong muốn dựa vào kiểu của DTO truyền lên
+            int? expectedTypeId = ServiceHelper.GetTypeIdFromUpdateDto(dto);
+
+            // 3. Kiểm tra chéo: Nếu ID Service trong DB thuộc loại khác với Endpoint đang gọi (DTO)
+            if (expectedTypeId.HasValue && currentEntity.TypeId != expectedTypeId.Value)
+            {
+                return ValidationResult.Fail(
+                    MessageResponse.AdminManagement.Service.INVALID_ID_BY_TYPE,
+                    StatusCodeResponse.BadRequest
+                );
+            }
+
+            // 4. Check trùng tên (vẫn phải check để tránh trùng tên trong cùng 1 loại)
             bool isDuplicate = await _repo.AnyAsync(x =>
                 x.Name == dto.Name &&
                 x.TypeId == currentEntity.TypeId && // Check theo TypeId gốc
@@ -139,6 +159,16 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
 
         public async Task<ApiResponse<PagedManageResult<ServiceDTO>>> GetServicesByTypeAsync(int? typeId, PagingRequest paging)
         {
+            // 1. Validate phân trang
+            var pagingValidation = await _pagingValidator.ValidateAsync(paging);
+            if (!pagingValidation.IsValid)
+            {
+                return ResponseFactory.Failure<PagedManageResult<ServiceDTO>>(
+                    StatusCodeResponse.BadRequest,
+                    pagingValidation.Errors[0].ErrorMessage);
+            }
+
+            // 2. Nếu không có lỗi, lấy dữ liệu theo typeId với helper chung
             return await ManagementAdminHelper.GetDataByTypeAsync<Service, ServiceDTO>(
                 typeId,
                 paging,

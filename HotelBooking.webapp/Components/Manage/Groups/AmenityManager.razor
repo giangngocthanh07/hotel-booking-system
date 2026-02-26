@@ -22,9 +22,9 @@
 else
 {
     <MasterDetailLayout @ref="_layoutRef" TItem="AmenityVM" TModel="BaseCreateOrUpdateAdminVM" Items="_items"
-        Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
-        OnPageChanged="HandlePageChanged" OnSubmit="SaveData" OnEdit="OnEditItem" OnDelete="HandleDelete"
-        OnCancel="ResetForm">
+                        Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
+                        OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
+                        OnDelete="HandleDelete" OnCancel="ResetForm">
 
         @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
         <SidebarTopContent>
@@ -41,7 +41,7 @@ else
             <div
                 class="d-flex align-items-center mb-3 p-2 border rounded bg-light shadow-sm animate__animated animate__fadeIn">
                 <div class="rounded-circle bg-white d-flex align-items-center justify-content-center shadow-sm me-3"
-                    style="width: 45px; height: 45px;">
+                     style="width: 45px; height: 45px;">
                     <i class="@GetAmenityIcon(m.Name) fs-4 text-success"></i>
                 </div>
                 <div>
@@ -75,7 +75,7 @@ else
             @* 2. Icon - Căn giữa *@
             <td class="text-center">
                 <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center shadow-sm mx-auto"
-                    style="width: 32px; height: 32px;">
+                     style="width: 32px; height: 32px;">
                     <i class="@GetAmenityIcon(row.Name) text-success"></i>
                 </div>
             </td>
@@ -311,13 +311,19 @@ else
             res = await Service.CreateAmenity(_createModel);
         }
 
-        // Hiển thị thông báo
-        SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
 
         if (res.StatusCode == StatusCodeResponse.Success)
         {
+            // Hiển thị thông báo
+            SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
             await LoadDataAsync();
             ResetForm();
+        }
+        else
+        {
+            // KHÔNG gọi ResetForm() nếu có lỗi từ Server (như trùng tên)
+            // Dữ liệu vẫn nằm nguyên trong _updateModel để Admin sửa tiếp
+            SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
         }
     }
 }

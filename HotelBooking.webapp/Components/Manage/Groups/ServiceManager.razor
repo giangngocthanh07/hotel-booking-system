@@ -24,7 +24,7 @@ else
 {
     <MasterDetailLayout TItem="ServiceVM" @ref="_layoutRef" TModel="BaseCreateOrUpdateAdminVM" Items="items" Model="@GetModel()"
         PageIndex="_paging.PageIndex ?? 1" TotalPages="totalPages" TotalCount="totalCount" OnPageChanged="HandlePageChanged"
-        OnSubmit="SaveData" OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm" OnNameBlur="SuggestDefaultValues">
+        OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm" OnNameBlur="SuggestDefaultValues">
 
         @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
         <SidebarTopContent>
@@ -852,12 +852,17 @@ else
             res = await Service.CreateService(_createModel);
         }
 
-        SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
-
         if (res.StatusCode == StatusCodeResponse.Success)
         {
+            SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
             await LoadDataAsync();
             ResetForm();
+        }
+        else
+        {
+            // KHÔNG gọi ResetForm() nếu có lỗi từ Server (như trùng tên)
+            // Dữ liệu vẫn nằm nguyên trong _updateModel để Admin sửa tiếp
+            SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
         }
     }
 }

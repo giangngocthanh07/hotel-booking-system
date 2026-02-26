@@ -1,5 +1,15 @@
 using System.ComponentModel.DataAnnotations;
 
+public enum AmenityTypeEnum
+{
+    InRoom = 1,
+    BathRoom = 2,
+    SafetySecurity = 3,
+    General = 4,
+    Nearby = 5,
+    FoodAndDrink = 6,
+}
+
 public class AmenityTypeDTO : BaseAdminDTO
 {
     // Parse từ Additional JSON

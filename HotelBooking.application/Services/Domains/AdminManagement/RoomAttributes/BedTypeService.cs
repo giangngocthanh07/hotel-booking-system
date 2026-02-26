@@ -70,8 +70,7 @@ public class BedTypeService : BaseManage<BedType, IBedTypeRepository, BedTypeDTO
     {
         // Check trùng tên (Chỉ trong nhóm BedType)
         bool isDuplicate = await _repo.AnyAsync(x =>
-            x.Name == dto.Name &&
-            x.IsDeleted == false);
+            x.Name == dto.Name);
 
         if (isDuplicate) return ValidationResult.Fail(MessageResponse.AdminManagement.RoomAttribute.BedType.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
 

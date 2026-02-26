@@ -32,14 +32,25 @@ public static class MessageResponse
     // =====================================================
     public static class Validation
     {
+        public const string INVALID_MODULE = "Module quản lý không hợp lệ!";
         public const string TYPE_ID_REQUIRED = "Vui lòng chọn loại (TypeId)!";
+        public const string INVALID_TYPE_ID = "TypeId phải lớn hơn 0!";
         public const string EMPTY_NAME = "Tên không được để trống!";
         public const string LONG_NAME = "Tên quá dài!";
         public const string EMPTY_TYPE = "Loại không được để trống!";
         public const string NAME_ALREADY_EXISTS = "Tên đã tồn tại!";
-        public const string INVALID_AMOUNT = "Số tiền phải lớn hơn 0!";
+        public const string INVALID_AMOUNT = "Số tiền phải tối thiểu bằng 0đ (Miễn phí)";
         public const string PERCENT_INVALID = "Phần trăm không hợp lệ!";
         public const string LONG_DESCRIPTION = "Mô tả quá dài!";
+
+        public static class Pagination
+        {
+            public const string MISSING_PAGE_INDEX = "Số trang không được để trống!";
+            public const string INVALID_PAGE_INDEX = "Số trang phải lớn hơn 0!";
+            public const string MISSING_PAGE_SIZE = "Kích thước trang không được để trống!";
+            public const string INVALID_PAGE_SIZE = "Kích thước trang phải lớn hơn 0!";
+            public const string PAGE_SIZE_TOO_LARGE = "Kích thước trang tối đa là 100!";
+        }
     }
 
     // =====================================================
@@ -54,6 +65,8 @@ public static class MessageResponse
             public const string LONG_NAME = "Tên tiện ích quá dài (tối đa 20 ký tự)!";
             public const string EMPTY_TYPE = "Loại tiện ích không được để trống!";
             public const string NAME_ALREADY_EXISTS = "Tên tiện ích đã tồn tại!";
+            public const string INVALID_TYPE = "Loại tiện ích không hợp lệ!";
+            public const string GREATER_THAN_ZERO = "Giá trị phải lớn hơn 0!";
         }
 
         // Policy Messages
@@ -72,15 +85,19 @@ public static class MessageResponse
             public const string NAME_ALREADY_EXISTS = "Tên dịch vụ đã tồn tại!";
             public const string LONG_NAME = "Tên dịch vụ quá dài (tối đa 50 ký tự)!";
             public const string EMPTY_NAME = "Tên dịch vụ không được để trống!";
-            public const string INVALID_AMOUNT = "Số tiền dịch vụ phải lớn hơn hoặc bằng 0!";
+            public const string INVALID_AMOUNT = "Số tiền dịch vụ phải tối thiểu bằng 0đ (Miễn phí) ";
+            public const string INVALID_ID_BY_TYPE = "ID không hợp lệ cho loại dịch vụ này!";
             public const string INVALID_TYPE = "Loại dịch vụ không hợp lệ!";
             public const string EMPTY_UNIT = "Đơn vị tính không được để trống!";
             public const string EMPTY_UNIT_NAME = "Tên đơn vị tính không được để trống!";
             public const string LONG_UNIT = "Đơn vị tính quá dài (tối đa 20 ký tự)!";
-            public const string MIN_PASSENGERS = "Số lượng khách tối thiểu phải lớn hơn 0!";
-            public const string MIN_LUGGAGE = "Số lượng hành lý không được âm!";
-            public const string INVALID_ROUND_TRIP_PRICE = "Giá khứ hồi không hợp lệ, phải lớn hơn 1000!";
-            public const string INVALID_ADDITIONAL_FEE = "Phụ phí đêm phải lớn hơn 1000!";
+            public const string STANDARD_SERVICE_PRICE_GREATER_THAN_ZERO = "Dịch vụ tiêu chuẩn phải có giá tối thiểu là 10,000đ!";
+            public const string MIN_PASSENGERS = "Số lượng khách tối thiểu phải là 1!";
+            public const string MAX_PASSENGERS = "Số lượng khách tối đa không được vượt quá 45!";
+            public const string MIN_LUGGAGE = "Số lượng hành lý tối thiểu là 1!";
+            public const string MAX_LUGGAGE = "Số lượng hành lý tối đa không được vượt quá 45!";
+            public const string INVALID_ROUND_TRIP_PRICE = "Giá khứ hồi phải tối thiểu bằng 0đ (Miễn phí)";
+            public const string DEFAULT_ADDITIONAL_FEE = "Phụ phí đêm phải lớn hơn";
             public const string MISSING_ADDITIONAL_FEE_START_TIME = "Vui lòng nhập giờ bắt đầu phụ phí đêm!";
             public const string MISSING_ADDITIONAL_FEE_END_TIME = "Vui lòng nhập giờ kết thúc phụ phí đêm!";
             public const string INVALID_ADDITIONAL_FEE_START_END_TIME = "Giờ bắt đầu và kết thúc không được trùng nhau.";
@@ -133,6 +150,7 @@ public static class MessageResponse
                 public const string MISSING_ROOM_QUALITY_TYPE = "Vui lòng chọn Loại chất lượng phòng!";
                 public const string INVALID_TYPE_ID = "TypeId phải lớn hơn 0!";
                 public const string UNSUPPORTED_TYPE_ID_FILTER = "Loại thuộc tính này không hỗ trợ lọc theo TypeId (vui lòng để null)!";
+                public const string PAGINATION_REQUIRED = "Dữ liệu phân trang là bắt buộc!";
             }
         }
 
@@ -180,6 +198,7 @@ public static class MessageResponse
             public const string SHORT_PASSWORD = "Mật khẩu phải có ít nhất 8 ký tự!";
             public const string EMPTY_PASSWORD = "Mật khẩu không được để trống!";
             public const string UPPERCASE_LETTER_PASSWORD = "Mật khẩu phải chứa ít nhất một chữ cái viết hoa!";
+            public const string NUMBER_PASSWORD = "Mật khẩu phải chứa ít nhất một chữ số!";
             public const string LOWERCASE_LETTER_PASSWORD = "Mật khẩu phải chứa ít nhất một chữ cái viết thường!";
             public const string SPECIAL_CHARACTER_PASSWORD = "Mật khẩu phải chứa ít nhất một ký tự đặc biệt!";
         }
@@ -277,6 +296,7 @@ public static class MessageResponse
         public static string SHORT_PASSWORD => UserManagement.Register.SHORT_PASSWORD;
         public static string EMPTY_PASSWORD => UserManagement.Register.EMPTY_PASSWORD;
         public static string UPPERCASE_LETTER_PASSWORD => UserManagement.Register.UPPERCASE_LETTER_PASSWORD;
+            public static string NUMBER_PASSWORD => UserManagement.Register.NUMBER_PASSWORD;
         public static string LOWERCASE_LETTER_PASSWORD => UserManagement.Register.LOWERCASE_LETTER_PASSWORD;
         public static string SPECIAL_CHARACTER_PASSWORD => UserManagement.Register.SPECIAL_CHARACTER_PASSWORD;
     }

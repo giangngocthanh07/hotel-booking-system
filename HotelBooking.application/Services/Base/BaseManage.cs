@@ -61,10 +61,28 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateDTO, TUpdateDTO> :
         try
         {
             var entity = await _repo.GetByIdAsync(id);
+
+            // 1.Check null trước
             if (entity == null)
             {
                 return ResponseFactory.Failure<TDto>(StatusCodeResponse.NotFound, MessageResponse.Common.NOT_FOUND);
             }
+
+            // --- DÙNG REFLECTION GIỐNG HÀM ADD CỦA BẠN ---
+            var prop = typeof(TEntity).GetProperty("IsDeleted");
+            if (prop != null && (prop.PropertyType == typeof(bool) || prop.PropertyType == typeof(bool?)))
+            {
+                // Thay vì SetValue (gán), ta dùng GetValue (đọc)
+                var value = prop.GetValue(entity);
+
+                // Nếu giá trị đang là true, nghĩa là đã bị xóa mềm
+                if (value != null && (bool)value == true)
+                {
+                    return ResponseFactory.Failure<TDto>(StatusCodeResponse.NotFound, MessageResponse.Common.NOT_FOUND);
+                }
+            }
+            // --------------------------------------------
+
             // Mapping logic from TEntity to TDto should be implemented here
             TDto dto = MapToDto(entity);
 
@@ -107,9 +125,10 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateDTO, TUpdateDTO> :
 
             return ResponseFactory.Success(dto, MessageResponse.Common.CREATE_SUCCESSFULLY);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return ResponseFactory.ServerError<TDto>();
+            // Log ex ở đây
+            return ResponseFactory.Failure<TDto>(StatusCodeResponse.Error, ex.InnerException?.Message ?? ex.Message);
         }
     }
 
@@ -117,11 +136,21 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateDTO, TUpdateDTO> :
     {
         try
         {
-
             // A. Check Tồn tại
             var entity = await _repo.GetByIdAsync(id);
             if (entity == null)
                 return ResponseFactory.Failure<TDto>(StatusCodeResponse.NotFound, MessageResponse.Common.NOT_FOUND);
+
+            // --- DÙNG REFLECTION ĐỂ KIỂM TRA ISDELETED ---
+            var prop = typeof(TEntity).GetProperty("IsDeleted");
+            if (prop != null && (prop.PropertyType == typeof(bool) || prop.PropertyType == typeof(bool?)))
+            {
+                var value = prop.GetValue(entity);
+                if (value != null && (bool)value == true)
+                {
+                    return ResponseFactory.Failure<TDto>(StatusCodeResponse.NotFound, MessageResponse.Common.NOT_FOUND);
+                }
+            }
 
             // B. Fluent Validation (Tĩnh) -> Dùng _updateValidator [Lưu ý dùng updateDto]
             if (_updateValidator != null)
@@ -165,6 +194,7 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateDTO, TUpdateDTO> :
             // Check xem entity có phải là ISoftDelete không
             // --- XÓA MỀM (Cực nhanh, ko cần Reflection) ---
             // Dùng Reflection để tìm cột IsDeleted
+
             var isDeletedProp = typeof(TEntity).GetProperty("IsDeleted");
 
             // Kiểm tra xem có cột IsDeleted hay không (hỗ trợ cả bool và bool?)

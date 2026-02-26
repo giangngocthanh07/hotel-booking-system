@@ -92,7 +92,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
         protected override async Task<ValidationResult> ValidateCreateLogicAsync(PolicyCreateDTO dto)
         {
             // 1. Check trùng tên trong cùng TypeId
-            bool exists = await _repo.AnyAsync(x => x.Name == dto.Name && x.TypeId == dto.TypeId && x.IsDeleted == false);
+            bool exists = await _repo.AnyAsync(x => x.Name == dto.Name && x.TypeId == dto.TypeId);
             if (exists) return ValidationResult.Fail(MessageResponse.AdminManagement.Policy.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
 
             // 2. Check Logic nghiệp vụ (Giờ check-in < check-out, v.v...)

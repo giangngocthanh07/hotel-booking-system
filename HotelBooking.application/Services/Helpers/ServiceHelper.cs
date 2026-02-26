@@ -8,6 +8,17 @@ public static class ServiceHelper
     {
         PropertyNameCaseInsensitive = true
     };
+
+    public static int? GetTypeIdFromUpdateDto(ServiceUpdateDTO dto)
+    {
+        return dto switch
+        {
+            ServiceStandardUpdateDTO => (int)ServiceTypeEnum.Standard,
+            ServiceAirportUpdateDTO => (int)ServiceTypeEnum.AirportTransfer,
+            _ => null
+        };
+    }
+
     public static ServiceDTO? MapToServiceDTO(Service sv)
     {
         var additionalJson = sv.Additional ?? "{}";

@@ -23,7 +23,7 @@ public static class ResponseFactory
     // ==========================================
     public static ApiResponse<T> ServerError<T>()
     {
-        return CreateResponse<T>(StatusCodeResponse.Error, MessageResponse.ERROR_IN_SERVER, default!);
+        return CreateResponse<T>(StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER, default!);
     }
 
     // ==========================================

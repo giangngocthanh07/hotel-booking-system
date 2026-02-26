@@ -70,7 +70,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
         // Override Logic Create: Check trùng tên (chung chung)
         protected override async Task<ValidationResult> ValidateCreateLogicAsync(AmenityCreateDTO dto)
         {
-            bool exists = await _repo.AnyAsync(x => x.Name == dto.Name && x.IsDeleted == false);
+            bool exists = await _repo.AnyAsync(x => x.Name == dto.Name);
             if (exists) return ValidationResult.Fail(MessageResponse.AdminManagement.Amenity.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
 
             return ValidationResult.Success();

@@ -11,8 +11,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using HotelBooking.application.Interfaces;
 using Microsoft.OpenApi.Models;
+
 using FluentValidation;
 using HotelBooking.application.Validators.AdminManagement.Amenity;
+using HotelBooking.application.Validators.AdminManagement.Service;
+using HotelBooking.application.Validators.AdminManagement.Policy;
+using HotelBooking.application.Validators.AdminManagement.RoomAttributes;
+using HotelBooking.application.Validators.AdminManagement;
+
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -91,8 +97,33 @@ builder.Services.AddScoped<IManagementAdminService, ManagementAdminService>();
 builder.Services.AddSingleton<IImageHelper, ImageHelper>();
 builder.Services.AddScoped<IFileHelper, FileHelper>();
 
-// Quét toàn bộ Assembly chứa class Validator này và đăng ký hết
-builder.Services.AddValidatorsFromAssemblyContaining<AmenityCreateValidator>();
+// DI for Validators
+builder.Services.AddScoped<IValidator<AmenityCreateDTO>, AmenityCreateValidator>();
+builder.Services.AddScoped<IValidator<AmenityUpdateDTO>, AmenityUpdateValidator>();
+builder.Services.AddScoped<IValidator<PolicyCreateDTO>, PolicyCreateValidator>();
+builder.Services.AddScoped<IValidator<PolicyUpdateDTO>, PolicyUpdateValidator>();
+builder.Services.AddScoped<IValidator<ServiceCreateDTO>, ServiceCreateValidator>();
+builder.Services.AddScoped<IValidator<ServiceUpdateDTO>, ServiceUpdateValidator>();
+builder.Services.AddScoped<IValidator<RoomQualityCreateDTO>, RoomQualityCreateValidator>();
+builder.Services.AddScoped<IValidator<RoomQualityUpdateDTO>, RoomQualityUpdateValidator>();
+
+builder.Services.AddScoped<IValidator<RoomViewCreateDTO>, RoomViewCreateValidator>();
+builder.Services.AddScoped<IValidator<RoomViewUpdateDTO>, RoomViewUpdateValidator>();
+builder.Services.AddScoped<IValidator<BedTypeCreateDTO>, BedTypeCreateValidator>();
+builder.Services.AddScoped<IValidator<BedTypeUpdateDTO>, BedTypeUpdateValidator>();
+builder.Services.AddScoped<IValidator<UnitTypeCreateDTO>, UnitTypeCreateValidator>();
+builder.Services.AddScoped<IValidator<UnitTypeUpdateDTO>, UnitTypeUpdateValidator>();
+
+builder.Services.AddScoped<IValidator<ManageMenuRequest>, ManageMenuRequestValidator>();
+builder.Services.AddScoped<IValidator<PagingRequest>, PagingRequestValidator>(); 
+builder.Services.AddScoped<IValidator<GetRoomAttributeRequest>, GetRoomAttributeRequestValidator>();
+
+// User management validators
+builder.Services.AddScoped<IValidator<RegisterCustomerDTO>, HotelBooking.application.Validators.UserManagement.Register.RegisterCustomerValidator>();
+builder.Services.AddScoped<IValidator<RegisterAdminDTO>, HotelBooking.application.Validators.UserManagement.Register.RegisterAdminValidator>();
+builder.Services.AddScoped<IValidator<LoginUserDTO>, HotelBooking.application.Validators.UserManagement.Login.LoginValidator>();
+
+
 
 //Use map controller
 builder.Services.AddControllers();

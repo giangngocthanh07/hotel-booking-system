@@ -55,8 +55,7 @@ public class RoomQualityService : BaseManage<RoomQuality, IRoomQualityRepository
         // Check trùng tên TRONG CÙNG NHÓM (TypeId)
         bool exists = await _repo.AnyAsync(x =>
             x.Name == dto.Name &&
-            x.TypeId == dto.TypeId &&
-            x.IsDeleted == false);
+            x.TypeId == dto.TypeId);
 
         if (exists) return ValidationResult.Fail(MessageResponse.AdminManagement.Amenity.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
 

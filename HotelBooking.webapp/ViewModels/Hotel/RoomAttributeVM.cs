@@ -64,15 +64,22 @@ public class RoomViewUpdateVM : BaseCreateOrUpdateAdminVM
 public class BedTypeVM : RoomAttributeVM
 {
     public override RoomAttributeType AttributeType => RoomAttributeType.BedType; // Tự động gán số 2
+
+    // 1. Sức chứa (Bắt buộc và phải > 0)
+    [Required(ErrorMessage = "Vui lòng nhập sức chứa mặc định!")]
     [Range(1, int.MaxValue, ErrorMessage = "Sức chứa phải lớn hơn 0!")]
     public int? DefaultCapacity { get; set; } = 1;
 
     // --- CÁC TRƯỜNG THÔNG SỐ KỸ THUẬT BỔ SUNG ---
 
     // Kích thước chiều ngang tối thiểu (Inch)
+    // 2. Kích thước tối thiểu
+    [Range(0, 300, ErrorMessage = "Kích thước không được âm hoặc vượt quá 300 inches!")]
     public double MinWidth { get; set; }
 
     // Kích thước chiều ngang tối đa (Inch)
+    // 3. Kích thước tối đa
+    [Range(0, 300, ErrorMessage = "Kích thước không được âm hoặc vượt quá 300 inches!")]
     public double MaxWidth { get; set; }
 
     // Thêm set để hỗ trợ Binding từ UI
@@ -99,10 +106,14 @@ public class BedTypeVM : RoomAttributeVM
 // 2. Create
 public class BedTypeCreateVM : BaseCreateOrUpdateAdminVM
 {
+    // 1. Sức chứa (Bắt buộc và phải > 0)
+    [Required(ErrorMessage = "Vui lòng nhập sức chứa mặc định!")]
     [Range(1, int.MaxValue, ErrorMessage = "Sức chứa phải lớn hơn 0!")]
     public int? DefaultCapacity { get; set; } = 1;
 
+    [Range(0, 300, ErrorMessage = "Kích thước không được âm hoặc vượt quá 300 inches!")]
     public double MinWidth { get; set; }
+    [Range(0, 300, ErrorMessage = "Kích thước không được âm hoặc vượt quá 300 inches!")]
     public double MaxWidth { get; set; }
 
     // Hỗ trợ Binding cho Switch
@@ -128,10 +139,14 @@ public class BedTypeCreateVM : BaseCreateOrUpdateAdminVM
 // 3. Update (Giống Create nhưng tách ra để dễ mở rộng sau này)
 public class BedTypeUpdateVM : BaseCreateOrUpdateAdminVM
 {
+    // 1. Sức chứa (Bắt buộc và phải > 0)
+    [Required(ErrorMessage = "Vui lòng nhập sức chứa mặc định!")]
     [Range(1, int.MaxValue, ErrorMessage = "Sức chứa phải lớn hơn 0!")]
     public int? DefaultCapacity { get; set; } = 1;
 
+    [Range(0, 300, ErrorMessage = "Kích thước không được âm hoặc vượt quá 300 inches!")]
     public double MinWidth { get; set; }
+    [Range(0, 300, ErrorMessage = "Kích thước không được âm hoặc vượt quá 300 inches!")]
     public double MaxWidth { get; set; }
 
     private bool? _isVaryingSize;
@@ -166,6 +181,7 @@ public class BedTypeAdditionalData
 public class RoomQualityGroupVM : RoomAttributeVM
 {
     public override RoomAttributeType AttributeType => RoomAttributeType.RoomQuality; // Tự động gán số 4
+    [Range(0, 10, ErrorMessage = "Thứ tự ưu tiên từ 0-10")]
     public int? SortOrder { get; set; } = 0;
 
 }
@@ -173,6 +189,7 @@ public class RoomQualityGroupVM : RoomAttributeVM
 public class RoomQualityVM : RoomAttributeVM
 {
     public override RoomAttributeType AttributeType => RoomAttributeType.RoomQuality; // Tự động gán số 4
+    [Range(0, 10, ErrorMessage = "Thứ tự ưu tiên từ 0-10")]
     public int? SortOrder { get; set; } = 0;
 
     [Required(ErrorMessage = "Loại chất lượng phòng không được để trống!")]
@@ -185,49 +202,16 @@ public class RoomQualityCreateVM : BaseCreateOrUpdateAdminVM
     [Required(ErrorMessage = "Vui lòng chọn nhóm hạng phòng!")]
     public int TypeId { get; set; }
 
-    [Range(0, 100, ErrorMessage = "Thứ tự ưu tiên từ 0-100")]
+    [Range(0, 10, ErrorMessage = "Thứ tự ưu tiên từ 0-10")]
     public int SortOrder { get; set; } = 0;
 }
 
 // 3. Update (Không có TypeId)
 public class RoomQualityUpdateVM : BaseCreateOrUpdateAdminVM
 {
-    [Range(0, 100, ErrorMessage = "Thứ tự ưu tiên từ 0-100")]
+    [Range(0, 10, ErrorMessage = "Thứ tự ưu tiên từ 0-10")]
     public int? SortOrder { get; set; } = 0;
 }
 
-
-// Dùng cho Bed Type (Cần hứng thêm DefaultCapacity từ Form)
-public class BedTypeCreateOrUpdateVM : BaseCreateOrUpdateAdminVM
-{
-    [Range(1, int.MaxValue, ErrorMessage = "Sức chứa phải lớn hơn 0!")]
-    public int DefaultCapacity { get; set; } = 1;
-
-
-    // Kích thước chiều ngang tối thiểu (Inch)
-    public double MinWidth { get; set; }
-
-    // Kích thước chiều ngang tối đa (Inch)
-    public double MaxWidth { get; set; }
-
-    // Hỗ trợ Binding 2 chiều cho Switch trên Sidebar
-    private bool? _isVaryingSize;
-    public bool IsVaryingSize
-    {
-        // Nếu người dùng chưa gạt switch (_isVaryingSize == null), 
-        // ta tính toán dựa trên dữ liệu hiện có (dùng khi Edit).
-        // Nếu đã gạt switch, ta tin tưởng hoàn toàn vào giá trị của switch.
-        get => _isVaryingSize ?? (MinWidth <= 0 && MaxWidth <= 0);
-        set
-        {
-            _isVaryingSize = value;
-            if (value)
-            {
-                MinWidth = 0;
-                MaxWidth = 0;
-            }
-        }
-    }
-}
 
 

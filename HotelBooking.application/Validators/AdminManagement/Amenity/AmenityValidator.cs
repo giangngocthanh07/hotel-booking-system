@@ -12,11 +12,20 @@ public class AmenityCreateValidator : AbstractValidator<AmenityCreateDTO>
             .NotEmpty().WithMessage(MessageResponse.AdminManagement.Amenity.EMPTY_NAME)
             .MaximumLength(20).WithMessage(MessageResponse.AdminManagement.Amenity.LONG_NAME);
 
-        // 2. Validate TypeId (BẮT BUỘC vì đang tạo mới)
+        // 2a. Validate TypeId không được rỗng (BẮT BUỘC vì đang tạo mới)
         RuleFor(x => x.TypeId)
-            .GreaterThan(0).WithMessage(MessageResponse.AdminManagement.Amenity.EMPTY_TYPE);
+            .NotEmpty().WithMessage(MessageResponse.AdminManagement.Amenity.EMPTY_TYPE);
 
-        // 3. Validate Description (Nếu cần - Optional)
+        // 2b. Validate TypeId lớn hơn 0 (BẮT BUỘC vì đang tạo mới)
+        RuleFor(x => x.TypeId)
+            .GreaterThan(0).WithMessage(MessageResponse.AdminManagement.Amenity.GREATER_THAN_ZERO);
+
+        // 3. Validate TypeId có hợp lệ không (Có tồn tại trong enum không)
+        RuleFor(x => x.TypeId)
+            .Must(typeId => Enum.IsDefined(typeof(AmenityTypeEnum), typeId))
+            .WithMessage(MessageResponse.AdminManagement.Amenity.INVALID_TYPE);
+
+        // 4. Validate Description (Nếu cần - Optional)
         RuleFor(x => x.Description)
             .MaximumLength(500).WithMessage(MessageResponse.Validation.LONG_DESCRIPTION);
     }

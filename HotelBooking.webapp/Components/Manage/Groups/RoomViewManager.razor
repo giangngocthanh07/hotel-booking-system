@@ -20,10 +20,10 @@
 }
 else
 {
-    <MasterDetailLayout TItem="RoomViewVM" TModel="BaseCreateOrUpdateAdminVM" Items="items"
-        Model="@(_isUpdate ? (BaseCreateOrUpdateAdminVM)_updateModel : (BaseCreateOrUpdateAdminVM)_createModel)"
-        PageIndex="_paging.PageIndex ?? 1" TotalPages="totalPages" TotalCount="totalCount" OnPageChanged="HandlePageChanged"
-        OnSubmit="SaveData" OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm">
+    <MasterDetailLayout @ref="_layoutRef" TItem="RoomViewVM" TModel="BaseCreateOrUpdateAdminVM" Items="items"
+                        Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="totalPages" TotalCount="totalCount"
+                        OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
+                        OnDelete="HandleDelete"               OnCancel="ResetForm">
 
         @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
         <SidebarTopContent>
@@ -33,54 +33,7 @@ else
         </SidebarTopContent>
 
         @* --- B. CẤU HÌNH FORM (Đã tút tát lại) --- *@
-        <FormContent>
-
-            @* 1. TÊN HƯỚNG NHÌN *@
-            <div class="mb-4">
-                <div class="mb-4 pb-3 border-bottom border-light">
-                    <label class="form-label fw-bold small text-muted text-uppercase">Tên hướng nhìn</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-white"><i class="fa-solid fa-binoculars text-primary"></i></span>
-                        @if (_isUpdate)
-                        {
-                            <InputText class="form-control" @bind-Value="_updateModel.Name" placeholder="VD: Sea View..." />
-                        }
-                        else
-                        {
-                            <InputText class="form-control" @bind-Value="_createModel.Name" placeholder="VD: Sea View..." />
-                        }
-                    </div>
-
-                    @if (_isUpdate)
-                    {
-                        <ValidationMessage For="() => _updateModel.Name" />
-                    }
-                    else
-                    {
-                        <ValidationMessage For="() => _createModel.Name" />
-                    }
-
-                    <div class="form-text small mt-2">
-                        <i class="fa-solid fa-circle-info me-1"></i>
-                        Tên hướng nhìn sẽ hiển thị trên trang chi tiết phòng.
-                    </div>
-                </div>
-
-                @* 2. MÔ TẢ *@
-                <div class="mb-3">
-                    <label class="form-label fw-bold small text-muted text-uppercase">Mô tả</label>
-                    @if (_isUpdate)
-                    {
-                        <InputTextArea class="form-control" @bind-Value="_updateModel.Description" rows="3"
-                            placeholder="Mô tả..." />
-                    }
-                    else
-                    {
-                        <InputTextArea class="form-control" @bind-Value="_createModel.Description" rows="3"
-                            placeholder="Mô tả..." />
-                    }
-                </div>
-            </div>
+        <FormContent Context="m">
 
             @* 3. PREVIEW ICON *@
             @* Lấy tên hiện tại để preview *@
@@ -93,7 +46,7 @@ else
                     <div class="me-3">
                         @* Gọi hàm Helper bên dưới để lấy icon *@
                         <div class="rounded-circle bg-white border d-flex align-items-center justify-content-center shadow-sm"
-                            style="width: 40px; height: 40px;">
+                             style="width: 40px; height: 40px;">
                             <i class="@GetViewIcon(currentName) text-primary"></i>
                         </div>
                     </div>
@@ -171,6 +124,11 @@ else
     private PagingRequest _paging = new() { PageIndex = 1, PageSize = 10 };
     private int totalPages = 0;
     private int totalCount = 0;
+
+    private BaseCreateOrUpdateAdminVM GetModel() => _isUpdate ? (BaseCreateOrUpdateAdminVM)_updateModel :
+    (BaseCreateOrUpdateAdminVM)_createModel;
+
+    private MasterDetailLayout<RoomViewVM, BaseCreateOrUpdateAdminVM>? _layoutRef;
 
     // --- HELPER: Tự động chọn Icon dựa trên tên ---
     private string GetViewIcon(string? name)
@@ -270,6 +228,11 @@ else
             Name = item.Name,
             Description = item.Description
         };
+
+        StateHasChanged();
+
+        // Đảm bảo khi mở form Edit, các lỗi cũ không bị "nhảy" ra
+        _layoutRef?.TriggerValidate();
     }
 
     private async Task HandleDelete(RoomViewVM item)
@@ -297,6 +260,9 @@ else
         _updateModel = new RoomViewUpdateVM();
 
         StateHasChanged();
+
+        // Đảm bảo khi mở form Edit, các lỗi cũ không bị "nhảy" ra
+        _layoutRef?.TriggerValidate();
     }
 
     private async Task SaveData()
@@ -305,13 +271,18 @@ else
         if (_isUpdate) res = await Service.UpdateRoomView(_currentEditingId, _updateModel);
         else res = await Service.CreateRoomView(_createModel);
 
-        // Hiển thị thông báo
-        SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
-
         if (res.StatusCode == StatusCodeResponse.Success)
         {
+            // Hiển thị thông báo
+            SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
             await LoadDataAsync();
             ResetForm();
+        }
+        else
+        {
+            // KHÔNG gọi ResetForm() nếu có lỗi từ Server (như trùng tên)
+            // Dữ liệu vẫn nằm nguyên trong _updateModel để Admin sửa tiếp
+            SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
         }
     }
 

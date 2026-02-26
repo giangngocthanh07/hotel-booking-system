@@ -5,21 +5,29 @@ using FluentAssertions;
 
 // 1. Using DTO và Service từ tầng Application
 using HotelBooking.application.Services.Domains.UserManagement; // Nơi chứa UserService
+using HotelBooking.application.Validators.UserManagement.Register; // Nơi chứa RegisterCustomerDTO, RegisterAdminDTO
+using HotelBooking.application.Validators.UserManagement.Login; // Nơi chứa LoginUserDTO
 
 // 2. Using Entity và Interface Repo từ tầng Infrastructure
 using HotelBooking.infrastructure.Models;
-using System.Linq.Expressions; // Nơi chứa class User, Room...
+using System.Linq.Expressions;
+using FluentValidation; // Nơi chứa class User, Room...
 
 namespace HotelBooking.Tests.Services
 {
     public class UserServiceTest : BaseServiceTest
     {
-        // 1. Khai báo các Mock cần thiết
+        // Khai báo các Mock cần thiết
         private readonly Mock<IUserRepository> _mockUserRepo;
 
         // Khai báo thêm các Mock còn thiếu theo đúng Constructor của bạn
         private readonly Mock<IUserRoleRepository> _mockUserRoleRepo;
         private readonly Mock<IUpgradeRequestRepository> _mockUpgradeRepo;
+
+        // Validators mocks
+        private readonly Mock<IValidator<RegisterCustomerDTO>> _mockRegisterCustomerValidator;
+        private readonly Mock<IValidator<RegisterAdminDTO>> _mockRegisterAdminValidator;
+        private readonly Mock<IValidator<LoginUserDTO>> _mockLoginValidator;
 
         // Service cần test
         private readonly UserService _userService;
@@ -31,7 +39,20 @@ namespace HotelBooking.Tests.Services
             _mockUserRoleRepo = new Mock<IUserRoleRepository>();
             _mockUpgradeRepo = new Mock<IUpgradeRequestRepository>();
 
-            // 3. Khởi tạo Service với đầy đủ 6 tham số
+            // 3. Khởi tạo các Mock validator (mặc định dùng validator thật để giữ behavior)
+            _mockRegisterCustomerValidator = new Mock<IValidator<RegisterCustomerDTO>>();
+            _mockRegisterCustomerValidator.Setup(v => v.Validate(It.IsAny<RegisterCustomerDTO>()))
+                .Returns((RegisterCustomerDTO dto) => new RegisterCustomerValidator().Validate(dto));
+
+            _mockRegisterAdminValidator = new Mock<IValidator<RegisterAdminDTO>>();
+            _mockRegisterAdminValidator.Setup(v => v.Validate(It.IsAny<RegisterAdminDTO>()))
+                .Returns((RegisterAdminDTO dto) => new RegisterAdminValidator().Validate(dto));
+
+            _mockLoginValidator = new Mock<IValidator<LoginUserDTO>>();
+            _mockLoginValidator.Setup(v => v.Validate(It.IsAny<LoginUserDTO>()))
+                .Returns((LoginUserDTO dto) => new LoginValidator().Validate(dto));
+
+            // 4. Khởi tạo Service với đầy đủ tham số (thêm 3 validator ở cuối)
             // Thứ tự phải CHÍNH XÁC như trong file UserService.cs
             _userService = new UserService(
                 null!,                       // 1. DBContext (Unit Test ko cần DB thật -> null)
@@ -39,7 +60,10 @@ namespace HotelBooking.Tests.Services
                 _mockUserRoleRepo.Object,   // 3. UserRoleRepository (Mock thêm cho đủ tụ)
                 _mockUpgradeRepo.Object,    // 4. UpgradeRequestRepository (Mock thêm cho đủ tụ)
                 null!,                       // 5. JwtAuthService (Hàm Register ko dùng Token -> null)
-                _mockUnitOfWork.Object      // 6. UnitOfWork
+                _mockUnitOfWork.Object,     // 6. UnitOfWork
+                _mockRegisterCustomerValidator.Object,
+                _mockRegisterAdminValidator.Object,
+                _mockLoginValidator.Object
             );
         }
 
@@ -48,6 +72,7 @@ namespace HotelBooking.Tests.Services
         // TEST CASE 1: ĐĂNG KÝ THÀNH CÔNG (HAPPY PATH)
         // ==========================================================
         [Fact]
+        [Obsolete]
         public async Task RegisterCustomer_WhenInfoValid_ShouldSuccess()
         {
             // 1. ARRANGE
@@ -93,6 +118,7 @@ namespace HotelBooking.Tests.Services
         // TEST CASE 2: LỖI TRÙNG USERNAME
         // ==========================================================
         [Fact]
+        [Obsolete]
         public async Task RegisterCustomer_WhenUsernameExists_ShouldReturnConflict()
         {
             // 1. ARRANGE
@@ -128,6 +154,7 @@ namespace HotelBooking.Tests.Services
         // TEST CASE 3: LỖI TRÙNG EMAIL
         // ==========================================================
         [Fact]
+        [Obsolete]
         public async Task RegisterCustomer_WhenEmailExists_ShouldReturnConflict()
         {
             // 1. ARRANGE
@@ -163,6 +190,7 @@ namespace HotelBooking.Tests.Services
         // TEST CASE 4: LỖI HỆ THỐNG (EXCEPTION)
         // ==========================================================
         [Fact]
+        [Obsolete]
         public async Task RegisterCustomer_WhenExceptionOccurs_ShouldReturnError()
         {
             // 1. ARRANGE
@@ -196,6 +224,7 @@ namespace HotelBooking.Tests.Services
         // TEST CASE 5: EMAIL SAI ĐỊNH DẠNG (INVALID FORMAT)
         // ==========================================================
         [Fact]
+        [Obsolete]
         public async Task RegisterCustomer_WhenEmailFormatIsInvalid_ShouldReturnBadRequest()
         {
             // 1. ARRANGE
@@ -227,15 +256,15 @@ namespace HotelBooking.Tests.Services
         // ==========================================================
         [Theory]
         // --- Nhóm Rỗng/Null (Cái bạn vừa yêu cầu) ---
-        [InlineData("", MessageRegister.EMPTY_PASSWORD)]          // Rỗng tuyệt đối
-        [InlineData(null, MessageRegister.EMPTY_PASSWORD)]        // Null
-        [InlineData("   ", MessageRegister.EMPTY_PASSWORD)]       // Chỉ có khoảng trắng (Space)
+        [InlineData("", MessageResponse.UserManagement.Register.EMPTY_PASSWORD)]          // Rỗng tuyệt đối
+        [InlineData(null, MessageResponse.UserManagement.Register.EMPTY_PASSWORD)]        // Null
+        [InlineData("   ", MessageResponse.UserManagement.Register.EMPTY_PASSWORD)]       // Chỉ có khoảng trắng (Space)
 
         // --- Nhóm Sai Định Dạng (Cái cũ) ---
-        [InlineData("short", MessageRegister.SHORT_PASSWORD)]           // Quá ngắn (< 8 ký tự)
-        [InlineData("nocapital1@", MessageRegister.UPPERCASE_LETTER_PASSWORD)]     // Thiếu chữ hoa
-        [InlineData("NO_LOWER_123", MessageRegister.LOWERCASE_LETTER_PASSWORD)]    // Thiếu chữ thường
-        [InlineData("NoSpecialChar1", MessageRegister.SPECIAL_CHARACTER_PASSWORD)]  // Thiếu ký tự đặc biệt
+        [InlineData("short", MessageResponse.UserManagement.Register.SHORT_PASSWORD)]           // Quá ngắn (< 8 ký tự)
+        [InlineData("nocapital1@", MessageResponse.UserManagement.Register.UPPERCASE_LETTER_PASSWORD)]     // Thiếu chữ hoa
+        [InlineData("NO_LOWER_123", MessageResponse.UserManagement.Register.LOWERCASE_LETTER_PASSWORD)]    // Thiếu chữ thường
+        [InlineData("NoSpecialChar1", MessageResponse.UserManagement.Register.SPECIAL_CHARACTER_PASSWORD)]  // Thiếu ký tự đặc biệt
         public async Task RegisterCustomer_WhenPasswordIsInvalid_ShouldReturnBadRequest(string? invalidPassword, string expectedMsg)
         {
             // 1. ARRANGE

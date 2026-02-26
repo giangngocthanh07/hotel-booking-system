@@ -21,9 +21,10 @@
 }
 else
 {
-    <MasterDetailLayout TItem="RoomQualityVM" TModel="BaseCreateOrUpdateAdminVM" Items="_items" Model="@(_isUpdate ? (BaseCreateOrUpdateAdminVM)_updateModel : (BaseCreateOrUpdateAdminVM)_createModel)" PageIndex="_paging.PageIndex ?? 1"
-        TotalPages="_totalPages" TotalCount="_totalCount" OnPageChanged="HandlePageChanged" OnSubmit="SaveData"
-        OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm">
+    <MasterDetailLayout @ref="_layoutRef" TItem="RoomQualityVM" TModel="BaseCreateOrUpdateAdminVM" Items="_items"
+                        Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
+                        OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
+                        OnDelete="HandleDelete" OnCancel="ResetForm">
 
         @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
         <SidebarTopContent>
@@ -33,62 +34,49 @@ else
         </SidebarTopContent>
 
         @* --- B. CẤU HÌNH FORM (Nâng cấp trực quan) --- *@
-        <FormContent>
-            @* 1. TÊN CHẤT LƯỢNG *@
-            <div class="mb-4">
-                <label class="form-label fw-bold small text-muted text-uppercase">Tên mức chất lượng</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-white"><i class="fa-solid fa-award text-warning"></i></span>
-                    @if (_isUpdate)
-                    {
-                        <InputText class="form-control" @bind-Value="_updateModel.Name" placeholder="VD: Premium, Budget..." />
-                    }
-                    else
-                    {
-                        <InputText class="form-control" @bind-Value="_createModel.Name" placeholder="VD: Premium, Budget..." />
-                    }
-                </div>
-                @if (_isUpdate) { <ValidationMessage For="() => _updateModel.Name" /> }
-                else { <ValidationMessage For="() => _createModel.Name" /> }
-            </div>
+        <FormContent Context="m">
 
-            @* 2. MÔ TẢ *@
-            <div class="mb-3">
-                <label class="form-label fw-bold small text-muted text-uppercase">
-                    <i class="fa-solid fa-quote-left me-1"></i> Mô tả dịch vụ
-                </label>
-                @if (_isUpdate)
+            @{
+                // Hàm hiển thị lỗi cho trường SortOrder
+                RenderFragment RenderVal(string prop) => __builder =>
                 {
-                    <InputTextArea class="form-control shadow-sm" rows="3" @bind-Value="_updateModel.Description" placeholder="Mô tả..." />
-                    <ValidationMessage For="() => _updateModel.Description" />
-                }
-                else
-                {
-                    <InputTextArea class="form-control shadow-sm" rows="3" @bind-Value="_createModel.Description" placeholder="Mô tả..." />
-                    <ValidationMessage For="() => _createModel.Description" />
-                }
-                <div class="form-text small mt-1">Dùng để giải thích quy trình hoặc lưu ý đặc biệt.</div>
-            </div>
+                    if (_isUpdate && prop == "SortOrder")
+                    {
+                        <ValidationMessage For="() => _updateModel.SortOrder" class="val-msg" />
+                    }
+                    else if (!_isUpdate && prop == "SortOrder")
+                    {
+                        <ValidationMessage For="() => _createModel.SortOrder" class="val-msg" />
+                    }
+                };
 
-            @* 3. THỨ TỰ ƯU TIÊN (SORT ORDER) *@
+                // Lấy giá trị SortOrder hiện tại
+                int? currentSort = _isUpdate ? _updateModel.SortOrder : _createModel.SortOrder;
+            }
+
+            @* 1. THỨ TỰ ƯU TIÊN (SORT ORDER) *@
             <div class="mb-3">
                 <label class="form-label fw-bold small text-muted text-uppercase">Thứ tự ưu tiên</label>
                 <div class="input-group" style="max-width: 150px;">
                     <span class="input-group-text bg-white"><i class="fa-solid fa-sort-numeric-down text-muted"></i></span>
-                    @if (_isUpdate)
-                    {
-                        <InputNumber class="form-control text-center" @bind-Value="_updateModel.SortOrder" />
-                    }
-                    else
-                    {
-                        <InputNumber class="form-control text-center" @bind-Value="_createModel.SortOrder" />
-                    }
+                    <input type="number" class="form-control text-center fw-bold" value="@currentSort"
+                           @oninput="@(e => HandleSortInput(e.Value?.ToString()))" />
                 </div>
-                <div class="form-text small mt-2">
-                    <i class="fa-solid fa-circle-info me-1"></i>
+                @RenderVal("SortOrder")
+                <div class="form-text extra-small mt-2 animate__animated animate__fadeIn">
+                    <i class="fa-solid fa-circle-info me-1 text-info"></i>
                     Số càng lớn, mức chất lượng này càng được ưu tiên hiển thị trước.
                 </div>
             </div>
+
+            @* Badge Preview khi số lớn *@
+            @if (currentSort >= 5)
+            {
+                <div    class="alert alert-info border-0 py-2 px-3 d-flex align-items-center shadow-sm animate__animated animate__bounceIn">
+                    <i class="fa-solid fa-star me-2 fs-5"></i>
+                    <div class="small fw-bold">Đây là mức chất lượng ĐƯỢC ƯU TIÊN.</div>
+                </div>
+            }
         </FormContent>
 
         @* --- C. CẤU HÌNH BẢNG (TABLE) --- *@
@@ -106,19 +94,20 @@ else
 
             @* 2. Tên mức chất lượng - Căn trái vùng giữa *@
             <td class="text-center align-middle">
-                
-                    <span class="@(row.SortOrder >= 5 ? "text-primary" : "text-dark")">
-                        @row.Name
-                    </span>
-                
+
+                <span class="@(row.SortOrder >= 5 ? "text-primary" : "text-dark")">
+                    @row.Name
+                </span>
+
             </td>
 
             @* 3. Badge Ưu tiên (Cột mới) *@
             <td class="text-center align-middle">
                 @if (row.SortOrder >= 5)
                 {
-                    <span class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill px-3 py-2 animate__animated animate__fadeIn"
-                          style="font-size: 0.65rem; letter-spacing: 0.5px; text-transform: uppercase;">
+                    <span
+                        class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill px-3 py-2 animate__animated animate__fadeIn"
+                        style="font-size: 0.65rem; letter-spacing: 0.5px; text-transform: uppercase;">
                         <i class="fa-solid fa-star me-1"></i>High Priority
                     </span>
                 }
@@ -141,7 +130,7 @@ else
             @* 5. Thứ tự sắp xếp *@
             <td class="text-center">
                 <div class="d-inline-flex align-items-center justify-content-center bg-light border rounded-circle fw-bold text-secondary shadow-sm"
-                    style="width: 32px; height: 32px; font-size: 0.85rem;">
+                     style="width: 32px; height: 32px; font-size: 0.85rem;">
                     @row.SortOrder
                 </div>
             </td>
@@ -175,6 +164,26 @@ else
 
     // Biến kiểm soát vòng đời & Re-render
     private int? _previousTypeId = -999;
+
+    private BaseCreateOrUpdateAdminVM GetModel() => _isUpdate ? (BaseCreateOrUpdateAdminVM)_updateModel :
+    (BaseCreateOrUpdateAdminVM)_createModel;
+
+    private MasterDetailLayout<RoomQualityVM, BaseCreateOrUpdateAdminVM>? _layoutRef;
+
+    // --- HÀM XỬ LÝ INPUT THUẦN (REACTIVE & XÓA LỖI) ---
+    private async Task HandleSortInput(string? val)
+    {
+        int.TryParse(val, out var sort);
+
+        if (_isUpdate) _updateModel.SortOrder = sort;
+        else _createModel.SortOrder = sort;
+
+        // Ép UI vẽ lại con số mới
+        StateHasChanged();
+
+        // Ra lệnh cho Layout quét sạch tin nhắn lỗi đỏ
+        _layoutRef?.TriggerValidate();
+    }
 
     // --- LIFECYCLE ---
     // --- 1. LOAD DATA (Override từ Cha) ---
@@ -231,7 +240,7 @@ else
             _previousTypeId = TypeId;
             ResetForm();
 
-            if (IsJsReady) 
+            if (IsJsReady)
             {
                 _paging.PageIndex = 1;
                 await LoadDataAsync();
@@ -261,6 +270,11 @@ else
             Description = item.Description,
             SortOrder = item.SortOrder
         };
+
+        StateHasChanged();
+
+        // Đảm bảo khi mở form Edit, các lỗi cũ không bị "nhảy" ra
+        _layoutRef?.TriggerValidate();
     }
 
     private async Task HandleDelete(RoomQualityVM item)
@@ -284,14 +298,17 @@ else
         _currentEditingId = 0;
 
         // Reset CreateVM với TypeId hiện tại
-        _createModel = new RoomQualityCreateVM 
-        { 
+        _createModel = new RoomQualityCreateVM
+        {
             TypeId = TypeId ?? 0,
-            SortOrder = 0 
+            SortOrder = 0
         };
         _updateModel = new RoomQualityUpdateVM();
 
         StateHasChanged();
+
+        // Xóa sạch dấu vết lỗi của lần nhập trước
+        _layoutRef?.TriggerValidate();
     }
 
     private async Task SaveData()
@@ -311,13 +328,18 @@ else
             res = await Service.CreateRoomQuality(_createModel);
         }
 
-        // Hiển thị thông báo
-        SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
-
         if (res.StatusCode == StatusCodeResponse.Success)
         {
+            // Hiển thị thông báo
+            SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
             await LoadDataAsync();
             ResetForm();
+        }
+        else
+        {
+            // KHÔNG gọi ResetForm() nếu có lỗi từ Server (như trùng tên)
+            // Dữ liệu vẫn nằm nguyên trong _updateModel để Admin sửa tiếp
+            SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
         }
     }
 }

@@ -1,5 +1,8 @@
 using HotelBooking.application.Helpers;
 using HotelBooking.application.Services;
+using FluentValidation;
+using HotelBooking.application.Validators.UserManagement.Register;
+using HotelBooking.application.Validators.UserManagement.Login;
 using HotelBooking.infrastructure.Models;
 using System.Net.Mail;
 // Note: MessageRegister, MessageLogin được consolidate vào MessageResponse tại Helpers/Messages/
@@ -27,7 +30,19 @@ namespace HotelBooking.application.Services.Domains.UserManagement
         public JwtAuthService _jwtAuthService;
         public IUnitOfWork _dbu;
 
-        public UserService(HotelBookingDBContext context, IUserRepository userRepository, IUserRoleRepository userRoleRepository, IUpgradeRequestRepository upgradeRequestRepository, JwtAuthService jwtAuthService, IUnitOfWork dbu)
+        private readonly IValidator<RegisterCustomerDTO> _registerCustomerValidator;
+        private readonly IValidator<RegisterAdminDTO> _registerAdminValidator;
+        private readonly IValidator<LoginUserDTO> _loginValidator;
+
+        public UserService(HotelBookingDBContext context,
+                           IUserRepository userRepository,
+                           IUserRoleRepository userRoleRepository,
+                           IUpgradeRequestRepository upgradeRequestRepository,
+                           JwtAuthService jwtAuthService,
+                           IUnitOfWork dbu,
+                           IValidator<RegisterCustomerDTO> registerCustomerValidator,
+                           IValidator<RegisterAdminDTO> registerAdminValidator,
+                           IValidator<LoginUserDTO> loginValidator)
         {
             _context = context;
             _userRepository = userRepository;
@@ -35,6 +50,10 @@ namespace HotelBooking.application.Services.Domains.UserManagement
             _upgradeRequestRepository = upgradeRequestRepository;
             _jwtAuthService = jwtAuthService;
             _dbu = dbu;
+
+            _registerCustomerValidator = registerCustomerValidator;
+            _registerAdminValidator = registerAdminValidator;
+            _loginValidator = loginValidator;
         }
 
         public async Task<UserDetailDTO> GetByIdAsync(int id)
@@ -64,6 +83,13 @@ namespace HotelBooking.application.Services.Domains.UserManagement
         {
             try
             {
+                // Validate input using injected FluentValidation validator
+                var adminValidation = _registerAdminValidator.Validate(newAdmin);
+                if (!adminValidation.IsValid)
+                {
+                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, adminValidation.Errors.First().ErrorMessage);
+                }
+
                 var checkAdmin = await _userRepository.SingleOrDefaultAsync(admin => admin.Email == newAdmin.Email || admin.UserName == newAdmin.Username);
                 if (checkAdmin != null)
                 {
@@ -140,41 +166,11 @@ namespace HotelBooking.application.Services.Domains.UserManagement
         {
             try
             {
-                // --- 1. VALIDATE INPUT (THÊM ĐOẠN NÀY) ---
-                if (!IsValidEmail(newCustomer.Email))
+                // Validate input using injected FluentValidation validator
+                var validation = _registerCustomerValidator.Validate(newCustomer);
+                if (!validation.IsValid)
                 {
-                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, MessageResponse.UserManagement.Register.INVALID_EMAIL);
-                }
-
-                // --- 2. VALIDATE PASSWORD (THÊM ĐOẠN NÀY) ---
-                // 1. Check Rỗng trước
-                if (string.IsNullOrWhiteSpace(newCustomer.Password))
-                {
-                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, MessageResponse.UserManagement.Register.EMPTY_PASSWORD);
-                }
-
-                // 2. Check độ dài
-                if (newCustomer.Password.Length <= 8)
-                {
-                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, MessageResponse.UserManagement.Register.SHORT_PASSWORD);
-                }
-
-                // 3. Check chữ hoa (Dùng LINQ cho gọn, khỏi cần Regex phức tạp)
-                if (!newCustomer.Password.Any(char.IsUpper))
-                {
-                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, MessageResponse.UserManagement.Register.UPPERCASE_LETTER_PASSWORD);
-                }
-
-                // 4. Check chữ thường
-                if (!newCustomer.Password.Any(char.IsLower))
-                {
-                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, MessageResponse.UserManagement.Register.LOWERCASE_LETTER_PASSWORD);
-                }
-
-                // 5. Check ký tự đặc biệt
-                if (!newCustomer.Password.Any(ch => !char.IsLetterOrDigit(ch)))
-                {
-                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, MessageResponse.UserManagement.Register.SPECIAL_CHARACTER_PASSWORD);
+                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, validation.Errors.First().ErrorMessage);
                 }
 
                 // --- 3. CHECK TRÙNG (Code cũ của bạn) ---
@@ -237,6 +233,13 @@ namespace HotelBooking.application.Services.Domains.UserManagement
         {
             try
             {
+                // Validate login input using injected validator
+                var loginValidation = _loginValidator.Validate(userLogin);
+                if (!loginValidation.IsValid)
+                {
+                    return new ApiResponse<LoginResponseDTO> { StatusCode = StatusCodeResponse.BadRequest, Message = loginValidation.Errors.First().ErrorMessage, Content = null };
+                }
+
                 var user = await _userRepository.GetUserWithRoles(u => u.UserName == userLogin.UsernameOrEmail || u.Email == userLogin.UsernameOrEmail);
                 if (user == null)
                 {
