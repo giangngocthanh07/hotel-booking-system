@@ -34,13 +34,23 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
             var user = await _userRepo.GetByIdAsync(userId);
             if (user == null) return null;
 
+            // Check for existing requests
+            var existingRequests = await _upgradeRequestRepo.GetAllAsync();
+            var userRequest = existingRequests?
+                .Where(r => r.UserId == userId)
+                .OrderByDescending(r => r.RequestedAt)
+                .FirstOrDefault();
+
+            var requestStatus = userRequest?.Status ?? "None";
+
             return new UserForUpgradeDTO
             {
                 UserId = user.Id,
                 UserName = user.UserName,
                 FullName = user.FullName ?? "",
                 Email = user.Email,
-                PhoneNumber = user.PhoneNumber
+                PhoneNumber = user.PhoneNumber,
+                RequestStatus = requestStatus
             };
         }
 

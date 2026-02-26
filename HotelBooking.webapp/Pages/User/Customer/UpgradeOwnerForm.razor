@@ -25,63 +25,92 @@ else
                         <p class="text-muted mb-4">Vui lòng kiểm tra thông tin tài khoản của bạn và bổ sung địa chỉ, mã số
                             thuế để gửi yêu cầu nâng cấp.</p>
 
-                        @if (userInfo == null)
-                        {
-                            <p><em>Đang tải thông tin người dùng...</em></p>
-                        }
-                        else
-                        {
-                            <EditForm Model="@requestModel" OnValidSubmit="HandleValidSubmit">
-                                <DataAnnotationsValidator />
-
-                                <!-- Thông tin readonly -->
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">UserName</label>
-                                        <input class="form-control text-muted" value="@userInfo.UserName" readonly />
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Full Name</label>
-                                        <input class="form-control text-muted" value="@userInfo.FullName" readonly />
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Email</label>
-                                        <input class="form-control text-muted" value="@userInfo.Email" readonly />
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Phone Number</label>
-                                        <input class="form-control text-muted" value="@userInfo.PhoneNumber" readonly />
-                                    </div>
+                            @if (requestStatus != "None")
+                            {
+                                <div class="alert @GetStatusAlertClass(requestStatus)" role="alert">
+                                    <strong>Trạng thái yêu cầu:</strong> <span
+                                    class="badge @GetStatusBadgeClass(requestStatus)">@requestStatus</span>
                                 </div>
+                            }
 
-                                <!-- Các field bổ sung -->
-                                <div class="row g-3 mt-2">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Địa chỉ</label>
-                                        <InputText class="form-control" @bind-Value="requestModel.Address" />
-                                        <ValidationMessage For="@(() => requestModel.Address)" class="text-danger"/>
+                            @if (userInfo == null)
+                            {
+                                <p><em>Đang tải thông tin người dùng...</em></p>
+                            }
+                            else
+                            {
+                                <EditForm Model="@requestModel" OnValidSubmit="HandleValidSubmit">
+                                    <DataAnnotationsValidator />
+
+                                    <!-- Thông tin readonly -->
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">UserName</label>
+                                            <input class="form-control text-muted" value="@userInfo.UserName" readonly />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Full Name</label>
+                                            <input class="form-control text-muted" value="@userInfo.FullName" readonly />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Email</label>
+                                            <input class="form-control text-muted" value="@userInfo.Email" readonly />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Phone Number</label>
+                                            <input class="form-control text-muted" value="@userInfo.PhoneNumber" readonly />
+                                        </div>
                                     </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Mã số thuế</label>
-                                        <InputText class="form-control" @bind-Value="requestModel.TaxCode" />
-                                        <ValidationMessage For="@(() => requestModel.TaxCode)" class="text-danger"/>
+
+                                    <!-- Các field bổ sung -->
+                                    <div class="row g-3 mt-2">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Địa chỉ</label>
+                                            <InputText class="form-control" @bind-Value="requestModel.Address"
+                                                       readonly="@isFormReadOnly" />
+                                            <ValidationMessage For="@(() => requestModel.Address)" class="text-danger" />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Mã số thuế</label>
+                                            <InputText class="form-control" @bind-Value="requestModel.TaxCode"
+                                                       readonly="@isFormReadOnly" />
+                                            <ValidationMessage For="@(() => requestModel.TaxCode)" class="text-danger" />
+                                        </div>
                                     </div>
-                                </div>
 
-                                <button type="submit" class="btn btn-primary w-100 mt-4">Gửi yêu cầu nâng cấp</button>
-                            </EditForm>
-                        }
+                                    <button type="submit" class="btn btn-primary w-100 mt-4" disabled="@isFormReadOnly">Gửi yêu cầu
+                                        nâng cấp</button>
+                                        @if (requestStatus == "Pending")
+                                        {
+                                            <div class="alert alert-info mt-3">
+                                                ✓ Yêu cầu của bạn đã được gửi và đang chờ phê duyệt từ admin.
+                                            </div>
+                                        }
+                                        else if (requestStatus == "Approved")
+                                        {
+                                            <div class="alert alert-success mt-3">
+                                                ✓ Yêu cầu của bạn đã được duyệt. Chúc mừng bạn đã trở thành đối tác!
+                                            </div>
+                                        }
+                                        else if (requestStatus == "Rejected")
+                                        {
+                                            <div class="alert alert-warning mt-3">
+                                                ✗ Yêu cầu của bạn đã bị từ chối. Vui lòng kiểm tra lại thông tin và gửi lại.
+                                            </div>
+                                        }
+                                    </EditForm>
+                                }
 
-                        @if (!string.IsNullOrEmpty(message))
-                        {
-                            <div class="alert @alertClass mt-3">@message</div>
-                        }
+                                @if (!string.IsNullOrEmpty(message))
+                                {
+                                    <div class="alert @alertClass mt-3">@message</div>
+                                }
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-}
+        }
 
 @code {
     private UserForUpgradeVM? userInfo;
@@ -89,6 +118,8 @@ else
     private string message = "";
     private string alertClass = "alert-success";
     private HttpClient? _httpClient;
+    private string requestStatus = "None"; // None, Pending, Approved, Rejected
+    private bool isFormReadOnly = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -104,6 +135,12 @@ else
         try
         {
             userInfo = await _httpClient.GetFromJsonAsync<UserForUpgradeVM>("v1/request/get-user-upgrade");
+
+            // Check nếu user có request nào không
+            // Giả sử BE sẽ trả vê userInfo kèm theo status của request (nếu có)
+            // Nếu userInfo có property Status thì load nó, không thì set mặc định
+            requestStatus = userInfo?.RequestStatus ?? "None";
+            isFormReadOnly = requestStatus == "Pending" || requestStatus == "Approved";
         }
         catch (Exception ex)
         {
@@ -131,16 +168,18 @@ else
             var response = await _httpClient.PostAsJsonAsync("v1/request/create-request", requestModel);
             if (response.IsSuccessStatusCode)
             {
-                message = "Yêu cầu được gửi thành công. Vui lòng chờ phê duyệt từ admin.";
                 alertClass = "alert-success";
-                SnackbarHelper.Show(Snackbar, StatusCodeResponse.Success, message);
+                requestStatus = "Pending";
+                isFormReadOnly = true;
+                SnackbarHelper.Show(Snackbar, StatusCodeResponse.Success, "Yêu cầu được gửi thành công. Vui lòng chờ phê duyệt từ admin.");
             }
             else
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
                 try
                 {
-                    var apiResp = JsonSerializer.Deserialize<ApiResponse<UpgradeRequestResponseVM>>(errorContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    var apiResp = JsonSerializer.Deserialize<ApiResponse<UpgradeRequestResponseVM>>(errorContent, new JsonSerializerOptions
+                    { PropertyNameCaseInsensitive = true });
                     message = apiResp?.Message ?? errorContent;
                 }
                 catch
@@ -158,4 +197,20 @@ else
             SnackbarHelper.Show(Snackbar, StatusCodeResponse.Error, message);
         }
     }
+
+    private string GetStatusAlertClass(string status) => status switch
+    {
+        "Pending" => "alert-info",
+        "Approved" => "alert-success",
+        "Rejected" => "alert-warning",
+        _ => "alert-secondary"
+    };
+
+    private string GetStatusBadgeClass(string status) => status switch
+    {
+        "Pending" => "bg-info text-white",
+        "Approved" => "bg-success text-white",
+        "Rejected" => "bg-warning text-dark",
+        _ => "bg-secondary text-white"
+    };
 }

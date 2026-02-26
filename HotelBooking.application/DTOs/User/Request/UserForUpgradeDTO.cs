@@ -5,4 +5,5 @@ public class UserForUpgradeDTO
     public string FullName { get; set; } = null!;
     public string Email { get; set; } = null!;
     public string PhoneNumber { get; set; } = null!;
+    public string? RequestStatus { get; set; } = "None";
 }
