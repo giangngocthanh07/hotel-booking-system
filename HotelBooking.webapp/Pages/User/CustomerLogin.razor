@@ -77,11 +77,11 @@
     {
         try
         {
-            var response = await _httpClient.PostAsJsonAsync("v1/admin/Account/login", userLogin);
+            var response = await _httpClient.PostAsJsonAsync("v1/authentication/login", userLogin);
             if (response.IsSuccessStatusCode)
             {
                 var loginResponse = await response.Content.ReadFromJsonAsync<ApiResponse<LoginResponseDTO>>();
-                if (loginResponse?.Content.AccessToken != null)
+                if (loginResponse?.Content?.AccessToken != null)
                 {
                     await ((CustomAuthStateProvider)AuthStateProvider).MarkUserAsAuthenticated(loginResponse.Content.AccessToken);
                     errorMessage = null;

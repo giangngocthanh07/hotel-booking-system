@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace HotelBooking.api.Controllers.V1.Public
 {
     /// <summary>
-    /// Authentication Controller - Đăng ký, đăng nhập, quản lý tài khoản
+    /// Public Authentication Controller - Đăng ký, đăng nhập, quản lý thông tin người dùng
     /// </summary>
     [Route("api/v1/[controller]")]
     [ApiController]
@@ -21,7 +21,7 @@ namespace HotelBooking.api.Controllers.V1.Public
         }
 
         /// <summary>
-        /// Lấy thông tin người dùng hiện tại
+        /// Lấy thông tin người dùng hiện tại (Yêu cầu xác thực)
         /// </summary>
         [HttpGet("me")]
         [Authorize]
@@ -36,29 +36,7 @@ namespace HotelBooking.api.Controllers.V1.Public
         }
 
         /// <summary>
-        /// Lấy thông tin người dùng theo ID
-        /// </summary>
-        [HttpGet("{userId}")]
-        public async Task<IActionResult> GetUserById(int userId)
-        {
-            var user = await _userService.GetByIdAsync(userId);
-            if (user == null) return NotFound("User not found.");
-            return Ok(user);
-        }
-
-        /// <summary>
-        /// Đăng ký Admin (chỉ admin có quyền)
-        /// </summary>
-        [HttpPost("register-admin")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> RegisterAdmin([FromBody] RegisterAdminDTO newAdmin)
-        {
-            var response = await _userService.RegisterAdmin(newAdmin);
-            return ApiResponseHandlerHelper.HandleResponse(response);
-        }
-
-        /// <summary>
-        /// Đăng ký Customer
+        /// Đăng ký tài khoản khách hàng (công khai)
         /// </summary>
         [HttpPost("register")]
         public async Task<IActionResult> RegisterCustomer([FromBody] RegisterCustomerDTO newCustomer)
@@ -68,7 +46,7 @@ namespace HotelBooking.api.Controllers.V1.Public
         }
 
         /// <summary>
-        /// Đăng nhập
+        /// Đăng nhập (công khai)
         /// </summary>
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginUserDTO loginRequest)
@@ -76,5 +54,6 @@ namespace HotelBooking.api.Controllers.V1.Public
             var response = await _userService.LoginUser(loginRequest);
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
+
     }
 }

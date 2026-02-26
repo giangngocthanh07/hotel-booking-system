@@ -10,7 +10,6 @@ namespace HotelBooking.api.Controllers.V1.Admin
     /// </summary>
     [Route("api/v1/admin/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
     public class RequestController : ControllerBase
     {
         private readonly IUpgradeRequestService _upgradeRequestService;
@@ -20,34 +19,6 @@ namespace HotelBooking.api.Controllers.V1.Admin
             _upgradeRequestService = upgradeRequestService;
         }
 
-        /// <summary>
-        /// Lấy danh sách tất cả đơn yêu cầu (có lọc theo status)
-        /// </summary>
-        [HttpGet("get-user-upgrade")]
-        [Authorize(Roles = "Customer")]
-        public async Task<IActionResult> GetUserForUpgrade()
-        {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            var dto = await _upgradeRequestService.GetUserForUpgradeAsync(userId);
-
-            if (dto == null) return NotFound();
-
-            return Ok(dto);
-        }
-
-        [HttpPost("create-request")]
-        [Authorize(Roles = "Customer")]
-        public async Task<IActionResult> CreateRequestAsync([FromBody] CreateUpgradeRequestDTO request)
-        {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-
-            var result = await _upgradeRequestService.CreateRequestAsync(userId, request.Address, request.TaxCode);
-            if (result)
-            {
-                return Ok(new { Message = "Request created successfully." });
-            }
-            return BadRequest(new { Message = "Failed to create request." });
-        }
 
         [HttpGet("get-all-requests")]
         [Authorize(Roles = "Admin")]

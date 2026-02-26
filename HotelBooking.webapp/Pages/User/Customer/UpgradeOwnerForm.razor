@@ -1,10 +1,13 @@
 @page "/upgrade-owner"
 @attribute [Authorize(Roles = "Customer")]
+@layout MainLayout
 @inject IHttpClientFactory HttpClientFactory
-@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject Blazored.LocalStorage.ILocalStorageService _localStorage
+@inject MudBlazor.ISnackbar Snackbar
 
-<h3>Upgrade to Owner Request</h3>
+@using MudBlazor
+@using System.Net.Http.Json
+@using System.Text.Json
 
 @if (userInfo == null)
 {
@@ -30,25 +33,24 @@ else
                         {
                             <EditForm Model="@requestModel" OnValidSubmit="HandleValidSubmit">
                                 <DataAnnotationsValidator />
-                                <ValidationSummary />
 
                                 <!-- Thông tin readonly -->
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <label class="form-label">UserName</label>
-                                        <input class="form-control" value="@userInfo.UserName" readonly />
+                                        <input class="form-control text-muted" value="@userInfo.UserName" readonly />
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Full Name</label>
-                                        <input class="form-control" value="@userInfo.FullName" readonly />
+                                        <input class="form-control text-muted" value="@userInfo.FullName" readonly />
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Email</label>
-                                        <input class="form-control" value="@userInfo.Email" readonly />
+                                        <input class="form-control text-muted" value="@userInfo.Email" readonly />
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Phone Number</label>
-                                        <input class="form-control" value="@userInfo.PhoneNumber" readonly />
+                                        <input class="form-control text-muted" value="@userInfo.PhoneNumber" readonly />
                                     </div>
                                 </div>
 
@@ -57,12 +59,12 @@ else
                                     <div class="col-md-6">
                                         <label class="form-label">Địa chỉ</label>
                                         <InputText class="form-control" @bind-Value="requestModel.Address" />
-                                        <ValidationMessage For="@(() => requestModel.Address)" />
+                                        <ValidationMessage For="@(() => requestModel.Address)" class="text-danger"/>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Mã số thuế</label>
                                         <InputText class="form-control" @bind-Value="requestModel.TaxCode" />
-                                        <ValidationMessage For="@(() => requestModel.TaxCode)" />
+                                        <ValidationMessage For="@(() => requestModel.TaxCode)" class="text-danger"/>
                                     </div>
                                 </div>
 
@@ -81,30 +83,32 @@ else
     </div>
 }
 
-@if (!string.IsNullOrEmpty(message))
-{
-    <div class="alert @alertClass mt-3">@message</div>
-}
-
 @code {
     private UserForUpgradeVM? userInfo;
     private CreateUpgradeRequestVM requestModel = new();
     private string message = "";
     private string alertClass = "alert-success";
     private HttpClient? _httpClient;
+
     protected override async Task OnInitializedAsync()
     {
         _httpClient = HttpClientFactory.CreateClient("HotelBookingAPI");
 
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-
-        var userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-
-        if (!string.IsNullOrEmpty(userId))
+        var token = await _localStorage.GetItemAsync<string>("accessToken");
+        if (!string.IsNullOrEmpty(token))
         {
-            userInfo = await _httpClient.GetFromJsonAsync<UserForUpgradeVM>(
-            $"v1/admin/Account/get-user-by-id?userId={userId}");
+            _httpClient.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        }
+
+        try
+        {
+            userInfo = await _httpClient.GetFromJsonAsync<UserForUpgradeVM>("v1/request/get-user-upgrade");
+        }
+        catch (Exception ex)
+        {
+            message = $"Lỗi khi tải thông tin: {ex.Message}";
+            alertClass = "alert-danger";
         }
     }
 
@@ -115,22 +119,43 @@ else
         {
             message = "Bạn chưa đăng nhập.";
             alertClass = "alert-danger";
+            SnackbarHelper.Show(Snackbar, StatusCodeResponse.BadRequest, message);
             return;
         }
 
         _httpClient.DefaultRequestHeaders.Authorization =
-        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-        var response = await _httpClient.PostAsJsonAsync("v1/admin/Request/create-request", requestModel);
-        if (response.IsSuccessStatusCode)
+        try
         {
-            message = "Request created successfully. Please wait for admin approval.";
-            alertClass = "alert-success";
+            var response = await _httpClient.PostAsJsonAsync("v1/request/create-request", requestModel);
+            if (response.IsSuccessStatusCode)
+            {
+                message = "Yêu cầu được gửi thành công. Vui lòng chờ phê duyệt từ admin.";
+                alertClass = "alert-success";
+                SnackbarHelper.Show(Snackbar, StatusCodeResponse.Success, message);
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                try
+                {
+                    var apiResp = JsonSerializer.Deserialize<ApiResponse<UpgradeRequestResponseVM>>(errorContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    message = apiResp?.Message ?? errorContent;
+                }
+                catch
+                {
+                    message = errorContent ?? "Không thể gửi yêu cầu.";
+                }
+                alertClass = "alert-danger";
+                SnackbarHelper.Show(Snackbar, StatusCodeResponse.Error, message);
+            }
         }
-        else
+        catch (Exception ex)
         {
-            message = "Failed to create request.";
+            message = $"Lỗi: {ex.Message}";
             alertClass = "alert-danger";
+            SnackbarHelper.Show(Snackbar, StatusCodeResponse.Error, message);
         }
     }
 }

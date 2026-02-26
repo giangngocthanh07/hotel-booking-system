@@ -3,10 +3,12 @@
 @*Add Service http client*@
 @inject IHttpClientFactory HttpClientFactory;
 @inject NavigationManager _navManager;
+@inject MudBlazor.ISnackbar Snackbar;
 
 @using System.Net.Http.Json
 @using System.Text.Json
 @using HotelBooking.webapp.ViewModels
+@using MudBlazor
 
 <div class="d-flex justify-content-center align-items-center min-vh-100">
     <div class="container mt-5">
@@ -19,60 +21,62 @@
                     </p>
                     <EditForm Model="@userRegister" OnValidSubmit="HandleValidSubmit">
                         <DataAnnotationsValidator />
-                        <ValidationSummary />
+                        @if (!string.IsNullOrEmpty(messageAlert))
+                        {
+                            <div class="alert @(isError ? "alert-danger" : "alert-success")" role="alert">@messageAlert</div>
+                        }
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="username" class="form-label">Username</label>
                                 <InputText @bind-Value="userRegister.Username" class="form-control" id="username" />
-                                <ValidationMessage For="@(() => userRegister.Username)" />
+                                <ValidationMessage For="@(() => userRegister.Username)" class="text-danger" />
                             </div>
 
                             <div class="col-md-6">
                                 <label for="email" class="form-label">Email</label>
                                 <InputText @bind-Value="userRegister.Email" type="email" class="form-control"
                                     id="email" />
-                                <ValidationMessage For="@(() => userRegister.Email)" />
+                                <ValidationMessage For="@(() => userRegister.Email)" class="text-danger" />
                             </div>
 
                             <div class="col-md-6">
                                 <label for="fullname" class="form-label">Full Name</label>
                                 <InputText @bind-Value="userRegister.FullName" class="form-control" id="fullname" />
-                                <ValidationMessage For="@(() => userRegister.FullName)" />
+                                <ValidationMessage For="@(() => userRegister.FullName)" class="text-danger" />
                             </div>
 
                             <div class="col-md-6">
                                 <label for="phone" class="form-label">Phone Number</label>
                                 <InputText @bind-Value="userRegister.PhoneNumber" class="form-control" id="phone" />
-                                <ValidationMessage For="@(() => userRegister.PhoneNumber)" />
+                                <ValidationMessage For="@(() => userRegister.PhoneNumber)" class="text-danger" />
                             </div>
 
                             <div class="col-md-6">
                                 <label for="password" class="form-label">Password</label>
                                 <InputText @bind-Value="userRegister.Password" type="password" class="form-control"
                                     id="password" />
-                                <ValidationMessage For="@(() => userRegister.Password)" />
+                                <ValidationMessage For="@(() => userRegister.Password)" class="text-danger" />
                             </div>
                             <div class="col-md-6">
                                 <label for="confirmPassword" class="form-label">Confirm Password</label>
                                 <InputText @bind-Value="userRegister.ConfirmPassword" type="password"
                                     class="form-control" id="confirmPassword" />
-                                <ValidationMessage For="@(() => userRegister.ConfirmPassword)" />
+                                <ValidationMessage For="@(() => userRegister.ConfirmPassword)" class="text-danger" />
                             </div>
                         </div>
                         <div class="form-check mt-4">
-                            <input class="form-check-input" type="checkbox" id="receiveEmail">
+                            <input class="form-check-input" type="checkbox" id="receiveEmail" @bind="userRegister.ReceiveEmail">
                             <label class="form-check-label" for="receiveEmail">
                                 Vâng, tôi muốn nhận email từ Hotel Booking
                             </label>
                         </div>
 
                         <div class="form-check mb-3">
-                            <InputCheckbox @bind-Value="userRegister.AgreeTerm" class="form-check-input"
-                                id="agreeTerm" />
+                            <InputCheckbox @bind-Value="userRegister.AgreeTerm" class="form-check-input" id="agreeTerm" />
                             <label class="form-check-label" for="agreeTerm">
-                                Tôi đồng ý với <a href="#">Điều khoản, Chính sách bảo mật và Phí dịch vụ</a>
+                                Tôi đồng ý với Điều khoản, Chính sách bảo mật và Phí dịch vụ
                             </label>
-                            <ValidationMessage For="@(() => userRegister.AgreeTerm)" />
+                            <ValidationMessage For="@(() => userRegister.AgreeTerm)" class="text-danger" />
                         </div>
 
                         <button type="submit" class="btn btn-primary w-100">Tạo tài khoản</button>
@@ -92,37 +96,62 @@
     private UserRegisterVM userRegister = new UserRegisterVM();
 
     private string messageAlert = "";
+    private bool isError = false;
 
     private async Task HandleValidSubmit()
     {
+        // if agree term false should not reach here due to validation but double-check
+        if (!userRegister.AgreeTerm)
+        {
+            isError = true;
+            messageAlert = "Bạn phải đồng ý điều khoản.";
+            SnackbarHelper.Show(Snackbar, StatusCodeResponse.BadRequest, messageAlert);
+            return;
+        }
         try
         {
             var client = HttpClientFactory.CreateClient("HotelBookingAPI");
-            var response = await client.PostAsJsonAsync("v1/admin/Account/register-customer", new
+            var response = await client.PostAsJsonAsync("v1/authentication/register", new
             {
                 Username = userRegister.Username,
                 Email = userRegister.Email,
                 Password = userRegister.Password,
                 FullName = userRegister.FullName,
                 PhoneNumber = userRegister.PhoneNumber,
+                ReceiveEmail = userRegister.ReceiveEmail
             });
 
             if (response.IsSuccessStatusCode)
             {
-                messageAlert = "Registration successful! Redirecting to login...";
+                isError = false;
+                messageAlert = "Đăng ký thành công!";
+                SnackbarHelper.Show(Snackbar, StatusCodeResponse.Success, messageAlert);
                 // Redirect to login page after a short delay
                 await Task.Delay(2000);
                 _navManager.NavigateTo("/customer-login");
             }
             else
             {
+                isError = true;
                 var errorContent = await response.Content.ReadAsStringAsync();
-                messageAlert = $"Registration failed: {errorContent}";
+                try
+                {
+                    var apiResp = JsonSerializer.Deserialize<ApiResponse<RegisterResponseVM>>(errorContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    messageAlert = apiResp?.Message ?? errorContent;
+                }
+                catch
+                {
+                    messageAlert = $"Registration failed: {errorContent}";
+                }
+                // Show snackbar for DB-related or other errors so user notices pop-up
+                SnackbarHelper.Show(Snackbar, StatusCodeResponse.Error, messageAlert);
             }
         }
         catch (Exception ex)
         {
+            isError = true;
             messageAlert = $"An error occurred: {ex.Message}";
+            SnackbarHelper.Show(Snackbar, StatusCodeResponse.Error, messageAlert);
         }
     }
 }

@@ -1,81 +1,77 @@
 using System.Security.Claims;
 using HotelBooking.application.Helpers;
+using HotelBooking.application.Services.Domains.UserManagement;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using HotelBooking.application.Services.Domains.UserManagement;
 
 namespace HotelBooking.api.Controllers.V1.Admin
 {
+    /// <summary>
+    /// Admin Account Controller - Quản lý tài khoản, Đăng ký Admin
+    /// </summary>
     [Route("api/v1/admin/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class AccountController : ControllerBase
     {
         private readonly IUserService _userService;
+
         public AccountController(IUserService userService)
         {
             _userService = userService;
         }
 
-        [HttpGet("get-user-by-id")]
-        public async Task<ActionResult> GetUserByIdAsync(int userId)
+        /// <summary>
+        /// Lấy thông tin người dùng hiện tại (Admin)
+        /// </summary>
+        [HttpGet("me")]
+        public async Task<IActionResult> GetCurrentUser()
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            if (userId == 0) return Unauthorized();
+
+            var user = await _userService.GetByIdAsync(userId);
+            if (user == null) return NotFound("User not found.");
+            return Ok(user);
+        }
+
+        /// <summary>
+        /// Lấy thông tin người dùng theo ID (Admin)
+        /// </summary>
+        [HttpGet("{userId}")]
+        public async Task<IActionResult> GetUserById(int userId)
         {
             var user = await _userService.GetByIdAsync(userId);
             if (user == null) return NotFound("User not found.");
             return Ok(user);
         }
 
-        [HttpPost("register-admin")]
-        public async Task<IActionResult> RegisterAdminAsync([FromBody] RegisterAdminDTO newAdmin)
+        /// <summary>
+        /// Đăng ký tài khoản Admin (Yêu cầu Admin)
+        /// </summary>
+        [HttpPost("register")]
+        public async Task<IActionResult> RegisterAdmin([FromBody] RegisterAdminDTO newAdmin)
         {
             var res = await _userService.RegisterAdmin(newAdmin);
             return ApiResponseHandlerHelper.HandleResponse(res);
         }
 
-        [HttpPost("register-customer")]
-        public async Task<IActionResult> RegisterCustomerAsync([FromBody] RegisterCustomerDTO newCustomer)
-        {
-            var res = await _userService.RegisterCustomer(newCustomer);
-            return ApiResponseHandlerHelper.HandleResponse(res);
-        }
-
-        [HttpPost("login")]
-        public async Task<IActionResult> LoginUserAsync([FromBody] LoginUserDTO userLogin)
-        {
-            var res = await _userService.LoginUser(userLogin);
-            return ApiResponseHandlerHelper.HandleResponse(res);
-        }
-
-        // [HttpPost("upgrade-request")]
-        // [Authorize(Roles = "Customer")]
-        // public async Task<ActionResult> RequestUpgradeAsync()
-        // {
-        //     var claim = User.FindFirst(ClaimTypes.NameIdentifier);
-        //     if (claim == null || string.IsNullOrEmpty(claim.Value))
-        //     {
-        //         return BadRequest("User identifier claim is missing.");
-        //     }
-
-        //     var userId = int.Parse(claim.Value);
-        //     var success = await _userService.RequestUpgradeToOwnerAsync(userId);
-        //     if (!success) return BadRequest("Cannot process upgrade request.");
-        //     else
-        //         return Ok("Sent upgrade request successfully. Please wait for admin approval.");
-        // }
-
-        [HttpPost("upgrade-approve")]
-        [Authorize(Roles = "Admin")]
-        public async Task<ActionResult> ApproveUpgradeAsync(int requestId)
+        /// <summary>
+        /// Phé duyệt yêu cầu nâng cấp thành chủ khách sạn
+        /// </summary>
+        [HttpPost("{requestId}/upgrade-approve")]
+        public async Task<IActionResult> ApproveUpgradeAsync(int requestId)
         {
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (claim == null || string.IsNullOrEmpty(claim.Value))
             {
                 return BadRequest("User identifier claim is missing.");
             }
+
             var adminId = int.Parse(claim.Value);
             var success = await _userService.ApproveUpgradeToOwnerAsync(requestId, adminId);
             if (!success) return BadRequest("Cannot approve upgrade request.");
-            else
-                return Ok("Approved upgrade request successfully.");
+            return Ok("Approved upgrade request successfully.");
         }
     }
 }
