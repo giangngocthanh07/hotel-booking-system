@@ -162,6 +162,7 @@ namespace HotelBooking.application.Services.Domains.UserManagement
             }
         }
 
+        [Obsolete]
         public async Task<ApiResponse<RegisterResponseDTO>> RegisterCustomer(RegisterCustomerDTO newCustomer)
         {
             try

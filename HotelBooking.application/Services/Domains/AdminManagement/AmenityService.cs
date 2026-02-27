@@ -101,6 +101,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
             }
         }
 
+        [Obsolete]
         public async Task<ApiResponse<List<AmenityTypeDTO>>> GetTypeDataAsync()
         {
             try

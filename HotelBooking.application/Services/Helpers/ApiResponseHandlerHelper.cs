@@ -46,6 +46,7 @@ namespace HotelBooking.application.Helpers
         // ==========================================
         // 3. NHÓM SERVER ERROR (Lỗi hệ thống - 5xx)
         // ==========================================
+        [Obsolete]
         public static ApiResponse<T> ServerError<T>()
         {
             return CreateResponse<T>(StatusCodeResponse.Error, MessageResponse.ERROR_IN_SERVER, default!);

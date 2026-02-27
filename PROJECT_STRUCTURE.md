@@ -32,10 +32,11 @@ HotelBooking.application/
 │   │   │   ├── IUserService.cs (interface)
 │   │   │   └── UserService.cs (implementation tại Services/UserService.cs)
 │   │   │
-│   │   ├── RequestManagement/    # TODO
-│   │   │   └── ...
+│   │   ├── RequestManagement/    # chứa logic xử lý đơn nâng cấp
+│   │   │   ├── IUpgradeRequestService.cs
+│   │   │   └── UpgradeRequestService.cs
 │   │   │
-│   │   └── BookingManagement/    # TODO
+│   │   └── BookingManagement/    # TODO - đặt chỗ cho sau này (booking, payment, review)
 │   │       └── ...
 │   │
 │   ├── Features/                  # Quản lý các tính năng phụ
@@ -154,16 +155,16 @@ builder.Services.AddScoped<IUserService, UserService>();
 ## 📝 Next Steps
 
 ### Để hoàn thành refactor:
-1. ✅ Tạo cấu trúc Domains (AdminManagement, HotelManagement...)
+1. ✅ Tạo cấu trúc Domains (AdminManagement, HotelManagement, RequestManagement...)
 2. ✅ Tạo Controllers V1 (Admin, Customer, Public)
 3. ✅ Cập nhật Program.cs DI
-4. ⏳ Di chuyển file HotelService.cs → Services/Domains/HotelManagement/
-5. ⏳ Di chuyển file UserService.cs → Services/Domains/UserManagement/
+4. ✅ Di chuyển file HotelService.cs → Services/Domains/HotelManagement/ (đã hoàn thành hoặc đang chuyển)
+5. ✅ Di chuyển file UserService.cs → Services/Domains/UserManagement/
 6. ⏳ Xóa/cập nhật các file Features cũ (AmenityManage, PolicyManage...)
 7. ⏳ Cập nhật tất cả import statements
 
 ### Domains cần implement tiếp:
-- **RequestManagement** - Quản lý đơn yêu cầu từ customer
+- **RequestManagement** - Quản lý đơn yêu cầu nâng cấp khách hàng → owner
 - **BookingManagement** - Quản lý booking, payment, review
 - **OwnerManagement** - Dashboard owner, quản lý khách sạn
 
@@ -181,6 +182,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 | Services/Features/ServiceManage.cs | Services/Domains/AdminManagement/ServiceService.cs | ✅ Done |
 | Controllers/AccountController.cs | Controllers/V1/Public/AuthenticationController.cs | ✅ Done |
 | Controllers/RequestController.cs | Controllers/V1/Customer/RequestsController.cs | ✅ Done |
+| Controllers/V1/Public/RequestController (previous) | Controllers/V1/Customer/RequestsController.cs + AdminRequestsController.cs | ✅ Refactored |
 | Controllers/RoleController.cs | Controllers/V1/Admin/RolesController.cs | ✅ Done |
 | Controllers/HotelController.cs | Controllers/V1/Admin/AdminManagementController.cs (partial) | ⏳ Refactor needed |
 

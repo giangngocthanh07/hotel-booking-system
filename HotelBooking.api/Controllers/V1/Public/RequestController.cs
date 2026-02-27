@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using HotelBooking.application.Services.Domains.RequestManagement;
+using HotelBooking.application.Helpers;
 
 namespace HotelBooking.api.Controllers.V1.Public
 {
@@ -31,9 +32,8 @@ namespace HotelBooking.api.Controllers.V1.Public
                 return BadRequest("User identifier claim is missing.");
 
             var userId = int.Parse(claim.Value);
-            var dto = await _upgradeRequestService.GetUserForUpgradeAsync(userId);
-            if (dto == null) return NotFound();
-            return Ok(dto);
+            var response = await _upgradeRequestService.GetUserForUpgradeAsync(userId);
+            return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
         /// <summary>
@@ -48,10 +48,8 @@ namespace HotelBooking.api.Controllers.V1.Public
                 return BadRequest("User identifier claim is missing.");
 
             var userId = int.Parse(claim.Value);
-            var result = await _upgradeRequestService.CreateRequestAsync(userId, request.Address, request.TaxCode);
-            if (result)
-                return Ok(new { Message = "Request created successfully." });
-            return BadRequest(new { Message = "Failed to create request." });
+            var response = await _upgradeRequestService.CreateRequestAsync(userId, request.Address, request.TaxCode);
+            return ApiResponseHandlerHelper.HandleResponse(response);
         }
     }
 }

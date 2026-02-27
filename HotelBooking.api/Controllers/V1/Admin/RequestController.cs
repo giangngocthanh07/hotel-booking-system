@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using HotelBooking.application.Services.Domains.RequestManagement;
+using HotelBooking.application.Helpers;
 
 namespace HotelBooking.api.Controllers.V1.Admin
 {
@@ -24,17 +25,16 @@ namespace HotelBooking.api.Controllers.V1.Admin
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetRequestsAsync([FromQuery] string? status)
         {
-            var requests = await _upgradeRequestService.GetAllRequestAsync(status);
-            return Ok(requests);
+            var response = await _upgradeRequestService.GetAllRequestAsync(status);
+            return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
         [HttpGet("request-detail/{requestId}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetByRequestIdAsync(int requestId)
         {
-            var request = await _upgradeRequestService.GetByRequestIdAsync(requestId);
-            if (request == null) return NotFound();
-            return Ok(request);
+            var response = await _upgradeRequestService.GetByRequestIdAsync(requestId);
+            return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
         [HttpPost("approve/{requestId}")]
@@ -45,10 +45,8 @@ namespace HotelBooking.api.Controllers.V1.Admin
             if (claim == null) return BadRequest("AdminId claim is missing.");
 
             var adminId = int.Parse(claim.Value);
-            var success = await _upgradeRequestService.ApproveRequestAsync(requestId, adminId);
-            if (!success) return BadRequest("Cannot approve upgrade request.");
-            else
-                return Ok("Approved upgrade request successfully.");
+            var response = await _upgradeRequestService.ApproveRequestAsync(requestId, adminId);
+            return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
         [HttpPost("reject/{requestId}")]
@@ -59,10 +57,8 @@ namespace HotelBooking.api.Controllers.V1.Admin
             if (claim == null) return BadRequest("AdminId claim is missing.");
 
             var adminId = int.Parse(claim.Value);
-            var success = await _upgradeRequestService.RejectRequestAsync(requestId, adminId);
-            if (!success) return BadRequest("Cannot reject upgrade request.");
-            else
-                return Ok("Rejected upgrade request successfully.");
+            var response = await _upgradeRequestService.RejectRequestAsync(requestId, adminId);
+            return ApiResponseHandlerHelper.HandleResponse(response);
         }
     }
 }

@@ -218,7 +218,43 @@ public static class MessageResponse
     }
 
     // =====================================================
-    // 5. PAGINATION MESSAGES
+    // 5. REQUEST MANAGEMENT MESSAGES
+    // =====================================================
+    public static class RequestManagement
+    {
+        // Upgrade Request Messages
+        public static class UpgradeRequest
+        {
+            // Get User for Upgrade
+            public const string USER_INFO_RETRIEVED = "Thông tin người dùng được lấy thành công!";
+            public const string USER_NOT_FOUND = "Không tìm thấy tài khoản người dùng!";
+
+            // Create Request
+            public const string REQUEST_CREATED_SUCCESS = "Yêu cầu được tạo thành công!";
+            public const string REQUEST_CREATE_FAILED = "Không thể tạo yêu cầu!";
+            public const string USER_NOT_CUSTOMER = "Tài khoản của bạn không phải là khách hàng!";
+            public const string PENDING_REQUEST_EXISTS = "Yêu cầu đang chờ phê duyệt đã tồn tại cho tài khoản này!";
+
+            // Get All Requests
+            public const string REQUESTS_RETRIEVED = "Danh sách yêu cầu được lấy thành công!";
+
+            // Get Request By ID
+            public const string REQUEST_RETRIEVED = "Yêu cầu được lấy thành công!";
+            public const string REQUEST_NOT_FOUND = "Không tìm thấy yêu cầu!";
+
+            // Approve Request
+            public const string REQUEST_APPROVED_SUCCESS = "Yêu cầu được phê duyệt thành công!";
+            public const string REQUEST_APPROVE_FAILED = "Không thể phê duyệt yêu cầu!";
+            public const string REQUEST_STATUS_INVALID = "Yêu cầu không tìm thấy hoặc không ở trạng thái chờ phê duyệt!";
+
+            // Reject Request
+            public const string REQUEST_REJECTED_SUCCESS = "Yêu cầu được từ chối thành công!";
+            public const string REQUEST_REJECT_FAILED = "Không thể từ chối yêu cầu!";
+        }
+    }
+
+    // =====================================================
+    // 6. PAGINATION MESSAGES
     // =====================================================
     public static class Pagination
     {
@@ -230,7 +266,7 @@ public static class MessageResponse
     }
 
     // =====================================================
-    // 6. MENU REQUEST MESSAGES
+    // 7. MENU REQUEST MESSAGES
     // =====================================================
     public static class ManageMenu
     {
