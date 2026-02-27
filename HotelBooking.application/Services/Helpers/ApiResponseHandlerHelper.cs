@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using HotelBooking.application.Helpers;
 
 namespace HotelBooking.application.Helpers
 {

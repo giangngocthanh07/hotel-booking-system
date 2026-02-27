@@ -1,8 +1,5 @@
 using HotelBooking.application.Helpers;
-using HotelBooking.application.Services;
 using FluentValidation;
-using HotelBooking.application.Validators.UserManagement.Register;
-using HotelBooking.application.Validators.UserManagement.Login;
 using HotelBooking.infrastructure.Models;
 using System.Net.Mail;
 // Note: MessageRegister, MessageLogin được consolidate vào MessageResponse tại Helpers/Messages/
@@ -13,17 +10,16 @@ namespace HotelBooking.application.Services.Domains.UserManagement
 {
     public interface IUserService
     {
-        public Task<UserDetailDTO> GetByIdAsync(int id);
+        public Task<ApiResponse<UserDetailDTO>> GetByIdAsync(int id);
         public Task<ApiResponse<RegisterResponseDTO>> RegisterAdmin(RegisterAdminDTO newAdmin);
         public Task<ApiResponse<RegisterResponseDTO>> RegisterCustomer(RegisterCustomerDTO newCustomer);
         public Task<ApiResponse<LoginResponseDTO>> LoginUser(LoginUserDTO userLogin);
-        public Task<bool> ApproveUpgradeToOwnerAsync(int requestId, int adminId);
+        public Task<ApiResponse<bool>> ApproveUpgradeToOwnerAsync(int requestId, int adminId);
         // public Task<bool> RejectUpgradeToOwnerAsync(int requestId, int adminId);
     }
 
     public class UserService : IUserService
     {
-        public HotelBookingDBContext _context;
         private readonly IUserRepository _userRepository;
         private readonly IUserRoleRepository _userRoleRepository;
         private readonly IUpgradeRequestRepository _upgradeRequestRepository;
@@ -34,8 +30,7 @@ namespace HotelBooking.application.Services.Domains.UserManagement
         private readonly IValidator<RegisterAdminDTO> _registerAdminValidator;
         private readonly IValidator<LoginUserDTO> _loginValidator;
 
-        public UserService(HotelBookingDBContext context,
-                           IUserRepository userRepository,
+        public UserService(IUserRepository userRepository,
                            IUserRoleRepository userRoleRepository,
                            IUpgradeRequestRepository upgradeRequestRepository,
                            JwtAuthService jwtAuthService,
@@ -44,7 +39,6 @@ namespace HotelBooking.application.Services.Domains.UserManagement
                            IValidator<RegisterAdminDTO> registerAdminValidator,
                            IValidator<LoginUserDTO> loginValidator)
         {
-            _context = context;
             _userRepository = userRepository;
             _userRoleRepository = userRoleRepository;
             _upgradeRequestRepository = upgradeRequestRepository;
@@ -56,27 +50,38 @@ namespace HotelBooking.application.Services.Domains.UserManagement
             _loginValidator = loginValidator;
         }
 
-        public async Task<UserDetailDTO> GetByIdAsync(int id)
+        public async Task<ApiResponse<UserDetailDTO>> GetByIdAsync(int id)
         {
-            var user = await _userRepository.GetByIdAsync(id);
-            if (user == null) return null!;
-
-            var userWithRoles = await _userRepository.GetUserWithRoles(u => u.UserName == user.UserName || u.Email == user.Email);
-            var userDetailDTO = new UserDetailDTO
+            try
             {
-                Id = userWithRoles.Id,
-                UserName = userWithRoles.UserName,
-                FullName = userWithRoles.FullName!,
-                Email = userWithRoles.Email,
-                PhoneNumber = userWithRoles.PhoneNumber,
-                DateOfBirth = userWithRoles.DateOfBirth,
-                AvatarUrl = userWithRoles.AvatarUrl,
-                IsActive = userWithRoles.IsActive,
-                IsDeleted = userWithRoles.IsDeleted,
-                CreatedAt = userWithRoles.CreatedAt,
-                Roles = userWithRoles.UserRoles.Select(ur => ur.Role.Name).ToList()
-            };
-            return userDetailDTO;
+                var user = await _userRepository.GetByIdAsync(id);
+                if (user == null)
+                {
+                    return ResponseFactory.Failure<UserDetailDTO>(StatusCodeResponse.NotFound, MessageResponse.UserManagement.User.NOT_FOUND);
+                }
+
+                var userWithRoles = await _userRepository.GetUserWithRoles(u => u.UserName == user.UserName || u.Email == user.Email);
+
+                var userDetailDTO = new UserDetailDTO
+                {
+                    Id = userWithRoles.Id,
+                    UserName = userWithRoles.UserName,
+                    FullName = userWithRoles.FullName!,
+                    Email = userWithRoles.Email,
+                    PhoneNumber = userWithRoles.PhoneNumber,
+                    DateOfBirth = userWithRoles.DateOfBirth,
+                    AvatarUrl = userWithRoles.AvatarUrl,
+                    IsActive = userWithRoles.IsActive,
+                    IsDeleted = userWithRoles.IsDeleted,
+                    CreatedAt = userWithRoles.CreatedAt,
+                    Roles = userWithRoles.UserRoles.Select(ur => ur.Role.Name).ToList()
+                };
+                return ResponseFactory.Success(userDetailDTO, MessageResponse.Common.GET_SUCCESSFULLY);
+            }
+            catch (Exception)
+            {
+                return ResponseFactory.Failure<UserDetailDTO>(StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
+            }
         }
 
         public async Task<ApiResponse<RegisterResponseDTO>> RegisterAdmin(RegisterAdminDTO newAdmin)
@@ -87,22 +92,21 @@ namespace HotelBooking.application.Services.Domains.UserManagement
                 var adminValidation = _registerAdminValidator.Validate(newAdmin);
                 if (!adminValidation.IsValid)
                 {
-                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, adminValidation.Errors.First().ErrorMessage);
+                    var response = ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, adminValidation.Errors.First().ErrorMessage);
+                    response.Content = new RegisterResponseDTO { IsSuccess = false };
+                    return response;
                 }
 
                 var checkAdmin = await _userRepository.SingleOrDefaultAsync(admin => admin.Email == newAdmin.Email || admin.UserName == newAdmin.Username);
                 if (checkAdmin != null)
                 {
-                    return new ApiResponse<RegisterResponseDTO>
-                    {
-                        StatusCode = StatusCodeResponse.Conflict,
-                        Content = new RegisterResponseDTO
-                        {
-                            IsSuccess = false,
-
-                        },
-                        Message = checkAdmin.UserName == newAdmin.Username ? MessageResponse.UserManagement.Register.USERNAME_EXIST : MessageResponse.UserManagement.Register.EMAIL_EXIST
-                    };
+                    var response = ResponseFactory.Failure<RegisterResponseDTO>(
+                        StatusCodeResponse.Conflict,
+                        checkAdmin.UserName == newAdmin.Username
+                            ? MessageResponse.UserManagement.Register.USERNAME_EXIST
+                            : MessageResponse.UserManagement.Register.EMAIL_EXIST);
+                    response.Content = new RegisterResponseDTO { IsSuccess = false };
+                    return response;
                 }
 
                 var user = new User
@@ -133,32 +137,18 @@ namespace HotelBooking.application.Services.Domains.UserManagement
                 user.UserRoles.Add(userRole);
                 await _dbu.SaveChangesAsync(); // Save again to save UserRole
 
-                return new ApiResponse<RegisterResponseDTO>
+                return ResponseFactory.Success(new RegisterResponseDTO
                 {
-                    StatusCode = StatusCodeResponse.Success,
-                    Content = new RegisterResponseDTO
-                    {
-                        IsSuccess = true,
-
-                        FullName = user.FullName,
-                        Email = user.Email
-                    },
-
-                    Message = MessageResponse.UserManagement.Register.SUCCESS
-                };
+                    IsSuccess = true,
+                    FullName = user.FullName,
+                    Email = user.Email
+                }, MessageResponse.UserManagement.Register.SUCCESS);
             }
             catch (Exception)
             {
-                return new ApiResponse<RegisterResponseDTO>
-                {
-                    StatusCode = StatusCodeResponse.Error,
-                    Content = new RegisterResponseDTO
-                    {
-                        IsSuccess = false,
-
-                    },
-                    Message = MessageResponse.UserManagement.Register.FAIL,
-                };
+                var response = ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.Error, MessageResponse.UserManagement.Register.FAIL);
+                response.Content = new RegisterResponseDTO { IsSuccess = false };
+                return response;
             }
         }
 
@@ -238,65 +228,69 @@ namespace HotelBooking.application.Services.Domains.UserManagement
                 var loginValidation = _loginValidator.Validate(userLogin);
                 if (!loginValidation.IsValid)
                 {
-                    return new ApiResponse<LoginResponseDTO> { StatusCode = StatusCodeResponse.BadRequest, Message = loginValidation.Errors.First().ErrorMessage, Content = null };
+                    return ResponseFactory.Failure<LoginResponseDTO>(StatusCodeResponse.BadRequest, loginValidation.Errors.First().ErrorMessage);
                 }
 
                 var user = await _userRepository.GetUserWithRoles(u => u.UserName == userLogin.UsernameOrEmail || u.Email == userLogin.UsernameOrEmail);
                 if (user == null)
                 {
-                    return new ApiResponse<LoginResponseDTO> { StatusCode = StatusCodeResponse.NotFound, Message = MessageResponse.UserManagement.Login.USER_NOT_FOUND, Content = null };
+                    return ResponseFactory.Failure<LoginResponseDTO>(StatusCodeResponse.NotFound, MessageResponse.UserManagement.Login.USER_NOT_FOUND);
                 }
 
                 // Kiểm tra mật khẩu
                 if (!PasswordHelper.VerifyPassword(userLogin.Password, user.PasswordHash))
                 {
-                    return new ApiResponse<LoginResponseDTO> { StatusCode = StatusCodeResponse.NotFound, Message = MessageResponse.UserManagement.Login.PASSWORD_INCORRECT, Content = null };
+                    return ResponseFactory.Failure<LoginResponseDTO>(StatusCodeResponse.NotFound, MessageResponse.UserManagement.Login.PASSWORD_INCORRECT);
                 }
                 var token = _jwtAuthService.GenerateToken(user);
                 var roles = user.UserRoles.Select(ur => ur.Role.Name).ToList();
-                return new ApiResponse<LoginResponseDTO>
+                return ResponseFactory.Success(new LoginResponseDTO
                 {
-                    StatusCode = StatusCodeResponse.Success,
-                    Message = MessageResponse.UserManagement.Login.SUCCESS,
-                    Content = new LoginResponseDTO
-                    {
-                        AccessToken = token,
-                        FullName = user.FullName!,
-                        AvatarUrl = user.AvatarUrl,
-                        Roles = roles,
-                    }
-                };
+                    AccessToken = token,
+                    FullName = user.FullName!,
+                    AvatarUrl = user.AvatarUrl,
+                    Roles = roles,
+                }, MessageResponse.UserManagement.Login.SUCCESS);
             }
             catch (Exception)
             {
-                return new ApiResponse<LoginResponseDTO> { StatusCode = StatusCodeResponse.Error, Message = MessageResponse.UserManagement.Login.ERROR_IN_SERVER, Content = null };
+                return ResponseFactory.Failure<LoginResponseDTO>(StatusCodeResponse.Error, MessageResponse.UserManagement.Login.ERROR_IN_SERVER);
             }
         }
 
-        public async Task<bool> ApproveUpgradeToOwnerAsync(int requestId, int adminId)
+        public async Task<ApiResponse<bool>> ApproveUpgradeToOwnerAsync(int requestId, int adminId)
         {
-            var request = await _upgradeRequestRepository
-            .SingleOrDefaultAsync(r => r.Id == requestId && r.Status == "Pending");
-            if (request == null)
-                return false;
-
-            var user = await _userRepository.SingleOrDefaultAsync(u => u.Id == request.UserId);
-            if (user == null)
-                return false;
-
-            // Kiểm tra xem user đã có role Owner chưa
-            var hasOwnerRole = await _userRoleRepository
-                .AnyAsync(ur => ur.UserId == user.Id && ur.RoleId == RoleTypeConstDTO.Owner);
-
-            if (!hasOwnerRole)
+            try
             {
+                var request = await _upgradeRequestRepository
+                    .SingleOrDefaultAsync(r => r.Id == requestId && r.Status == "Pending");
+                if (request == null)
+                {
+                    return ResponseFactory.Failure<bool>(StatusCodeResponse.BadRequest, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_STATUS_INVALID);
+                }
+
+                var user = await _userRepository.SingleOrDefaultAsync(u => u.Id == request.UserId);
+                if (user == null)
+                {
+                    return ResponseFactory.Failure<bool>(StatusCodeResponse.NotFound, MessageResponse.RequestManagement.UpgradeRequest.USER_NOT_FOUND);
+                }
+
+                // Kiểm tra xem user đã có role Owner chưa
+                var hasOwnerRole = await _userRoleRepository
+                    .AnyAsync(ur => ur.UserId == user.Id && ur.RoleId == RoleTypeConstDTO.Owner);
+
+                if (hasOwnerRole)
+                {
+                    return ResponseFactory.Failure<bool>(StatusCodeResponse.Conflict, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_APPROVE_FAILED);
+                }
+
                 // Thêm role Owner cho user
                 var newUserRole = new UserRole
                 {
                     UserId = user.Id,
                     RoleId = RoleTypeConstDTO.Owner
                 };
-                _context.UserRoles.Add(newUserRole);
+                await _userRoleRepository.AddAsync(newUserRole);
 
                 // Cập nhật trạng thái yêu cầu
                 request.Status = "Approved";
@@ -305,12 +299,15 @@ namespace HotelBooking.application.Services.Domains.UserManagement
 
                 await _upgradeRequestRepository.UpdateAsync(request);
 
-
-                await _dbu.SaveChangesAsync();
-                return true;
+                var saved = await _dbu.SaveChangesAsync() > 0;
+                return saved
+                    ? ResponseFactory.Success(true, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_APPROVED_SUCCESS)
+                    : ResponseFactory.Failure<bool>(StatusCodeResponse.Error, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_APPROVE_FAILED);
             }
-
-            return false;
+            catch (Exception)
+            {
+                return ResponseFactory.Failure<bool>(StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
+            }
         }
 
         // Hàm Helper check Regex (có thể để private ở dưới cùng class Service)

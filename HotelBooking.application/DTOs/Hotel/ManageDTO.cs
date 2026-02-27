@@ -18,7 +18,7 @@ public enum ManageModuleEnum
 public class ManageTypeDTO // Hoặc dùng lại BaseAdminDTO nếu bạn muốn sửa trực tiếp
 {
     public int? Id { get; set; } // Null nếu là module phẳng
-    public string Name { get; set; } = null!;
+    public string Name { get; set; } = string.Empty;
 }
 
 // DTO dùng để hứng tham số đầu vào cho API lấy Menu

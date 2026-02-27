@@ -28,11 +28,14 @@ namespace HotelBooking.api.Controllers.V1.Public
         public async Task<IActionResult> GetCurrentUser()
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-            if (userId == 0) return Unauthorized();
+            if (userId == 0)
+            {
+                return ApiResponseHandlerHelper.HandleResponse(
+                    ResponseFactory.Failure<UserDetailDTO>(StatusCodeResponse.Unauthorized, MessageResponse.Common.BAD_REQUEST));
+            }
 
-            var user = await _userService.GetByIdAsync(userId);
-            if (user == null) return NotFound("User not found.");
-            return Ok(user);
+            var response = await _userService.GetByIdAsync(userId);
+            return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
         /// <summary>

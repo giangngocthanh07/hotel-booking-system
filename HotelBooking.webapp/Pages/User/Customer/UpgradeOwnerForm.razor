@@ -177,6 +177,14 @@ else if (userInfo.Content == null)
             return;
         }
 
+        if (_httpClient == null)
+        {
+            message = "Lỗi: Không thể khởi tạo HTTP client.";
+            alertClass = "alert-danger";
+            SnackbarHelper.Show(Snackbar, StatusCodeResponse.Error, message);
+            return;
+        }
+
         _httpClient.DefaultRequestHeaders.Authorization =
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 

@@ -28,11 +28,14 @@ namespace HotelBooking.api.Controllers.V1.Admin
         public async Task<IActionResult> GetCurrentUser()
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-            if (userId == 0) return Unauthorized();
+            if (userId == 0)
+            {
+                return ApiResponseHandlerHelper.HandleResponse(
+                    ResponseFactory.Failure<UserDetailDTO>(StatusCodeResponse.Unauthorized, MessageResponse.Common.BAD_REQUEST));
+            }
 
-            var user = await _userService.GetByIdAsync(userId);
-            if (user == null) return NotFound("User not found.");
-            return Ok(user);
+            var response = await _userService.GetByIdAsync(userId);
+            return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
         /// <summary>
@@ -41,9 +44,8 @@ namespace HotelBooking.api.Controllers.V1.Admin
         [HttpGet("{userId}")]
         public async Task<IActionResult> GetUserById(int userId)
         {
-            var user = await _userService.GetByIdAsync(userId);
-            if (user == null) return NotFound("User not found.");
-            return Ok(user);
+            var response = await _userService.GetByIdAsync(userId);
+            return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
         /// <summary>
@@ -65,13 +67,13 @@ namespace HotelBooking.api.Controllers.V1.Admin
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (claim == null || string.IsNullOrEmpty(claim.Value))
             {
-                return BadRequest("User identifier claim is missing.");
+                return ApiResponseHandlerHelper.HandleResponse(
+                    ResponseFactory.Failure<bool>(StatusCodeResponse.BadRequest, MessageResponse.Common.BAD_REQUEST));
             }
 
             var adminId = int.Parse(claim.Value);
-            var success = await _userService.ApproveUpgradeToOwnerAsync(requestId, adminId);
-            if (!success) return BadRequest("Cannot approve upgrade request.");
-            return Ok("Approved upgrade request successfully.");
+            var response = await _userService.ApproveUpgradeToOwnerAsync(requestId, adminId);
+            return ApiResponseHandlerHelper.HandleResponse(response);
         }
     }
 }

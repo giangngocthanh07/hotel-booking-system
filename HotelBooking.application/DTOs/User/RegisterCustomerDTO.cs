@@ -1,10 +1,10 @@
 public class RegisterCustomerDTO
 {
-    public string Username { get; set; } = null!;
-    public string FullName { get; set; } = null!;
-    public string Email { get; set; } = null!;
-    public string PhoneNumber { get; set; } = null!;
-    public string Password { get; set; } = null!;
+    public string Username { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string PhoneNumber { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
     private int RoleId = RoleTypeConstDTO.Customer;
 
     public int GetRoleId()
