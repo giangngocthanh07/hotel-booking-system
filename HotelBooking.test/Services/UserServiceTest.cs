@@ -1,6 +1,4 @@
-using Xunit;
 using Moq;
-using System.Threading.Tasks;
 using FluentAssertions;
 
 // 1. Using DTO và Service từ tầng Application
@@ -10,8 +8,9 @@ using HotelBooking.application.Validators.UserManagement.Login; // Nơi chứa L
 
 // 2. Using Entity và Interface Repo từ tầng Infrastructure
 using HotelBooking.infrastructure.Models;
-using System.Linq.Expressions;
-using FluentValidation; // Nơi chứa class User, Room...
+using FluentValidation;
+using HotelBooking.application.Helpers;
+using System.Linq.Expressions; // Nơi chứa class User, Room...
 
 namespace HotelBooking.Tests.Services
 {
@@ -265,6 +264,7 @@ namespace HotelBooking.Tests.Services
         [InlineData("nocapital1@", MessageResponse.UserManagement.Register.UPPERCASE_LETTER_PASSWORD)]     // Thiếu chữ hoa
         [InlineData("NO_LOWER_123", MessageResponse.UserManagement.Register.LOWERCASE_LETTER_PASSWORD)]    // Thiếu chữ thường
         [InlineData("NoSpecialChar1", MessageResponse.UserManagement.Register.SPECIAL_CHARACTER_PASSWORD)]  // Thiếu ký tự đặc biệt
+        [Obsolete]
         public async Task RegisterCustomer_WhenPasswordIsInvalid_ShouldReturnBadRequest(string? invalidPassword, string expectedMsg)
         {
             // 1. ARRANGE
@@ -290,6 +290,338 @@ namespace HotelBooking.Tests.Services
             Verify_Repo_Never_SingleOrDefaultAsync<IUserRepository, User>(_mockUserRepo);
             Verify_Repo_Never_AddAsync<IUserRepository, User>(_mockUserRepo);
         }
+        #endregion
+
+        #region RegisterAdmin Tests
+        // ==========================================================
+        // TEST CASE 1: ĐĂNG KÝ ADMIN THÀNH CÔNG (HAPPY PATH)
+        // ==========================================================
+        [Fact]
+        public async Task RegisterAdmin_WhenInfoValid_ShouldSuccess()
+        {
+            // 1. ARRANGE
+            var input = new RegisterAdminDTO
+            {
+                Username = "admin_new",
+                Email = "admin@gmail.com",
+                Password = "AdminPass@123",
+                FullName = "Admin User",
+                PhoneNumber = "0912345678"
+            };
+
+            // Giả lập DB chưa có ai trùng Username hay Email
+            MockRepo_Find_Returns<IUserRepository, User>(_mockUserRepo, null);
+
+            // 2. ACT
+            var result = await _userService.RegisterAdmin(input);
+
+            // 3. ASSERT
+            result.StatusCode.Should().Be(StatusCodeResponse.Success);
+            result.Message.Should().Be(MessageResponse.UserManagement.Register.SUCCESS);
+            result.Content.Should().NotBeNull();
+            result.Content.IsSuccess.Should().BeTrue();
+
+            // Verify hàm AddAsync gọi 1 lần
+            Verify_Repo_AddAsync<IUserRepository, User>(_mockUserRepo, 1);
+            // Verify SaveChangesAsync gọi 2 lần (1 lần lưu User, 1 lần lưu Role)
+            Verify_Saved(2);
+        }
+
+        // ==========================================================
+        // TEST CASE 2: ADMIN - LỖI TRÙNG USERNAME
+        // ==========================================================
+        [Fact]
+        public async Task RegisterAdmin_WhenUsernameExists_ShouldReturnConflict()
+        {
+            // 1. ARRANGE
+            var input = new RegisterAdminDTO
+            {
+                Username = "admin_trung",
+                Email = "new_admin@gmail.com",
+                Password = "AdminPass@123",
+                FullName = "Admin Test",
+                PhoneNumber = "0912345678"
+            };
+
+            var existingAdmin = new User { UserName = "admin_trung", Email = "old_admin@gmail.com" };
+            MockRepo_Find_Returns(_mockUserRepo, existingAdmin);
+
+            // 2. ACT
+            var result = await _userService.RegisterAdmin(input);
+
+            // 3. ASSERT
+            result.Content.Should().BeNull();
+            result.Message.Should().Be(MessageResponse.UserManagement.Register.USERNAME_EXIST);
+            result.StatusCode.Should().Be(StatusCodeResponse.Conflict);
+
+            Verify_Repo_Never_AddAsync<IUserRepository, User>(_mockUserRepo);
+        }
+
+        // ==========================================================
+        // TEST CASE 3: ADMIN - INVALID EMAIL
+        // ==========================================================
+        [Fact]
+        public async Task RegisterAdmin_WhenEmailFormatIsInvalid_ShouldReturnBadRequest()
+        {
+            // 1. ARRANGE
+            var input = new RegisterAdminDTO
+            {
+                Username = "admin_test",
+                Email = "invalid_email_format",
+                Password = "AdminPass@123",
+                FullName = "Admin Test",
+                PhoneNumber = "0912345678"
+            };
+
+            // 2. ACT
+            var result = await _userService.RegisterAdmin(input);
+
+            // 3. ASSERT
+            result.Content.Should().BeNull();
+            result.Message.Should().Be(MessageResponse.UserManagement.Register.INVALID_EMAIL);
+            result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+
+            Verify_Repo_Never_SingleOrDefaultAsync<IUserRepository, User>(_mockUserRepo);
+            Verify_Repo_Never_AddAsync<IUserRepository, User>(_mockUserRepo);
+        }
+
+        // ==========================================================
+        // TEST CASE 4: ADMIN - INVALID PHONE NUMBER
+        // ==========================================================
+        [Theory]
+        [InlineData("123", MessageResponse.UserManagement.Register.INVALID_PHONE)]        // Quá ngắn
+        [InlineData("012345678", MessageResponse.UserManagement.Register.INVALID_PHONE)]  // 9 chữ số
+        [InlineData("01234567890", MessageResponse.UserManagement.Register.INVALID_PHONE)]// 11 chữ số
+        [InlineData("091234567a", MessageResponse.UserManagement.Register.INVALID_PHONE)] // Có chữ
+        public async Task RegisterAdmin_WhenPhoneNumberIsInvalid_ShouldReturnBadRequest(string invalidPhone, string expectedMsg)
+        {
+            // 1. ARRANGE
+            var input = new RegisterAdminDTO
+            {
+                Username = "admin_test",
+                Email = "admin@gmail.com",
+                Password = "AdminPass@123",
+                FullName = "Admin Test",
+                PhoneNumber = invalidPhone
+            };
+
+            // 2. ACT
+            var result = await _userService.RegisterAdmin(input);
+
+            // 3. ASSERT
+            result.Content.Should().BeNull();
+            result.Message.Should().Be(expectedMsg);
+            result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+
+            Verify_Repo_Never_SingleOrDefaultAsync<IUserRepository, User>(_mockUserRepo);
+            Verify_Repo_Never_AddAsync<IUserRepository, User>(_mockUserRepo);
+        }
+
+        // ==========================================================
+        // TEST CASE 5: ADMIN - DATABASE ERROR
+        // ==========================================================
+        [Fact]
+        public async Task RegisterAdmin_WhenExceptionOccurs_ShouldReturnError()
+        {
+            // 1. ARRANGE
+            var input = new RegisterAdminDTO
+            {
+                Username = "admin_test",
+                Email = "admin@gmail.com",
+                Password = "AdminPass@123",
+                FullName = "Admin Test",
+                PhoneNumber = "0912345678"
+            };
+
+            MockRepo_Find_Returns<IUserRepository, User>(_mockUserRepo, null);
+            MockRepo_Add_ThrowsException<IUserRepository, User>(_mockUserRepo);
+
+            // 2. ACT
+            var result = await _userService.RegisterAdmin(input);
+
+            // 3. ASSERT
+            result.Content.Should().BeNull();
+            result.Message.Should().Be(MessageResponse.UserManagement.Register.FAIL);
+            result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        }
+        #endregion
+
+        #region LoginUser Tests
+        // ==========================================================
+        // TEST CASE 1: ĐĂNG NHẬP THÀNH CÔNG (HAPPY PATH)
+        // ==========================================================
+        [Fact]
+        public async Task LoginUser_WhenCredentialsValid_ShouldSuccess()
+        {
+            // 1. ARRANGE
+            var input = new LoginUserDTO
+            {
+                UsernameOrEmail = "testuser",
+                Password = "ValidPass@123"
+            };
+
+            // Giả lập DB trả về user có role
+            var user = new User
+            {
+                Id = 1,
+                UserName = "testuser",
+                Email = "test@gmail.com",
+                PasswordHash = PasswordHelper.HashPassword("ValidPass@123"),
+                FullName = "Test User",
+                AvatarUrl = "https://example.com/avatar.jpg",
+                UserRoles = new List<UserRole>
+            {
+                new UserRole { RoleId = RoleTypeConstDTO.Customer, Role = new Role { Name = "Customer" } }
+            }
+            };
+
+            _mockUserRepo.Setup(x => x.GetUserWithRoles(It.IsAny<Expression<Func<User, bool>>>()))
+                .ReturnsAsync(user);
+
+            // 2. ACT
+            var result = await _userService.LoginUser(input);
+
+            // 3. ASSERT
+            result.StatusCode.Should().Be(StatusCodeResponse.Success);
+            result.Message.Should().Be(MessageResponse.UserManagement.Login.SUCCESS);
+            result.Content.Should().NotBeNull();
+            result.Content.AccessToken.Should().NotBeNullOrEmpty();
+            result.Content.FullName.Should().Be("Test User");
+            result.Content.Roles.Should().Contain("Customer");
+        }
+
+        // ==========================================================
+        // TEST CASE 2: ĐĂNG NHẬP - USER KHÔNG TỒN TẠI
+        // ==========================================================
+        [Fact]
+        public async Task LoginUser_WhenUserNotFound_ShouldReturnNotFound()
+        {
+            // 1. ARRANGE
+            var input = new LoginUserDTO
+            {
+                UsernameOrEmail = "notexist",
+                Password = "ValidPass@123"
+            };
+
+            _mockUserRepo.Setup(x => x.GetUserWithRoles(It.IsAny<Expression<Func<User, bool>>>()))
+            .ReturnsAsync((User?)null);
+
+            // 2. ACT
+            var result = await _userService.LoginUser(input);
+
+            // 3. ASSERT
+            result.Content.Should().BeNull();
+            result.Message.Should().Be(MessageResponse.UserManagement.Login.USER_NOT_FOUND);
+            result.StatusCode.Should().Be(StatusCodeResponse.NotFound);
+        }
+
+        // ==========================================================
+        // TEST CASE 3: ĐĂNG NHẬP - PASSWORD SAI
+        // ==========================================================
+        [Fact]
+        public async Task LoginUser_WhenPasswordIsIncorrect_ShouldReturnNotFound()
+        {
+            // 1. ARRANGE
+            var input = new LoginUserDTO
+            {
+                UsernameOrEmail = "testuser",
+                Password = "WrongPassword@123"
+            };
+
+            var user = new User
+            {
+                Id = 1,
+                UserName = "testuser",
+                Email = "test@gmail.com",
+                PasswordHash = PasswordHelper.HashPassword("CorrectPass@123"),
+                FullName = "Test User",
+                UserRoles = new List<UserRole>()
+            };
+
+            _mockUserRepo.Setup(x => x.GetUserWithRoles(It.IsAny<Expression<Func<User, bool>>>()))
+                .ReturnsAsync(user);
+
+            // 2. ACT
+            var result = await _userService.LoginUser(input);
+
+            // 3. ASSERT
+            result.Content.Should().BeNull();
+            result.Message.Should().Be(MessageResponse.UserManagement.Login.PASSWORD_INCORRECT);
+            result.StatusCode.Should().Be(StatusCodeResponse.NotFound);
+        }
+
+        // ==========================================================
+        // TEST CASE 4: ĐĂNG NHẬP - INVALID EMAIL FORMAT
+        // ==========================================================
+        [Fact]
+        public async Task LoginUser_WhenEmailFormatIsInvalid_ShouldReturnBadRequest()
+        {
+            // 1. ARRANGE
+            var input = new LoginUserDTO
+            {
+                UsernameOrEmail = "invalid_email",
+                Password = "ValidPass@123"
+            };
+
+            // 2. ACT
+            var result = await _userService.LoginUser(input);
+
+            // 3. ASSERT
+            result.Content.Should().BeNull();
+            result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+
+            // Verify KHÔNG gọi GetUserWithRoles vì validation bị fail trước đó
+            _mockUserRepo.Verify(x => x.GetUserWithRoles(It.IsAny<Expression<Func<User, bool>>>()), Times.Never);
+        }
+
+        // ==========================================================
+        // TEST CASE 5: ĐĂNG NHẬP - EMPTY PASSWORD
+        // ==========================================================
+        [Fact]
+        public async Task LoginUser_WhenPasswordIsEmpty_ShouldReturnBadRequest()
+        {
+            // 1. ARRANGE
+            var input = new LoginUserDTO
+            {
+                UsernameOrEmail = "testuser",
+                Password = ""
+            };
+
+            // 2. ACT
+            var result = await _userService.LoginUser(input);
+
+            // 3. ASSERT
+            result.Content.Should().BeNull();
+            result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+
+            // Verify KHÔNG gọi GetUserWithRoles
+            _mockUserRepo.Verify(x => x.GetUserWithRoles(It.IsAny<Expression<Func<User, bool>>>()), Times.Never);
+        }
+
+        // ==========================================================
+        // TEST CASE 6: ĐĂNG NHẬP - DATABASE ERROR
+        // ==========================================================
+        [Fact]
+        public async Task LoginUser_WhenExceptionOccurs_ShouldReturnError()
+        {
+            // 1. ARRANGE
+            var input = new LoginUserDTO
+            {
+                UsernameOrEmail = "testuser",
+                Password = "ValidPass@123"
+            };
+
+            _mockUserRepo.Setup(x => x.GetUserWithRoles(It.IsAny<Expression<Func<User, bool>>>()))
+                .ThrowsAsync(new Exception("Database Connection Error"));
+
+            // 2. ACT
+            var result = await _userService.LoginUser(input);
+
+            // 3. ASSERT
+            result.Content.Should().BeNull();
+            result.Message.Should().Be(MessageResponse.UserManagement.Login.ERROR_IN_SERVER);
+            result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        }
     }
-    #endregion
 }
+        #endregion

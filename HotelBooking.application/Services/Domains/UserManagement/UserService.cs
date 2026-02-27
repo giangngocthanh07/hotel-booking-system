@@ -31,6 +31,7 @@ namespace HotelBooking.application.Services.Domains.UserManagement
         private readonly IValidator<LoginUserDTO> _loginValidator;
 
         public UserService(IUserRepository userRepository,
+                           IUserRepository @object,
                            IUserRoleRepository userRoleRepository,
                            IUpgradeRequestRepository upgradeRequestRepository,
                            JwtAuthService jwtAuthService,
