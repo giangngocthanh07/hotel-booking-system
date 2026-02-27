@@ -69,7 +69,7 @@
                                     </a>
                                 </li>
                             }
-                            @if (userRoles.Contains("Customer"))
+                            @if (userRoles.Contains("Customer") && !userRoles.Contains("Owner"))
                             {
                                 <li>
                                     <a class="dropdown-item" href="/upgrade-owner">

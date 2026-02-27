@@ -4,6 +4,7 @@
 @inject IHttpClientFactory HttpClientFactory
 @inject Blazored.LocalStorage.ILocalStorageService _localStorage
 @inject MudBlazor.ISnackbar Snackbar
+@inject NavigationManager NavigationManager
 
 @using MudBlazor
 @using System.Net.Http.Json
@@ -141,6 +142,12 @@ else
             // Nếu userInfo có property Status thì load nó, không thì set mặc định
             requestStatus = userInfo?.RequestStatus ?? "None";
             isFormReadOnly = requestStatus == "Pending" || requestStatus == "Approved";
+
+            // Nếu request approved thì redirect về owner-dashboard
+            if (requestStatus == "Approved")
+            {
+                NavigationManager.NavigateTo("/owner-dashboard");
+            }
         }
         catch (Exception ex)
         {
