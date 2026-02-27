@@ -19,7 +19,6 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
 
     public class HotelService : IHotelService
     {
-        public HotelBookingDBContext _context;
         private readonly IHotelRepository _hotelRepository;
         private readonly IHotelImageRepository _hotelImageRepository;
         private readonly IHotelAmenityRepository _hotelAmenityRepository;
@@ -30,9 +29,8 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
         private readonly IPhotoService _photoService;
         public IUnitOfWork _dbu;
 
-        public HotelService(HotelBookingDBContext context, IHotelRepository hotelRepository, IHotelImageRepository hotelImageRepository, IHotelAmenityRepository hotelAmenityRepository, IHotelPolicyRepository hotelPolicyRepository, ICountryRepository countryRepository, ICityRepository cityRepository,   IImageHelper imageHelper, IPhotoService photoService, IUnitOfWork dbu)
+        public HotelService(IHotelRepository hotelRepository, IHotelImageRepository hotelImageRepository, IHotelAmenityRepository hotelAmenityRepository, IHotelPolicyRepository hotelPolicyRepository, ICountryRepository countryRepository, ICityRepository cityRepository, IImageHelper imageHelper, IPhotoService photoService, IUnitOfWork dbu)
         {
-            _context = context;
             _hotelRepository = hotelRepository;
             _hotelImageRepository = hotelImageRepository;
             _hotelAmenityRepository = hotelAmenityRepository;
@@ -53,16 +51,28 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
         public async Task<List<SearchHotelResultDTO>> GetSearchOptionsAsync(string cityName, DateTime? checkIn, DateTime? checkOut,
         int? adults, int? children, int? rooms)
         {
-            var hotels = await _context.Database
-        .SqlQueryRaw<SearchHotelResultDTO>(
-            "EXEC sp_SearchHotels @CityName={0}, @CheckIn={1}, @CheckOut={2}, @Adults={3}, @Children={4}, @Rooms={5}",
-            cityName, checkIn, checkOut, adults, children, rooms)
-        .ToListAsync();
+            var results = await _hotelRepository.GetSearchHotelsAsync(cityName, checkIn, checkOut, adults, children, rooms);
 
-            return hotels;
+            return results.Select(r => new SearchHotelResultDTO
+            {
+                Id = r.Id,
+                Name = r.Name,
+                Address = r.Address,
+                Description = string.Empty, // SP không trả Description
+                CityName = r.CityName,
+                CountryName = r.CountryName,
+                CoverImageUrl = r.CoverImageUrl ?? string.Empty,
+                PriceFrom = r.PriceFrom,
+                MaxAdultCapacity = r.MaxAdultCapacity,
+                MaxChildCapacity = r.MaxChildCapacity,
+                AvgRating = r.AvgRating,
+                ReviewCount = r.ReviewCount,
+                AvailableRooms = r.AvailableRooms
+            }).ToList();
         }
 
         #region 
+        [Obsolete]
         public async Task<ApiResponse<List<CityDTO>>> GetAllCitiesVNAsync()
         {
             try
@@ -112,6 +122,7 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
             }
         }
 
+        [Obsolete]
         public async Task<ApiResponse<List<CityDTO>>> GetAllCitiesAsync()
         {
             try
@@ -162,6 +173,7 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
 
         #region POST HOTEL (Basic Info + Amenities + Images)
         // =============== ĐĂNG TẢI KHÁCH SẠN MỚI ================
+        [Obsolete]
         public async Task<ApiResponse<CreateHotelResponseDTO>> PostHotelAsync(CreateHotelDTO newHotel, int ownerId)
         {
             try
@@ -274,6 +286,7 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
         #endregion
 
         // Test: Up ảnh lên Cloudinary vào folder có mã userId
+        [Obsolete]
         public async Task<ApiResponse<UploadResultDTO>> TestUploadImageToCloudinaryAsync(UploadFileDTO file, int userId)
         {
             var uploadResult = new UploadResultDTO();

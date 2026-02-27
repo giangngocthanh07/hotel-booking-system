@@ -26,7 +26,7 @@ else
 
 
 @code {
-    public List<SearchHotelResultDTO> Hotels;
+    public List<SearchHotelResultDTO>? Hotels;
     HttpClient _httpClient;
     protected override async Task OnInitializedAsync()
     {
@@ -46,11 +46,11 @@ else
 
 
         var apiUrl =
-        $"hotel/get-search-options?cityName={destination}&checkin={checkin}&checkout={checkout}&adults={adults}&children={children}&rooms={rooms}";
+        $"v1/hotel/get-search-options?cityName={destination}&checkin={checkin}&checkout={checkout}&adults={adults}&children={children}&rooms={rooms}";
 
         Hotels = await _httpClient.GetFromJsonAsync<List<SearchHotelResultDTO>>(apiUrl);
 
-        Console.WriteLine($"Fetched {Hotels.Count} hotels from API.");
+        Console.WriteLine($"Fetched {Hotels?.Count} hotels from API.");
 
     }
 }

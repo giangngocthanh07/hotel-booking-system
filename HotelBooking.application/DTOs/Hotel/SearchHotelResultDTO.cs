@@ -1,11 +1,12 @@
 public class SearchHotelResultDTO
 {
     public int Id { get; set; }                // h.Id
-    public string Name { get; set; }           // h.Name
-    public string Address { get; set; }        // h.Address
-    public string CityName { get; set; }       // c.Name
-    public string CountryName { get; set; }    // co.Name
-    public string CoverImageUrl { get; set; }  // h.CoverImageUrl
+    public string Name { get; set; } = string.Empty;           // h.Name
+    public string Address { get; set; } = string.Empty;     // h.Address
+    public string? Description { get; set; } = string.Empty; // h.Description
+    public string CityName { get; set; } = string.Empty;       // c.Name
+    public string CountryName { get; set; } = string.Empty;   // co.Name
+    public string CoverImageUrl { get; set; } = string.Empty; // h.CoverImageUrl
 
     // Giá ép kiểu DECIMAL(18,2) trong SP → DTO để decimal
     public decimal PriceFrom { get; set; }
