@@ -194,6 +194,10 @@ public static class MessageResponse
             public const string EMAIL_EXIST = "Email đã tồn tại!";
             public const string INVALID_EMAIL = "Định dạng email không hợp lệ!";
 
+            // Phone validation messages
+            public const string EMPTY_PHONE = "Số điện thoại không được để trống!";
+            public const string INVALID_PHONE = "Số điện thoại phải là 10 chữ số!";
+
             // Password validation messages
             public const string SHORT_PASSWORD = "Mật khẩu phải có ít nhất 8 ký tự!";
             public const string EMPTY_PASSWORD = "Mật khẩu không được để trống!";
