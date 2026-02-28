@@ -59,7 +59,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="6" class="text-center">No requests found</td>
+                        <td colspan="6" class="text-center">@MessageResponse.RequestManagement.UpgradeRequest.NO_REQUESTS_FOUND</td>
                     </tr>
                 }
             </tbody>
@@ -101,19 +101,4 @@
             NavigationManager.NavigateTo($"/admin/requests/details/{requestId}");
         }
     }
-
-    private async Task ApproveRequest(int requestId)
-    {
-        // TODO: Implement API call to approve request
-        // await HttpClient.PutAsync(...);
-    }
-
-    private async Task RejectRequest(int requestId)
-    {
-        // TODO: Implement API call to reject request
-        // await HttpClient.PutAsync(...);
-    }
-
-
-
 }

@@ -61,7 +61,7 @@ public static class MessageResponse
             public const string INVALID_AMOUNT = "Số tiền phải lớn hơn 0!";
             public const string INVALID_DIFF_TIME = "Mốc thời gian chuẩn phải tối thiểu cách nhau từ 1 tiếng!";
             public const string MAX_DIFF_TIME = "Mốc thời gian chuẩn không được vượt quá 23 tiếng!";
-            public const string INVALID_AGE_RANGE = "Khoảng tuổi không hợp lệ!"; 
+            public const string INVALID_AGE_RANGE = "Khoảng tuổi không hợp lệ!";
         }
 
         // Service Messages
@@ -185,7 +185,7 @@ public static class MessageResponse
         public const string INVALID_PAGE_INDEX = "Số trang phải lớn hơn 0!";
         public const string MISSING_PAGE_SIZE = "Kích thước trang không được để trống!";
         public const string INVALID_PAGE_SIZE = "Kích thước trang phải lớn hơn 0!";
-        public const string PAGE_SIZE_TOO_LARGE = "Kích thước trang tối đa là 100 (Chống DDOS)!";
+        public const string PAGE_SIZE_TOO_LARGE = "Kích thước trang tối đa là 100!";
     }
 
     // =====================================================
@@ -194,6 +194,26 @@ public static class MessageResponse
     public static class ManageMenu
     {
         public const string INVALID_MODULE = "Module không hợp lệ!";
+    }
+
+    // =====================================================
+    // 7. UPGRADE REQUEST MESSAGES
+    // =====================================================
+    public static class RequestManagement
+    {
+        public static class UpgradeRequest
+        {
+            public const string NOT_FOUND = "Không tìm thấy yêu cầu!";
+            public const string ERROR_LOADING_DETAILS = "Lỗi khi tải chi tiết yêu cầu!";
+            public const string ERROR_LOADING_STATS = "Lỗi khi tải thống kê";
+            public const string ERROR_LOADING_PAGED = "Lỗi khi tải danh sách yêu cầu";
+            public const string NO_REQUESTS_FOUND = "Không có yêu cầu nào";
+
+            public const string APPROVE_SUCCESS = "Phê duyệt yêu cầu thành công!";
+            public const string APPROVE_FAILED = "Phê duyệt yêu cầu thất bại!";
+            public const string REJECT_SUCCESS = "Từ chối yêu cầu thành công!";
+            public const string REJECT_FAILED = "Từ chối yêu cầu thất bại!";
+        }
     }
 
     // =====================================================

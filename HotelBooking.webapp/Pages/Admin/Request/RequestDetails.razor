@@ -136,13 +136,13 @@ _httpClient.GetFromJsonAsync<ApiResponse<UpgradeRequestVM>>($"v1/admin/Request/r
             else
             {
                 toastClass = "bg-danger";
-                toastMessage = "Request not found.";
+                toastMessage = MessageResponse.RequestManagement.UpgradeRequest.NOT_FOUND;
             }
         }
         catch (Exception)
         {
             toastClass = "bg-danger";
-            toastMessage = "Error loading request details.";
+            toastMessage = MessageResponse.RequestManagement.UpgradeRequest.ERROR_LOADING_DETAILS;
         }
     }
 
@@ -167,12 +167,12 @@ _httpClient.GetFromJsonAsync<ApiResponse<UpgradeRequestVM>>($"v1/admin/Request/r
         {
             request!.Status = "Approved";
             toastClass = "bg-success";
-            toastMessage = "Request approved successfully!";
+            toastMessage = MessageResponse.RequestManagement.UpgradeRequest.APPROVE_SUCCESS;
         }
         else
         {
             toastClass = "bg-danger";
-            toastMessage = "Failed to approve request.";
+            toastMessage = MessageResponse.RequestManagement.UpgradeRequest.APPROVE_FAILED;
         }
     }
 
@@ -187,12 +187,12 @@ _httpClient.GetFromJsonAsync<ApiResponse<UpgradeRequestVM>>($"v1/admin/Request/r
                 request.Status = "Rejected";
             }
             toastClass = "bg-success";
-            toastMessage = "Request rejected successfully!";
+            toastMessage = MessageResponse.RequestManagement.UpgradeRequest.REJECT_SUCCESS;
         }
         else
         {
             toastClass = "bg-danger";
-            toastMessage = "Failed to reject request.";
+            toastMessage = MessageResponse.RequestManagement.UpgradeRequest.REJECT_FAILED;
         }
     }
 }

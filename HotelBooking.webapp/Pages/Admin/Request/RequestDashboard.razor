@@ -101,7 +101,7 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading stats: {ex.Message}");
+            Console.WriteLine($"{MessageResponse.RequestManagement.UpgradeRequest.ERROR_LOADING_STATS}: {ex.Message}");
         }
     }
 
@@ -128,12 +128,12 @@
             }
             else
             {
-                Console.WriteLine($"Failed to load paged requests. Status: {response.StatusCode}");
+                Console.WriteLine($"{MessageResponse.RequestManagement.UpgradeRequest.ERROR_LOADING_PAGED}. Status: {response.StatusCode}");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error fetching paged requests: {ex.Message}");
+            Console.WriteLine($"{MessageResponse.RequestManagement.UpgradeRequest.ERROR_LOADING_PAGED}: {ex.Message}");
             pagedRequests = new List<UpgradeRequestVM>();
         }
         finally
