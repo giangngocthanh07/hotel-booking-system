@@ -16,6 +16,11 @@ public interface IUpgradeRequestRepository : IRepository<UpgradeRequest>
         Expression<Func<UpgradeRequest, bool>>? filter,
         int pageIndex,
         int pageSize);
+    
+    /// <summary>
+    /// Lấy danh sách các Status distinct từ DB
+    /// </summary>
+    Task<List<string>> GetDistinctStatusesAsync();
 }
 
 public class UpgradeRequestRepository : Repository<UpgradeRequest>, IUpgradeRequestRepository
@@ -64,5 +69,16 @@ public class UpgradeRequestRepository : Repository<UpgradeRequest>, IUpgradeRequ
             .ToListAsync();
 
         return (items, totalCount);
+    }
+
+    public async Task<List<string>> GetDistinctStatusesAsync()
+    {
+        return await _dbSet
+            .AsNoTracking()
+            .Where(r => r.Status != null)
+            .Select(r => r.Status!)
+            .Distinct()
+            .OrderBy(s => s)
+            .ToListAsync();
     }
 }

@@ -21,6 +21,17 @@ namespace HotelBooking.api.Controllers.V1.Admin
         }
 
         /// <summary>
+        /// Lấy danh sách các Status từ DB (để Swagger biết mà nhập)
+        /// </summary>
+        [HttpGet("statuses")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetAllStatusesAsync()
+        {
+            var response = await _upgradeRequestService.GetAllStatusesAsync();
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
+        /// <summary>
         /// Lấy danh sách Request có phân trang (Reuse PagingRequest)
         /// </summary>
         [HttpGet("get-requests-paged")]

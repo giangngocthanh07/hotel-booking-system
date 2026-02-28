@@ -18,6 +18,11 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
         /// Lấy danh sách Request có phân trang (Reuse PagingRequest, PagedResult)
         /// </summary>
         public Task<ApiResponse<PagedResult<UpgradeRequestDTO>>> GetPagedRequestsAsync(PagingRequest pagingRequest, string? status = null);
+        
+        /// <summary>
+        /// Lấy danh sách các Status từ DB (để Swagger biết mà nhập)
+        /// </summary>
+        public Task<ApiResponse<List<string>>> GetAllStatusesAsync();
     }
 
     public class UpgradeRequestService : IUpgradeRequestService
@@ -324,6 +329,23 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
             catch (Exception)
             {
                 return ResponseFactory.ServerError<PagedResult<UpgradeRequestDTO>>();
+            }
+        }
+
+        /// <summary>
+        /// Lấy danh sách các Status từ DB
+        /// </summary>
+        [Obsolete]
+        public async Task<ApiResponse<List<string>>> GetAllStatusesAsync()
+        {
+            try
+            {
+                var statuses = await _upgradeRequestRepo.GetDistinctStatusesAsync();
+                return ResponseFactory.Success(statuses, MessageResponse.Common.GET_SUCCESSFULLY);
+            }
+            catch (Exception)
+            {
+                return ResponseFactory.ServerError<List<string>>();
             }
         }
     }
