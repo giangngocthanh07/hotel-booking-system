@@ -1,5 +1,6 @@
 ﻿@using System.Net.Http
 @using System.Net.Http.Json
+@using System.Net.Http.Headers
 @using System.Text.Json
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Authorization
@@ -9,14 +10,30 @@
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.AspNetCore.Components.Rendering
 @using Microsoft.JSInterop
+
+@*  *@
 @using HotelBooking.webapp
 @using HotelBooking.webapp.Shared
 @using HotelBooking.webapp.Helpers
 @using HotelBooking.webapp.Components
 @using HotelBooking.webapp.Components.Manage
+
+@* ViewModels *@
 @using HotelBooking.webapp.ViewModels
+@using HotelBooking.webapp.ViewModels.Request
+
+@* Pages *@
 @using HotelBooking.webapp.Pages
+
+@* Admin Pages *@
+@using HotelBooking.webapp.Pages.Admin
+@using HotelBooking.webapp.Pages.Admin.Request
+@using HotelBooking.webapp.Pages.Admin.Request.Components
+@using HotelBooking.webapp.Pages.Admin.Request.UpgradeOwner
+@using HotelBooking.webapp.Pages.Admin.Request.UpgradeOwner.Components
 @using HotelBooking.webapp.Components.Manage.Groups
+
+@* MudBlazor *@
 @using MudBlazor
 @using MudBlazor.Components
 @using MudBlazor.Extensions

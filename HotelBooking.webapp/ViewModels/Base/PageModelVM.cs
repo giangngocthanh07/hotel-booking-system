@@ -16,5 +16,7 @@ public class PagedResult<T>
     // Backend đã tính toán và gửi số này về trong JSON,
     // Frontend chỉ việc hứng lấy (get; set;)
     public int TotalPages { get; set; }
+    public bool HasPreviousPage => PageIndex > 1;
+    public bool HasNextPage => PageIndex < TotalPages;
 
 }

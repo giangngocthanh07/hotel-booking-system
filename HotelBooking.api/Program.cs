@@ -21,6 +21,7 @@ using HotelBooking.application.Validators.AdminManagement;
 
 
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Service EF
@@ -73,6 +74,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IHotelService, HotelService>();
 builder.Services.AddScoped<IUpgradeRequestService, UpgradeRequestService>();
+builder.Services.AddScoped<IRequestOverviewService, RequestOverviewService>();
 builder.Services.AddScoped<IPhotoService, PhotoService>();
 
 // DI for Admin Management Services
@@ -122,6 +124,7 @@ builder.Services.AddScoped<IValidator<GetRoomAttributeRequest>, GetRoomAttribute
 builder.Services.AddScoped<IValidator<RegisterCustomerDTO>, HotelBooking.application.Validators.UserManagement.Register.RegisterCustomerValidator>();
 builder.Services.AddScoped<IValidator<RegisterAdminDTO>, HotelBooking.application.Validators.UserManagement.Register.RegisterAdminValidator>();
 builder.Services.AddScoped<IValidator<LoginUserDTO>, HotelBooking.application.Validators.UserManagement.Login.LoginValidator>();
+builder.Services.AddScoped<IValidator<CreateUpgradeRequestDTO>, HotelBooking.application.Validators.UserManagement.CreateUpgradeRequestValidator>();
 
 
 

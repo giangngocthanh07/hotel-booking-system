@@ -8,7 +8,7 @@ public interface IUpgradeRequestRepository : IRepository<UpgradeRequest>
     // Add custom methods for UpgradeRequest here if needed
     Task<IEnumerable<UpgradeRequest>> GetPendingByIdAsync(int id);
     Task<IEnumerable<UpgradeRequest>> GetAllPendingRequestsAsync();
-    
+
     /// <summary>
     /// Lấy danh sách Request có phân trang, Include User
     /// </summary>
@@ -16,11 +16,22 @@ public interface IUpgradeRequestRepository : IRepository<UpgradeRequest>
         Expression<Func<UpgradeRequest, bool>>? filter,
         int pageIndex,
         int pageSize);
-    
+
     /// <summary>
-    /// Lấy danh sách các Status distinct từ DB
+    /// Lấy thống kê raw cho dashboard
     /// </summary>
-    Task<List<string>> GetDistinctStatusesAsync();
+    Task<(int Total, int Pending, int Approved, int Rejected, int Cancelled, int Today, int ThisWeek, int ThisMonth)> GetStatsRawAsync();
+
+    /// <summary>
+    /// Lấy requests gần đây
+    /// </summary>
+    Task<List<UpgradeRequest>> GetRecentAsync(int count);
+
+    /// <summary>
+    /// Lấy tất cả request của 1 user (bao gồm cả đã xử lý)
+    /// </summary>
+    Task<List<UpgradeRequest>> GetByUserIdAsync(int userId);
+    Task<List<string>?> GetDistinctStatusesAsync();
 }
 
 public class UpgradeRequestRepository : Repository<UpgradeRequest>, IUpgradeRequestRepository
@@ -71,14 +82,52 @@ public class UpgradeRequestRepository : Repository<UpgradeRequest>, IUpgradeRequ
         return (items, totalCount);
     }
 
-    public async Task<List<string>> GetDistinctStatusesAsync()
+    public async Task<(int Total, int Pending, int Approved, int Rejected, int Cancelled, int Today, int ThisWeek, int ThisMonth)> GetStatsRawAsync()
+    {
+        var today = DateTime.Today;
+        var weekStart = today.AddDays(-(int)today.DayOfWeek);
+        var monthStart = new DateTime(today.Year, today.Month, 1);
+
+        var allRequests = await _dbSet.AsNoTracking().ToListAsync();
+
+        return (
+            Total: allRequests.Count,
+            Pending: allRequests.Count(r => r.Status == "Pending"),
+            Approved: allRequests.Count(r => r.Status == "Approved"),
+            Rejected: allRequests.Count(r => r.Status == "Rejected"),
+            Cancelled: allRequests.Count(r => r.Status == "Cancelled"),
+            Today: allRequests.Count(r => r.RequestedAt.Date == today),
+            ThisWeek: allRequests.Count(r => r.RequestedAt >= weekStart),
+            ThisMonth: allRequests.Count(r => r.RequestedAt >= monthStart)
+        );
+    }
+
+    public async Task<List<UpgradeRequest>> GetRecentAsync(int count)
     {
         return await _dbSet
             .AsNoTracking()
-            .Where(r => r.Status != null)
-            .Select(r => r.Status!)
-            .Distinct()
-            .OrderBy(s => s)
+            .Include(r => r.User)
+            .OrderByDescending(r => r.RequestedAt)
+            .Take(count)
+            .ToListAsync();
+    }
+
+    public async Task<List<string>?> GetDistinctStatusesAsync()
+    {
+        return await _dbSet.AsNoTracking()
+                           .Select(r => r.Status)
+                           .Where(s => s != null)
+                           .Distinct()
+                           .ToListAsync();
+    }
+
+    public async Task<List<UpgradeRequest>> GetByUserIdAsync(int userId)
+    {
+        return await _dbSet
+            .AsNoTracking()
+            .Include(r => r.User)
+            .Where(r => r.UserId == userId)
+            .OrderByDescending(r => r.RequestedAt)
             .ToListAsync();
     }
 }

@@ -1,0 +1,346 @@
+@* filepath: e:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.webapp\Pages\Admin\Requests\UpgradeOwner\Index.razor *@
+@page "/admin/requests/upgrade-owner"
+@implements IDisposable
+@using HotelBooking.webapp.ViewModels
+@using HotelBooking.webapp.ViewModels.Request
+@using System.Net.Http.Headers
+
+@attribute [Authorize(Roles = "Admin")]
+@layout AdminLayout
+
+@inject NavigationManager NavigationManager
+@inject IHttpClientFactory _httpClientFactory
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+@inject IJSRuntime JSRuntime
+@inject ISnackbar Snackbar
+
+<PageTitle>Quản lý Yêu cầu Nâng cấp Owner</PageTitle>
+
+<div class="container-fluid py-4">
+    @* Header *@
+    <div class="text-center mb-4">
+        <h2 class="mb-1">
+            <i class="fas fa-user-plus text-primary me-2"></i>
+            Quản lý Yêu cầu Nâng cấp Owner
+        </h2>
+    </div>
+
+    @* Stats Cards Component *@
+    <UpgradeStatsCard Stats="@stats" 
+                      SelectedStatus="@selectedStatus" 
+                      OnStatusClick="FilterByStatus" />
+
+    @* Filters Component *@
+    <UpgradeFilters SearchTerm="@searchTerm"
+                    SearchTermChanged="OnSearchTermChanged"
+                    SelectedStatus="@selectedStatus"
+                    SelectedStatusChanged="OnSelectedStatusChanged"
+                    PageSize="@pageSize"
+                    PageSizeChanged="OnPageSizeChanged"
+                    StatusList="@statusList"
+                    OnApply="ApplyFilters"
+                    OnReset="ResetFilters" />
+
+    @* Table Component *@
+    <UpgradeTable Requests="@FilteredRequests"
+                  IsLoading="@isLoading"
+                  CurrentPage="@currentPage"
+                  PageSize="@pageSize"
+                  TotalCount="@totalCount"
+                  TotalPages="@totalPages"
+                  DisplayCount="@FilteredRequests.Count()"
+                  SelectedStatus="@selectedStatus"
+                  SearchTerm="@searchTerm"
+                  OnView="ViewDetails"
+                  OnApprove="ShowApproveModal"
+                  OnReject="ShowRejectModal"
+                  OnPageChange="GoToPage" />
+</div>
+
+@* Confirmation Modal *@
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header @modalHeaderClass">
+                <h5 class="modal-title text-white">
+                    <i class="@modalIcon me-2"></i>@modalTitle
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>@modalMessage</p>
+                @if (selectedRequest != null)
+                {
+                    <div class="alert alert-light border">
+                        <strong>Username:</strong> @selectedRequest.UserName<br />
+                        <strong>Họ tên:</strong> @selectedRequest.FullName<br />
+                        <strong>SĐT:</strong> @selectedRequest.PhoneNumber
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn @modalBtnClass" @onclick="ConfirmAction" disabled="@isProcessing">
+                    @if (isProcessing)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                    }
+                    Xác nhận
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .cursor-pointer { cursor: pointer; transition: transform 0.2s; }
+    .cursor-pointer:hover { transform: translateY(-2px); }
+    .border-3 { border-width: 3px !important; }
+</style>
+
+@code {
+    private HttpClient _httpClient = null!;
+    private CancellationTokenSource _cts = new();
+
+    // Data
+    private List<UpgradeRequestVM> requests = new();
+    private List<string> statusList = new() { "Pending", "Approved", "Rejected", "Cancelled" };
+    private RequestTypeStatsVM stats = new();
+
+    // Paging
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private int totalPages = 0;
+    private int totalCount = 0;
+
+    // Filters
+    private string searchTerm = "";
+    private string? selectedStatus = null;
+
+    // State
+    private bool isLoading = false;
+    private bool isProcessing = false;
+
+    // Modal
+    private UpgradeRequestVM? selectedRequest;
+    private string modalTitle = "";
+    private string modalMessage = "";
+    private string modalHeaderClass = "bg-primary";
+    private string modalBtnClass = "btn-primary";
+    private string modalIcon = "fas fa-question-circle";
+    private string actionType = "";
+
+    // Client-side filtered requests
+    private IEnumerable<UpgradeRequestVM> FilteredRequests => string.IsNullOrWhiteSpace(searchTerm)
+        ? requests
+        : requests.Where(r =>
+            r.RequestId.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            (r.UserName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (r.FullName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (r.PhoneNumber?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (r.TaxCode?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (r.Email?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false)
+        );
+
+    protected override async Task OnInitializedAsync()
+    {
+        _httpClient = _httpClientFactory.CreateClient("HotelBookingAPI");
+
+        var token = await _localStorage.GetItemAsync<string>("accessToken");
+        if (!string.IsNullOrEmpty(token))
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        }
+
+        await LoadStatsAsync();
+        await LoadRequestsAsync();
+    }
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    // ==================== DATA LOADING ====================
+
+    private async Task LoadStatsAsync()
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync("v1/admin/requests/stats", _cts.Token);
+            if (response.IsSuccessStatusCode)
+            {
+                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<RequestStatsVM>>();
+                if (apiResponse?.Content != null)
+                {
+                    stats = apiResponse.Content.UpgradeRequest;
+                }
+            }
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading stats: {ex.Message}");
+        }
+    }
+
+    private async Task LoadRequestsAsync()
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            var url = $"v1/admin/upgrade-requests?pageIndex={currentPage}&pageSize={pageSize}";
+            if (!string.IsNullOrEmpty(selectedStatus))
+            {
+                url += $"&status={selectedStatus}";
+            }
+
+            var response = await _httpClient.GetAsync(url, _cts.Token);
+            if (response.IsSuccessStatusCode)
+            {
+                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<PagedResult<UpgradeRequestVM>>>();
+                if (apiResponse?.Content != null)
+                {
+                    requests = apiResponse.Content.Items;
+                    totalPages = apiResponse.Content.TotalPages;
+                    totalCount = apiResponse.Content.TotalCount;
+                }
+            }
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading requests: {ex.Message}");
+            requests = new();
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    // ==================== EVENT HANDLERS ====================
+
+    private void OnSearchTermChanged(string value) => searchTerm = value;
+
+    private async Task OnSelectedStatusChanged(string? value)
+    {
+        selectedStatus = value;
+        currentPage = 1;
+        await LoadRequestsAsync();
+    }
+
+    private async Task OnPageSizeChanged(int value)
+    {
+        pageSize = value;
+        currentPage = 1;
+        await LoadRequestsAsync();
+    }
+
+    private async Task FilterByStatus(string? status)
+    {
+        selectedStatus = status;
+        currentPage = 1;
+        await LoadRequestsAsync();
+    }
+
+    private async Task ApplyFilters()
+    {
+        currentPage = 1;
+        await LoadRequestsAsync();
+    }
+
+    private async Task ResetFilters()
+    {
+        searchTerm = "";
+        selectedStatus = null;
+        pageSize = 10;
+        currentPage = 1;
+        await LoadRequestsAsync();
+    }
+
+    private async Task GoToPage(int page)
+    {
+        if (page >= 1 && page <= totalPages && page != currentPage)
+        {
+            currentPage = page;
+            await LoadRequestsAsync();
+        }
+    }
+
+    // ==================== ACTIONS ====================
+
+    private void ViewDetails(UpgradeRequestVM request)
+    {
+        NavigationManager.NavigateTo($"/admin/requests/upgrade-owner/{request.RequestId}");
+    }
+
+    private async Task ShowApproveModal(UpgradeRequestVM request)
+    {
+        selectedRequest = request;
+        modalTitle = "Xác nhận Duyệt";
+        modalMessage = "Bạn có chắc chắn muốn DUYỆT yêu cầu này? Người dùng sẽ được nâng cấp lên Owner.";
+        modalHeaderClass = "bg-success";
+        modalBtnClass = "btn-success";
+        modalIcon = "fas fa-check-circle";
+        actionType = "approve";
+        await JSRuntime.InvokeVoidAsync("eval", "new bootstrap.Modal(document.getElementById('confirmModal')).show()");
+    }
+
+    private async Task ShowRejectModal(UpgradeRequestVM request)
+    {
+        selectedRequest = request;
+        modalTitle = "Xác nhận Từ chối";
+        modalMessage = "Bạn có chắc chắn muốn TỪ CHỐI yêu cầu này?";
+        modalHeaderClass = "bg-danger";
+        modalBtnClass = "btn-danger";
+        modalIcon = "fas fa-times-circle";
+        actionType = "reject";
+        await JSRuntime.InvokeVoidAsync("eval", "new bootstrap.Modal(document.getElementById('confirmModal')).show()");
+    }
+
+    private async Task ConfirmAction()
+    {
+        if (selectedRequest == null) return;
+
+        isProcessing = true;
+        StateHasChanged();
+
+        try
+        {
+            var url = actionType == "approve"
+                ? $"v1/admin/upgrade-requests/{selectedRequest.RequestId}/approve"
+                : $"v1/admin/upgrade-requests/{selectedRequest.RequestId}/reject";
+
+            var response = await _httpClient.PostAsync(url, null, _cts.Token);
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<object>>();
+
+            // ✅ Dùng SnackbarHelper
+            if (apiResponse != null)
+            {
+                SnackbarHelper.Show(Snackbar, apiResponse.StatusCode ?? StatusCodeResponse.Error, apiResponse.Message ?? "");
+            }
+
+            if (response.IsSuccessStatusCode)
+            {
+                await JSRuntime.InvokeVoidAsync("eval", "bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide()");
+                await LoadStatsAsync();
+                await LoadRequestsAsync();
+            }
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            SnackbarHelper.Show(Snackbar, StatusCodeResponse.Error, $"Lỗi: {ex.Message}");
+        }
+        finally
+        {
+            isProcessing = false;
+            StateHasChanged();
+        }
+    }
+}
