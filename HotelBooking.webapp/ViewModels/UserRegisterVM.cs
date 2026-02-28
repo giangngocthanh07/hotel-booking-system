@@ -24,6 +24,7 @@ namespace HotelBooking.webapp.ViewModels
         [Compare("Password", ErrorMessage = "Passwords do not match")]
         public string ConfirmPassword { get; set; } = string.Empty;
 
+        [Required(ErrorMessage = "Full Name is required")]
         [StringLength(150, ErrorMessage = "Full Name cannot exceed 150 characters")]
         public string FullName { get; set; } = string.Empty;
 

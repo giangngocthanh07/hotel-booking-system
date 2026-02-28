@@ -15,15 +15,21 @@
         <div class="row justify-content-center">
             <div class="col-lg-8">
                 <div class="bg-white border rounded shadow-sm p-4">
-                    <h2 class="mb-2">Đăng ký tài khoản</h2>
-                    <h6 class="mb-3 fw-normal">Đặt phòng khách sạn dễ dàng</h6>
-                    <p class="text-muted mb-4">Hãy tạo tài khoản để trải nghiệm dịch vụ đặt phòng tốt nhất từ chúng tôi.
-                    </p>
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold mb-2">Đăng ký tài khoản</h2>
+                        <h6 class="fw-normal text-secondary mb-2">Đặt phòng khách sạn dễ dàng</h6>
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-star-fill text-warning me-1"></i>
+                            Hãy tạo tài khoản để trải nghiệm dịch vụ đặt phòng tốt nhất từ chúng tôi.
+                            <i class="bi bi-star-fill text-warning ms-1"></i>
+                        </p>
+                    </div>
                     <EditForm Model="@userRegister" OnValidSubmit="HandleValidSubmit">
                         <DataAnnotationsValidator />
                         @if (!string.IsNullOrEmpty(messageAlert))
                         {
-                            <div class="alert @(isError ? "alert-danger" : "alert-success")" role="alert">@messageAlert</div>
+                            <div class="alert @(isError ? "alert-danger" : "alert-success")" role="alert">@messageAlert
+                            </div>
                         }
                         <div class="row g-3">
                             <div class="col-md-6">
@@ -35,7 +41,7 @@
                             <div class="col-md-6">
                                 <label for="email" class="form-label">Email</label>
                                 <InputText @bind-Value="userRegister.Email" type="email" class="form-control"
-                                    id="email" />
+                                           id="email" />
                                 <ValidationMessage For="@(() => userRegister.Email)" class="text-danger" />
                             </div>
 
@@ -54,43 +60,61 @@
                             <div class="col-md-6">
                                 <label for="password" class="form-label">Password</label>
                                 <InputText @bind-Value="userRegister.Password" type="password" class="form-control"
-                                    id="password" />
+                                           id="password" />
                                 <ValidationMessage For="@(() => userRegister.Password)" class="text-danger" />
                             </div>
                             <div class="col-md-6">
                                 <label for="confirmPassword" class="form-label">Confirm Password</label>
                                 <InputText @bind-Value="userRegister.ConfirmPassword" type="password"
-                                    class="form-control" id="confirmPassword" />
+                                           class="form-control" id="confirmPassword" />
                                 <ValidationMessage For="@(() => userRegister.ConfirmPassword)" class="text-danger" />
                             </div>
                         </div>
                         <div class="form-check mt-4">
-                            <input class="form-check-input" type="checkbox" id="receiveEmail" @bind="userRegister.ReceiveEmail">
-                            <label class="form-check-label" for="receiveEmail">
-                                Vâng, tôi muốn nhận email từ Hotel Booking
-                            </label>
-                        </div>
+                            <input class="form-check-input" type="checkbox" id="receiveEmail"
+                                   @bind="userRegister.ReceiveEmail">
+                                <label class="form-check-label" for="receiveEmail">
+                                    Vâng, tôi muốn nhận email từ Hotel Booking
+                                </label>
+                            </div>
 
-                        <div class="form-check mb-3">
-                            <InputCheckbox @bind-Value="userRegister.AgreeTerm" class="form-check-input" id="agreeTerm" />
-                            <label class="form-check-label" for="agreeTerm">
-                                Tôi đồng ý với Điều khoản, Chính sách bảo mật và Phí dịch vụ
-                            </label>
-                            <ValidationMessage For="@(() => userRegister.AgreeTerm)" class="text-danger" />
-                        </div>
+                            <div class="form-check mb-3">
+                                <InputCheckbox @bind-Value="userRegister.AgreeTerm" class="form-check-input"
+                                               id="agreeTerm" />
+                                <label class="form-check-label" for="agreeTerm">
+                                    Tôi đồng ý với Điều khoản, Chính sách bảo mật và Phí dịch vụ
+                                </label>
+                                <ValidationMessage For="@(() => userRegister.AgreeTerm)" class="text-danger" />
+                            </div>
 
-                        <button type="submit" class="btn btn-primary w-100">Tạo tài khoản</button>
+                            <button type="submit" class="btn btn-primary w-100">Tạo tài khoản</button>
 
-                        <div class="text-center mt-3">
-                            <small class="text-muted">Bạn đã có tài khoản? <a href="/customer-login">Đăng
+                            <div class="text-center mt-3">
+                                <small class="text-muted">Bạn đã có tài khoản ? <a href="/customer-login"
+                                                                                   class="login-link">Đăng
                                     nhập</a></small>
+                                </div>
+                            </EditForm>
                         </div>
-                    </EditForm>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
+
+        <style>
+            .login-link {
+                text-decoration: none;
+                font-weight: 500;
+                transition: all 0.3s ease;
+                color: #007bff;
+            }
+
+            .login-link:hover {
+                color: #0a58ca;
+                text-decoration: underline;
+                transform: translateX(2px);
+            }
+        </style>
 
 @code {
     private UserRegisterVM userRegister = new UserRegisterVM();
@@ -136,7 +160,10 @@
                 var errorContent = await response.Content.ReadAsStringAsync();
                 try
                 {
-                    var apiResp = JsonSerializer.Deserialize<ApiResponse<RegisterResponseVM>>(errorContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    var apiResp = JsonSerializer.Deserialize<ApiResponse<RegisterResponseVM>>(errorContent, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
                     messageAlert = apiResp?.Message ?? errorContent;
                 }
                 catch
