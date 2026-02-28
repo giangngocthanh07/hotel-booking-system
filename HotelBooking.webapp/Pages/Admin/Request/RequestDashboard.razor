@@ -74,15 +74,24 @@
         {
             // Gọi API để lấy danh sách requests
             var response = await _httpClient.GetAsync("v1/admin/Request/get-all-requests");
+
             if (response.IsSuccessStatusCode)
             {
-                recentRequests = await response.Content.ReadFromJsonAsync<List<UpgradeRequestVM>>() ?? new
-                List<UpgradeRequestVM>();
+                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<List<UpgradeRequestVM>>>();
 
-                // Tính thống kê (stats) để truyền sang RequestOverview
-                stats.Pending = recentRequests.Count(r => r.Status == "Pending");
-                stats.Approved = recentRequests.Count(r => r.Status == "Approved");
-                stats.Rejected = recentRequests.Count(r => r.Status == "Rejected");
+                if (apiResponse?.Content != null)
+                {
+                    recentRequests = apiResponse.Content;
+
+                    // Tính thống kê (stats) để truyền sang RequestOverview
+                    stats.Pending = recentRequests.Count(r => r.Status == "Pending");
+                    stats.Approved = recentRequests.Count(r => r.Status == "Approved");
+                    stats.Rejected = recentRequests.Count(r => r.Status == "Rejected");
+                }
+                else
+                {
+                    recentRequests = new List<UpgradeRequestVM>();
+                }
             }
             else
             {
