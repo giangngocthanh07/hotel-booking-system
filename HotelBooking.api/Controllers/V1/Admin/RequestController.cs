@@ -20,9 +20,20 @@ namespace HotelBooking.api.Controllers.V1.Admin
             _upgradeRequestService = upgradeRequestService;
         }
 
+        /// <summary>
+        /// Lấy danh sách Request có phân trang (Reuse PagingRequest)
+        /// </summary>
+        [HttpGet("get-requests-paged")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetPagedRequestsAsync([FromQuery] PagingRequest pagingRequest, [FromQuery] string? status)
+        {
+            var response = await _upgradeRequestService.GetPagedRequestsAsync(pagingRequest, status);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
 
         [HttpGet("get-all-requests")]
         [Authorize(Roles = "Admin")]
+        [Obsolete("Use GetPagedRequestsAsync instead for better performance")]
         public async Task<IActionResult> GetRequestsAsync([FromQuery] string? status)
         {
             var response = await _upgradeRequestService.GetAllRequestAsync(status);

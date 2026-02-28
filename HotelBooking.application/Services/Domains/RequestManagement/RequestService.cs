@@ -1,5 +1,7 @@
 using HotelBooking.infrastructure.Models;
 using HotelBooking.application.Helpers;
+using FluentValidation;
+using System.Linq.Expressions;
 
 namespace HotelBooking.application.Services.Domains.RequestManagement
 {
@@ -11,6 +13,11 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
         public Task<ApiResponse<UpgradeRequestDTO>> GetByRequestIdAsync(int requestId);
         public Task<ApiResponse<bool>> ApproveRequestAsync(int requestId, int adminId);
         public Task<ApiResponse<bool>> RejectRequestAsync(int requestId, int adminId);
+
+        /// <summary>
+        /// Lấy danh sách Request có phân trang (Reuse PagingRequest, PagedResult)
+        /// </summary>
+        public Task<ApiResponse<PagedResult<UpgradeRequestDTO>>> GetPagedRequestsAsync(PagingRequest pagingRequest, string? status = null);
     }
 
     public class UpgradeRequestService : IUpgradeRequestService
@@ -19,13 +26,20 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
         private readonly IUserRepository _userRepo;
         private readonly IUserRoleRepository _userRoleRepo;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IValidator<PagingRequest> _pagingValidator;
 
-        public UpgradeRequestService(IUpgradeRequestRepository upgradeRequestRepo, IUserRepository userRepo, IUserRoleRepository userRoleRepo, IUnitOfWork unitOfWork)
+        public UpgradeRequestService(
+            IUpgradeRequestRepository upgradeRequestRepo,
+            IUserRepository userRepo,
+            IUserRoleRepository userRoleRepo,
+            IUnitOfWork unitOfWork,
+            IValidator<PagingRequest> pagingValidator)
         {
             _upgradeRequestRepo = upgradeRequestRepo;
             _userRepo = userRepo;
             _userRoleRepo = userRoleRepo;
             _unitOfWork = unitOfWork;
+            _pagingValidator = pagingValidator;
         }
 
         [Obsolete]
@@ -251,6 +265,65 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
             catch (Exception)
             {
                 return ResponseFactory.ServerError<bool>();
+            }
+        }
+
+        /// <summary>
+        /// Lấy danh sách Request có phân trang - Reuse PagingRequest & PagedResult
+        /// </summary>
+        [Obsolete]
+        public async Task<ApiResponse<PagedResult<UpgradeRequestDTO>>> GetPagedRequestsAsync(PagingRequest pagingRequest, string? status = null)
+        {
+            try
+            {
+                // 1. Validate pagination params (reuse PagingRequestValidator)
+                var validation = _pagingValidator.Validate(pagingRequest);
+                if (!validation.IsValid)
+                {
+                    return ResponseFactory.Failure<PagedResult<UpgradeRequestDTO>>(
+                        StatusCodeResponse.BadRequest,
+                        validation.Errors.First().ErrorMessage);
+                }
+
+                // 2. Build filter expression theo status
+                Expression<Func<UpgradeRequest, bool>>? filter = null;
+                if (!string.IsNullOrEmpty(status))
+                {
+                    filter = r => r.Status == status;
+                }
+
+                // 3. Gọi Repository với pagination (đã include User)
+                var (items, totalCount) = await _upgradeRequestRepo.GetPagedWithUserAsync(
+                    filter,
+                    pagingRequest.PageIndex ?? 1,
+                    pagingRequest.PageSize ?? 10);
+
+                // 4. Map sang DTO
+                var dtoItems = items.Select(request => new UpgradeRequestDTO
+                {
+                    RequestId = request.Id,
+                    UserId = request.User?.Id ?? 0,
+                    UserName = request.User?.UserName ?? "",
+                    FullName = request.User?.FullName ?? "",
+                    PhoneNumber = request.User?.PhoneNumber ?? "",
+                    Address = request.Address ?? "",
+                    TaxCode = request.TaxCode ?? "",
+                    Status = request.Status ?? "Pending",
+                    RequestedAt = request.RequestedAt
+                }).ToList();
+
+                // 5. Trả về PagedResult (reuse từ PageModelDTO.cs)
+                var pagedResult = new PagedResult<UpgradeRequestDTO>(
+                    dtoItems,
+                    totalCount,
+                    pagingRequest.PageIndex,
+                    pagingRequest.PageSize);
+
+                return ResponseFactory.Success(pagedResult, MessageResponse.RequestManagement.UpgradeRequest.REQUESTS_RETRIEVED);
+            }
+            catch (Exception)
+            {
+                return ResponseFactory.ServerError<PagedResult<UpgradeRequestDTO>>();
             }
         }
     }

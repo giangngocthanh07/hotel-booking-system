@@ -1,5 +1,6 @@
 using HotelBooking.infrastructure.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 
 public interface IUpgradeRequestRepository : IRepository<UpgradeRequest>
@@ -7,7 +8,14 @@ public interface IUpgradeRequestRepository : IRepository<UpgradeRequest>
     // Add custom methods for UpgradeRequest here if needed
     Task<IEnumerable<UpgradeRequest>> GetPendingByIdAsync(int id);
     Task<IEnumerable<UpgradeRequest>> GetAllPendingRequestsAsync();
-
+    
+    /// <summary>
+    /// Lấy danh sách Request có phân trang, Include User
+    /// </summary>
+    Task<(List<UpgradeRequest> Items, int TotalCount)> GetPagedWithUserAsync(
+        Expression<Func<UpgradeRequest, bool>>? filter,
+        int pageIndex,
+        int pageSize);
 }
 
 public class UpgradeRequestRepository : Repository<UpgradeRequest>, IUpgradeRequestRepository
@@ -31,4 +39,30 @@ public class UpgradeRequestRepository : Repository<UpgradeRequest>, IUpgradeRequ
                            .ToListAsync();
     }
 
+    public async Task<(List<UpgradeRequest> Items, int TotalCount)> GetPagedWithUserAsync(
+        Expression<Func<UpgradeRequest, bool>>? filter,
+        int pageIndex,
+        int pageSize)
+    {
+        // 1. Query base với Include User
+        var query = _dbSet.AsNoTracking().Include(ur => ur.User).AsQueryable();
+
+        // 2. Apply filter nếu có
+        if (filter != null)
+        {
+            query = query.Where(filter);
+        }
+
+        // 3. Đếm tổng số bản ghi (trước khi phân trang)
+        int totalCount = await query.CountAsync();
+
+        // 4. Sắp xếp theo RequestedAt mới nhất + phân trang
+        var items = await query
+            .OrderByDescending(r => r.RequestedAt)
+            .Skip((pageIndex - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (items, totalCount);
+    }
 }
