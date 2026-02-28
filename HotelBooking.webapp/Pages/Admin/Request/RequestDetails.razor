@@ -161,6 +161,7 @@ _httpClient.GetFromJsonAsync<ApiResponse<UpgradeRequestVM>>($"v1/admin/Request/r
 
     private async Task ApproveRequest()
     {
+        if (_httpClient == null) return;
         var response = await _httpClient.PostAsync($"v1/admin/Request/approve/{RequestId}", null);
         if (response.IsSuccessStatusCode)
         {
@@ -177,10 +178,14 @@ _httpClient.GetFromJsonAsync<ApiResponse<UpgradeRequestVM>>($"v1/admin/Request/r
 
     private async Task RejectRequest()
     {
+        if (_httpClient == null) return;
         var response = await _httpClient.PostAsync($"v1/admin/Request/reject/{RequestId}", null);
         if (response.IsSuccessStatusCode)
         {
-            request.Status = "Rejected";
+            if (request != null)
+            {
+                request.Status = "Rejected";
+            }
             toastClass = "bg-success";
             toastMessage = "Request rejected successfully!";
         }
