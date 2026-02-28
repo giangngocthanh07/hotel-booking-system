@@ -1,0 +1,462 @@
+@page "/admin/requests/upgrade-owner/{RequestId:int}"
+@using HotelBooking.webapp.ViewModels
+@using HotelBooking.webapp.ViewModels.Request
+@using System.Net.Http.Headers
+
+@attribute [Authorize(Roles = "Admin")]
+@layout AdminLayout
+
+@inject NavigationManager NavigationManager
+@inject IHttpClientFactory _httpClientFactory
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Chi tiết Yêu cầu #@RequestId</PageTitle>
+
+<div class="container-fluid py-4">
+    @* Header *@
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <button class="btn btn-outline-secondary me-3" @onclick="GoBack">
+                <i class="fas fa-arrow-left me-2"></i>Quay lại
+            </button>
+            <span class="h4 mb-0">Chi tiết Yêu cầu #@RequestId</span>
+        </div>
+        @if (request != null && request.Status == "Pending")
+        {
+            <div>
+                <button class="btn btn-success me-2" @onclick="ShowApproveModal">
+                    <i class="fas fa-check me-2"></i>Duyệt
+                </button>
+                <button class="btn btn-danger" @onclick="ShowRejectModal">
+                    <i class="fas fa-times me-2"></i>Từ chối
+                </button>
+            </div>
+        }
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3 text-muted">Đang tải dữ liệu...</p>
+        </div>
+    }
+    else if (request == null)
+    {
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            Không tìm thấy yêu cầu này.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @* Thông tin người dùng *@
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-primary text-white">
+                        <i class="fas fa-user me-2"></i>Thông tin Người dùng
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-borderless mb-0">
+                            <tbody>
+                                <tr>
+                                    <td class="text-muted" style="width: 140px;">Username</td>
+                                    <td><strong>@request.UserName</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Họ tên</td>
+                                    <td>@request.FullName</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Email</td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(request.Email))
+                                        {
+                                            <a href="mailto:@request.Email">@request.Email</a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted fst-italic">Chưa cập nhật</span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Số điện thoại</td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(request.PhoneNumber))
+                                        {
+                                            <a href="tel:@request.PhoneNumber">@request.PhoneNumber</a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted fst-italic">Chưa cập nhật</span>
+                                        }
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            @* Thông tin yêu cầu *@
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-info text-white">
+                        <i class="fas fa-file-alt me-2"></i>Thông tin Yêu cầu
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-borderless mb-0">
+                            <tbody>
+                                <tr>
+                                    <td class="text-muted" style="width: 140px;">Mã yêu cầu</td>
+                                    <td><strong>#@request.RequestId</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Trạng thái</td>
+                                    <td>
+                                        <span class="badge @GetStatusBadgeClass(request.Status) fs-6">
+                                            <i class="@GetStatusIcon(request.Status) me-1"></i>
+                                            @request.Status
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Ngày tạo</td>
+                                    <td>@request.RequestedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Mã số thuế</td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(request.TaxCode))
+                                        {
+                                            <code class="fs-6">@request.TaxCode</code>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted fst-italic">Không có</span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Địa chỉ KD</td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(request.Address))
+                                        {
+                                            @request.Address
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted fst-italic">Không có</span>
+                                        }
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* Lịch sử xử lý *@
+        @if (request.Status != "Pending")
+        {
+            <div class="card shadow-sm mb-4">
+                <div class="card-header @GetStatusBgClass(request.Status) text-white">
+                    <i class="fas fa-history me-2"></i>Lịch sử Xử lý
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="me-4">
+                            <i class="@GetStatusIcon(request.Status) fa-3x @GetStatusTextClass(request.Status)"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-1">
+                                @if (request.Status == "Approved")
+                                {
+                                    <span class="text-success">Yêu cầu đã được DUYỆT</span>
+                                }
+                                else if (request.Status == "Rejected")
+                                {
+                                    <span class="text-danger">Yêu cầu đã bị TỪ CHỐI</span>
+                                }
+                                else if (request.Status == "Cancelled")
+                                {
+                                    <span class="text-secondary">Yêu cầu đã bị HỦY</span>
+                                }
+                            </h5>
+                            <p class="mb-0 text-muted">
+                                @if (request.ProcessedAt.HasValue)
+                                {
+                                    <span>
+                                        <i class="fas fa-clock me-1"></i>
+                                        @request.ProcessedAt.Value.ToString("dd/MM/yyyy HH:mm")
+                                    </span>
+                                }
+                                @if (!string.IsNullOrEmpty(request.ProcessedByName))
+                                {
+                                    <span class="ms-3">
+                                        <i class="fas fa-user-shield me-1"></i>
+                                        Bởi: <strong>@request.ProcessedByName</strong>
+                                    </span>
+                                }
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @* Action Buttons (sticky bottom cho mobile) *@
+        @if (request.Status == "Pending")
+        {
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-center gap-3">
+                        <button class="btn btn-success btn-lg px-5" @onclick="ShowApproveModal">
+                            <i class="fas fa-check me-2"></i>Duyệt yêu cầu
+                        </button>
+                        <button class="btn btn-danger btn-lg px-5" @onclick="ShowRejectModal">
+                            <i class="fas fa-times me-2"></i>Từ chối
+                        </button>
+                    </div>
+                    <p class="text-center text-muted mt-3 mb-0">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Khi duyệt, người dùng sẽ được nâng cấp lên vai trò <strong>Owner</strong>
+                    </p>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@* Confirmation Modal *@
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header @modalHeaderClass">
+                <h5 class="modal-title text-white">
+                    <i class="@modalIcon me-2"></i>@modalTitle
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>@modalMessage</p>
+                @if (request != null)
+                {
+                    <div class="alert alert-light border">
+                        <strong>Username:</strong> @request.UserName<br />
+                        <strong>Họ tên:</strong> @request.FullName
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn @modalBtnClass" @onclick="ConfirmAction" disabled="@isProcessing">
+                    @if (isProcessing)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                    }
+                    Xác nhận
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Toast *@
+@if (!string.IsNullOrEmpty(toastMessage))
+{
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div class="toast show align-items-center text-white @toastClass border-0">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="@toastIcon me-2"></i>@toastMessage
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" 
+                        @onclick="() => toastMessage = null"></button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int RequestId { get; set; }
+
+    private HttpClient _httpClient = null!;
+    private UpgradeRequestVM? request;
+
+    // State
+    private bool isLoading = true;
+    private bool isProcessing = false;
+
+    // Toast
+    private string? toastMessage;
+    private string toastClass = "bg-success";
+    private string toastIcon = "fas fa-check-circle";
+
+    // Modal
+    private string modalTitle = "";
+    private string modalMessage = "";
+    private string modalHeaderClass = "bg-primary";
+    private string modalBtnClass = "btn-primary";
+    private string modalIcon = "fas fa-question-circle";
+    private string actionType = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _httpClient = _httpClientFactory.CreateClient("HotelBookingAPI");
+
+        var token = await _localStorage.GetItemAsync<string>("accessToken");
+        if (!string.IsNullOrEmpty(token))
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        }
+
+        await LoadRequestAsync();
+    }
+
+    private async Task LoadRequestAsync()
+    {
+        isLoading = true;
+        try
+        {
+            var response = await _httpClient.GetAsync($"v1/admin/upgrade-requests/{RequestId}");
+            if (response.IsSuccessStatusCode)
+            {
+                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<UpgradeRequestVM>>();
+                request = apiResponse?.Content;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/admin/requests/upgrade-owner");
+    }
+
+    // ==================== ACTIONS ====================
+
+    private async Task ShowApproveModal()
+    {
+        modalTitle = "Xác nhận Duyệt";
+        modalMessage = "Bạn có chắc chắn muốn DUYỆT yêu cầu này? Người dùng sẽ được nâng cấp lên Owner.";
+        modalHeaderClass = "bg-success";
+        modalBtnClass = "btn-success";
+        modalIcon = "fas fa-check-circle";
+        actionType = "approve";
+
+        await JSRuntime.InvokeVoidAsync("eval", "new bootstrap.Modal(document.getElementById('confirmModal')).show()");
+    }
+
+    private async Task ShowRejectModal()
+    {
+        modalTitle = "Xác nhận Từ chối";
+        modalMessage = "Bạn có chắc chắn muốn TỪ CHỐI yêu cầu này?";
+        modalHeaderClass = "bg-danger";
+        modalBtnClass = "btn-danger";
+        modalIcon = "fas fa-times-circle";
+        actionType = "reject";
+
+        await JSRuntime.InvokeVoidAsync("eval", "new bootstrap.Modal(document.getElementById('confirmModal')).show()");
+    }
+
+    private async Task ConfirmAction()
+    {
+        isProcessing = true;
+        StateHasChanged();
+
+        try
+        {
+            var url = actionType == "approve"
+                ? $"v1/admin/upgrade-requests/{RequestId}/approve"
+                : $"v1/admin/upgrade-requests/{RequestId}/reject";
+
+            var response = await _httpClient.PostAsync(url, null);
+
+            await JSRuntime.InvokeVoidAsync("eval", "bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide()");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var message = actionType == "approve" 
+                    ? "Duyệt yêu cầu thành công! Người dùng đã được nâng cấp lên Owner." 
+                    : "Từ chối yêu cầu thành công!";
+                ShowToast(message, true);
+                await LoadRequestAsync(); // Reload để cập nhật trạng thái
+            }
+            else
+            {
+                var message = actionType == "approve" ? "Duyệt yêu cầu thất bại!" : "Từ chối yêu cầu thất bại!";
+                ShowToast(message, false);
+            }
+        }
+        finally
+        {
+            isProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    // ==================== HELPERS ====================
+
+    private string GetStatusBadgeClass(string status) => status switch
+    {
+        "Pending" => "bg-warning text-dark",
+        "Approved" => "bg-success",
+        "Rejected" => "bg-danger",
+        "Cancelled" => "bg-secondary",
+        _ => "bg-secondary"
+    };
+
+    private string GetStatusBgClass(string status) => status switch
+    {
+        "Approved" => "bg-success",
+        "Rejected" => "bg-danger",
+        "Cancelled" => "bg-secondary",
+        _ => "bg-secondary"
+    };
+
+    private string GetStatusTextClass(string status) => status switch
+    {
+        "Approved" => "text-success",
+        "Rejected" => "text-danger",
+        "Cancelled" => "text-secondary",
+        _ => "text-secondary"
+    };
+
+    private string GetStatusIcon(string status) => status switch
+    {
+        "Pending" => "fas fa-hourglass-half",
+        "Approved" => "fas fa-check-circle",
+        "Rejected" => "fas fa-times-circle",
+        "Cancelled" => "fas fa-ban",
+        _ => "fas fa-question-circle"
+    };
+
+    private void ShowToast(string message, bool isSuccess)
+    {
+        toastMessage = message;
+        toastClass = isSuccess ? "bg-success" : "bg-danger";
+        toastIcon = isSuccess ? "fas fa-check-circle" : "fas fa-exclamation-circle";
+        StateHasChanged();
+
+        _ = Task.Delay(3000).ContinueWith(_ =>
+        {
+            toastMessage = null;
+            InvokeAsync(StateHasChanged);
+        });
+    }
+}

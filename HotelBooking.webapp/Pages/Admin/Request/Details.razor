@@ -1,14 +1,20 @@
+@* filepath: e:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.webapp\Pages\Admin\Request\RequestDetails.razor *@
 @page "/admin/requests/details/{RequestId:int}"
+@page "/admin/upgrade-requests/{RequestId:int}"
+@implements IDisposable
 @using System.Net.Http.Headers
+@using HotelBooking.webapp.ViewModels.Request
 
 @attribute [Authorize(Roles = "Admin")]
 @layout AdminLayout
+
 @inject NavigationManager NavigationManager
 @inject IHttpClientFactory _httpClientFactory
 @inject Blazored.LocalStorage.ILocalStorageService _localStorage
+@inject ISnackbar Snackbar
 
 <div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
-    <div class="card shadow-sm">
+    <div class="card shadow-sm" style="min-width: 600px;">
         <div class="card-header bg-white d-flex justify-content-between align-items-center">
             <h4 class="mb-0">Request Details #@RequestId</h4>
             <button class="btn btn-secondary" @onclick="NavigateBack">
@@ -36,19 +42,15 @@
                         <input type="text" class="form-control" value="@request.TaxCode" readonly />
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Status</label><br />
+                        <label class="form-label">Status</label>
                         <input type="text"
-                               class="form-control text-white bg-primary fw-bold @GetStatusBadgeClass(request.Status)"
+                               class="form-control text-white fw-bold @GetStatusBadgeClass(request.Status)"
                                value="@request.Status" readonly />
-                        @*<span class="badge /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/">
-                            /*~~~~~~~~~~~*/
-                            @request.Status
-                        </span>*@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Requested At</label>
-                        <input type="text" class="form-control" value="@request.RequestedAt.ToString("dd/MM/yyyy HH:mm")"
-                               readonly />
+                        <input type="text" class="form-control" 
+                               value="@request.RequestedAt.ToString("dd/MM/yyyy HH:mm")" readonly />
                     </div>
                     <div class="col-12">
                         <label class="form-label">Address</label>
@@ -56,17 +58,24 @@
                     </div>
                 </form>
 
-                @* Nút action khi status = Pending *@
                 @if (request.Status == "Pending")
                 {
                     <div class="mt-4 row">
                         <div class="col-md-6">
-                            <button class="btn btn-success btn-lg w-100" @onclick="ApproveRequest">
+                            <button class="btn btn-success btn-lg w-100" @onclick="ApproveRequest" disabled="@isProcessing">
+                                @if (isProcessing)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                }
                                 <i class="fas fa-check"></i> Approve
                             </button>
                         </div>
                         <div class="col-md-6">
-                            <button class="btn btn-danger btn-lg w-100" @onclick="RejectRequest">
+                            <button class="btn btn-danger btn-lg w-100" @onclick="RejectRequest" disabled="@isProcessing">
+                                @if (isProcessing)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                }
                                 <i class="fas fa-times"></i> Reject
                             </button>
                         </div>
@@ -85,64 +94,57 @@
     </div>
 </div>
 
-@* Toast notification *@
-@if (!string.IsNullOrEmpty(toastMessage))
-{
-    <div class="toast-container position-fixed bottom-0 end-0 p-3">
-        <div class="toast show align-items-center text-white @toastClass border-0">
-            <div class="d-flex">
-                <div class="toast-body">
-                    @toastMessage
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto"
-                        @onclick="() => toastMessage = null"></button>
-            </div>
-        </div>
-    </div>
-}
-
 @code {
     [Parameter] public int RequestId { get; set; }
+    
+    private HttpClient _httpClient = null!;
+    private CancellationTokenSource _cts = new();
+    
     private UpgradeRequestVM? request;
-    HttpClient? _httpClient;
-
-    // Toast state
-    private string? toastMessage;
-    private string toastClass = "bg-success";
-
+    private bool isProcessing = false;
 
     protected override async Task OnInitializedAsync()
     {
         _httpClient = _httpClientFactory.CreateClient("HotelBookingAPI");
 
-        // Lấy token từ localStorage
         var token = await _localStorage.GetItemAsync<string>("accessToken");
         if (!string.IsNullOrEmpty(token))
         {
-            // Thêm token vào header
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
 
+        await LoadRequestDetails();
+    }
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    private async Task LoadRequestDetails()
+    {
         try
         {
-            var response = await
-_httpClient.GetFromJsonAsync<ApiResponse<UpgradeRequestVM>>($"v1/admin/Request/request-detail/{RequestId}");
-
-            if (response?.Content != null)
+            var response = await _httpClient.GetAsync($"v1/admin/upgrade-requests/{RequestId}", _cts.Token);
+            
+            if (response.IsSuccessStatusCode)
             {
-                request = response.Content;
-                toastMessage = null;
-            }
-            else
-            {
-                toastClass = "bg-danger";
-                toastMessage = MessageResponse.RequestManagement.UpgradeRequest.NOT_FOUND;
+                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<UpgradeRequestVM>>();
+                if (apiResponse?.Content != null)
+                {
+                    request = apiResponse.Content;
+                }
+                else
+                {
+                    SnackbarHelper.Show(Snackbar, StatusCodeResponse.NotFound, "Request not found");
+                }
             }
         }
+        catch (OperationCanceledException) { }
         catch (Exception)
         {
-            toastClass = "bg-danger";
-            toastMessage = MessageResponse.RequestManagement.UpgradeRequest.ERROR_LOADING_DETAILS;
+            SnackbarHelper.Show(Snackbar, StatusCodeResponse.Error, "Error loading request details");
         }
     }
 
@@ -156,43 +158,67 @@ _httpClient.GetFromJsonAsync<ApiResponse<UpgradeRequestVM>>($"v1/admin/Request/r
         "Pending" => "bg-primary",
         "Approved" => "bg-success",
         "Rejected" => "bg-danger",
+        "Cancelled" => "bg-secondary",
         _ => "bg-secondary"
     };
 
     private async Task ApproveRequest()
     {
-        if (_httpClient == null) return;
-        var response = await _httpClient.PostAsync($"v1/admin/Request/approve/{RequestId}", null);
-        if (response.IsSuccessStatusCode)
+        if (isProcessing) return;
+        
+        isProcessing = true;
+        StateHasChanged();
+        
+        try
         {
-            request!.Status = "Approved";
-            toastClass = "bg-success";
-            toastMessage = MessageResponse.RequestManagement.UpgradeRequest.APPROVE_SUCCESS;
+            var response = await _httpClient.PostAsync($"v1/admin/upgrade-requests/{RequestId}/approve", null, _cts.Token);
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<object>>();
+            
+            if (apiResponse != null && !string.IsNullOrEmpty(apiResponse.StatusCode))
+            {
+                SnackbarHelper.Show(Snackbar, apiResponse.StatusCode, apiResponse.Message ?? string.Empty);
+            }
+            
+            if (response.IsSuccessStatusCode)
+            {
+                request!.Status = "Approved";
+            }
         }
-        else
+        catch (OperationCanceledException) { }
+        finally
         {
-            toastClass = "bg-danger";
-            toastMessage = MessageResponse.RequestManagement.UpgradeRequest.APPROVE_FAILED;
+            isProcessing = false;
+            StateHasChanged();
         }
     }
 
     private async Task RejectRequest()
     {
-        if (_httpClient == null) return;
-        var response = await _httpClient.PostAsync($"v1/admin/Request/reject/{RequestId}", null);
-        if (response.IsSuccessStatusCode)
+        if (isProcessing) return;
+        
+        isProcessing = true;
+        StateHasChanged();
+        
+        try
         {
-            if (request != null)
+            var response = await _httpClient.PostAsync($"v1/admin/upgrade-requests/{RequestId}/reject", null, _cts.Token);
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<object>>();
+            
+            if (apiResponse != null && !string.IsNullOrEmpty(apiResponse.StatusCode))
             {
-                request.Status = "Rejected";
+                SnackbarHelper.Show(Snackbar, apiResponse.StatusCode, apiResponse.Message ?? string.Empty);
             }
-            toastClass = "bg-success";
-            toastMessage = MessageResponse.RequestManagement.UpgradeRequest.REJECT_SUCCESS;
+            
+            if (response.IsSuccessStatusCode)
+            {
+                request!.Status = "Rejected";
+            }
         }
-        else
+        catch (OperationCanceledException) { }
+        finally
         {
-            toastClass = "bg-danger";
-            toastMessage = MessageResponse.RequestManagement.UpgradeRequest.REJECT_FAILED;
+            isProcessing = false;
+            StateHasChanged();
         }
     }
 }

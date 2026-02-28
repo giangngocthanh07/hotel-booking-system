@@ -1,6 +1,9 @@
+@* filepath: e:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.webapp\Pages\Admin\Request\RequestDashboard.razor *@
 @page "/admin/requests/requests-overview"
+@implements IDisposable
 @using HotelBooking.webapp.ViewModels
 @using System.Net.Http.Headers
+@using HotelBooking.webapp.ViewModels.Request
 
 @attribute [Authorize(Roles = "Admin")]
 @layout AdminLayout
@@ -10,7 +13,6 @@
 @inject Blazored.LocalStorage.ILocalStorageService _localStorage
 
 <div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
-
     <div class="w-100 mx-4">
         <PageTitle>Requests Dashboard</PageTitle>
 
@@ -20,7 +22,6 @@
             <RequestOverview Stats="@stats" />
             <RecentRequests Requests="@pagedRequests" />
 
-            @* Pagination Controls - dùng data từ BE *@
             @if (TotalPages > 0)
             {
                 <div class="d-flex justify-content-center mt-4">
@@ -53,11 +54,12 @@
 
 @code {
     private HttpClient _httpClient = null!;
+    private CancellationTokenSource _cts = new();
+    
     private List<UpgradeRequestVM> pagedRequests = new();
     private RequestStatsVM stats = new();
     private bool isLoading = false;
 
-    // Pagination state - nhận từ BE
     private int CurrentPage { get; set; } = 1;
     private int PageSize { get; set; } = 5;
     private int TotalPages { get; set; } = 0;
@@ -73,48 +75,46 @@
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
 
-        // Load stats (dùng API cũ để đếm tổng)
         await LoadStatsAsync();
-
-        // Load page đầu tiên (dùng API mới có phân trang)
         await LoadPagedRequestsAsync();
     }
 
-    /// <summary>
-    /// Load stats count (Pending/Approved/Rejected) - dùng API cũ
-    /// </summary>
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
     private async Task LoadStatsAsync()
     {
         try
         {
-            var response = await _httpClient.GetAsync("v1/admin/Request/get-all-requests");
+            var response = await _httpClient.GetAsync("v1/admin/requests/stats", _cts.Token);
             if (response.IsSuccessStatusCode)
             {
-                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<List<UpgradeRequestVM>>>();
+                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<RequestStatsVM>>();
                 if (apiResponse?.Content != null)
                 {
-                    stats.Pending = apiResponse.Content.Count(r => r.Status == "Pending");
-                    stats.Approved = apiResponse.Content.Count(r => r.Status == "Approved");
-                    stats.Rejected = apiResponse.Content.Count(r => r.Status == "Rejected");
+                    stats = apiResponse.Content;
                 }
             }
         }
+        catch (OperationCanceledException) { }
         catch (Exception ex)
         {
-            Console.WriteLine($"{MessageResponse.RequestManagement.UpgradeRequest.ERROR_LOADING_STATS}: {ex.Message}");
+            Console.WriteLine($"Error loading stats: {ex.Message}");
         }
     }
 
-    /// <summary>
-    /// Load requests có phân trang từ BE
-    /// </summary>
     private async Task LoadPagedRequestsAsync()
     {
         isLoading = true;
+        StateHasChanged();
+        
         try
         {
-            var url = $"v1/admin/Request/get-requests-paged?pageIndex={CurrentPage}&pageSize={PageSize}";
-            var response = await _httpClient.GetAsync(url);
+            var url = $"v1/admin/upgrade-requests?pageIndex={CurrentPage}&pageSize={PageSize}";
+            var response = await _httpClient.GetAsync(url, _cts.Token);
 
             if (response.IsSuccessStatusCode)
             {
@@ -126,19 +126,17 @@
                     TotalCount = apiResponse.Content.TotalCount;
                 }
             }
-            else
-            {
-                Console.WriteLine($"{MessageResponse.RequestManagement.UpgradeRequest.ERROR_LOADING_PAGED}. Status: {response.StatusCode}");
-            }
         }
+        catch (OperationCanceledException) { }
         catch (Exception ex)
         {
-            Console.WriteLine($"{MessageResponse.RequestManagement.UpgradeRequest.ERROR_LOADING_PAGED}: {ex.Message}");
-            pagedRequests = new List<UpgradeRequestVM>();
+            Console.WriteLine($"Error loading requests: {ex.Message}");
+            pagedRequests = new();
         }
         finally
         {
             isLoading = false;
+            StateHasChanged();
         }
     }
 

@@ -1,11 +1,10 @@
 using HotelBooking.infrastructure.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 public interface IHotelRepository : IRepository<Hotel>
 {
     Task<List<SearchHotelResult>> GetSearchHotelsAsync(string cityName, DateTime? checkIn, DateTime? checkOut, int? adults, int? children, int? rooms);
-
-
 }
 public class HotelRepository : Repository<Hotel>, IHotelRepository
 {

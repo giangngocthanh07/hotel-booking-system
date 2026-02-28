@@ -243,6 +243,10 @@ public static class MessageResponse
             public const string USER_NOT_CUSTOMER = "Tài khoản của bạn không phải là khách hàng!";
             public const string PENDING_REQUEST_EXISTS = "Yêu cầu đang chờ phê duyệt đã tồn tại cho tài khoản này!";
 
+            // Cancel Request
+            public const string REQUEST_CANCELLED_SUCCESS = "Yêu cầu được hủy thành công!";
+            public const string REQUEST_CANCEL_FAILED = "Không thể hủy yêu cầu!";
+
             // Get All Requests
             public const string REQUESTS_RETRIEVED = "Danh sách yêu cầu được lấy thành công!";
 
@@ -258,7 +262,41 @@ public static class MessageResponse
             // Reject Request
             public const string REQUEST_REJECTED_SUCCESS = "Yêu cầu được từ chối thành công!";
             public const string REQUEST_REJECT_FAILED = "Không thể từ chối yêu cầu!";
+
+            // Validation Messages
+            public const string ADDRESS_REQUIRED = "Địa chỉ không được để trống!";
+            public const string ADDRESS_TOO_LONG = "Địa chỉ không được vượt quá 500 ký tự!";
+            public const string TAX_CODE_REQUIRED = "Mã số thuế không được để trống!";
+            public const string TAX_CODE_INVALID = "Mã số thuế phải có 10 hoặc 13 chữ số!";
         }
+
+        /// <summary>
+        /// Messages cho duyệt khách sạn
+        /// </summary>
+        public static class HotelApproval
+        {
+            public const string HOTELS_RETRIEVED = "Danh sách khách sạn được lấy thành công!";
+            public const string HOTEL_RETRIEVED = "Thông tin khách sạn được lấy thành công!";
+            public const string HOTEL_NOT_FOUND = "Không tìm thấy khách sạn!";
+            public const string STATUS_INVALID = "Khách sạn không ở trạng thái chờ duyệt!";
+            public const string APPROVED_SUCCESS = "Khách sạn được duyệt thành công!";
+            public const string APPROVE_FAILED = "Không thể duyệt khách sạn!";
+            public const string REJECTED_SUCCESS = "Khách sạn bị từ chối thành công!";
+            public const string REJECT_FAILED = "Không thể từ chối khách sạn!";
+        }
+    }
+
+    // Alias for easier access
+    public static class HotelApproval
+    {
+        public const string HOTELS_RETRIEVED = RequestManagement.HotelApproval.HOTELS_RETRIEVED;
+        public const string HOTEL_RETRIEVED = RequestManagement.HotelApproval.HOTEL_RETRIEVED;
+        public const string HOTEL_NOT_FOUND = RequestManagement.HotelApproval.HOTEL_NOT_FOUND;
+        public const string STATUS_INVALID = RequestManagement.HotelApproval.STATUS_INVALID;
+        public const string APPROVED_SUCCESS = RequestManagement.HotelApproval.APPROVED_SUCCESS;
+        public const string APPROVE_FAILED = RequestManagement.HotelApproval.APPROVE_FAILED;
+        public const string REJECTED_SUCCESS = RequestManagement.HotelApproval.REJECTED_SUCCESS;
+        public const string REJECT_FAILED = RequestManagement.HotelApproval.REJECT_FAILED;
     }
 
     // =====================================================

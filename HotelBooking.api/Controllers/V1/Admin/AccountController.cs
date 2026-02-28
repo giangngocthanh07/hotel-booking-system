@@ -12,6 +12,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
     [Route("api/v1/admin/[controller]")]
     [ApiController]
     [Authorize(Roles = "Admin")]
+    [Tags("Admin - Account Management")]
     public class AccountController : ControllerBase
     {
         private readonly IUserService _userService;
