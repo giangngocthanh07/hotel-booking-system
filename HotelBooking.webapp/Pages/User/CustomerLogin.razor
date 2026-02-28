@@ -57,7 +57,7 @@
 
                                     <div class="d-flex justify-content-between align-items-center mb-3">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" value="" id="rememberCheck">
+                                            <InputCheckbox class="form-check-input" @bind-Value="rememberMe" id="rememberCheck" />
                                             <label class="form-check-label" for="rememberCheck">
                                                 Ghi nhớ đăng nhập
                                             </label>
@@ -199,9 +199,24 @@
     private UserLoginVM userLogin = new UserLoginVM();
     private string? errorMessage;
     private HttpClient? _httpClient;
-    protected override void OnInitialized()
+    private bool rememberMe = false;
+
+
+    protected override async Task OnInitializedAsync()
     {
         _httpClient = HttpClientFactory.CreateClient("HotelBookingAPI");
+        
+        // Load username đã lưu (nếu có)
+        var savedRememberMe = await localStorage.GetItemAsync<bool>("rememberMe");
+        if (savedRememberMe)
+        {
+            rememberMe = true;
+            var savedUsername = await localStorage.GetItemAsync<string>("savedUsername");
+            if (!string.IsNullOrEmpty(savedUsername))
+            {
+                userLogin.UsernameOrEmail = savedUsername;
+            }
+        }
     }
 
     private async Task HandleValidSubmit()
@@ -220,6 +235,19 @@
             {
                 if (loginResponse?.Content?.AccessToken != null)
                 {
+                    // Xử lý Remember Me - Lưu username nếu checkbox được chọn
+                    if (rememberMe)
+                    {
+                        await localStorage.SetItemAsync("rememberMe", true);
+                        await localStorage.SetItemAsync("savedUsername", userLogin.UsernameOrEmail);
+                    }
+                    else
+                    {
+                        // Xóa dữ liệu remember me nếu không chọn
+                        await localStorage.RemoveItemAsync("rememberMe");
+                        await localStorage.RemoveItemAsync("savedUsername");
+                    }
+
                     await ((CustomAuthStateProvider)AuthStateProvider).MarkUserAsAuthenticated(loginResponse.Content.AccessToken);
                     errorMessage = null;
                     _nav.NavigateTo("/", forceLoad: true);
