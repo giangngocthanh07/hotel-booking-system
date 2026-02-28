@@ -233,16 +233,16 @@ namespace HotelBooking.application.Services.Domains.UserManagement
                 }
 
                 var user = await _userRepository.GetUserWithRoles(u => u.UserName == userLogin.UsernameOrEmail || u.Email == userLogin.UsernameOrEmail);
-                if (user == null)
+
+                // Nếu không tìm thấy user hoặc mật khẩu không khớp thì trả về lỗi Unauthorized
+                if (user == null || !PasswordHelper.VerifyPassword(userLogin.Password, user.PasswordHash))
                 {
-                    return ResponseFactory.Failure<LoginResponseDTO>(StatusCodeResponse.NotFound, MessageResponse.UserManagement.Login.USER_NOT_FOUND);
+                    return ResponseFactory.Failure<LoginResponseDTO>(
+                        StatusCodeResponse.Unauthorized,
+                        MessageResponse.UserManagement.Login.INVALID_CREDENTIALS);
                 }
 
-                // Kiểm tra mật khẩu
-                if (!PasswordHelper.VerifyPassword(userLogin.Password, user.PasswordHash))
-                {
-                    return ResponseFactory.Failure<LoginResponseDTO>(StatusCodeResponse.NotFound, MessageResponse.UserManagement.Login.PASSWORD_INCORRECT);
-                }
+                // Generate JWT token
                 var token = _jwtAuthService.GenerateToken(user);
                 var roles = user.UserRoles.Select(ur => ur.Role.Name).ToList();
                 return ResponseFactory.Success(new LoginResponseDTO

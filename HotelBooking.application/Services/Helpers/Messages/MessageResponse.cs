@@ -178,11 +178,15 @@ public static class MessageResponse
         {
             public const string FAIL = "Đăng nhập thất bại!";
             public const string SUCCESS = "Đăng nhập thành công!";
-            public const string USER_NOT_FOUND = "Tài khoản không tìm thấy!";
-            public const string PASSWORD_INCORRECT = "Mật khẩu không chính xác!";
+            public const string INVALID_CREDENTIALS = "Tài khoản hoặc mật khẩu không đúng!";
             public const string USER_BLOCKED = "Tài khoản của bạn đã bị khóa! Vui lòng liên hệ hỗ trợ.";
             public const string USER_DELETED = "Tài khoản của bạn đã bị xóa! Vui lòng liên hệ hỗ trợ.";
             public const string ERROR_IN_SERVER = "Đã xảy ra lỗi trên máy chủ. Vui lòng thử lại sau.";
+            
+            // Validation messages for login input (basic validation only)
+            public const string EMPTY_USERNAME_OR_EMAIL = "Username hoặc Email không được để trống!";
+            public const string MAX_LENGTH_USERNAME_OR_EMAIL = "Username hoặc Email không được vượt quá 255 ký tự!";
+            public const string MAX_LENGTH_PASSWORD = "Mật khẩu không được vượt quá 100 ký tự!";
         }
 
         // Register Messages
@@ -319,8 +323,7 @@ public static class MessageResponse
     {
         public static string LOGIN_FAIL => UserManagement.Login.FAIL;
         public static string LOGIN_SUCCESS => UserManagement.Login.SUCCESS;
-        public static string USER_NOT_FOUND => UserManagement.Login.USER_NOT_FOUND;
-        public static string PASSWORD_INCORRECT => UserManagement.Login.PASSWORD_INCORRECT;
+        public static string INVALID_CREDENTIALS => UserManagement.Login.INVALID_CREDENTIALS;
         public static string USER_BLOCKED => UserManagement.Login.USER_BLOCKED;
         public static string USER_DELETED => UserManagement.Login.USER_DELETED;
     }
