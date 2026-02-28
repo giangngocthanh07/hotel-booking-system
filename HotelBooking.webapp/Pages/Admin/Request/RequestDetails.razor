@@ -38,8 +38,8 @@
                     <div class="col-md-6">
                         <label class="form-label">Status</label><br />
                         <input type="text"
-                            class="form-control text-white bg-primary fw-bold @GetStatusBadgeClass(request.Status)"
-                            value="@request.Status" readonly />
+                               class="form-control text-white bg-primary fw-bold @GetStatusBadgeClass(request.Status)"
+                               value="@request.Status" readonly />
                         @*<span class="badge /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/">
                             /*~~~~~~~~~~~*/
                             @request.Status
@@ -48,7 +48,7 @@
                     <div class="col-md-6">
                         <label class="form-label">Requested At</label>
                         <input type="text" class="form-control" value="@request.RequestedAt.ToString("dd/MM/yyyy HH:mm")"
-                            readonly />
+                               readonly />
                     </div>
                     <div class="col-12">
                         <label class="form-label">Address</label>
@@ -95,7 +95,7 @@
                     @toastMessage
                 </div>
                 <button type="button" class="btn-close btn-close-white me-2 m-auto"
-                    @onclick="() => toastMessage = null"></button>
+                        @onclick="() => toastMessage = null"></button>
             </div>
         </div>
     </div>
@@ -125,16 +125,18 @@
 
         try
         {
-            request = await _httpClient.GetFromJsonAsync<UpgradeRequestVM>($"v1/admin/Request/request-detail/{RequestId}");
+            var response = await
+_httpClient.GetFromJsonAsync<ApiResponse<UpgradeRequestVM>>($"v1/admin/Request/request-detail/{RequestId}");
 
-            if (request == null)
+            if (response?.Content != null)
             {
-                toastClass = "bg-danger";
-                toastMessage = "Request not found.";
+                request = response.Content;
+                toastMessage = null;
             }
             else
             {
-                toastMessage = null; // Clear any previous messages
+                toastClass = "bg-danger";
+                toastMessage = "Request not found.";
             }
         }
         catch (Exception)
@@ -162,7 +164,7 @@
         var response = await _httpClient.PostAsync($"v1/admin/Request/approve/{RequestId}", null);
         if (response.IsSuccessStatusCode)
         {
-            request.Status = "Approved";
+            request!.Status = "Approved";
             toastClass = "bg-success";
             toastMessage = "Request approved successfully!";
         }
