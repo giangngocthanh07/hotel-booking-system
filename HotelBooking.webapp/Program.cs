@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using HotelBooking.Client;
 using MudBlazor;
 using HotelBooking.webapp.Services;
+using HotelBooking.webapp.Services.Interface;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,6 +43,7 @@ builder.Services.AddHttpClient("HotelBookingAPI", client =>
 // DI Services
 builder.Services.AddScoped<HotelFormState>();
 builder.Services.AddScoped<IManagementService, ManagementService>();
+builder.Services.AddScoped<IRequestService, RequestService>();
 
 
 var app = builder.Build();

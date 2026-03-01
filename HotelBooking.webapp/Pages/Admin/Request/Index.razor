@@ -22,32 +22,8 @@
             <RequestOverview Stats="@stats" />
             <RecentRequests Requests="@pagedRequests" />
 
-            @if (TotalPages > 0)
-            {
-                <div class="d-flex justify-content-center mt-4">
-                    <nav aria-label="Page navigation">
-                        <ul class="pagination">
-                            <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
-                                <button class="page-link" @onclick="PreviousPage" disabled="@isLoading">&laquo;</button>
-                            </li>
-                            @for (int i = 1; i <= TotalPages; i++)
-                            {
-                                var pageNumber = i;
-                                <li class="page-item @(pageNumber == CurrentPage ? "active" : "")">
-                                    <button class="page-link" @onclick="() => GoToPage(pageNumber)"
-                                            disabled="@isLoading">@i</button>
-                                </li>
-                            }
-                            <li class="page-item @(CurrentPage == TotalPages ? "disabled" : "")">
-                                <button class="page-link" @onclick="NextPage" disabled="@isLoading">&raquo;</button>
-                            </li>
-                        </ul>
-                    </nav>
-                </div>
-                <div class="text-center text-muted">
-                    <small>Trang @CurrentPage / @TotalPages (Tổng: @TotalCount requests)</small>
-                </div>
-            }
+            <Pagination CurrentPage="@CurrentPage" TotalPages="@TotalPages" TotalCount="@TotalCount"
+                        IsLoading="@isLoading" OnPageChange="GoToPage" />
         </div>
     </div>
 </div>
@@ -55,7 +31,7 @@
 @code {
     private HttpClient _httpClient = null!;
     private CancellationTokenSource _cts = new();
-    
+
     private List<UpgradeRequestVM> pagedRequests = new();
     private RequestStatsVM stats = new();
     private bool isLoading = false;
@@ -110,7 +86,7 @@
     {
         isLoading = true;
         StateHasChanged();
-        
+
         try
         {
             var url = $"v1/admin/upgrade-requests?pageIndex={CurrentPage}&pageSize={PageSize}";
@@ -149,21 +125,4 @@
         }
     }
 
-    private async Task PreviousPage()
-    {
-        if (CurrentPage > 1)
-        {
-            CurrentPage--;
-            await LoadPagedRequestsAsync();
-        }
-    }
-
-    private async Task NextPage()
-    {
-        if (CurrentPage < TotalPages)
-        {
-            CurrentPage++;
-            await LoadPagedRequestsAsync();
-        }
-    }
 }

@@ -1,26 +1,30 @@
+using HotelBooking.application.DTOs.Request.Base;
+
 namespace HotelBooking.application.DTOs.Request;
 
 /// <summary>
-/// Các trạng thái của yêu cầu nâng cấp Owner
+/// Các trạng thái của yêu cầu nâng cấp Owner.
+/// [OBSOLETE] Sử dụng RequestStatusConst từ Base namespace thay thế.
+/// Class này giữ lại để backward compatibility.
 /// </summary>
+[Obsolete("Use HotelBooking.application.DTOs.Request.Base.RequestStatusConst instead")]
 public static class UpgradeRequestStatusConst
 {
-    public const string Pending = "Pending";
-    public const string Approved = "Approved";
-    public const string Rejected = "Rejected";
-    public const string Cancelled = "Cancelled";
-    public const string None = "None";
+    public const string Pending = RequestStatusConst.Pending;
+    public const string Approved = RequestStatusConst.Approved;
+    public const string Rejected = RequestStatusConst.Rejected;
+    public const string Cancelled = RequestStatusConst.Cancelled;
+    public const string None = RequestStatusConst.None;
 
     /// <summary>
     /// Kiểm tra xem status có hợp lệ không
     /// </summary>
-    public static bool IsValid(string? status)
-    {
-        return status == Pending || status == Approved || status == Rejected || status == Cancelled || status == None;
-    }
+    [Obsolete("Use RequestStatusConst.IsValid instead")]
+    public static bool IsValid(string? status) => RequestStatusConst.IsValid(status);
 
     /// <summary>
     /// Lấy danh sách tất cả status hợp lệ
     /// </summary>
-    public static List<string> GetAll() => new() { Pending, Approved, Rejected, Cancelled, None };
+    [Obsolete("Use RequestStatusConst.GetAll instead")]
+    public static List<string> GetAll() => RequestStatusConst.GetAll();
 }

@@ -1,6 +1,5 @@
 using System.Text.Json;
 
-
 public static class HttpClientExtensions
 {
     // 1. [QUAN TRỌNG] Tạo cấu hình JSON dùng chung
@@ -24,7 +23,8 @@ public static class HttpClientExtensions
         }
     }
 
-    // --- 2. POST: Nhận TResponse (đầu ra) và TRequest (đầu vào) ---
+    // --- 2. POST: 
+    // ========== a) With Body --- Nhận TResponse (đầu ra) và TRequest (đầu vào) ---
     public static async Task<ApiResponse<TResponse>> PostApiAsync<TResponse, TRequest>(
         this HttpClient client,
         string url,
@@ -33,6 +33,22 @@ public static class HttpClientExtensions
         try
         {
             var response = await client.PostAsJsonAsync(url, data, _options);
+            return await HandleResponse<TResponse>(response);
+        }
+        catch
+        {
+            return ResponseFactory.Failure<TResponse>(StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
+        }
+    }
+
+    // ========== b) No Body --- Nhận TResponse (đầu ra) nhưng không có TRequest (đầu vào)
+    public static async Task<ApiResponse<TResponse>> PostApiAsync<TResponse>(
+        this HttpClient client,
+        string url)
+    {
+        try
+        {
+            var response = await client.PostAsync(url, null);
             return await HandleResponse<TResponse>(response);
         }
         catch

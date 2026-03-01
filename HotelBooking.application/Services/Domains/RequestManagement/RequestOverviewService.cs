@@ -1,8 +1,13 @@
+using HotelBooking.application.DTOs.Request.Base;
 using HotelBooking.application.DTOs.Request.Overview;
 using HotelBooking.application.Helpers;
 
 namespace HotelBooking.application.Services.Domains.RequestManagement
 {
+    /// <summary>
+    /// Service tổng quan cho tất cả loại requests - Dashboard Admin.
+    /// Aggregates stats và recent requests từ các loại request khác nhau.
+    /// </summary>
     public interface IRequestOverviewService
     {
         Task<ApiResponse<RequestStatsDTO>> GetStatsAsync();
@@ -65,21 +70,27 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
             {
                 var recentRequests = new List<RecentRequestDTO>();
 
-                // Get recent upgrade requests
+                // Get recent upgrade requests - sử dụng RequestType enum
                 var upgradeRequests = await _upgradeRequestRepo.GetRecentAsync(count);
                 recentRequests.AddRange(upgradeRequests.Select(r => new RecentRequestDTO
                 {
                     Id = r.Id,
-                    Type = "UpgradeOwner",
-                    TypeDisplay = "Nâng cấp Owner",
+                    Type = RequestType.UpgradeOwner.ToString(),
+                    TypeDisplay = RequestType.UpgradeOwner.GetDisplayName(),
                     RequesterName = r.User?.FullName ?? r.User?.UserName ?? "",
-                    Status = r.Status ?? "Pending",
+                    Status = r.Status ?? RequestStatusConst.Pending,
                     CreatedAt = r.RequestedAt
                 }));
 
                 // Get recent hotel approvals (sau này)
                 // var hotelApprovals = await _hotelApprovalRepo.GetRecentAsync(count);
-                // recentRequests.AddRange(...);
+                // recentRequests.AddRange(hotelApprovals.Select(r => new RecentRequestDTO
+                // {
+                //     Id = r.Id,
+                //     Type = RequestType.HotelApproval.ToString(),
+                //     TypeDisplay = RequestType.HotelApproval.GetDisplayName(),
+                //     ...
+                // }));
 
                 // Sort by date and take top N
                 var result = recentRequests

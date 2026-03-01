@@ -3,23 +3,24 @@ using HotelBooking.application.Helpers;
 using FluentValidation;
 using System.Linq.Expressions;
 using HotelBooking.application.DTOs.Request;
+using HotelBooking.application.DTOs.Request.Base;
+using HotelBooking.application.DTOs.Request.UpgradeRequest;
+using HotelBooking.application.Services.Domains.RequestManagement.Base;
 
 namespace HotelBooking.application.Services.Domains.RequestManagement
 {
-    public interface IUpgradeRequestService
+    /// <summary>
+    /// Interface cho Upgrade Request Service.
+    /// Kế thừa IBaseRequestService để tái sử dụng common operations.
+    /// Thêm các methods riêng cho Customer operations.
+    /// </summary>
+    public interface IUpgradeRequestService : IBaseRequestService<UpgradeRequestDTO>
     {
-        // === Customer ===
+        // === Customer Operations (Riêng cho Upgrade) ===
         Task<ApiResponse<UserForUpgradeDTO?>> GetUserForUpgradeAsync(int userId);
         Task<ApiResponse<bool>> CreateRequestAsync(int userId, string address, string taxCode);
         Task<ApiResponse<bool>> CancelRequestAsync(int userId);
         Task<ApiResponse<List<UpgradeRequestDTO>>> GetMyRequestsAsync(int userId);
-
-        // === Admin ===
-        Task<ApiResponse<PagedResult<UpgradeRequestDTO>>> GetPagedRequestsAsync(PagingRequest pagingRequest, string? status = null);
-        Task<ApiResponse<UpgradeRequestDTO>> GetByRequestIdAsync(int requestId);
-        Task<ApiResponse<bool>> ApproveRequestAsync(int requestId, int adminId);
-        Task<ApiResponse<bool>> RejectRequestAsync(int requestId, int adminId);
-        Task<ApiResponse<List<string>>> GetAllStatusesAsync();
 
         // === Obsolete ===
         [Obsolete("Use GetPagedRequestsAsync instead")]
@@ -70,7 +71,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
                     .OrderByDescending(r => r.RequestedAt)
                     .FirstOrDefault();
 
-                var requestStatus = userRequest?.Status ?? UpgradeRequestStatusConst.None;
+                var requestStatus = userRequest?.Status ?? RequestStatusConst.None;
 
                 var userForUpgradeDTO = new UserForUpgradeDTO
                 {
@@ -135,7 +136,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
                     UserId = userId,
                     Address = address,
                     TaxCode = taxCode,
-                    Status = UpgradeRequestStatusConst.Pending,
+                    Status = RequestStatusConst.Pending,
                     RequestedAt = DateTime.Now
                 };
 
@@ -166,7 +167,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
                         MessageResponse.RequestManagement.UpgradeRequest.REQUEST_NOT_FOUND);
 
                 // Cập nhật status thành Cancelled
-                request.Status = UpgradeRequestStatusConst.Cancelled;
+                request.Status = RequestStatusConst.Cancelled;
                 await _upgradeRequestRepo.UpdateAsync(request);
 
                 var saved = await _unitOfWork.SaveChangesAsync() > 0;
@@ -196,7 +197,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
                     PhoneNumber = r.User?.PhoneNumber ?? "",
                     Address = r.Address ?? "",
                     TaxCode = r.TaxCode ?? "",
-                    Status = r.Status ?? UpgradeRequestStatusConst.Pending,
+                    Status = r.Status ?? RequestStatusConst.Pending,
                     RequestedAt = r.RequestedAt
                 }).OrderByDescending(r => r.RequestedAt).ToList();
 
@@ -251,7 +252,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
                     PhoneNumber = request.User?.PhoneNumber ?? "",
                     Address = request.Address ?? "",
                     TaxCode = request.TaxCode ?? "",
-                    Status = request.Status ?? UpgradeRequestStatusConst.Pending,
+                    Status = request.Status ?? RequestStatusConst.Pending,
                     RequestedAt = request.RequestedAt
                 }).ToList();
 
@@ -296,7 +297,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
                     PhoneNumber = user.PhoneNumber ?? "",
                     Address = request.Address ?? "",
                     TaxCode = request.TaxCode ?? "",
-                    Status = request.Status ?? UpgradeRequestStatusConst.Pending,
+                    Status = request.Status ?? RequestStatusConst.Pending,
                     RequestedAt = request.RequestedAt
                 };
 
@@ -313,7 +314,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
             try
             {
                 var request = await _upgradeRequestRepo.GetByIdAsync(requestId);
-                if (request == null || request.Status != UpgradeRequestStatusConst.Pending)
+                if (request == null || request.Status != RequestStatusConst.Pending)
                     return ResponseFactory.Failure<bool>(
                         StatusCodeResponse.BadRequest,
                         MessageResponse.RequestManagement.UpgradeRequest.REQUEST_STATUS_INVALID);
@@ -340,7 +341,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
                 await _userRoleRepo.AddAsync(ownerRole);
 
                 // Update request status
-                request.Status = UpgradeRequestStatusConst.Approved;
+                request.Status = RequestStatusConst.Approved;
                 request.ApprovedAt = DateTime.Now;
                 request.ApprovedBy = adminId;
                 await _upgradeRequestRepo.UpdateAsync(request);
@@ -366,13 +367,13 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
             try
             {
                 var request = await _upgradeRequestRepo.GetByIdAsync(requestId);
-                if (request == null || request.Status != UpgradeRequestStatusConst.Pending)
+                if (request == null || request.Status != RequestStatusConst.Pending)
                     return ResponseFactory.Failure<bool>(
                         StatusCodeResponse.BadRequest,
                         MessageResponse.RequestManagement.UpgradeRequest.REQUEST_STATUS_INVALID);
 
                 // Update request status to Rejected
-                request.Status = UpgradeRequestStatusConst.Rejected;
+                request.Status = RequestStatusConst.Rejected;
                 request.ApprovedAt = DateTime.Now;
                 request.ApprovedBy = adminId;
                 await _upgradeRequestRepo.UpdateAsync(request);
@@ -432,7 +433,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
                             PhoneNumber = user.PhoneNumber ?? "",
                             Address = request.Address ?? "",
                             TaxCode = request.TaxCode ?? "",
-                            Status = request.Status ?? UpgradeRequestStatusConst.Pending,
+                            Status = request.Status ?? RequestStatusConst.Pending,
                             RequestedAt = request.RequestedAt
                         });
                     }

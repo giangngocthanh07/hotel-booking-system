@@ -2,7 +2,7 @@
 <div class="row mb-4">
     <div class="col-md-3">
         <div class="card border-warning h-100 cursor-pointer @(SelectedStatus == "Pending" ? "border-3" : "")"
-             @onclick="@(() => OnStatusClick.InvokeAsync("Pending"))">
+             @onclick="@(() => HandleStatusClick("Pending"))">
             <div class="card-body text-center">
                 <i class="fas fa-hourglass-half fa-2x text-warning mb-2"></i>
                 <h3 class="mb-0 text-warning">@Stats.Pending</h3>
@@ -12,7 +12,7 @@
     </div>
     <div class="col-md-3">
         <div class="card border-success h-100 cursor-pointer @(SelectedStatus == "Approved" ? "border-3" : "")"
-             @onclick="@(() => OnStatusClick.InvokeAsync("Approved"))">
+             @onclick="@(() => HandleStatusClick("Approved"))">
             <div class="card-body text-center">
                 <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
                 <h3 class="mb-0 text-success">@Stats.Approved</h3>
@@ -22,7 +22,7 @@
     </div>
     <div class="col-md-3">
         <div class="card border-danger h-100 cursor-pointer @(SelectedStatus == "Rejected" ? "border-3" : "")"
-             @onclick="@(() => OnStatusClick.InvokeAsync("Rejected"))">
+             @onclick="@(() => HandleStatusClick("Rejected"))">
             <div class="card-body text-center">
                 <i class="fas fa-times-circle fa-2x text-danger mb-2"></i>
                 <h3 class="mb-0 text-danger">@Stats.Rejected</h3>
@@ -32,7 +32,7 @@
     </div>
     <div class="col-md-3">
         <div class="card border-primary h-100 cursor-pointer @(string.IsNullOrEmpty(SelectedStatus) ? "border-3" : "")"
-             @onclick="@(() => OnStatusClick.InvokeAsync(null))">
+             @onclick="@(() => HandleStatusClick(null))">
             <div class="card-body text-center">
                 <i class="fas fa-list fa-2x text-primary mb-2"></i>
                 <h3 class="mb-0 text-primary">@Stats.Total</h3>
@@ -45,5 +45,19 @@
 @code {
     [Parameter] public RequestTypeStatsVM Stats { get; set; } = new();
     [Parameter] public string? SelectedStatus { get; set; }
+
+    /// <summary>
+    /// Cả 2 tên đều được hỗ trợ để backward compatibility
+    /// </summary>
     [Parameter] public EventCallback<string?> OnStatusClick { get; set; }
+    [Parameter] public EventCallback<string?> OnFilterByStatus { get; set; }
+
+    private async Task HandleStatusClick(string? status)
+    {
+        // Gọi cả 2 callbacks nếu có
+        if (OnFilterByStatus.HasDelegate)
+            await OnFilterByStatus.InvokeAsync(status);
+        else if (OnStatusClick.HasDelegate)
+            await OnStatusClick.InvokeAsync(status);
+    }
 }

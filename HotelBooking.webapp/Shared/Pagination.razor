@@ -1,0 +1,113 @@
+@* 
+    Reusable Pagination Component
+    Usage: <Pagination CurrentPage="@currentPage" TotalPages="@totalPages" 
+                       TotalCount="@totalCount" OnPageChange="GoToPage" />
+*@
+
+@if (TotalPages > 1)
+{
+    <div class="d-flex justify-content-center mt-4">
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                @* Previous Button *@
+                <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
+                    <button class="page-link" @onclick="GoToPrevious" disabled="@IsLoading">
+                        &laquo;
+                    </button>
+                </li>
+
+                @* Page Numbers *@
+                @foreach (var page in GetPageNumbers())
+                {
+                    <li class="page-item @(page == CurrentPage ? "active" : "")">
+                        <button class="page-link" @onclick="() => GoToPage(page)" disabled="@IsLoading">
+                            @(@page)
+                        </button>
+                    </li>
+                }
+
+                @* Next Button *@
+                <li class="page-item @(CurrentPage == TotalPages ? "disabled" : "")">
+                    <button class="page-link" @onclick="GoToNext" disabled="@IsLoading">
+                        &raquo;
+                    </button>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    @if (ShowInfo)
+    {
+        <div class="text-center text-muted">
+            <small>Trang @CurrentPage / @TotalPages @(TotalCount > 0 ? $"(Tổng: {TotalCount} mục)" : "")</small>
+        </div>
+    }
+}
+
+@code {
+    /// <summary>
+    /// Trang hiện tại (1-indexed)
+    /// </summary>
+    [Parameter] public int CurrentPage { get; set; } = 1;
+
+    /// <summary>
+    /// Tổng số trang
+    /// </summary>
+    [Parameter] public int TotalPages { get; set; }
+
+    /// <summary>
+    /// Tổng số items (optional, dùng để hiển thị info)
+    /// </summary>
+    [Parameter] public int TotalCount { get; set; }
+
+    /// <summary>
+    /// Đang loading? (disable buttons)
+    /// </summary>
+    [Parameter] public bool IsLoading { get; set; }
+
+    /// <summary>
+    /// Hiển thị info "Trang x/y (Tổng: n)"
+    /// </summary>
+    [Parameter] public bool ShowInfo { get; set; } = true;
+
+    /// <summary>
+    /// Số trang hiển thị ở mỗi bên của trang hiện tại
+    /// </summary>
+    [Parameter] public int Spread { get; set; } = 2;
+
+    /// <summary>
+    /// Callback khi chuyển trang
+    /// </summary>
+    [Parameter] public EventCallback<int> OnPageChange { get; set; }
+
+    /// <summary>
+    /// Tính toán các số trang cần hiển thị (với spread)
+    /// VD: CurrentPage=5, Spread=2 -> [3,4,5,6,7]
+    /// </summary>
+    private IEnumerable<int> GetPageNumbers()
+    {
+        var start = Math.Max(1, CurrentPage - Spread);
+        var end = Math.Min(TotalPages, CurrentPage + Spread);
+        return Enumerable.Range(start, end - start + 1);
+    }
+
+    private async Task GoToPage(int page)
+    {
+        if (page >= 1 && page <= TotalPages && page != CurrentPage && !IsLoading)
+        {
+            await OnPageChange.InvokeAsync(page);
+        }
+    }
+
+    private async Task GoToPrevious()
+    {
+        if (CurrentPage > 1)
+            await GoToPage(CurrentPage - 1);
+    }
+
+    private async Task GoToNext()
+    {
+        if (CurrentPage < TotalPages)
+            await GoToPage(CurrentPage + 1);
+    }
+}
