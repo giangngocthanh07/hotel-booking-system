@@ -1,7 +1,11 @@
+using HotelBooking.webapp.Services.Interface;
 
-public interface IManagementService
+/// <summary>
+/// Interface cho Management Service - quản lý các entities (Amenity, BedType, etc.)
+/// Kế thừa ITokenService để hỗ trợ AdminPageBase&lt;TService&gt; generic.
+/// </summary>
+public interface IManagementService : ITokenService
 {
-    void SetToken(string token);
 
     // 1. GET MENU
     Task<ApiResponse<ManageMenuResultVM>> GetManageModuleTypesOnly(ManageModuleEnum module);

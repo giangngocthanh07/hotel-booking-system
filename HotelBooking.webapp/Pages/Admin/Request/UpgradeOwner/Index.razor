@@ -1,13 +1,13 @@
 @* filepath: e:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.webapp\Pages\Admin\Request\UpgradeOwner\Index.razor *@
+
 @page "/admin/requests/upgrade-owner"
-@implements IDisposable
+@using HotelBooking.webapp.Pages.Admin.Base
+@using HotelBooking.webapp.Services.Interface
+@inherits AdminPageBase<IRequestService>
 
 @attribute [Authorize(Roles = "Admin")]
 @layout AdminLayout
 
-@inject IRequestService RequestService
-@inject Blazored.LocalStorage.ILocalStorageService _localStorage
-@inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
 @inject ISnackbar Snackbar
 
@@ -109,25 +109,23 @@
         );
 
     // ==========================================
-    // LIFECYCLE
+    // LIFECYCLE (Override base class)
     // ==========================================
 
-    protected override async Task OnInitializedAsync()
+    /// <summary>
+    /// Override LoadDataAsync từ AdminPageBase - được gọi tự động sau khi token được set.
+    /// </summary>
+    protected override async Task LoadDataAsync()
     {
-        var token = await _localStorage.GetItemAsync<string>("accessToken");
-        if (!string.IsNullOrEmpty(token))
-        {
-            RequestService.SetToken(token);
-        }
-
         await LoadStatsAsync();
         await LoadRequestsAsync();
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
         _cts.Cancel();
         _cts.Dispose();
+        base.Dispose();
     }
 
     // ==========================================
@@ -138,7 +136,7 @@
     {
         try
         {
-            var response = await RequestService.GetStatsAsync();
+            var response = await Service.GetStatsAsync();
             if (response.StatusCode == StatusCodeResponse.Success && response.Content != null)
             {
                 stats = response.Content.UpgradeRequest;
@@ -158,7 +156,7 @@
 
         try
         {
-            var response = await RequestService.GetUpgradeRequestsAsync(currentPage, pageSize, selectedStatus);
+            var response = await Service.GetUpgradeRequestsAsync(currentPage, pageSize, selectedStatus);
 
             if (response.StatusCode == StatusCodeResponse.Success && response.Content != null)
             {
@@ -243,7 +241,7 @@ MessageResponse.Common.ERROR_IN_SERVER);
 
     private void ViewDetails(UpgradeRequestVM request)
     {
-        NavigationManager.NavigateTo($"/admin/requests/upgrade-owner/{request.RequestId}");
+        Navigation.NavigateTo($"/admin/requests/upgrade-owner/{request.RequestId}");
     }
 
     private async Task ShowApproveModal(UpgradeRequestVM request)
@@ -280,8 +278,8 @@ MessageResponse.Common.ERROR_IN_SERVER);
         try
         {
             var response = actionType == "approve"
-                ? await RequestService.ApproveUpgradeRequestAsync(selectedRequest.RequestId)
-                : await RequestService.RejectUpgradeRequestAsync(selectedRequest.RequestId);
+                ? await Service.ApproveUpgradeRequestAsync(selectedRequest.RequestId)
+                : await Service.RejectUpgradeRequestAsync(selectedRequest.RequestId);
 
             SnackbarHelper.Show(Snackbar, response.StatusCode ?? StatusCodeResponse.Error, response.Message ??
 MessageResponse.Common.ERROR_IN_SERVER);

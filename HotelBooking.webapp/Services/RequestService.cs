@@ -12,13 +12,11 @@ namespace HotelBooking.webapp.Services.Interface;
 /// - Type Safety (không dùng dynamic/object)
 /// - Polymorphism (cùng method, nhiều loại request)
 /// - Dễ mở rộng (thêm loại request mới không cần sửa interface)
+/// 
+/// Kế thừa ITokenService để hỗ trợ AdminPageBase&lt;TService&gt; generic.
 /// </summary>
-public interface IRequestService
+public interface IRequestService : ITokenService
 {
-    /// <summary>
-    /// Set Authorization token cho HTTP requests
-    /// </summary>
-    void SetToken(string token);
 
     // ==========================================
     // GENERIC METHODS (Polymorphism)
