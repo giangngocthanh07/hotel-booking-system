@@ -120,29 +120,14 @@
                     }
                 </div>
 
-                @* FOOTER: PHÂN TRANG (Luôn dính đáy) *@
+                @* FOOTER: PHÂN TRANG (Dùng shared Pagination component) *@
                 @if (TotalPages > 1)
                 {
                     <div class="card-footer bg-white py-2 border-top">
-                        <nav>
-                            <ul class="pagination justify-content-center pagination-sm mb-0">
-                                <li class="page-item @(PageIndex <= 1 ? "disabled" : "")">
-                                    <button class="page-link"
-                                            @onclick="() => HandlePageChange(PageIndex - 1)">&laquo;</button>
-                                </li>
-                                @for (int i = 1; i <= TotalPages; i++)
-                                {
-                                    var p = i;
-                                    <li class="page-item @(PageIndex == p ? "active" : "")">
-                                        <button class="page-link" @onclick="() => HandlePageChange(p)">@p</button>
-                                    </li>
-                                }
-                                <li class="page-item @(PageIndex >= TotalPages ? "disabled" : "")">
-                                    <button class="page-link"
-                                            @onclick="() => HandlePageChange(PageIndex + 1)">&raquo;</button>
-                                </li>
-                            </ul>
-                        </nav>
+                        <Pagination CurrentPage="PageIndex" TotalPages="TotalPages" TotalCount="TotalCount"
+                                    OnPageChange="HandlePageChange" ShowInfo="false"
+                                    ContainerClass="d-flex justify-content-center mb-0"
+                                    PaginationClass="pagination-sm mb-0" />
                     </div>
                 }
             </div>

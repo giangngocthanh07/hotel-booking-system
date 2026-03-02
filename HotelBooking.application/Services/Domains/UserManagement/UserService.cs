@@ -2,6 +2,8 @@ using HotelBooking.application.Helpers;
 using FluentValidation;
 using HotelBooking.infrastructure.Models;
 using System.Net.Mail;
+using HotelBooking.application.DTOs.User.Register;
+using HotelBooking.application.DTOs.User.Login;
 // Note: MessageRegister, MessageLogin được consolidate vào MessageResponse tại Helpers/Messages/
 // Dùng MessageResponse.UserManagement.Register.* và MessageResponse.UserManagement.Login.* cho code mới
 // Hoặc vẫn dùng MessageRegister/MessageLogin để backward compatible

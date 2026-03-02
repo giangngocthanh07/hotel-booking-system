@@ -15,35 +15,26 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
     public class PolicyService : BaseManage<Policy, IPolicyRepository, PolicyDTO, PolicyCreateDTO, PolicyUpdateDTO>, IPolicyService
     {
         private readonly IPolicyTypeRepository _policyTypeRepo;
+                private readonly IValidator<PagingRequest> _pagingValidator;
+
 
         public PolicyService(
             IPolicyRepository repository,
             IUnitOfWork unitOfWork,
             IPolicyTypeRepository policyTypeRepo,
             IValidator<PolicyCreateDTO> createVal,
-        IValidator<PolicyUpdateDTO> updateVal)
+        IValidator<PolicyUpdateDTO> updateVal,
+        IValidator<PagingRequest> pagingValidator)
             : base(repository, unitOfWork, createVal, updateVal)
         {
             _policyTypeRepo = policyTypeRepo;
+            _pagingValidator = pagingValidator;
         }
 
         protected override PolicyDTO MapToDto(Policy entity)
         {
-            return new PolicyDTO
-            {
-                Id = entity.Id,
-                Name = entity.Name,
-                Description = entity.Description,
-                IsDeleted = entity.IsDeleted,
-                TypeId = entity.TypeId,
-                TimeFrom = entity.TimeFrom,
-                TimeTo = entity.TimeTo,
-                IntValue1 = entity.IntValue1,
-                IntValue2 = entity.IntValue2,
-                Amount = entity.Amount,
-                Percent = entity.Percent,
-                BoolValue = entity.BoolValue
-            };
+            // Delegate to PolicyHelper for polymorphic mapping
+            return PolicyHelper.MapToPolicyDTO(entity)!;
         }
 
         protected override void MapUpdateToEntity(PolicyUpdateDTO updateDto, Policy entity)
@@ -51,40 +42,21 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
             entity.Name = updateDto.Name;
             entity.Description = updateDto.Description;
 
-            // Cập nhật các cột Generic
-            entity.TimeFrom = updateDto.TimeFrom;
-            entity.TimeTo = updateDto.TimeTo;
-            entity.IntValue1 = updateDto.IntValue1;
-            entity.IntValue2 = updateDto.IntValue2;
-            entity.Amount = updateDto.Amount;
-            entity.Percent = updateDto.Percent;
-            entity.BoolValue = updateDto.BoolValue;
-
-            // Sau khi map xong, chạy Sanitize để xóa các field thừa nếu user cố tình gửi lên
-            PolicyHelper.SanitizeEntity(entity);
+            // Map polymorphic data to JSON
+            entity.Additional = PolicyHelper.MapToAdditionalJson(updateDto);
         }
 
         protected override Policy MapCreateToEntity(PolicyCreateDTO createDto)
         {
-            var entity = new Policy
+            return new Policy
             {
                 Name = createDto.Name,
                 Description = createDto.Description,
                 IsDeleted = false,
                 TypeId = createDto.TypeId,
-
-                // Map Generic
-                TimeFrom = createDto.TimeFrom,
-                TimeTo = createDto.TimeTo,
-                IntValue1 = createDto.IntValue1,
-                IntValue2 = createDto.IntValue2,
-                Amount = createDto.Amount,
-                Percent = createDto.Percent,
-                BoolValue = createDto.BoolValue
+                // Map polymorphic data to JSON
+                Additional = PolicyHelper.MapToAdditionalJson(createDto)
             };
-
-            PolicyHelper.SanitizeEntity(entity);
-            return entity;
         }
 
         // --- VALIDATION LOGIC (Quan trọng) ---
@@ -107,7 +79,10 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
         {
             // 1. Lấy Entity gốc để biết TypeId là gì (Vì DTO không có TypeId)
             var currentEntity = await _repo.GetByIdAsync(id);
-            if (currentEntity == null) return ValidationResult.Success(); // Để hàm chính xử lý 404
+            if (currentEntity == null || currentEntity.IsDeleted == true) return ValidationResult.Fail(
+                    MessageResponse.Common.NOT_FOUND,
+                    StatusCodeResponse.NotFound
+                ); // Để hàm chính xử lý 404
 
             // 2. Check trùng tên (Dùng TypeId từ DB)
             bool exists = await _repo.AnyAsync(x =>
@@ -118,9 +93,17 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
             );
             if (exists) return ValidationResult.Fail(MessageResponse.AdminManagement.Policy.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
 
-            // 3. Check Logic nghiệp vụ
-            // Kết hợp TypeId từ DB + Dữ liệu mới từ DTO để validate
-            // Ví dụ: Nếu TypeId là CheckInTime (1002), kiểm tra dto.TimeFrom có hợp lệ không
+            // 3. Lấy TypeId mong muốn dựa vào kiểu của DTO truyền lên
+            int? expectedTypeId = PolicyHelper.GetTypeIdFromUpdateDto(dto);
+
+            // 4. Kiểm tra chéo: Nếu ID Service trong DB thuộc loại khác với Endpoint đang gọi (DTO)
+            if (expectedTypeId.HasValue && currentEntity.TypeId != expectedTypeId.Value)
+            {
+                return ValidationResult.Fail(
+                    MessageResponse.AdminManagement.Policy.INVALID_ID_BY_TYPE,
+                    StatusCodeResponse.BadRequest
+                );
+            }
 
             return ValidationResult.Success();
         }
@@ -154,6 +137,15 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
 
         public async Task<ApiResponse<PagedManageResult<PolicyDTO>>> GetPoliciesByTypeAsync(int? typeId, PagingRequest paging)
         {
+             // 1. Validate phân trang
+            var pagingValidation = await _pagingValidator.ValidateAsync(paging);
+            if (!pagingValidation.IsValid)
+            {
+                return ResponseFactory.Failure<PagedManageResult<PolicyDTO>>(
+                    StatusCodeResponse.BadRequest,
+                    pagingValidation.Errors[0].ErrorMessage);
+            }
+
             return await ManagementAdminHelper.GetDataByTypeAsync<Policy, PolicyDTO>(
                 typeId,
                 paging,

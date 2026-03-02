@@ -1,20 +1,18 @@
 @* File: Components/Manage/GlobalNavMenu.razor *@
+@using HotelBooking.webapp.Helpers
 @inject NavigationManager Nav
 @inject IManagementService _manageService
 @inject ILogger<GlobalNavMenu> Logger
 
 
-@* 1. Dropdown chọn Module (Chuyển trang) *@
+@* 1. Dropdown chọn Module (Chuyển trang) - Dùng ManageModuleConstants *@
 <div class="mb-3">
     <label class="form-label small fw-bold text-muted">Nhóm dữ liệu</label>
     <select class="form-select" value="@CurrentModule" @onchange="OnModuleChanged">
-        <option value="Service">Service</option>
-        <option value="Policy">Policy</option>
-        <option value="Amenity">Amenity</option>
-        <option value="RoomQuality">RoomQuality</option>
-        <option value="UnitType">UnitType</option>
-        <option value="BedType">BedType</option>
-        <option value="RoomView">RoomView</option>
+        @foreach (var module in ManageModuleConstants.GetAll())
+        {
+            <option value="@module.Module.ToString()">@module.DisplayName</option>
+        }
     </select>
 </div>
 

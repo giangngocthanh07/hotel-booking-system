@@ -20,8 +20,8 @@
 }
 else
 {
-    <MasterDetailLayout @ref="_layoutRef" TItem="UnitTypeVM" TModel="BaseCreateOrUpdateAdminVM" Items="items"
-                        Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="totalPages" TotalCount="totalCount"
+    <MasterDetailLayout @ref="_layoutRef" TItem="UnitTypeVM" TModel="BaseCreateOrUpdateAdminVM" Items="_items"
+                        Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
                         OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
                         OnDelete="HandleDelete" OnCancel="ResetForm">
 
@@ -144,7 +144,7 @@ else
     [Parameter] public int? TypeId { get; set; }
 
     // --- STATE ---
-    private List<UnitTypeVM>? items;
+    private List<UnitTypeVM>? _items;
     // Tách Model
     private UnitTypeCreateVM _createModel = new UnitTypeCreateVM();
     private UnitTypeUpdateVM _updateModel = new UnitTypeUpdateVM();
@@ -154,8 +154,11 @@ else
 
     // --- PHÂN TRANG ---
     private PagingRequest _paging = new() { PageIndex = 1, PageSize = 10 };
-    private int totalPages = 0;
-    private int totalCount = 0;
+    private int _totalPages = 0;
+    private int _totalCount = 0;
+
+    // Biến kiểm tra lần đầu tiên load
+    private bool _isFirstLoad = true;
 
     private BaseCreateOrUpdateAdminVM GetModel() => _isUpdate ? (BaseCreateOrUpdateAdminVM)_updateModel :
     (BaseCreateOrUpdateAdminVM)_createModel;
@@ -176,7 +179,7 @@ else
     protected override async Task LoadDataAsync()
     {
         // Reset UI Loading
-        items = null;
+        _items = null;
         StateHasChanged();
 
         try
@@ -188,13 +191,13 @@ else
             {
                 if (res.StatusCode == StatusCodeResponse.Success && res.Content != null)
                 {
-                    items = res.Content.Items;
-                    totalPages = res.Content.TotalPages;
-                    totalCount = res.Content.TotalCount;
+                    _items = res.Content.Items;
+                    _totalPages = res.Content.TotalPages;
+                    _totalCount = res.Content.TotalCount;
                 }
                 else
                 {
-                    items = new List<UnitTypeVM>();
+                    _items = new List<UnitTypeVM>();
 
                     if (res.StatusCode != StatusCodeResponse.Success)
                     {
@@ -207,7 +210,7 @@ else
         catch (Exception ex)
         {
             Logger.LogError(ex, "Lỗi load data unittype");
-            items = new List<UnitTypeVM>();
+            _items = new List<UnitTypeVM>();
         }
     }
 
@@ -220,10 +223,11 @@ else
     // --- 2. XỬ LÝ PARAMETERS ---
     protected override async Task OnParametersSetAsync()
     {
-        ResetForm();
-
-        if (IsJsReady)
+        // Chỉ load lần đầu tiên khi JS đã sẵn sàng
+        if (_isFirstLoad && IsJsReady)
         {
+            _isFirstLoad = false;
+            ResetForm();
             await LoadDataAsync();
         }
     }

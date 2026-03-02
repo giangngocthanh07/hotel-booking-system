@@ -1,4 +1,5 @@
 using FluentValidation;
+using HotelBooking.application.DTOs.User.Register;
 
 namespace HotelBooking.application.Validators.UserManagement.Register
 {

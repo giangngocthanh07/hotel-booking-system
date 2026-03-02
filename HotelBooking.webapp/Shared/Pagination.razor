@@ -6,9 +6,9 @@
 
 @if (TotalPages > 1)
 {
-    <div class="d-flex justify-content-center mt-4">
+    <div class="@ContainerClass">
         <nav aria-label="Page navigation">
-            <ul class="pagination">
+            <ul class="pagination @PaginationClass">
                 @* Previous Button *@
                 <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
                     <button class="page-link" @onclick="GoToPrevious" disabled="@IsLoading">
@@ -74,6 +74,16 @@
     /// Số trang hiển thị ở mỗi bên của trang hiện tại
     /// </summary>
     [Parameter] public int Spread { get; set; } = 2;
+
+    /// <summary>
+    /// CSS class cho container div (default: d-flex justify-content-center mt-4)
+    /// </summary>
+    [Parameter] public string ContainerClass { get; set; } = "d-flex justify-content-center mt-4";
+
+    /// <summary>
+    /// CSS class bổ sung cho ul.pagination (default: empty)
+    /// </summary>
+    [Parameter] public string PaginationClass { get; set; } = "";
 
     /// <summary>
     /// Callback khi chuyển trang

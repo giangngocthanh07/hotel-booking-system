@@ -77,6 +77,7 @@ public static class MessageResponse
             public const string EMPTY_TYPE = "Loại chính sách không được để trống!";
             public const string INVALID_AMOUNT = "Số tiền phải lớn hơn 0!";
             public const string NAME_ALREADY_EXISTS = "Tên chính sách đã tồn tại!";
+            public const string INVALID_ID_BY_TYPE = "ID không hợp lệ cho loại chính sách này!";
         }
 
         // Service Messages

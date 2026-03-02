@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using HotelBooking.application.DTOs.User.Register;
 using HotelBooking.application.Helpers;
 using HotelBooking.application.Services.Domains.UserManagement;
 using Microsoft.AspNetCore.Authorization;

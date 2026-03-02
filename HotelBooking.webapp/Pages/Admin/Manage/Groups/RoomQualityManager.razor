@@ -163,7 +163,7 @@ else
 
 
     // Biến kiểm soát vòng đời & Re-render
-    private int? _previousTypeId = -999;
+    private int? _previousTypeId = null;
 
     private BaseCreateOrUpdateAdminVM GetModel() => _isUpdate ? (BaseCreateOrUpdateAdminVM)_updateModel :
     (BaseCreateOrUpdateAdminVM)_createModel;

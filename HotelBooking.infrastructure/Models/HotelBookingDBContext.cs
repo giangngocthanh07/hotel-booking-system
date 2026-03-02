@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 
 namespace HotelBooking.infrastructure.Models;
 
@@ -395,7 +397,6 @@ public partial class HotelBookingDBContext : DbContext
 
             entity.HasIndex(e => e.Name, "UQ_Policies_Name").IsUnique();
 
-            entity.Property(e => e.Amount).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.Name).HasMaxLength(150);
 

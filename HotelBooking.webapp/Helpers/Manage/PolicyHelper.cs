@@ -1,98 +1,273 @@
 namespace HotelBooking.webapp.Helpers
 {
+    /// <summary>
+    /// Helper class cho Policy - xử lý factory, mapping, và default values
+    /// Pattern: Giống ServiceHelper FE - polymorphic ViewModels
+    /// </summary>
     public static class PolicyHelper
     {
-        // --- 1. ÁP DỤNG CHO CREATE MODEL ---
+        // ===========================================================================
+        // 1. FACTORY PATTERN: Tạo object CreateVM rỗng dựa trên TypeId
+        // ===========================================================================
+        public static PolicyCreateVM CreateNewPolicyModel(int typeId)
+        {
+            return typeId switch
+            {
+                (int)PolicyTypeEnum.CheckInOut => new CheckInOutPolicyCreateVM { TypeId = typeId },
+                (int)PolicyTypeEnum.Cancellation => new CancellationPolicyCreateVM { TypeId = typeId },
+                (int)PolicyTypeEnum.Children => new ChildrenPolicyCreateVM { TypeId = typeId },
+                (int)PolicyTypeEnum.Pets => new PetPolicyCreateVM { TypeId = typeId },
+                _ => new CheckInOutPolicyCreateVM { TypeId = typeId } // Default
+            };
+        }
+
+        // ===========================================================================
+        // 2. MAPPING: Chuyển từ Dữ liệu hiển thị (PolicyVM) sang Dữ liệu Update (PolicyUpdateVM)
+        // ===========================================================================
+        public static PolicyUpdateVM? MapToUpdateVM(PolicyVM source)
+        {
+            if (source == null) return null;
+
+            return source switch
+            {
+                CheckInOutPolicyVM checkInOut => new CheckInOutPolicyUpdateVM
+                {
+                    Name = checkInOut.Name,
+                    Description = checkInOut.Description,
+                    CheckInTime = checkInOut.CheckInTime,
+                    CheckOutTime = checkInOut.CheckOutTime,
+                    EarlyCheckInFee = checkInOut.EarlyCheckInFee,
+                    LateCheckOutFee = checkInOut.LateCheckOutFee
+                },
+                CancellationPolicyVM cancel => new CancellationPolicyUpdateVM
+                {
+                    Name = cancel.Name,
+                    Description = cancel.Description,
+                    DaysBeforeCheckIn = cancel.DaysBeforeCheckIn,
+                    RefundPercent = cancel.RefundPercent,
+                    IsRefundable = cancel.IsRefundable
+                },
+                ChildrenPolicyVM children => new ChildrenPolicyUpdateVM
+                {
+                    Name = children.Name,
+                    Description = children.Description,
+                    MinAge = children.MinAge,
+                    MaxAge = children.MaxAge,
+                    ExtraBedFee = children.ExtraBedFee
+                },
+                PetPolicyVM pet => new PetPolicyUpdateVM
+                {
+                    Name = pet.Name,
+                    Description = pet.Description,
+                    PetFee = pet.PetFee,
+                    IsPetAllowed = pet.IsPetAllowed
+                },
+                _ => null
+            };
+        }
+
+        // ===========================================================================
+        // 3. HELPER: Lấy tên hiển thị của PolicyType
+        // ===========================================================================
+        public static string GetPolicyTypeName(int typeId)
+        {
+            return typeId switch
+            {
+                (int)PolicyTypeEnum.CheckInOut => "Check-In/Check-Out",
+                (int)PolicyTypeEnum.Cancellation => "Hủy phòng",
+                (int)PolicyTypeEnum.Children => "Trẻ em & Giường phụ",
+                (int)PolicyTypeEnum.Pets => "Thú cưng",
+                _ => "Khác"
+            };
+        }
+
+        // ===========================================================================
+        // 4. SMART FILL: Tự động gợi ý thông số dựa trên tên chính sách
+        // ===========================================================================
+        
+        // --- 4a. ÁP DỤNG CHO CREATE MODEL ---
         public static void ApplyDefaultValues(PolicyCreateVM model, int typeId)
         {
-            // Không reset ở đây, để ResetForm() của Manager lo
-            ApplyLogic(typeId, model.Name ?? "",
-                v => { if (model.TimeFrom == null) model.TimeFrom = v; },
-                v => { if (model.TimeTo == null) model.TimeTo = v; },
-                v => { if (model.IntValue1 == 0 || model.IntValue1 == null) model.IntValue1 = v; },
-                v => { if (model.IntValue2 == 0 || model.IntValue2 == null) model.IntValue2 = v; },
-                v => { if (model.Amount == 0 || model.Amount == null) model.Amount = v; },
-                v => { if (model.Percent == 0 || model.Percent == null) model.Percent = v; },
-                v => { if (model.BoolValue == null) model.BoolValue = v; });
-        }
+            if (model == null) return;
+            var name = model.Name ?? "";
 
-        // --- 2. ÁP DỤNG CHO UPDATE MODEL ---
-        public static void ApplyDefaultValues(PolicyUpdateVM model, int typeId)
-        {
-            ApplyLogic(typeId, model.Name ?? "",
-                v => { if (model.TimeFrom == null) model.TimeFrom = v; },
-                v => { if (model.TimeTo == null) model.TimeTo = v; },
-                v => { if (model.IntValue1 == 0 || model.IntValue1 == null) model.IntValue1 = v; },
-                v => { if (model.IntValue2 == 0 || model.IntValue2 == null) model.IntValue2 = v; },
-                v => { if (model.Amount == 0 || model.Amount == null) model.Amount = v; },
-                v => { if (model.Percent == 0 || model.Percent == null) model.Percent = v; },
-                v => { if (model.BoolValue == null) model.BoolValue = v; });
-        }
-
-        // --- 3. LOGIC NGHIỆP VỤ (Private) ---
-        private static void ApplyLogic(int typeId, string nameCheck,
-            Action<TimeOnly?> setTimeFrom, Action<TimeOnly?> setTimeTo,
-            Action<int?> setInt1, Action<int?> setInt2,
-            Action<decimal?> setAmount, Action<double?> setPercent,
-            Action<bool?> setBool)
-        {
-            switch (typeId)
+            switch (model)
             {
-                case 1002: // Check-in & Check-out
-                    if (nameCheck.Contains("Early"))
-                    {
-                        setTimeFrom(new TimeOnly(8, 0)); setTimeTo(new TimeOnly(14, 0));
-                        setAmount(50000);
-                    }
-                    else if (nameCheck.Contains("Late"))
-                    {
-                        setTimeFrom(new TimeOnly(12, 0)); setTimeTo(new TimeOnly(18, 0));
-                        setAmount(50000);
-                    }
-                    else
-                    { // Standard
-                        setTimeFrom(new TimeOnly(14, 0)); setTimeTo(new TimeOnly(12, 0));
-                        setAmount(0);
-                    }
+                case CheckInOutPolicyCreateVM checkInOut:
+                    ApplyCheckInOutDefaults(checkInOut, name);
                     break;
-
-                case 1003: // Cancellation (Đã tối ưu cho Switch UI)
-                    if (nameCheck.Contains("Non-Refundable"))
-                    {
-                        setInt1(0);      // 0 ngày = Gạt Switch sang "Áp dụng ngay"
-                        setPercent(100); // Có phí phạt (%) -> Hiện ô nhập Percent
-                        setAmount(0);
-                    }
-                    else if (nameCheck.Contains("50%"))
-                    {
-                        setInt1(7);      // Hạn báo trước 7 ngày
-                        setPercent(50);
-                        setAmount(0);
-                    }
-                    else
-                    { // Linh hoạt / Miễn phí
-                        setInt1(3);      // Hạn báo trước 3 ngày
-                        setPercent(0);   // Phí = 0 -> Giao diện hiện "Miễn phí hủy"
-                        setAmount(0);
-                    }
+                case CancellationPolicyCreateVM cancel:
+                    ApplyCancellationDefaults(cancel, name);
                     break;
-
-                case 1004: // Children & Extra Bed
-                    if (nameCheck.Contains("Extra Bed") || nameCheck.Contains("Adult"))
-                    {
-                        setInt1(18); setInt2(99); setAmount(300000);
-                    }
-                    else
-                    {
-                        setInt1(6); setInt2(11); setAmount(150000);
-                    }
+                case ChildrenPolicyCreateVM children:
+                    ApplyChildrenDefaults(children, name);
                     break;
-
-                case 2002: // Pets
-                    setAmount(200000);
-                    setBool(true);
+                case PetPolicyCreateVM pet:
+                    ApplyPetDefaults(pet, name);
                     break;
             }
+        }
+
+        // --- 4b. ÁP DỤNG CHO UPDATE MODEL ---
+        public static void ApplyDefaultValues(PolicyUpdateVM model, int typeId)
+        {
+            if (model == null) return;
+            var name = model.Name ?? "";
+
+            switch (model)
+            {
+                case CheckInOutPolicyUpdateVM checkInOut:
+                    ApplyCheckInOutDefaults(checkInOut, name);
+                    break;
+                case CancellationPolicyUpdateVM cancel:
+                    ApplyCancellationDefaults(cancel, name);
+                    break;
+                case ChildrenPolicyUpdateVM children:
+                    ApplyChildrenDefaults(children, name);
+                    break;
+                case PetPolicyUpdateVM pet:
+                    ApplyPetDefaults(pet, name);
+                    break;
+            }
+        }
+
+        // ===========================================================================
+        // PRIVATE: Logic nghiệp vụ cho từng loại Policy
+        // ===========================================================================
+        
+        private static void ApplyCheckInOutDefaults(CheckInOutPolicyCreateVM model, string name)
+        {
+            if (name.Contains("Early", StringComparison.OrdinalIgnoreCase))
+            {
+                model.CheckInTime ??= new TimeOnly(8, 0);
+                model.CheckOutTime ??= new TimeOnly(14, 0);
+                model.EarlyCheckInFee ??= 50000;
+            }
+            else if (name.Contains("Late", StringComparison.OrdinalIgnoreCase))
+            {
+                model.CheckInTime ??= new TimeOnly(12, 0);
+                model.CheckOutTime ??= new TimeOnly(18, 0);
+                model.LateCheckOutFee ??= 50000;
+            }
+            else
+            {
+                model.CheckInTime ??= new TimeOnly(14, 0);
+                model.CheckOutTime ??= new TimeOnly(12, 0);
+            }
+        }
+
+        private static void ApplyCheckInOutDefaults(CheckInOutPolicyUpdateVM model, string name)
+        {
+            if (name.Contains("Early", StringComparison.OrdinalIgnoreCase))
+            {
+                model.CheckInTime ??= new TimeOnly(8, 0);
+                model.CheckOutTime ??= new TimeOnly(14, 0);
+                model.EarlyCheckInFee ??= 50000;
+            }
+            else if (name.Contains("Late", StringComparison.OrdinalIgnoreCase))
+            {
+                model.CheckInTime ??= new TimeOnly(12, 0);
+                model.CheckOutTime ??= new TimeOnly(18, 0);
+                model.LateCheckOutFee ??= 50000;
+            }
+            else
+            {
+                model.CheckInTime ??= new TimeOnly(14, 0);
+                model.CheckOutTime ??= new TimeOnly(12, 0);
+            }
+        }
+
+        private static void ApplyCancellationDefaults(CancellationPolicyCreateVM model, string name)
+        {
+            if (name.Contains("Non-Refundable", StringComparison.OrdinalIgnoreCase))
+            {
+                model.DaysBeforeCheckIn ??= 0;
+                model.RefundPercent ??= 0;
+                model.IsRefundable = false;
+            }
+            else if (name.Contains("50%", StringComparison.OrdinalIgnoreCase))
+            {
+                model.DaysBeforeCheckIn ??= 7;
+                model.RefundPercent ??= 50;
+                model.IsRefundable = true;
+            }
+            else
+            {
+                model.DaysBeforeCheckIn ??= 3;
+                model.RefundPercent ??= 100;
+                model.IsRefundable = true;
+            }
+        }
+
+        private static void ApplyCancellationDefaults(CancellationPolicyUpdateVM model, string name)
+        {
+            if (name.Contains("Non-Refundable", StringComparison.OrdinalIgnoreCase))
+            {
+                model.DaysBeforeCheckIn ??= 0;
+                model.RefundPercent ??= 0;
+                model.IsRefundable = false;
+            }
+            else if (name.Contains("50%", StringComparison.OrdinalIgnoreCase))
+            {
+                model.DaysBeforeCheckIn ??= 7;
+                model.RefundPercent ??= 50;
+                model.IsRefundable = true;
+            }
+            else
+            {
+                model.DaysBeforeCheckIn ??= 3;
+                model.RefundPercent ??= 100;
+                model.IsRefundable = true;
+            }
+        }
+
+        private static void ApplyChildrenDefaults(ChildrenPolicyCreateVM model, string name)
+        {
+            if (name.Contains("Extra Bed", StringComparison.OrdinalIgnoreCase) 
+                || name.Contains("Adult", StringComparison.OrdinalIgnoreCase))
+            {
+                model.MinAge ??= 12;
+                model.MaxAge ??= 17;
+                model.ExtraBedFee ??= 300000;
+            }
+            else
+            {
+                model.MinAge ??= 6;
+                model.MaxAge ??= 11;
+                model.ExtraBedFee ??= 150000;
+            }
+        }
+
+        private static void ApplyChildrenDefaults(ChildrenPolicyUpdateVM model, string name)
+        {
+            if (name.Contains("Extra Bed", StringComparison.OrdinalIgnoreCase) 
+                || name.Contains("Adult", StringComparison.OrdinalIgnoreCase))
+            {
+                model.MinAge ??= 12;
+                model.MaxAge ??= 17;
+                model.ExtraBedFee ??= 300000;
+            }
+            else
+            {
+                model.MinAge ??= 6;
+                model.MaxAge ??= 11;
+                model.ExtraBedFee ??= 150000;
+            }
+        }
+
+        private static void ApplyPetDefaults(PetPolicyCreateVM model, string name)
+        {
+            model.PetFee ??= 200000;
+            // Default: cho phép thú cưng
+            if (!model.IsPetAllowed && model.PetFee > 0)
+                model.IsPetAllowed = true;
+        }
+
+        private static void ApplyPetDefaults(PetPolicyUpdateVM model, string name)
+        {
+            model.PetFee ??= 200000;
+            if (!model.IsPetAllowed && model.PetFee > 0)
+                model.IsPetAllowed = true;
         }
     }
 }

@@ -1,4 +1,5 @@
 @using HotelBooking.webapp.Pages.Admin.Base
+@using HotelBooking.webapp.Helpers
 @inherits AdminPageBase
 @attribute [Authorize(Roles = "Admin")]
 
@@ -20,8 +21,8 @@
 }
 else
 {
-    <MasterDetailLayout @ref="_layoutRef" TItem="RoomViewVM" TModel="BaseCreateOrUpdateAdminVM" Items="items"
-                        Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="totalPages" TotalCount="totalCount"
+    <MasterDetailLayout @ref="_layoutRef" TItem="RoomViewVM" TModel="BaseCreateOrUpdateAdminVM" Items="_items"
+                        Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
                         OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
                         OnDelete="HandleDelete"               OnCancel="ResetForm">
 
@@ -112,7 +113,7 @@ else
     [Parameter] public int? TypeId { get; set; }
 
     // --- STATE ---
-    private List<RoomViewVM>? items;
+    private List<RoomViewVM>? _items;
 
     // Tách Model
     private RoomViewCreateVM _createModel = new RoomViewCreateVM();
@@ -120,46 +121,25 @@ else
 
     private int _currentEditingId = 0;
     private bool _isUpdate = false;
+
     // --- PHÂN TRANG ---
     private PagingRequest _paging = new() { PageIndex = 1, PageSize = 10 };
-    private int totalPages = 0;
-    private int totalCount = 0;
+    private int _totalPages = 0;
+    private int _totalCount = 0;
 
     private BaseCreateOrUpdateAdminVM GetModel() => _isUpdate ? (BaseCreateOrUpdateAdminVM)_updateModel :
     (BaseCreateOrUpdateAdminVM)_createModel;
 
     private MasterDetailLayout<RoomViewVM, BaseCreateOrUpdateAdminVM>? _layoutRef;
 
-    // --- HELPER: Tự động chọn Icon dựa trên tên ---
-    private string GetViewIcon(string? name)
-    {
-        if (string.IsNullOrEmpty(name)) return "fa-solid fa-image"; // Mặc định
-
-        name = name.ToLower();
-
-        // 1. Biển / Hồ / Nước
-        if (name.Contains("sea") || name.Contains("ocean") || name.Contains("lake") || name.Contains("pool") ||
-        name.Contains("biển") || name.Contains("hồ"))
-            return "fa-solid fa-water";
-
-        // 2. Vườn / Cây / Rừng / Núi
-        if (name.Contains("garden") || name.Contains("forest") || name.Contains("mountain") || name.Contains("hill") ||
-        name.Contains("vườn") || name.Contains("núi"))
-            return "fa-solid fa-tree";
-
-        // 3. Thành phố / Phố
-        if (name.Contains("city") || name.Contains("street") || name.Contains("landmark") || name.Contains("phố"))
-            return "fa-solid fa-city";
-
-        // 4. Mặc định
-        return "fa-solid fa-street-view";
-    }
+    // --- HELPER: Tự động chọn Icon dựa trên tên (delegate to helper) ---
+    private string GetViewIcon(string? name) => RoomViewIconHelper.GetIcon(name);
 
     // --- 1. LOAD DATA (Override từ Cha) ---
     protected override async Task LoadDataAsync()
     {
         // Reset UI Loading
-        items = null;
+        _items = null;
         StateHasChanged();
 
         try
@@ -171,13 +151,13 @@ else
             {
                 if (res.StatusCode == StatusCodeResponse.Success && res.Content != null)
                 {
-                    items = res.Content.Items;
-                    totalPages = res.Content.TotalPages;
-                    totalCount = res.Content.TotalCount;
+                    _items = res.Content.Items;
+                    _totalPages = res.Content.TotalPages;
+                    _totalCount = res.Content.TotalCount;
                 }
                 else
                 {
-                    items = new List<RoomViewVM>();
+                    _items = new List<RoomViewVM>();
 
                     if (res.StatusCode != StatusCodeResponse.Success)
                     {
@@ -189,7 +169,7 @@ else
         catch (Exception ex)
         {
             Logger.LogError(ex, "Lỗi load data roomview");
-            items = new List<RoomViewVM>();
+            _items = new List<RoomViewVM>();
         }
     }
 

@@ -20,8 +20,8 @@
 }
 else
 {
-    <MasterDetailLayout TItem="BedTypeVM" TModel="BaseCreateOrUpdateAdminVM" Items="items" Model="@GetModel()"
-                        PageIndex="_paging.PageIndex ?? 1" TotalPages="totalPages" TotalCount="totalCount" OnPageChanged="HandlePageChanged"
+    <MasterDetailLayout TItem="BedTypeVM" TModel="BaseCreateOrUpdateAdminVM" Items="_items" Model="@GetModel()"
+                        PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount" OnPageChanged="HandlePageChanged"
                         OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm">
 
         @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
@@ -194,7 +194,7 @@ else
     [Parameter] public int? TypeId { get; set; }
 
     // --- STATE ---
-    private List<BedTypeVM>? items;
+    private List<BedTypeVM>? _items;
 
     // Tách Model
     private BedTypeCreateVM _createModel = new BedTypeCreateVM();
@@ -205,8 +205,11 @@ else
 
     // --- PHÂN TRANG ---
     private PagingRequest _paging = new() { PageIndex = 1, PageSize = 10 };
-    private int totalPages = 0;
-    private int totalCount = 0;
+    private int _totalPages = 0;
+    private int _totalCount = 0;
+
+    // Biến kiểm tra lần đầu tiên load
+    private bool _isFirstLoad = true;
 
     private BaseCreateOrUpdateAdminVM GetModel() => _isUpdate ? _updateModel : _createModel;
 
@@ -257,7 +260,7 @@ else
     protected override async Task LoadDataAsync()
     {
         // Reset UI Loading
-        items = null!;
+        _items = null!;
         StateHasChanged();
 
         try
@@ -269,13 +272,13 @@ else
             {
                 if (res.StatusCode == StatusCodeResponse.Success && res.Content != null)
                 {
-                    items = res.Content.Items;
-                    totalPages = res.Content.TotalPages;
-                    totalCount = res.Content.TotalCount;
+                    _items = res.Content.Items;
+                    _totalPages = res.Content.TotalPages;
+                    _totalCount = res.Content.TotalCount;
                 }
                 else
                 {
-                    items = new List<BedTypeVM>();
+                    _items = new List<BedTypeVM>();
 
                     if (res.StatusCode != StatusCodeResponse.Success)
                     {
@@ -287,7 +290,7 @@ else
         catch (Exception ex)
         {
             Logger.LogError(ex, "Lỗi load data bedtype");
-            items = new List<BedTypeVM>();
+            _items = new List<BedTypeVM>();
         }
     }
 
@@ -298,15 +301,14 @@ else
     }
 
     // --- 2. XỬ LÝ PARAMETERS ---
-    // Với trang Non-Type, ta không cần override OnParametersSetAsync phức tạp
-    // Vì dữ liệu không đổi theo TypeId.
-    // Tuy nhiên, có thể thêm check IsJsReady để an toàn.
+    // Với trang Non-Type, chỉ load data lần đầu khi IsJsReady
     protected override async Task OnParametersSetAsync()
     {
-        ResetForm();
-
-        if (IsJsReady)
+        // Chỉ load lần đầu tiên khi JS đã sẵn sàng
+        if (_isFirstLoad && IsJsReady)
         {
+            _isFirstLoad = false;
+            ResetForm();
             await LoadDataAsync();
         }
     }

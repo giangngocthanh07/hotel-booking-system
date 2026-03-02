@@ -1,53 +1,201 @@
 using System.Text.Json;
 using HotelBooking.infrastructure.Models;
 
+/// <summary>
+/// Helper class cho Policy - xử lý mapping giữa Entity ↔ DTO thông qua JSON
+/// Pattern: Giống ServiceHelper - lưu dữ liệu đa hình vào column Additional
+/// </summary>
 public static class PolicyHelper
 {
-    // <summary>
-    /// Hàm này đảm bảo dữ liệu thừa bị xóa bỏ dựa trên TypeId.
-    /// Ví dụ: Policy về Giờ giấc thì không được lưu tiền hay phần trăm.
-    /// </summary>
-    public static void SanitizeEntity(Policy entity)
+    // JSON options dùng chung - tối ưu bộ nhớ
+    private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
     {
-        switch (entity.TypeId)
+        PropertyNameCaseInsensitive = true
+    };
+
+    // ===========================================================================
+    // 1. GET TYPE ID FROM UPDATE DTO
+    // ===========================================================================
+    public static int? GetTypeIdFromUpdateDto(PolicyUpdateDTO dto)
+    {
+        return dto switch
         {
-            // CASE 1: Check-in / Check-out (ID 1002)
-            // -> Chỉ giữ TimeFrom, TimeTo, Amount (phụ thu). Xóa Percent, IntValue.
-            case 1002:
-                entity.IntValue1 = null;
-                entity.IntValue2 = null;
-                entity.Percent = null;
-                entity.BoolValue = false;
-                // KHÔNG reset TimeFrom/TimeTo/Amount vì người dùng đã nhập
-                break;
+            CheckInOutPolicyUpdateDTO => (int)PolicyTypeEnum.CheckInOut,
+            CancellationPolicyUpdateDTO => (int)PolicyTypeEnum.Cancellation,
+            ChildrenPolicyUpdateDTO => (int)PolicyTypeEnum.Children,
+            PetPolicyUpdateDTO => (int)PolicyTypeEnum.Pets,
+            _ => null
+        };
+    }
 
-            // CASE 2: Cancellation (ID 1003)
-            // -> Cần IntValue1 (Ngày), Percent (Phạt), BoolValue. Xóa Time, IntValue2.
-            case 1003:
-                entity.TimeFrom = null;
-                entity.TimeTo = null;
-                entity.IntValue2 = null;
-                // entity.Amount = null; // Có thể giữ Amount nếu muốn phạt tiền cứng thay vì %
-                break;
+    // ===========================================================================
+    // 2. MAP ENTITY → DTO (Output - Hiển thị)
+    // ===========================================================================
+    public static PolicyDTO? MapToPolicyDTO(Policy entity)
+    {
+        var additionalJson = entity.Additional ?? "{}";
 
-            // CASE 3: Children (ID 1004)
-            // -> Cần IntValue1, IntValue2 (Tuổi), Amount. Xóa Time, Percent.
-            case 1004:
-                entity.TimeFrom = null;
-                entity.TimeTo = null;
-                entity.Percent = null;
-                entity.BoolValue = false;
-                break;
+        switch ((PolicyTypeEnum)entity.TypeId)
+        {
+            case PolicyTypeEnum.CheckInOut:
+                var checkInOutData = JsonSerializer.Deserialize<CheckInOutAdditionalData>(additionalJson, _jsonOptions);
+                return new CheckInOutPolicyDTO
+                {
+                    Id = entity.Id,
+                    Name = entity.Name,
+                    Description = entity.Description,
+                    IsDeleted = entity.IsDeleted,
+                    TypeId = entity.TypeId,
+                    // Semantic properties
+                    CheckInTime = ParseTimeOnly(checkInOutData?.CheckInTime),
+                    CheckOutTime = ParseTimeOnly(checkInOutData?.CheckOutTime),
+                    EarlyCheckInFee = checkInOutData?.EarlyCheckInFee,
+                    LateCheckOutFee = checkInOutData?.LateCheckOutFee
+                };
 
-            // CASE 4: Pets (ID 2002)
-            // -> Cần Amount, BoolValue. Xóa Time, Percent, IntValue.
-            case 2002:
-                entity.TimeFrom = null;
-                entity.TimeTo = null;
-                entity.IntValue1 = null;
-                entity.IntValue2 = null;
-                entity.Percent = null;
-                break;
+            case PolicyTypeEnum.Cancellation:
+                var cancelData = JsonSerializer.Deserialize<CancellationAdditionalData>(additionalJson, _jsonOptions);
+                return new CancellationPolicyDTO
+                {
+                    Id = entity.Id,
+                    Name = entity.Name,
+                    Description = entity.Description,
+                    IsDeleted = entity.IsDeleted,
+                    TypeId = entity.TypeId,
+                    // Semantic properties
+                    DaysBeforeCheckIn = cancelData?.DaysBeforeCheckIn,
+                    RefundPercent = cancelData?.RefundPercent,
+                    IsRefundable = cancelData?.IsRefundable ?? false
+                };
+
+            case PolicyTypeEnum.Children:
+                var childrenData = JsonSerializer.Deserialize<ChildrenAdditionalData>(additionalJson, _jsonOptions);
+                return new ChildrenPolicyDTO
+                {
+                    Id = entity.Id,
+                    Name = entity.Name,
+                    Description = entity.Description,
+                    IsDeleted = entity.IsDeleted,
+                    TypeId = entity.TypeId,
+                    // Semantic properties
+                    MinAge = childrenData?.MinAge,
+                    MaxAge = childrenData?.MaxAge,
+                    ExtraBedFee = childrenData?.ExtraBedFee
+                };
+
+            case PolicyTypeEnum.Pets:
+                var petData = JsonSerializer.Deserialize<PetAdditionalData>(additionalJson, _jsonOptions);
+                return new PetPolicyDTO
+                {
+                    Id = entity.Id,
+                    Name = entity.Name,
+                    Description = entity.Description,
+                    IsDeleted = entity.IsDeleted,
+                    TypeId = entity.TypeId,
+                    // Semantic properties
+                    PetFee = petData?.PetFee,
+                    IsPetAllowed = petData?.IsPetAllowed ?? false
+                };
+
+            default:
+                return null;
         }
+    }
+
+    // ===========================================================================
+    // 3. MAP CREATE DTO → JSON STRING (Lưu vào DB)
+    // ===========================================================================
+    public static string MapToAdditionalJson(PolicyCreateDTO dto)
+    {
+        switch (dto)
+        {
+            case CheckInOutPolicyCreateDTO checkInOut:
+                return JsonSerializer.Serialize(new CheckInOutAdditionalData
+                {
+                    CheckInTime = checkInOut.CheckInTime?.ToString("HH:mm"),
+                    CheckOutTime = checkInOut.CheckOutTime?.ToString("HH:mm"),
+                    EarlyCheckInFee = checkInOut.EarlyCheckInFee,
+                    LateCheckOutFee = checkInOut.LateCheckOutFee
+                }, _jsonOptions);
+
+            case CancellationPolicyCreateDTO cancel:
+                return JsonSerializer.Serialize(new CancellationAdditionalData
+                {
+                    DaysBeforeCheckIn = cancel.DaysBeforeCheckIn,
+                    RefundPercent = cancel.RefundPercent,
+                    IsRefundable = cancel.IsRefundable
+                }, _jsonOptions);
+
+            case ChildrenPolicyCreateDTO children:
+                return JsonSerializer.Serialize(new ChildrenAdditionalData
+                {
+                    MinAge = children.MinAge,
+                    MaxAge = children.MaxAge,
+                    ExtraBedFee = children.ExtraBedFee
+                }, _jsonOptions);
+
+            case PetPolicyCreateDTO pet:
+                return JsonSerializer.Serialize(new PetAdditionalData
+                {
+                    PetFee = pet.PetFee,
+                    IsPetAllowed = pet.IsPetAllowed
+                }, _jsonOptions);
+
+            default:
+                return "{}";
+        }
+    }
+
+    // ===========================================================================
+    // 4. MAP UPDATE DTO → JSON STRING (Cập nhật DB)
+    // ===========================================================================
+    public static string MapToAdditionalJson(PolicyUpdateDTO dto)
+    {
+        switch (dto)
+        {
+            case CheckInOutPolicyUpdateDTO checkInOut:
+                return JsonSerializer.Serialize(new CheckInOutAdditionalData
+                {
+                    CheckInTime = checkInOut.CheckInTime?.ToString("HH:mm"),
+                    CheckOutTime = checkInOut.CheckOutTime?.ToString("HH:mm"),
+                    EarlyCheckInFee = checkInOut.EarlyCheckInFee,
+                    LateCheckOutFee = checkInOut.LateCheckOutFee
+                }, _jsonOptions);
+
+            case CancellationPolicyUpdateDTO cancel:
+                return JsonSerializer.Serialize(new CancellationAdditionalData
+                {
+                    DaysBeforeCheckIn = cancel.DaysBeforeCheckIn,
+                    RefundPercent = cancel.RefundPercent,
+                    IsRefundable = cancel.IsRefundable
+                }, _jsonOptions);
+
+            case ChildrenPolicyUpdateDTO children:
+                return JsonSerializer.Serialize(new ChildrenAdditionalData
+                {
+                    MinAge = children.MinAge,
+                    MaxAge = children.MaxAge,
+                    ExtraBedFee = children.ExtraBedFee
+                }, _jsonOptions);
+
+            case PetPolicyUpdateDTO pet:
+                return JsonSerializer.Serialize(new PetAdditionalData
+                {
+                    PetFee = pet.PetFee,
+                    IsPetAllowed = pet.IsPetAllowed
+                }, _jsonOptions);
+
+            default:
+                return "{}";
+        }
+    }
+
+    // ===========================================================================
+    // PRIVATE HELPERS
+    // ===========================================================================
+    private static TimeOnly? ParseTimeOnly(string? timeStr)
+    {
+        if (string.IsNullOrEmpty(timeStr)) return null;
+        return TimeOnly.TryParse(timeStr, out var result) ? result : null;
     }
 }

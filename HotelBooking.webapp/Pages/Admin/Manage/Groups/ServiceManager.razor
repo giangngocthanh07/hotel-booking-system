@@ -1,5 +1,6 @@
 @using HotelBooking.webapp.ViewModels.Hotel
 @using HotelBooking.webapp.Pages.Admin.Base
+@using HotelBooking.webapp.Helpers
 
 @inherits AdminPageBase
 @attribute [Authorize(Roles = "Admin")]
@@ -478,7 +479,7 @@ else
 
 
     // Biến kiểm soát vòng đời & Re-render
-    private int? _previousTypeId = -999;
+    private int? _previousTypeId = null;
 
     private MasterDetailLayout<ServiceVM, BaseCreateOrUpdateAdminVM>? _layoutRef;
 
@@ -654,16 +655,7 @@ else
         // Fallback cho Create
         return _createModel ?? new ServiceStandardCreateVM();
     }
-    private string GetServiceIcon(string? name)
-    {
-        if (string.IsNullOrEmpty(name)) return "fa-solid fa-concierge-bell";
-        var n = name.ToLower();
-        if (n.Contains("sân bay") || n.Contains("airport") || n.Contains("xe")) return "fa-solid fa-car-side";
-        if (n.Contains("ăn") || n.Contains("breakfast") || n.Contains("lunch") || n.Contains("dinner")) return "fa-solid fa-utensils";
-        if (n.Contains("giặt") || n.Contains("laundry")) return "fa-solid fa-shirt";
-        if (n.Contains("đỗ") || n.Contains("parking")) return "fa-solid fa-square-p";
-        return "fa-solid fa-box-open";
-    }
+    private string GetServiceIcon(string? name) => ServiceIconHelper.GetIcon(name);
 
     
 

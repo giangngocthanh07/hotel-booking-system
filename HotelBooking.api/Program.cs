@@ -18,6 +18,8 @@ using HotelBooking.application.Validators.AdminManagement.Service;
 using HotelBooking.application.Validators.AdminManagement.Policy;
 using HotelBooking.application.Validators.AdminManagement.RoomAttributes;
 using HotelBooking.application.Validators.AdminManagement;
+using HotelBooking.application.DTOs.User.Register;
+using HotelBooking.application.DTOs.User.Login;
 
 
 

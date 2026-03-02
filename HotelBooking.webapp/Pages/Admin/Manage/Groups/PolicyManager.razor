@@ -1,17 +1,15 @@
 @using HotelBooking.webapp.Pages.Admin.Base
+@using HotelBooking.webapp.Helpers
 @inherits AdminPageBase
 @attribute [Authorize(Roles = "Admin")]
 
-@* --- 1. ĐỊNH NGHĨA ROUTING --- *@
 @page "/admin/manage/policy"
 @page "/admin/manage/policy/{TypeId:int}"
 
-@* --- 2. SỬ DỤNG LAYOUT ADMIN CHUNG --- *@
 @layout AdminLayout
 @inject ILogger<PolicyManager> Logger
 @inject ISnackbar _snackbar
 
-@* --- 3. UI LOADING (Kiểm soát bởi Class Cha) --- *@
 @if (!ShouldRenderUI())
 {
     <div class="d-flex justify-content-center align-items-center p-5">
@@ -21,592 +19,38 @@
 }
 else
 {
-    <MasterDetailLayout @ref="_layoutRef" TItem="PolicyVM" TModel="BaseCreateOrUpdateAdminVM" Items="items" Model="@GetModel()"
-        PageIndex="_paging.PageIndex ?? 1" TotalPages="totalPages" TotalCount="totalCount" OnPageChanged="HandlePageChanged"
-        OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm" OnNameBlur="SuggestDefaultValues">
+    <MasterDetailLayout @ref="_layoutRef" TItem="PolicyVM" TModel="BaseCreateOrUpdateAdminVM" Items="_items"
+                        Model="@GetModel()"        PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
+                        OnPageChanged="HandlePageChanged"        OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
+                        OnDelete="HandleDelete" OnCancel="ResetForm" OnNameBlur="SuggestDefaultValues">
 
-        @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
         <SidebarTopContent>
-            @* NHÚNG COMPONENT MENU THÔNG MINH VÀO ĐÂY *@
-            @* Nó tự biết đường vẽ ra Dropdown *@
             <GlobalNavMenu CurrentModule="Policy" CurrentTypeId="TypeId" />
         </SidebarTopContent>
 
-        @* --- B. CẤU HÌNH FORM (Mở khóa để Admin thiết lập mẫu) --- *@
         <FormContent Context="m">
-            @* LƯU Ý: Biến 'm' ở đây chính là Model được Layout truyền xuống qua @FormContent(Model).
-           Vì TModel được ràng buộc là BaseCreateOrUpdateAdminVM, bạn có thể truy cập 
-           các thuộc tính chung. Tuy nhiên, các thuộc tính riêng của Policy (Percent, Amount...) 
-           cần được xử lý khéo léo để đảm bảo Strong Type.
-            *@
-
-            @* --- HELPER VALIDATION NỘI BỘ (Chống lỗi FullConditionalExpression) --- *@
-            @{
-                // Switcher Validation để trỏ đúng model con
-                RenderFragment RenderVal(string prop) => __builder => {
-                    @if (_isUpdate) {
-                        if (prop == "Amount") { <ValidationMessage For="() => _updateModel.Amount" class="val-msg" /> }
-                        else if (prop == "Percent") { <ValidationMessage For="() => _updateModel.Percent" class="val-msg" /> }
-                        else if (prop == "IntValue1") { <ValidationMessage For="() => _updateModel.IntValue1" class="val-msg" /> }
-                    } else {
-                        if (prop == "Amount") { <ValidationMessage For="() => _createModel.Amount" class="val-msg" /> }
-                        else if (prop == "Percent") { <ValidationMessage For="() => _createModel.Percent" class="val-msg" /> }
-                        else if (prop == "IntValue1") { <ValidationMessage For="() => _createModel.IntValue1" class="val-msg" /> }
-                        }
-                };
-            }
-
-            @* --- CASE 1002: CHECK-IN / CHECK-OUT --- *@
-            @if (TypeId == 1002)
-            {
-                @* ----- SET TRẠNG THÁI CHO PHẦN AMOUNT -----*@
-                // Lấy giá trị hiện tại để xác định trạng thái Switch
-                decimal currentAmt = _isUpdate ? (_updateModel.Amount ?? 0) : (_createModel.Amount ?? 0);
-
-                bool isPaid = currentAmt > 0;
-
-                @* ----- SET TRẠNG THÁI CHO PHẦN KHUNG GIỜ -----*@
-                // 1. Lấy giá trị hiện tại
-                var tFrom = _isUpdate ? _updateModel.TimeFrom : _createModel.TimeFrom;
-                var tTo = _isUpdate ? _updateModel.TimeTo : _createModel.TimeTo;
-
-                // 2. Logic tính tổng số giờ
-                double totalHours = 0;
-                if (tFrom.HasValue && tTo.HasValue)
-                {
-                    var diff = tTo.Value - tFrom.Value;
-                    totalHours = diff.TotalHours;
-                    // Nếu trả phòng < nhận phòng (thuê xuyên đêm), cộng thêm 24h
-                    if (totalHours <= 0) totalHours += 24; 
-                }
-
-                // 3. Biến kiểm tra lỗi (Lỗi nếu thời gian ở > 12 tiếng)
-                bool isInvalidTime = totalHours > 23;
-
-                @* --- 1a. NÚT GẠT CHỌN MIỄN PHÍ / TÍNH PHÍ --- *@
-                <h6 class="text-primary fw-bold mb-3"><i class="fa-regular fa-clock me-2"></i>Khung giờ & Phụ thu</h6>
-                <div class="form-check form-switch custom-switch p-2 rounded border bg-light d-flex align-items-center justify-content-between mb-3 shadow-sm">
-                    <label class="small fw-bold text-muted text-uppercase mb-0 ms-1">
-                        <i class="fa-solid fa-hand-holding-dollar me-2 @(isPaid ? "text-success" : "text-secondary")"></i>
-                        @(isPaid ? "Tính phí phụ thu" : "Miễn phí")
-                    </label>
-                    <input class="form-check-input" type="checkbox" role="switch" 
-                        checked="@isPaid"
-                        @onchange="@(e => HandleToggleSurcharge((bool)e.Value!))"
-                        style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
-                </div>
-
-                
-                @* --- 1b. HIỂN THỊ Ô NHẬP TIỀN NẾU CHỌN TÍNH PHÍ --- *@
-                @if (isPaid)
-                {
-                    <div class="mb-3 animate__animated animate__fadeInDown animate__faster">
-                        <label class="form-label fw-bold extra-small text-muted text-uppercase">Số tiền phụ thu mẫu</label>
-                        <div class="input-group shadow-sm">
-                            <span class="input-group-text bg-white text-success">
-                                <i class="fa-solid fa-money-bill-wave"></i>
-                            </span>
-                            <input type="text" class="form-control text-end fw-bold text-success" 
-                                inputmode="numeric"
-                                value="@currentAmt.ToString("N0")" 
-                                @oninput="@(e => HandleAmountInput(e.Value?.ToString()))" 
-                                placeholder="Nhập số tiền..." />
-                            <span class="input-group-text bg-light fw-bold">VNĐ</span>
-                        </div>
-                        @RenderVal("Amount")
-                    </div>
-                }
-                else
-                {
-                    <div class="alert alert-success border-0 py-2 px-3 d-flex align-items-center shadow-sm mb-3 animate__animated animate__fadeIn">
-                        <i class="fa-solid fa-circle-check me-2 fs-5"></i>
-                        <div class="extra-small fst-italic"><b>Miễn phí:</b> Owner sẽ không thu thêm phí cho khung giờ này.</div>
-                    </div>
-                }
-                <div class="form-text small mb-3">Số tiền này sẽ được dùng làm giá gợi ý khi khách sạn áp dụng chính sách.
-                </div>
-                
-                @* ----- 2a. KHUNG GIỜ CHUẨN -----*@
-                <h6 class="text-primary fw-bold mb-3"><i class="fa-regular fa-clock me-2"></i>Thiết lập khung giờ chuẩn</h6>
-
-                <div class="row g-3">
-                    <div class="col-6">
-                        <label class="small text-muted fw-bold">Nhận phòng</label>
-                        @if(_isUpdate) { <input type="time" class="form-control shadow-sm @(isInvalidTime ? "border-danger text-danger" : "")" @bind="_updateModel.TimeFrom" /> }
-                        else { <input type="time" class="form-control shadow-sm @(isInvalidTime ? "border-danger text-danger" : "")" @bind="_createModel.TimeFrom" /> }
-                    </div>
-                    <div class="col-6">
-                        <label class="small text-muted fw-bold">Trả phòng</label>
-                        @if(_isUpdate) { <input type="time" class="form-control shadow-sm @(isInvalidTime ? "border-danger text-danger" : "")" @bind="_updateModel.TimeTo" /> }
-                        else { <input type="time" class="form-control shadow-sm @(isInvalidTime ? "border-danger text-danger" : "")" @bind="_createModel.TimeTo" /> }
-                    </div>
-                
-
-                    @* 2b. HIỂN THỊ LỖI LOGIC GIỜ GIẤC *@
-                    @if (isInvalidTime)
-                    {
-                        <div class="col-12 animate__animated animate__shakeX">
-                            <div class="alert alert-danger py-2 px-3 small fw-bold mb-0 shadow-sm" style="border:none; border-left: 4px solid darkred;">
-                                <i class="fa-solid fa-circle-exclamation me-2"></i>
-                                Lỗi: Thời gian lưu trú (@totalHours.ToString("0.0")h) không được vượt quá 12 tiếng.
-                            </div>
-                        </div>
-                    }
-                    else if (totalHours > 0)
-                    {
-                        <div class="col-12">
-                            <div class="extra-small text-muted fst-italic px-2">
-                                <i class="fa-solid fa-info-circle me-1"></i>Tổng thời gian lưu trú dự kiến: <b>@totalHours.ToString("0.0") giờ</b>.
-                            </div>
-                        </div>
-                    }
-                </div>
-            }
-
-            @* --- CASE 1003: CANCELLATION --- *@
-            @if (TypeId == 1003)
-            {
-                <h6 class="text-danger fw-bold mb-3"><i class="fa-solid fa-ban me-2"></i>Thiết lập phí hủy phòng</h6>
-                
-                @* ----- SET GIÁ TRỊ % PERCENT VÀ AMOUNT*@
-                var pct = _isUpdate ? _updateModel.Percent : _createModel.Percent;
-                var amt = _isUpdate ? _updateModel.Amount : _createModel.Amount;
-
-                var currentDays = _isUpdate ? _updateModel.IntValue1 : _createModel.IntValue1;
-
-                bool hasFine = pct > 0 || (amt > 0);
-                bool isPercentType = pct > 0 || (amt <= 0 || amt == null);
-                bool isAnytime = currentDays <= 0;
-
-
-                <div class="row g-3">
-                @* --- 1. BẬT/TẮT CÓ PHÍ PHẠT --- *@
-                <div class="col-12 mt-2">
-                    <div class="form-check form-switch custom-switch p-2 rounded border bg-light d-flex align-items-center justify-content-between shadow-sm">
-                        <label class="small fw-bold text-muted text-uppercase mb-0 ms-1">
-                            <i class="fa-solid fa-hand-holding-dollar me-2 text-danger"></i>Có áp dụng phí phạt?
-                        </label>
-                        <input class="form-check-input" type="checkbox" role="switch" 
-                            checked="@hasFine" 
-                            @onchange="@(e => HandleToggleFine((bool)e.Value!))"
-                            style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
-                    </div>
-                </div>
-
-                @if (hasFine)
-                {
-                    @* --- 2. CHỌN LOẠI VÀ NHẬP MỨC PHÍ --- *@
-                    <div class="col-12 animate__animated animate__fadeIn animate__faster">
-                        <div class="btn-group w-100 mb-2 shadow-sm" role="group">
-                            <button type="button" class="btn btn-sm @(isPercentType ? "btn-danger" : "btn-outline-danger") fw-bold" 
-                                    @onclick="@(() => ChangeFineType(true))">Phần trăm (%)</button>
-                            <button type="button" class="btn btn-sm @(!isPercentType ? "btn-success" : "btn-outline-success") fw-bold" 
-                                    @onclick="@(() => ChangeFineType(false))">Số tiền (VNĐ)</button>
-                        </div>
-
-                        @if (isPercentType)
-                        {
-                            <div class="input-group shadow-sm">
-                                <span class="input-group-text bg-danger text-white" style="width: 45px;"><i class="fa-solid fa-percent"></i></span>
-                                <input type="number" class="form-control text-danger fw-bold text-center" placeholder="Nhập % phạt..."
-                                    value="@pct" @oninput="@(e => HandleFineInput(e.Value?.ToString(), "percent"))" />
-                            </div>
-                            @* ----- VALIDATION MESSAGE -----*@
-                            @RenderVal("Percent")
-                        }
-                        else
-                        {
-                            <div class="input-group shadow-sm">
-                                <span class="input-group-text bg-success text-white" style="width: 45px;"><i class="fa-solid fa-money-bill-1"></i></span>
-                                <input type="text" class="form-control text-success fw-bold text-end" placeholder="Nhập số tiền..."
-                                    inputmode="numeric"
-                                    value="@((amt ?? 0).ToString("N0"))" @oninput="@(e => HandleFineInput(e.Value?.ToString(), "amount"))" />
-                                <span class="input-group-text bg-light small fw-bold">VNĐ</span>
-                            </div>
-                            @* ----- VALIDATION MESSAGE -----*@
-                            @RenderVal("Amount")
-                        }
-                    </div>
-
-                    @* --- 3. THỜI HẠN PHẠT --- *@
-                    <div class="col-12 mt-2 animate__animated animate__fadeIn">
-                        <div class="p-2 border rounded bg-white shadow-sm">
-                            <div class="form-check form-switch custom-switch p-0 d-flex align-items-center justify-content-between">
-                                <label class="small fw-bold @(isAnytime ? "text-danger" : "text-primary") mb-0">
-                                    <i class="@(isAnytime ? "fa-solid fa-bolt" : "fa-solid fa-clock") me-1"></i>
-                                    @(isAnytime ? "Áp dụng ngay khi đặt" : "Báo trước theo ngày")
-                                </label>
-                                <input class="form-check-input ms-0" type="checkbox" role="switch"
-                                    checked="@isAnytime" @onchange="@(e => SetIntValue((bool)e.Value! ? 0 : 1))"
-                                    style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
-                            </div>
-
-                            @if (!isAnytime)
-                            {
-                                <div class="mt-2 animate__animated animate__slideInDown animate__faster">
-                                    <div class="input-group shadow-sm">
-                                        <input type="number" class="form-control text-center fw-bold text-primary" 
-                                            value="@currentDays"
-                                            @oninput="@(e => HandleIntValueInput(e.Value?.ToString()))" />
-                                        <span class="input-group-text bg-primary text-white fw-bold">ngày</span>
-                                    </div>
-                                    @* ----- VALIDATION MESSAGE -----*@
-                                    @RenderVal("IntValue1")
-                                </div>
-                            }
-                        </div>
-                    </div>
-                }
-                else
-                {
-                    @* HIỂN THỊ KHI MIỄN PHÍ *@
-                    <div class="col-12 mt-2">
-                        <div class="alert alert-success border-0 py-2 px-3 d-flex align-items-center shadow-sm mb-0">
-                            <i class="fa-solid fa-circle-check me-2 fs-5"></i>
-                            <div class="extra-small fst-italic">Chính sách linh hoạt: Đang miễn phí hủy hoàn toàn.</div>
-                        </div>
-                    </div>
-                }
-
-                @* --- 4. DIỄN GIẢI CHÍNH SÁCH --- *@
-                <div class="col-12 mt-1">
-                    <div class="p-3 rounded bg-light border-start border-4 @(hasFine ? "border-danger" : "border-success") shadow-sm">
-                        <div class="small fw-bold text-uppercase mb-1 text-muted">Diễn giải chính sách:</div>
-                        <div class="small fst-italic">
-                            @if (!hasFine) { <span>Khách được hủy phòng <strong class="text-success">MIỄN PHÍ</strong> vào mọi thời điểm.</span> }
-                            else if (isAnytime) { <span>Khách bị phạt <strong class="text-danger">@(pct > 0 ? pct + "%" : amt?.ToString("N0") + "đ")</strong> ngay khi hủy.</span> }
-                            else {
-                                <span>Nếu hủy <strong class="text-danger">trong vòng @currentDays ngày</strong>: Phạt <strong>@(pct > 0 ? pct + "%" : amt?.ToString("N0") + "đ")</strong>.</span>
-                                <br /><span>Nếu hủy trước đó: <strong class="text-success">MIỄN PHÍ</strong>.</span>
-                            }
-                        </div>
-                    </div>
-                </div>
-            </div>
-            }
-
-            @* --- CASE 1004: INFANT, CHILD & EXTRA BED --- *@
-            @if (TypeId == 1004)
-            {
-                // Lấy giá trị strong type để hiển thị
-                int ageFrom = _isUpdate ? _updateModel.IntValue1 ?? 0 : _createModel.IntValue1 ?? 0;
-                int ageTo = _isUpdate ? _updateModel.IntValue2 ?? 0 : _createModel.IntValue2 ?? 0;
-                decimal surcharge = _isUpdate ? _updateModel.Amount ?? 0 : _createModel.Amount ?? 0;
-                
-                bool isInvalidRange = ageFrom > ageTo; // Logic kiểm tra độ tuổi
-                bool hasSurcharge = surcharge > 0;
-
-                <h6 class="text-success fw-bold mb-3"><i class="fa-solid fa-child-reaching me-2"></i>Chính sách độ tuổi & Giường phụ</h6>
-                <div class="row g-3">
-                @* 1. THIẾT LẬP ĐỘ TUỔI *@
-                <div class="col-6">
-                    <label class="small text-muted fw-bold">Độ tuổi tối thiểu (Từ)</label>
-                    <input type="number" class="form-control fw-bold shadow-sm" 
-                        value="@ageFrom" 
-                        @oninput="@(e => HandleAgeInput(e.Value?.ToString(), "from"))" />
-                    
-                    @* ----- VALIDATION MESSAGE -----*@
-                    @RenderVal("IntValue1")
-                </div>
-
-                <div class="col-6">
-                    <label class="small text-muted fw-bold">Độ tuổi tối đa (Đến)</label>
-                    <input type="number" class="form-control fw-bold shadow-sm" 
-                        value="@ageTo" 
-                        @oninput="@(e => HandleAgeInput(e.Value?.ToString(), "to"))" />
-                    
-                    @* ----- VALIDATION MESSAGE -----*@
-                    @RenderVal("IntValue2")
-                </div>
-
-                @* HIỂN THỊ LỖI LOGIC NGAY LẬP TỨC *@
-                @if (isInvalidRange)
-                {
-                    <div class="col-12 animate__animated animate__shakeX">
-                        <div class="alert alert-danger py-2 px-3 small fw-bold mb-0 shadow-sm" style="border:none; border-left: 4px solid darkred;">
-                            <i class="fa-solid fa-circle-exclamation me-2"></i>Lỗi: Độ tuổi "Tối thiểu" không được lớn hơn "Tối đa".
-                        </div>
-                    </div>
-                }
-
-                @* 2. NÚT GẠT PHỤ THU *@
-                <div class="col-12 mt-3">
-                    <div class="form-check form-switch custom-switch p-2 rounded border bg-light d-flex align-items-center justify-content-between shadow-sm">
-                        <label class="small fw-bold text-muted text-uppercase mb-0 ms-1">
-                            <i class="fa-solid fa-circle-dollar-to-slot me-2 text-success"></i>Có phụ thu phí ?
-                        </label>
-                        <input class="form-check-input" type="checkbox" role="switch" 
-                            checked="@hasSurcharge" 
-                            @onchange="@(e => HandleToggleSurcharge((bool)e.Value!))"
-                            style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
-                    </div>
-                </div>
-
-                @* 3. Ô NHẬP TIỀN (CHỈ HIỆN KHI BẬT PHỤ THU) *@
-                @if (hasSurcharge)
-                {
-                    <div class="col-12 animate__animated animate__fadeInDown animate__faster">
-                        <label class="form-label fw-bold small text-muted text-uppercase">Số tiền phụ thu / Phí dịch vụ</label>
-                        <div class="input-group shadow-sm">
-                            <span class="input-group-text bg-white text-success">
-                                <i class="fa-solid fa-money-bill-wave"></i>
-                            </span>
-                            <input type="number" class="form-control text-end fw-bold text-success" 
-                                value="@surcharge.ToString("N0")" 
-                                @oninput="@(e => HandleAmountInput(e.Value?.ToString()))" 
-                                placeholder="Nhập số tiền..." />
-                            <span class="input-group-text bg-light fw-bold">VNĐ</span>
-                        </div>
-                        @* ----- VALIDATION MESSAGE -----*@
-                        @RenderVal("Amount")
-                        
-                        <div class="form-text extra-small mt-1">Số tiền này sẽ là gợi ý mặc định cho các khách sạn.</div>
-                    </div>
-                }
-                else
-                {
-                    <div class="col-12 animate__animated animate__fadeIn">
-                        <div class="alert alert-success border-0 py-2 px-3 d-flex align-items-center shadow-sm mb-0">
-                            <i class="fa-solid fa-face-laugh-beam me-2 fs-5"></i>
-                            <div class="extra-small"><b>Miễn phí:</b> Trẻ em trong độ tuổi này sẽ không bị tính thêm phí.</div>
-                        </div>
-                    </div>
-                }
-            </div>
-            }
-
-            @* --- CASE 2002: PETS / OTHER POLICIES --- *@
-            @if (TypeId == 2002)
-            {
-                bool isAllowed = _isUpdate ? (_updateModel.BoolValue == true) : (_createModel.BoolValue == true);
-                decimal petFee = _isUpdate ? (_updateModel.Amount ?? 0) : (_createModel.Amount ?? 0);
-
-                bool isPaid = petFee > 0;
-
-                <h6 class="text-warning fw-bold mb-3"><i class="fa-solid fa-paw me-2"></i>Quy định về vật nuôi / Khác</h6>
-
-                @* --- BƯỚC 1: CẦN GẠT CHO PHÉP --- *@
-                <div class="mb-3">
-                    <div class="form-check form-switch custom-switch p-2 rounded border bg-light d-flex align-items-center justify-content-between shadow-sm">
-                        <label class="small fw-bold text-muted text-uppercase mb-0 ms-1">
-                            <i class="fa-solid fa-dog me-2 @(isAllowed ? "text-warning" : "text-secondary")"></i>
-                            @(isAllowed ? "ĐƯỢC PHÉP MANG THEO" : "KHÔNG TIẾP NHẬN")
-                        </label>
-                        <input class="form-check-input" type="checkbox" role="switch" 
-                            checked="@isAllowed" 
-                            @onchange="@(e => HandlePetToggle((bool)e.Value!))"
-                            style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    @* --- BƯỚC 2: NẾU CHO PHÉP -> HIỆN TIẾP CẦN GẠT PHÍ --- *@
-                    @if (isAllowed)
-                    {
-                        <div class="animate__animated animate__fadeIn">
-                            @* --- CẦN GẠT MIỄN PHÍ / TÍNH PHÍ --- *@
-                            <div class="form-check form-switch custom-switch p-2 rounded border bg-white d-flex align-items-center justify-content-between mb-3 shadow-sm" style="border-style: dashed !important;">
-                                <label class="small fw-bold text-muted text-uppercase mb-0 ms-1">
-                                    <i class="fa-solid fa-hand-holding-dollar me-2 @(isPaid ? "text-success" : "text-secondary")"></i>
-                                    @(isPaid ? "TÍNH PHÍ DỊCH VỤ" : "MIỄN PHÍ HOÀN TOÀN")
-                                </label>
-                                <input class="form-check-input" type="checkbox" role="switch" 
-                                    checked="@isPaid" 
-                                    @onchange="@(e => HandlePetFeeToggle((bool)e.Value!))"
-                                    style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
-                            </div>
-
-                            @* --- HIỂN THỊ Ô NHẬP TIỀN NẾU CHỌN TÍNH PHÍ --- *@
-                            @if (isPaid)
-                            {
-                                <div class="mb-3 animate__animated animate__fadeInDown animate__faster">
-                                    <label class="form-label fw-bold extra-small text-muted text-uppercase">Phí vệ sinh vật nuôi mẫu</label>
-                                    <div class="input-group shadow-sm">
-                                        <span class="input-group-text bg-white text-success"><i class="fa-solid fa-money-bill-wave"></i></span>
-                                        <input type="number" class="form-control text-end fw-bold text-success" 
-                                            value="@petFee.ToString("N0")" 
-                                            @oninput="@(e => HandleAmountInput(e.Value?.ToString()))" />
-                                        <span class="input-group-text bg-light fw-bold">VNĐ</span>
-                                    </div>
-                                    @RenderVal("Amount")
-                                </div>
-                            }
-                            else
-                            {
-                                <div class="alert alert-success border-0 py-2 px-3 d-flex align-items-center shadow-sm mb-0">
-                                    <i class="fa-solid fa-face-smile-beam me-2 fs-5"></i>
-                                    <div class="extra-small fst-italic"><b>Free:</b> Vật nuôi được ở cùng chủ miễn phí.</div>
-                                </div>
-                            }
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="alert alert-secondary border-0 py-2 px-3 d-flex align-items-center shadow-sm mb-0 animate__animated animate__fadeIn">
-                            <i class="fa-solid fa-ban me-2 fs-5"></i>
-                            <div class="extra-small fst-italic">Chính sách mặc định là không tiếp nhận vật nuôi.</div>
-                        </div>
-                    }
-                </div>
-            }
-
+            @RenderPolicyForm()
             <div class="alert alert-info border-0 shadow-sm mt-3 py-2 small">
                 <i class="fa-solid fa-circle-exclamation me-1"></i>
-                <strong>Lưu ý:</strong> Đây là các giá trị mặc định. Chủ khách sạn có thể thay đổi lại khi áp dụng cho khách
-                sạn của họ.
+                <strong>Lưu ý:</strong> Đây là các giá trị mặc định. Chủ khách sạn có thể thay đổi lại khi áp dụng.
             </div>
         </FormContent>
 
-        @* --- C. CẤU HÌNH BẢNG (TABLE) --- *@
         <TableHeader>
             <th class="text-center align-middle" style="width: 50px;">Id</th>
             <th class="text-center align-middle" style="width: 350px;">Tên chính sách</th>
             <th class="text-center align-middle" style="width: 100px;">Thông số cấu hình</th>
-            <th class="text-center align-middle">Mô tả chi tiết</th> @* Cột mô tả sẽ linh hoạt *@
+            <th class="text-center align-middle">Mô tả chi tiết</th>
         </TableHeader>
 
         <RowTemplate Context="row">
-            @* 1. ID *@
             <td class="text-center text-muted small">@row.Id</td>
-
-            @* 2. Tên chính sách*@
             <td class="text-center align-middle">
                 <div class="fw-bold text-dark">@row.Name</div>
             </td>
-
-            @* 3. THÔNG SỐ CẤU HÌNH *@
             <td class="text-center align-middle">
-                <div class="d-flex justify-content-center align-items-center">
-                    @if (row.TypeId == 1002) @* CASE: GIỜ GIẤC (CHECK-IN/OUT) *@
-                    {
-                        <div class="badge bg-primary bg-opacity-10 text-primary border border-primary d-flex flex-column justify-content-center py-1"
-                            style="min-width: 160px; height: 42px;">
-                            <div class="small" style="font-size: 0.75rem; letter-spacing: 0.5px;">
-                                <span class="badge rounded-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2" style="font-size: 0.65rem;">
-                                    <i class="fa-regular fa-clock me-1"></i>
-                                    @row.TimeFrom?.ToString(@"hh\:mm") - @row.TimeTo?.ToString(@"hh\:mm")
-                                </span>
-                            </div>
-                            <div class="fw-bold" style="font-size: 0.8rem; letter-spacing: 0.5px;">
-                                @if (row.Amount > 0)
-                                {
-                                    <span class="opacity-75">+@row.Amount?.ToString("N0")đ</span>
-                                }
-                                else if (row.Name.Contains("Standard"))
-                                {
-                                    <span class="opacity-75">Standard</span>
-                                }
-                                else
-                                {
-
-                                    <span class="opacity-75">Miễn Phí</span>
-                                }
-                            </div>
-                        </div>
-                    }
-                    else if (row.TypeId == 1003)
-                    @* CASE: HỦY PHÒNG (CANCELLATION) *@
-                    {
-                        @* Xác định xem đây là chính sách Miễn phí hay Có phí để chọn màu Badge *@
-                        bool isFree = (row.Percent <= 0 && (row.Amount <= 0 || row.Amount == null));
-                        string badgeClass = isFree ? "bg-success bg-opacity-10 text-success border-success"
-                        : "bg-danger bg-opacity-10 text-danger border-danger";
-                        string iconClass = isFree ? "fa-solid fa-check-circle" : "fa-solid fa-ban";
-
-                        <div class="badge bg-danger bg-opacity-10 text-danger border border-danger d-flex flex-column justify-content-center py-1"
-                            style="min-width: 160px; height: 42px;">
-
-                            @* Dòng 1: Điều kiện thời gian - Hiển thị dạng Chip/Badge nhỏ *@
-                            <div class="mb-1">
-                                @if (row.IntValue1 <= 0)
-                                {
-                                    @* Trạng thái Non-Refundable hoặc Hủy mọi lúc *@
-                                    <span
-                                        class="badge rounded-pill bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2"
-                                        style="font-size: 0.65rem; letter-spacing: 0.5px;">
-                                        <i class="fa-solid fa-infinity me-1"></i>Mọi thời điểm
-                                    </span>
-                                }
-                                else
-                                {
-                                    @* Trạng thái có thời hạn *@
-                                    <span
-                                        class="badge rounded-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2"
-                                        style="font-size: 0.65rem; letter-spacing: 0.5px;">
-                                        <i class="fa-solid fa-clock-rotate-left me-1"></i>Trước @row.IntValue1 ngày
-                                    </span>
-                                }
-                            </div>
-
-                            @* Dòng 2: Nội dung chính (Nút hành động giả hoặc text nổi bật) *@
-                            <div class="fw-bold text-uppercase" style="font-size: 0.8rem; letter-spacing: 0.5px;">
-                                @if (row.Percent > 0)
-                                {
-                                    <span>Phạt @(row.Percent == 100 ? "100%" : row.Percent + "%")</span>
-                                }
-                                else if (row.Amount > 0)
-                                {
-                                    <span>Phí @row.Amount?.ToString("N0")đ</span>
-                                }
-                                else
-                                {
-                                    <span>Miễn phí hủy</span>
-                                }
-                            </div>
-                        </div>
-                    }
-                    else if (row.TypeId == 1004)
-                    @* CASE: TRẺ EM & GIƯỜNG PHỤ *@
-                    {
-
-                        <div class="badge bg-success bg-opacity-10 text-success border border-success d-flex flex-column justify-content-center py-1"
-                            style="min-width: 160px; height: 42px;">
-                            <div class="small" style="font-size: 0.75rem; letter-spacing: 0.5px;">
-                                <span class="badge rounded-pill bg-success bg-opacity-10 text-info border border-info border-opacity-25 px-2" style="font-size: 0.7rem; letter-spacing: 0.5px;">
-                                    <i class="fa-solid fa-child-reaching me-1"></i>
-                                
-                                    @if (row.IntValue2 >= 99)
-                                    {
-                                        <span>Từ @row.IntValue1 tuổi +</span>
-                                    }
-                                    else
-                                    {
-
-                                        <span>@row.IntValue1 - @row.IntValue2 tuổi</span>
-                                    }
-                                </span>
-                            </div>
-                            <div class="fw-bold" style="font-size: 0.8rem; letter-spacing: 0.5px;">
-                                @(row.Amount > 0 ? "+" + row.Amount?.ToString("N0") + "đ" : "Miễn phí")
-                            </div>
-                        </div>
-                    }
-                    else if (row.TypeId == 2002)
-                    @* CASE: VẬT NUÔI (PETS) *@
-                    {
-                        bool allowed = row.BoolValue == true;
-
-                        <div class="badge @(allowed ? "bg-warning text-warning border-warning" : "bg-secondary text-secondary border-secondary") bg-opacity-10 border d-flex flex-column justify-content-center py-1"
-                            style="min-width: 160px; height: 42px;">
-                            <div class="small" style="font-size: 0.7rem;">
-                                <span class="badge rounded-pill bg-info bg-opacity-10 text-info border border-secondary border-opacity-25 px-2" style="font-size: 0.65rem;">
-                                    <i class="fa-solid fa-paw me-1"></i>
-                                    @(allowed ? "Cho phép mang theo" : "Không cho phép")
-                                </span>
-                            </div>
-                            <div class="fw-bold mt-1" style="font-size: 0.85rem; letter-spacing: 0.5px;">
-                                @if(allowed) { <div class="fw-bold">@(row.Amount > 0 ? "+" + row.Amount?.ToString("N0") + "đ" : "Miễn phí")</div> }
-                            </div>
-                        </div>
-                    }
-                    else
-                    {
-                        <span class="text-muted opacity-50 fw-bold" style="min-width: 160px;">---</span>
-                    }
-                </div>
+                <div class="d-flex justify-content-center">@RenderRowBadge(row)</div>
             </td>
-
-            @* 4. MÔ TẢ *@
             <td class="text-center align-middle">
                 @if (string.IsNullOrWhiteSpace(row.Description))
                 {
@@ -614,402 +58,656 @@ else
                 }
                 else
                 {
+
                     <div class="text-muted small text-truncate mx-auto" style="max-width: 350px;" title="@row.Description">
-                        @row.Description
-                    </div>
-                }
-            </td>
-        </RowTemplate>
-
-    </MasterDetailLayout>
-}
-
+                        @row.Description</div>
+                    }
+                </td>
+            </RowTemplate>
+        </MasterDetailLayout>
+    }
 
 @code {
-    // --- PARAMETERS TỪ URL ---
-    // Tự động nhận giá trị từ URL /admin/manage/policy/{TypeId}
     [Parameter] public int? TypeId { get; set; }
 
-    // --- STATE ---
-    private List<PolicyVM>? items;
-
-    // Dùng 2 model riêng biệt
-    private PolicyCreateVM _createModel = new PolicyCreateVM();
-    private PolicyUpdateVM _updateModel = new PolicyUpdateVM();
+    private List<PolicyVM>? _items;
+    private PolicyCreateVM _createModel = new CheckInOutPolicyCreateVM { TypeId = 1002 };
+    private PolicyUpdateVM _updateModel = new CheckInOutPolicyUpdateVM();
     private int _currentEditingId = 0;
     private bool _isUpdate = false;
 
-    // --- QUẢN LÝ PHÂN TRANG ---
-    // Khởi tạo request: Trang 1, Size 10
     private PagingRequest _paging = new() { PageIndex = 1, PageSize = 10 };
-    private int totalPages = 0;
-    private int totalCount = 0;
-
-    // Biến kiểm soát vòng đời & Re-render
-    private int? _previousTypeId = -999;
-    private BaseCreateOrUpdateAdminVM GetModel() => _isUpdate ? _updateModel : _createModel;
-
+    private int _totalPages = 0;
+    private int _totalCount = 0;
+    private int? _previousTypeId = null;
     private MasterDetailLayout<PolicyVM, BaseCreateOrUpdateAdminVM>? _layoutRef;
 
-    // --- LOGIC GỢI Ý MẶC ĐỊNH (TRIGGERED FROM LAYOUT) ---
-    private void SuggestDefaultValues()
-    {
-        if (_isUpdate) PolicyHelper.ApplyDefaultValues(_updateModel, TypeId ?? 1002);
-        else PolicyHelper.ApplyDefaultValues(_createModel, TypeId ?? 1002);
+    private BaseCreateOrUpdateAdminVM GetModel() => _isUpdate ? _updateModel : _createModel;
 
+    // ======================== RENDER FRAGMENTS ========================
+    private RenderFragment RenderPolicyForm() => __builder =>
+    {
+        var typeId = TypeId ?? 1002;
+        switch (typeId)
+        {
+            case 1002: RenderCheckInOutForm(__builder); break;
+            case 1003: RenderCancellationForm(__builder); break;
+            case 1004: RenderChildrenForm(__builder); break;
+            case 2002: RenderPetForm(__builder); break;
+        }
+    };
+
+    private void RenderCheckInOutForm(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder)
+    {
+        // Get values based on mode
+        TimeOnly? checkInTime = null;
+        TimeOnly? checkOutTime = null;
+        decimal earlyFee = 0;
+        decimal lateFee = 0;
+
+        if (_isUpdate && _updateModel is CheckInOutPolicyUpdateVM u)
+        {
+            checkInTime = u.CheckInTime;
+            checkOutTime = u.CheckOutTime;
+            earlyFee = u.EarlyCheckInFee ?? 0;
+            lateFee = u.LateCheckOutFee ?? 0;
+        }
+        else if (_createModel is CheckInOutPolicyCreateVM c)
+        {
+            checkInTime = c.CheckInTime;
+            checkOutTime = c.CheckOutTime;
+            earlyFee = c.EarlyCheckInFee ?? 0;
+            lateFee = c.LateCheckOutFee ?? 0;
+        }
+
+        bool hasFee = earlyFee > 0 || lateFee > 0;
+
+        <h6 class="text-primary fw-bold mb-3"><i class="fa-regular fa-clock me-2"></i>Khung giờ & Phụ thu</h6>
+
+        <div
+            class="form-check form-switch custom-switch p-2 rounded border bg-light d-flex align-items-center justify-content-between mb-3 shadow-sm">
+            <label class="small fw-bold text-muted text-uppercase mb-0 ms-1">
+                <i class="fa-solid fa-hand-holding-dollar me-2 @(hasFee ? "text-success" : "text-secondary")"></i>
+                @(hasFee ? "Tính phí phụ thu" : "Miễn phí")
+            </label>
+            <input class="form-check-input" type="checkbox" role="switch" checked="@hasFee"
+                   @onchange="@(e => ToggleCheckInOutFee((bool)e.Value!))"
+                   style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
+            </div>
+
+            @if (hasFee)
+            {
+                <div class="row g-3 mb-3 animate__animated animate__fadeInDown animate__faster">
+                    <div class="col-6">
+                        <label class="form-label fw-bold extra-small text-muted">Phí check-in sớm</label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-white text-success"><i class="fa-solid fa-sun"></i></span>
+                            <input type="text" class="form-control text-end fw-bold text-success" inputmode="numeric"
+                                   value="@earlyFee.ToString("N0")"                               @oninput="@(e => SetCheckInOutFee("early", e.Value?.ToString()))" />
+                            <span class="input-group-text bg-light fw-bold">VNĐ</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-bold extra-small text-muted">Phí check-out muộn</label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-white text-warning"><i class="fa-solid fa-moon"></i></span>
+                            <input type="text" class="form-control text-end fw-bold text-warning" inputmode="numeric"
+                                   value="@lateFee.ToString("N0")"                               @oninput="@(e => SetCheckInOutFee("late", e.Value?.ToString()))" />
+                            <span class="input-group-text bg-light fw-bold">VNĐ</span>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-success border-0 py-2 px-3 d-flex align-items-center shadow-sm mb-3">
+                    <i class="fa-solid fa-circle-check me-2 fs-5"></i>
+                    <div class="extra-small fst-italic"><b>Miễn phí:</b> Không thu thêm phí.</div>
+                </div>
+            }
+
+            <h6 class="text-primary fw-bold mb-3"><i class="fa-regular fa-clock me-2"></i>Khung giờ chuẩn</h6>
+            <div class="row g-3">
+                <div class="col-6">
+                    <label class="small text-muted fw-bold">Nhận phòng</label>
+                    <input type="time" class="form-control shadow-sm" value="@checkInTime?.ToString("HH:mm")"
+                           @onchange="@(e => SetCheckInOutTime("in", e.Value?.ToString()))" />
+                </div>
+                <div class="col-6">
+                    <label class="small text-muted fw-bold">Trả phòng</label>
+                    <input type="time" class="form-control shadow-sm" value="@checkOutTime?.ToString("HH:mm")"
+                           @onchange="@(e => SetCheckInOutTime("out", e.Value?.ToString()))" />
+                </div>
+            </div>
+        }
+
+    private void RenderCancellationForm(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder)
+    {
+        bool isRefundable = false;
+        int? days = 0;
+        double? refundPct = 0;
+
+        if (_isUpdate && _updateModel is CancellationPolicyUpdateVM u)
+        {
+            isRefundable = u.IsRefundable;
+            days = u.DaysBeforeCheckIn;
+            refundPct = u.RefundPercent;
+        }
+        else if (_createModel is CancellationPolicyCreateVM c)
+        {
+            isRefundable = c.IsRefundable;
+            days = c.DaysBeforeCheckIn;
+            refundPct = c.RefundPercent;
+        }
+
+        <h6 class="text-danger fw-bold mb-3"><i class="fa-solid fa-ban me-2"></i>Chính sách hủy phòng</h6>
+
+        <div
+            class="form-check form-switch custom-switch p-2 rounded border bg-light d-flex align-items-center justify-content-between mb-3 shadow-sm">
+            <label class="small fw-bold text-muted text-uppercase mb-0 ms-1">
+                <i class="fa-solid fa-hand-holding-dollar me-2 @(isRefundable ? "text-success" : "text-danger")"></i>
+                @(isRefundable ? "Có hoàn tiền" : "Non-Refundable")
+            </label>
+            <input class="form-check-input" type="checkbox" role="switch" checked="@isRefundable"
+                   @onchange="@(e => SetCancellationRefundable((bool)e.Value!))"
+                   style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
+            </div>
+
+            @if (isRefundable)
+            {
+                <div class="row g-3 animate__animated animate__fadeIn">
+                    <div class="col-6">
+                        <label class="small text-muted fw-bold">Hủy trước (ngày)</label>
+                        <div class="input-group shadow-sm">
+                            <input type="number" class="form-control text-center fw-bold" value="@days"
+                                   @oninput="@(e => SetCancellationDays(e.Value?.ToString()))" />
+                            <span class="input-group-text bg-primary text-white fw-bold">ngày</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <label class="small text-muted fw-bold">Hoàn lại (%)</label>
+                        <div class="input-group shadow-sm">
+                            <input type="number" class="form-control text-center fw-bold text-success" value="@refundPct"
+                                   @oninput="@(e => SetCancellationPercent(e.Value?.ToString()))" />
+                            <span class="input-group-text bg-success text-white fw-bold">%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-3 rounded bg-light border-start border-4 border-success shadow-sm mt-3">
+                    <div class="small fw-bold text-uppercase mb-1 text-muted">Diễn giải:</div>
+                    <div class="small fst-italic">Nếu hủy trước <b>@days ngày</b>: Hoàn <b class="text-success">@refundPct%</b>.</div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-danger border-0 py-2 px-3 d-flex align-items-center shadow-sm">
+                    <i class="fa-solid fa-ban me-2 fs-5"></i>
+                    <div class="extra-small fst-italic"><b>Non-Refundable:</b> Không hoàn tiền khi hủy.</div>
+                </div>
+            }
+        }
+
+    private void RenderChildrenForm(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder)
+    {
+        int minAge = 0, maxAge = 17;
+        decimal extraBedFee = 0;
+
+        if (_isUpdate && _updateModel is ChildrenPolicyUpdateVM u)
+        {
+            minAge = u.MinAge ?? 0;
+            maxAge = u.MaxAge ?? 17;
+            extraBedFee = u.ExtraBedFee ?? 0;
+        }
+        else if (_createModel is ChildrenPolicyCreateVM c)
+        {
+            minAge = c.MinAge ?? 0;
+            maxAge = c.MaxAge ?? 17;
+            extraBedFee = c.ExtraBedFee ?? 0;
+        }
+
+        bool hasFee = extraBedFee > 0;
+        bool isInvalidRange = minAge > maxAge;
+
+        <h6 class="text-success fw-bold mb-3"><i class="fa-solid fa-child-reaching me-2"></i>Trẻ em & Giường phụ</h6>
+
+        <div class="row g-3">
+            <div class="col-6">
+                <label class="small text-muted fw-bold">Tuổi tối thiểu</label>
+                <input type="number" class="form-control fw-bold shadow-sm @(isInvalidRange ? "border-danger" : "")"
+                       value="@minAge" @oninput="@(e => SetChildrenAge("min", e.Value?.ToString()))" />
+            </div>
+            <div class="col-6">
+                <label class="small text-muted fw-bold">Tuổi tối đa</label>
+                <input type="number" class="form-control fw-bold shadow-sm @(isInvalidRange ? "border-danger" : "")"
+                       value="@maxAge" @oninput="@(e => SetChildrenAge("max", e.Value?.ToString()))" />
+            </div>
+
+            @if (isInvalidRange)
+            {
+                <div class="col-12 animate__animated animate__shakeX">
+                    <div class="alert alert-danger py-2 px-3 small fw-bold mb-0 shadow-sm"
+                         style="border:none; border-left: 4px solid darkred;">
+                        <i class="fa-solid fa-circle-exclamation me-2"></i>Tuổi tối thiểu phải nhỏ hơn tối đa.
+                    </div>
+                </div>
+            }
+
+            <div class="col-12 mt-3">
+                <div class="form-check form-switch custom-switch p-2 rounded border bg-light d-flex align-items-center justify-content-between shadow-sm">
+                    <label class="small fw-bold text-muted text-uppercase mb-0 ms-1">
+                        <i class="fa-solid fa-bed me-2 @(hasFee ? "text-success" : "text-secondary")"></i>Phí giường phụ?
+                    </label>
+                    <input class="form-check-input" type="checkbox" role="switch" checked="@hasFee"
+                           @onchange="@(e => ToggleChildrenFee((bool)e.Value!))"
+                           style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
+                    </div>
+                </div>
+
+                @if (hasFee)
+                {
+                    <div class="col-12 animate__animated animate__fadeInDown animate__faster">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Phí giường phụ</label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-white text-success"><i class="fa-solid fa-money-bill-wave"></i></span>
+                            <input type="text" class="form-control text-end fw-bold text-success" inputmode="numeric"
+                                   value="@extraBedFee.ToString("N0")" @oninput="@(e => SetChildrenFee(e.Value?.ToString()))" />
+                            <span class="input-group-text bg-light fw-bold">VNĐ</span>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="col-12 animate__animated animate__fadeIn">
+                        <div class="alert alert-success border-0 py-2 px-3 d-flex align-items-center shadow-sm mb-0">
+                            <i class="fa-solid fa-face-laugh-beam me-2 fs-5"></i>
+                            <div class="extra-small"><b>Miễn phí:</b> Không tính thêm phí.</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+    private void RenderPetForm(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder)
+    {
+        bool isAllowed = false;
+        decimal petFee = 0;
+
+        if (_isUpdate && _updateModel is PetPolicyUpdateVM u)
+        {
+            isAllowed = u.IsPetAllowed;
+            petFee = u.PetFee ?? 0;
+        }
+        else if (_createModel is PetPolicyCreateVM c)
+        {
+            isAllowed = c.IsPetAllowed;
+            petFee = c.PetFee ?? 0;
+        }
+
+        bool hasFee = petFee > 0;
+
+        <h6 class="text-warning fw-bold mb-3"><i class="fa-solid fa-paw me-2"></i>Quy định vật nuôi</h6>
+
+        <div
+            class="form-check form-switch custom-switch p-2 rounded border bg-light d-flex align-items-center justify-content-between mb-3 shadow-sm">
+            <label class="small fw-bold text-muted text-uppercase mb-0 ms-1">
+                <i class="fa-solid fa-dog me-2 @(isAllowed ? "text-warning" : "text-secondary")"></i>
+                @(isAllowed ? "CHO PHÉP" : "KHÔNG CHO PHÉP")
+            </label>
+            <input class="form-check-input" type="checkbox" role="switch" checked="@isAllowed"
+                   @onchange="@(e => SetPetAllowed((bool)e.Value!))" style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
+            </div>
+
+            @if (isAllowed)
+            {
+                <div class="animate__animated animate__fadeIn">
+                    <div class="form-check form-switch custom-switch p-2 rounded border bg-white d-flex align-items-center justify-content-between mb-3 shadow-sm"
+                         style="border-style: dashed !important;">
+                        <label class="small fw-bold text-muted text-uppercase mb-0 ms-1">
+                            <i class="fa-solid fa-hand-holding-dollar me-2 @(hasFee ? "text-success" : "text-secondary")"></i>
+                            @(hasFee ? "TÍNH PHÍ" : "MIỄN PHÍ")
+                        </label>
+                        <input class="form-check-input" type="checkbox" role="switch" checked="@hasFee"
+                               @onchange="@(e => TogglePetFee((bool)e.Value!))"                           style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
+                        </div>
+
+                        @if (hasFee)
+                        {
+                            <div class="mb-3 animate__animated animate__fadeInDown animate__faster">
+                                <label class="form-label fw-bold extra-small text-muted text-uppercase">Phí vệ sinh</label>
+                                <div class="input-group shadow-sm">
+                                    <span class="input-group-text bg-white text-success"><i class="fa-solid fa-money-bill-wave"></i></span>
+                                    <input type="text" class="form-control text-end fw-bold text-success" inputmode="numeric"
+                                           value="@petFee.ToString("N0")" @oninput="@(e => SetPetFee(e.Value?.ToString()))" />
+                                    <span class="input-group-text bg-light fw-bold">VNĐ</span>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-success border-0 py-2 px-3 d-flex align-items-center shadow-sm mb-0">
+                                <i class="fa-solid fa-face-smile-beam me-2 fs-5"></i>
+                                <div class="extra-small fst-italic"><b>Free:</b> Vật nuôi ở miễn phí.</div>
+                            </div>
+                        }
+                    </div>
+                }
+        else
+                {
+                    <div class="alert alert-secondary border-0 py-2 px-3 d-flex align-items-center shadow-sm mb-0">
+                        <i class="fa-solid fa-ban me-2 fs-5"></i>
+                        <div class="extra-small fst-italic">Không tiếp nhận vật nuôi.</div>
+                    </div>
+                }
+            }
+
+    private RenderFragment RenderRowBadge(PolicyVM row) => __builder =>
+    {
+    switch (row)
+    {
+        case CheckInOutPolicyVM cio:
+            var totalFee = (cio.EarlyCheckInFee ?? 0) + (cio.LateCheckOutFee ?? 0);
+            <div class="badge bg-primary bg-opacity-10 text-primary border border-primary d-flex flex-column justify-content-center py-1"
+                 style="min-width: 160px; height: 42px;">
+                <div class="small" style="font-size: 0.75rem;">
+                    <span class="badge rounded-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2"
+                          style="font-size: 0.65rem;">
+                        <i class="fa-regular fa-clock me-1"></i>@cio.CheckInTime?.ToString("HH:mm") -
+                        @cio.CheckOutTime?.ToString("HH:mm")
+                    </span>
+                </div>
+                <div class="fw-bold" style="font-size: 0.8rem;">
+                    @(totalFee > 0 ? "+" + totalFee.ToString("N0") + "đ" : "Miễn Phí")
+                </div>
+            </div>
+            break;
+
+        case CancellationPolicyVM cancel:
+            <div class="badge bg-danger bg-opacity-10 text-danger border border-danger d-flex flex-column justify-content-center py-1"
+                 style="min-width: 160px; height: 42px;">
+                <div class="mb-1">
+                    @if (!cancel.IsRefundable)
+                    {
+                        <span class="badge rounded-pill bg-danger bg-opacity-10 text-danger px-2" style="font-size: 0.65rem;"><i
+                            class="fa-solid fa-ban me-1"></i>Non-Refundable</span>
+                        }
+                        else
+                        {
+
+                            <span class="badge rounded-pill bg-info bg-opacity-10 text-info px-2" style="font-size: 0.65rem;"><i
+                                class="fa-solid fa-clock-rotate-left me-1"></i>Trước @cancel.DaysBeforeCheckIn ngày</span>
+                            }
+                        </div>
+                        <div class="fw-bold text-uppercase" style="font-size: 0.8rem;">
+                            @(cancel.IsRefundable ? $"Hoàn {cancel.RefundPercent}%" : "Không hoàn tiền")
+                        </div>
+                    </div>
+                    break;
+
+            case ChildrenPolicyVM child:
+                        <div class="badge bg-success bg-opacity-10 text-success border border-success d-flex flex-column justify-content-center py-1"
+                             style="min-width: 160px; height: 42px;">
+                            <div class="small" style="font-size: 0.75rem;">
+                                <span class="badge rounded-pill bg-info bg-opacity-10 text-info border-opacity-25 px-2"
+                                      style="font-size: 0.7rem;">
+                                    <i class="fa-solid fa-child-reaching me-1"></i>@(child.MaxAge >= 99 ? $"Từ {child.MinAge} tuổi +" :
+                                                $"{child.MinAge} - {child.MaxAge} tuổi")
+                                </span>
+                            </div>
+                            <div class="fw-bold" style="font-size: 0.8rem;">@(child.ExtraBedFee > 0 ? "+" + child.ExtraBedFee?.ToString("N0") +
+                                        "đ" : "Miễn phí")</div>
+                            </div>
+                            break;
+
+            case PetPolicyVM pet:
+                                <div class="badge @(pet.IsPetAllowed ? "bg-warning text-warning border-warning" : "bg-secondary text-secondary border-secondary") bg-opacity-10 border d-flex flex-column justify-content-center py-1"
+                                     style="min-width: 160px; height: 42px;">
+                                    <div class="small" style="font-size: 0.7rem;">
+                                        <span class="badge rounded-pill bg-info bg-opacity-10 text-info px-2" style="font-size: 0.65rem;">
+                                            <i class="fa-solid fa-paw me-1"></i>@(pet.IsPetAllowed ? "Cho phép" : "Không cho phép")
+                                        </span>
+                                    </div>
+                                    @if (pet.IsPetAllowed)
+                                    {
+                                        <div class="fw-bold mt-1" style="font-size: 0.85rem;">@(pet.PetFee > 0 ? "+" + pet.PetFee?.ToString("N0") + "đ" :
+                                                    "Miễn phí")</div>
+                                        }
+                                    </div>
+                                    break;
+
+                                    default:
+<span class="text-muted opacity-50 fw-bold">---</span>
+                break;
+                                }
+                            }
+                            ;
+
+    // ======================== FORM HANDLERS ========================
+    private void ToggleCheckInOutFee(bool hasFee)
+    {
+        if (_isUpdate && _updateModel is CheckInOutPolicyUpdateVM u)
+        { u.EarlyCheckInFee = hasFee ? 50000 : 0; u.LateCheckOutFee = hasFee ? 50000 : 0; }
+        else if (_createModel is CheckInOutPolicyCreateVM c)
+        { c.EarlyCheckInFee = hasFee ? 50000 : 0; c.LateCheckOutFee = hasFee ? 50000 : 0; }
         StateHasChanged();
-        _layoutRef?.TriggerValidate();
     }
 
-    // --- CÁC HÀM XỬ LÝ STRONG TYPE ---
-    private void HandleAmountInput(string? val)
+    private void SetCheckInOutFee(string type, string? val)
     {
-        decimal.TryParse(val, out var amount);
-        if (_isUpdate) _updateModel.Amount = amount; else _createModel.Amount = amount;
-        StateHasChanged();
-        _layoutRef?.TriggerValidate();
-    }
-
-    private void HandleIntValueInput(string? val)
-    {
-        int.TryParse(val, out var v);
-        if (_isUpdate) _updateModel.IntValue1 = v; else _createModel.IntValue1 = v;
-        StateHasChanged();
-        _layoutRef?.TriggerValidate();
-    }
-
-    private void SetIntValue(int value)
-    {
-        if (_isUpdate) _updateModel.IntValue1 = value; else _createModel.IntValue1 = value;
+        decimal.TryParse(val?.Replace(",", "").Replace(".", ""), out var fee);
+        if (_isUpdate && _updateModel is CheckInOutPolicyUpdateVM u)
+        { if (type == "early") u.EarlyCheckInFee = fee; else u.LateCheckOutFee = fee; }
+        else if (_createModel is CheckInOutPolicyCreateVM c)
+        { if (type == "early") c.EarlyCheckInFee = fee; else c.LateCheckOutFee = fee; }
         StateHasChanged();
     }
 
-    private void HandleFineInput(string? val, string type)
+    private void SetCheckInOutTime(string type, string? val)
     {
-        double.TryParse(val, out var pVal);
-        decimal.TryParse(val, out var aVal);
-        if (_isUpdate) {
-            if (type == "percent") { _updateModel.Percent = pVal; _updateModel.Amount = 0; }
-            else { _updateModel.Amount = aVal; _updateModel.Percent = 0; }
-        } else {
-            if (type == "percent") { _createModel.Percent = pVal; _createModel.Amount = 0; }
-            else { _createModel.Amount = aVal; _createModel.Percent = 0; }
+        if (!TimeOnly.TryParse(val, out var time)) return;
+        if (_isUpdate && _updateModel is CheckInOutPolicyUpdateVM u)
+        { if (type == "in") u.CheckInTime = time; else u.CheckOutTime = time; }
+        else if (_createModel is CheckInOutPolicyCreateVM c)
+        { if (type == "in") c.CheckInTime = time; else c.CheckOutTime = time; }
+        StateHasChanged();
+    }
+
+    private void SetCancellationRefundable(bool isRefundable)
+    {
+        if (_isUpdate && _updateModel is CancellationPolicyUpdateVM u)
+        {
+            u.IsRefundable = isRefundable; if (!isRefundable) { u.DaysBeforeCheckIn = 0; u.RefundPercent = 0; }
+            else
+            {
+                u.DaysBeforeCheckIn = 3; u.RefundPercent = 100;
+            }
+        }
+        else if (_createModel is CancellationPolicyCreateVM c)
+        {
+            c.IsRefundable = isRefundable; if (!isRefundable) { c.DaysBeforeCheckIn = 0; c.RefundPercent = 0; }
+            else
+            {
+                c.DaysBeforeCheckIn = 3; c.RefundPercent = 100;
+            }
         }
         StateHasChanged();
-        _layoutRef?.TriggerValidate();
     }
 
-    private void HandleToggleFine(bool isEnabled)
+    private void SetCancellationDays(string? val)
     {
-        if (_isUpdate) {
-            _updateModel.Percent = isEnabled ? 10 : 0;
-            _updateModel.Amount = 0;
-            _updateModel.IntValue1 = 0;
-        } else {
-            _createModel.Percent = isEnabled ? 10 : 0;
-            _createModel.Amount = 0;
-            _createModel.IntValue1 = 0;
-        }
+        int.TryParse(val, out var days);
+        if (_isUpdate && _updateModel is CancellationPolicyUpdateVM u) u.DaysBeforeCheckIn = days;
+        else if (_createModel is CancellationPolicyCreateVM c) c.DaysBeforeCheckIn = days;
         StateHasChanged();
-        _layoutRef?.TriggerValidate();
     }
 
-    private void ChangeFineType(bool isPercent)
+    private void SetCancellationPercent(string? val)
     {
-        if (_isUpdate) {
-            if (isPercent) { _updateModel.Percent = 10; _updateModel.Amount = 0; }
-            else { _updateModel.Amount = 100000; _updateModel.Percent = 0; }
-        } else {
-            if (isPercent) { _createModel.Percent = 10; _createModel.Amount = 0; }
-            else { _createModel.Amount = 100000; _createModel.Percent = 0; }
-        }
+        double.TryParse(val, out var pct);
+        if (_isUpdate && _updateModel is CancellationPolicyUpdateVM u) u.RefundPercent = pct;
+        else if (_createModel is CancellationPolicyCreateVM c) c.RefundPercent = pct;
         StateHasChanged();
-        _layoutRef?.TriggerValidate();
     }
 
-    private void HandleAgeInput(string? val, string field)
+    private void SetChildrenAge(string type, string? val)
     {
         int.TryParse(val, out var age);
-        if (_isUpdate) {
-            if (field == "from") _updateModel.IntValue1 = age; else _updateModel.IntValue2 = age;
-        } else {
-            if (field == "from") _createModel.IntValue1 = age; else _createModel.IntValue2 = age;
-        }
+        if (_isUpdate && _updateModel is ChildrenPolicyUpdateVM u)
+        { if (type == "min") u.MinAge = age; else u.MaxAge = age; }
+        else if (_createModel is ChildrenPolicyCreateVM c)
+        { if (type == "min") c.MinAge = age; else c.MaxAge = age; }
         StateHasChanged();
-        _layoutRef?.TriggerValidate();
     }
 
-    private void HandleToggleSurcharge(bool isEnabled)
+    private void ToggleChildrenFee(bool hasFee)
     {
-        decimal val = isEnabled ? 150000 : 0;
-        if (_isUpdate) _updateModel.Amount = val; else _createModel.Amount = val;
-        
+        if (_isUpdate && _updateModel is ChildrenPolicyUpdateVM u) u.ExtraBedFee = hasFee ? 150000 : 0;
+        else if (_createModel is ChildrenPolicyCreateVM c) c.ExtraBedFee = hasFee ? 150000 : 0;
         StateHasChanged();
-        _layoutRef?.TriggerValidate();
     }
 
-    
-
-    // ----- 2002: PETS ----- //
-    // 1. Xử lý gạt switch Cho phép / Không cho phép
-    private void HandlePetToggle(bool isAllowed)
+    private void SetChildrenFee(string? val)
     {
-        if (_isUpdate) {
-            _updateModel.BoolValue = isAllowed;
-            if (!isAllowed) _updateModel.Amount = 0; // Nếu cấm thì xóa luôn phí
-        } else {
-            _createModel.BoolValue = isAllowed;
-            if (!isAllowed) _createModel.Amount = 0;
-        }
+        decimal.TryParse(val?.Replace(",", "").Replace(".", ""), out var fee);
+        if (_isUpdate && _updateModel is ChildrenPolicyUpdateVM u) u.ExtraBedFee = fee;
+        else if (_createModel is ChildrenPolicyCreateVM c) c.ExtraBedFee = fee;
         StateHasChanged();
-        _layoutRef?.TriggerValidate();
     }
 
-    // 2. Xử lý gạt switch Miễn phí / Tính phí (Chỉ dành cho vật nuôi)
-    private void HandlePetFeeToggle(bool isPaid)
+    private void SetPetAllowed(bool isAllowed)
     {
-        decimal defaultPetFee = isPaid ? 200000 : 0; // Gợi ý 200k nếu tính phí
-        
-        if (_isUpdate) _updateModel.Amount = defaultPetFee;
-        else _createModel.Amount = defaultPetFee;
-        
+        if (_isUpdate && _updateModel is PetPolicyUpdateVM u) { u.IsPetAllowed = isAllowed; if (!isAllowed) u.PetFee = 0; }
+        else if (_createModel is PetPolicyCreateVM c) { c.IsPetAllowed = isAllowed; if (!isAllowed) c.PetFee = 0; }
         StateHasChanged();
-        _layoutRef?.TriggerValidate();
     }
 
-    // --- LIFECYCLE ---
+    private void TogglePetFee(bool hasFee)
+    {
+        if (_isUpdate && _updateModel is PetPolicyUpdateVM u) u.PetFee = hasFee ? 200000 : 0;
+        else if (_createModel is PetPolicyCreateVM c) c.PetFee = hasFee ? 200000 : 0;
+        StateHasChanged();
+    }
 
-    // --- 1. LOAD DATA (Override từ Cha) ---
+    private void SetPetFee(string? val)
+    {
+        decimal.TryParse(val?.Replace(",", "").Replace(".", ""), out var fee);
+        if (_isUpdate && _updateModel is PetPolicyUpdateVM u) u.PetFee = fee;
+        else if (_createModel is PetPolicyCreateVM c) c.PetFee = fee;
+        StateHasChanged();
+    }
+
+    // ======================== LIFECYCLE ========================
     protected override async Task LoadDataAsync()
     {
-        // Ngăn chặn gọi API nếu Component đã bị hủy (tránh ObjectDisposedException)
         if (Disposed) return;
-
-        // Reset UI Loading
-        items = null;
+        _items = null;
         StateHasChanged();
 
         try
         {
-            // Gọi API bằng Property 'Service' từ AdminPageBase
             var res = await Service.GetPoliciesByType(TypeId, _paging);
-
-            if (!Disposed) // Check cờ Disposed từ Cha
+            if (!Disposed && res.StatusCode == StatusCodeResponse.Success && res.Content != null)
             {
-                if (res.StatusCode == StatusCodeResponse.Success && res.Content != null)
-                {
-                    items = res.Content.Items;
-                    totalPages = res.Content.TotalPages;
-                    totalCount = res.Content.TotalCount;
-                }
-                else
-                {
-                    items = new List<PolicyVM>();
-
-                    // Nếu lỗi 404 từ Server, trả về danh sách rỗng thay vì để items = null
-                    if (res.StatusCode != StatusCodeResponse.Success)
-                        SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
-                }
+                _items = res.Content.Items;
+                _totalPages = res.Content.TotalPages;
+                _totalCount = res.Content.TotalCount;
+            }
+            else
+            {
+                _items = new List<PolicyVM>();
+                if (res.StatusCode != StatusCodeResponse.Success) SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
             }
         }
         catch (Exception ex)
         {
-            // Log lỗi ra console để debug xem lỗi gì
-            Console.WriteLine($"[Policy Load Error]: {ex.Message}");
-
-            Logger.LogError(ex, "Lỗi load data policy");
-            items = new List<PolicyVM>();
+            Logger.LogError(ex, "Lỗi load policy");
+            _items = new List<PolicyVM>();
         }
-        finally
-        {
-            if (!Disposed) StateHasChanged();
-        }
+        finally { if (!Disposed) StateHasChanged(); }
     }
 
-    protected override void OnInitialized()
-    {
-        // Ép Model đúng kiểu ngay khi component vừa được tạo ra
-        ResetForm();
-    }
+    protected override void OnInitialized() => ResetForm();
 
-    // --- 2. XỬ LÝ PARAMETERS (Thay thế OnInitialized và OnAfterRender cũ) ---
     protected override async Task OnParametersSetAsync()
     {
         var effectiveTypeId = TypeId ?? 1002;
-
-        // Kiểm tra xem TypeId có thực sự đổi không
         if (effectiveTypeId != _previousTypeId)
         {
             _previousTypeId = effectiveTypeId;
             TypeId = effectiveTypeId;
             _paging.PageIndex = 1;
             ResetForm();
-
-            if (IsJsReady)
-            {
-                await LoadDataAsync();
-            }
+            if (IsJsReady) await LoadDataAsync();
         }
     }
 
-    // --- HÀM XỬ LÝ KHI BẤM CHUYỂN TRANG ---
-    private async Task HandlePageChanged(int newPage)
-    {
-        // Cập nhật số trang mới vào Request
-        _paging.PageIndex = newPage;
-        // Gọi lại API
-        await LoadDataAsync();
-    }
+    private async Task HandlePageChanged(int newPage) { _paging.PageIndex = newPage; await LoadDataAsync(); }
 
-
-    // --- CRUD METHODS ---
+    // ======================== CRUD ========================
     private void OnEditItem(PolicyVM item)
     {
         _isUpdate = true;
         _currentEditingId = item.Id;
-
-        _updateModel = new PolicyUpdateVM
-        {
-            Name = item.Name,
-            Description = item.Description,
-
-            // QUAN TRỌNG: Phải copy hết các field này thì form mới hiện số
-            TimeFrom = item.TimeFrom,
-            TimeTo = item.TimeTo,
-            IntValue1 = item.IntValue1,
-            IntValue2 = item.IntValue2,
-            Amount = item.Amount,
-            Percent = item.Percent,
-            BoolValue = item.BoolValue
-        };
-
+        _updateModel = PolicyHelper.MapToUpdateVM(item)!;
         StateHasChanged();
-
         _layoutRef?.TriggerValidate();
     }
 
     private async Task HandleDelete(PolicyVM item)
     {
-        // Gọi API xóa thực tế
         var res = await Service.DeletePolicy(item.Id);
-
-        // Hiển thị thông báo
         SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
-
-        if (res.StatusCode == StatusCodeResponse.Success)
-        {
-            // Xóa thành công thì load lại bảng
-            await LoadDataAsync();
-        }
+        if (res.StatusCode == StatusCodeResponse.Success) await LoadDataAsync();
     }
 
     private void ResetForm()
     {
         _isUpdate = false;
         _currentEditingId = 0;
-
-        // 1. Xác định TypeId chuẩn ngay từ đầu (Nếu null lấy 1002 - Check-in/out)
         int currentTypeId = TypeId ?? 1002;
 
-        // 2. Khởi tạo CreateVM
-        _createModel = new PolicyCreateVM
+        _createModel = PolicyHelper.CreateNewPolicyModel(currentTypeId);
+        _createModel.Name = "";
+        _createModel.Description = "";
+
+        _updateModel = currentTypeId switch
         {
-            Name = "",        // Đảm bảo không null để tránh lỗi UI
-            Description = "",  // Đảm bảo không null
-            TypeId = currentTypeId
+            (int)PolicyTypeEnum.CheckInOut => new CheckInOutPolicyUpdateVM(),
+            (int)PolicyTypeEnum.Cancellation => new CancellationPolicyUpdateVM(),
+            (int)PolicyTypeEnum.Children => new ChildrenPolicyUpdateVM(),
+            (int)PolicyTypeEnum.Pets => new PetPolicyUpdateVM(),
+            _ => new CheckInOutPolicyUpdateVM()
         };
 
-        // 3. Khởi tạo UpdateVM (Dummy để tránh lỗi null ở EditForm)
-        _updateModel = new PolicyUpdateVM();
-
-        // 4. Gọi Helper để điền các giá trị mặc định (Giờ giấc, số tiền...)
-        // Helper này giờ đã hỗ trợ nhận vào PolicyCreateVM nhờ overload chúng ta vừa viết
         PolicyHelper.ApplyDefaultValues(_createModel, currentTypeId);
-
-        // 5. Báo cho giao diện vẽ lại
         StateHasChanged();
+        _layoutRef?.TriggerValidate();
+    }
 
-        // 6. [QUAN TRỌNG] Xóa các thông báo lỗi đỏ từ phiên làm việc trước
+    private void SuggestDefaultValues()
+    {
+        int currentTypeId = TypeId ?? 1002;
+        if (_isUpdate) PolicyHelper.ApplyDefaultValues(_updateModel, currentTypeId);
+        else PolicyHelper.ApplyDefaultValues(_createModel, currentTypeId);
+        StateHasChanged();
         _layoutRef?.TriggerValidate();
     }
 
     private async Task SaveData()
     {
-        // 1. Kiểm tra logic giờ giấc (TypeId = 1002)
-        if (TypeId == 1002)
-        {
-            var mFrom = _isUpdate ? _updateModel.TimeFrom : _createModel.TimeFrom;
-            var mTo = _isUpdate ? _updateModel.TimeTo : _createModel.TimeTo;
-
-            if (mFrom.HasValue && mTo.HasValue)
-            {
-                // Tính số giờ giữa 2 mốc
-                var diff = (mTo.Value - mFrom.Value).TotalHours;
-                
-                // Nếu số giờ <= 0 (VD: 12h - 14h = -2h), nghĩa là khách ở xuyên đêm sang hôm sau
-                if (diff <= 0) diff += 24;
-
-                // CHẶN 1: Không được ở quá lâu (phải để thời gian dọn phòng)
-                if (diff > 23) 
-                {
-                    _snackbar.Add(MessageResponse.AdminManagement.Policy.MAX_DIFF_TIME, Severity.Error);
-                    return;
-                }
-
-                // CHẶN 2: Không được ở quá ngắn (VD: Check-in 14:00, Check-out 14:15 là vô lý)
-                if (diff < 1) 
-                {
-                    _snackbar.Add(MessageResponse.AdminManagement.Policy.INVALID_DIFF_TIME, Severity.Warning);
-                    return;
-                }
-            }
-        }
-
-        // 2. Làm sạch dữ liệu cho Chính sách hủy (TypeId = 1003)
-        if (TypeId == 1003)
-        {
-            // Đảm bảo nếu Admin vô tình để số ngày âm hoặc rác khi dùng Switch
-            if (_isUpdate && _updateModel.IntValue1 < 0) _updateModel.IntValue1 = 0;
-            if (!_isUpdate && _createModel.IntValue1 < 0) _createModel.IntValue1 = 0;
-        }
-
         if (TypeId == 1004)
         {
-            int f = _isUpdate ? (_updateModel.IntValue1 ?? 0) : (_createModel.IntValue1 ?? 0);
-            int t = _isUpdate ? (_updateModel.IntValue2 ?? 0) : (_createModel.IntValue2 ?? 0);
+            if (_createModel is ChildrenPolicyCreateVM cc && cc.MinAge > cc.MaxAge)
+            { _snackbar.Add(MessageResponse.AdminManagement.Policy.INVALID_AGE_RANGE, Severity.Error); return; }
+            if (_updateModel is ChildrenPolicyUpdateVM cu && cu.MinAge > cu.MaxAge)
+            { _snackbar.Add(MessageResponse.AdminManagement.Policy.INVALID_AGE_RANGE, Severity.Error); return; }
+        }
 
-            if (f > t)
-            {
-                _snackbar.Add(MessageResponse.AdminManagement.Policy.INVALID_AGE_RANGE, Severity.Error);
-                return; // Chặn không cho gọi API
-            }
-        }
-        
         ApiResponse<PolicyVM> res;
-        if (_isUpdate)
-        {
-            // Update: Gửi UpdateVM + ID
-            res = await Service.UpdatePolicy(_currentEditingId, _updateModel);
-        }
-        else
-        {
-            // Create: Gửi CreateVM (Đã có TypeId)
-            _createModel.TypeId = TypeId ?? 1002;
-            res = await Service.CreatePolicy(_createModel);
-        }
+        if (_isUpdate) { res = await Service.UpdatePolicy(_currentEditingId, _updateModel); }
+        else { _createModel.TypeId = TypeId ?? 1002; res = await Service.CreatePolicy(_createModel); }
 
         if (res.StatusCode == StatusCodeResponse.Success)
-        {
-            // Hiển thị thông báo
-            SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
-            await LoadDataAsync();
-            ResetForm();
-        }
-        else
-        {
-            // KHÔNG gọi ResetForm() nếu có lỗi từ Server (như trùng tên)
-            // Dữ liệu vẫn nằm nguyên trong _updateModel để Admin sửa tiếp
-            SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
-        }
+        { SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!); await LoadDataAsync(); ResetForm(); }
+        else { SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!); }
     }
 }

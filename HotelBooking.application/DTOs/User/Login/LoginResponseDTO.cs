@@ -1,3 +1,4 @@
+namespace HotelBooking.application.DTOs.User.Login;
 public class LoginResponseDTO
 {
     public string AccessToken { get; set; } = string.Empty;

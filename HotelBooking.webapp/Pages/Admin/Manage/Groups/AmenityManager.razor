@@ -1,4 +1,5 @@
 @using HotelBooking.webapp.Pages.Admin.Base
+@using HotelBooking.webapp.Helpers
 @inherits AdminPageBase
 @attribute [Authorize(Roles = "Admin")]
 
@@ -140,35 +141,10 @@ else
 
 
     // Biến kiểm soát vòng đời & Re-render
-    private int? _previousTypeId = -999;
+    private int? _previousTypeId = null;
 
     // --- HELPER: Tự động chọn Icon dựa trên tên tiện nghi ---
-    private string GetAmenityIcon(string? name)
-    {
-        if (string.IsNullOrEmpty(name)) return "fa-solid fa-plus-circle";
-
-        var n = name.ToLower();
-
-        // Nhóm Vệ sinh / Phòng tắm
-        if (n.Contains("towel") || n.Contains("khăn") || n.Contains("soap") || n.Contains("xà bông") || n.Contains("shampoo"))
-            return "fa-solid fa-pump-soap";
-        if (n.Contains("toilet") || n.Contains("vệ sinh") || n.Contains("shower") || n.Contains("vòi"))
-            return "fa-solid fa-shower";
-
-        // Nhóm Điện tử / Giải trí
-        if (n.Contains("tv") || n.Contains("tivi") || n.Contains("television")) return "fa-solid fa-tv";
-        if (n.Contains("wifi") || n.Contains("mạng") || n.Contains("internet")) return "fa-solid fa-wifi";
-        if (n.Contains("phone") || n.Contains("điện thoại")) return "fa-solid fa-phone";
-
-        // Nhóm Đồ gia dụng
-        if (n.Contains("fan") || n.Contains("quạt")) return "fa-solid fa-fan";
-        if (n.Contains("heat") || n.Contains("sưởi")) return "fa-solid fa-temperature-arrow-up";
-        if (n.Contains("air cond") || n.Contains("máy lạnh") || n.Contains("điều hòa")) return "fa-solid fa-snowflake";
-        if (n.Contains("safe") || n.Contains("két")) return "fa-solid fa-vault";
-        if (n.Contains("desk") || n.Contains("bàn làm việc")) return "fa-solid fa-table";
-
-        return "fa-solid fa-check-circle"; // Mặc định
-    }
+    private string GetAmenityIcon(string? name) => AmenityIconHelper.GetIcon(name);
 
     private BaseCreateOrUpdateAdminVM GetModel() => _isUpdate ? (BaseCreateOrUpdateAdminVM)_updateModel :
     (BaseCreateOrUpdateAdminVM)_createModel;

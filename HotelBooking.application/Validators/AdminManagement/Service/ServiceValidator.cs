@@ -1,10 +1,7 @@
 // Validator chung cho lớp cha ServiceCreateOrUpdateDTO
-using System.Data;
 using FluentValidation;
 
 namespace HotelBooking.application.Validators.AdminManagement.Service;
-
-
 public class ServiceValidator : AbstractValidator<ServiceDTO>
 {
     // Giả định mức tối thiểu là 10,000đ
