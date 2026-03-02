@@ -138,7 +138,7 @@ else if (userInfo.Content == null)
 
         try
         {
-            userInfo = await _httpClient.GetFromJsonAsync<ApiResponse<UserForUpgradeVM?>>("v1/request/get-user-upgrade");
+            userInfo = await _httpClient.GetFromJsonAsync<ApiResponse<UserForUpgradeVM?>>("v1/upgrade-requests/my-info");
 
             // Check nếu user có request nào không
             if (userInfo?.Content != null)
@@ -190,7 +190,7 @@ else if (userInfo.Content == null)
 
         try
         {
-            var response = await _httpClient.PostAsJsonAsync("v1/request/create-request", requestModel);
+            var response = await _httpClient.PostAsJsonAsync("v1/upgrade-requests/create-request", requestModel);
             var content = await response.Content.ReadAsStringAsync();
 
             try
