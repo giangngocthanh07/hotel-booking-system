@@ -10,13 +10,13 @@ using HotelBooking.application.Services.Domains.RequestManagement.Base;
 namespace HotelBooking.application.Services.Domains.RequestManagement
 {
     /// <summary>
-    /// Interface cho Upgrade Request Service.
-    /// Kế thừa IBaseRequestService để tái sử dụng common operations.
-    /// Thêm các methods riêng cho Customer operations.
+    /// Interface for the Upgrade Request Service.
+    /// Extends IBaseRequestService to reuse common operations.
+    /// Adds customer-specific methods.
     /// </summary>
     public interface IUpgradeRequestService : IBaseRequestService<UpgradeRequestDTO>
     {
-        // === Customer Operations (Riêng cho Upgrade) ===
+        // === Customer Operations (Upgrade-specific) ===
         Task<ApiResponse<UserForUpgradeDTO?>> GetUserForUpgradeAsync(int userId);
         Task<ApiResponse<bool>> CreateRequestAsync(int userId, string address, string taxCode);
         Task<ApiResponse<bool>> CancelRequestAsync(int userId);
@@ -26,7 +26,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
         [Obsolete("Use GetPagedRequestsAsync instead")]
         Task<ApiResponse<IEnumerable<UpgradeRequestDTO>>> GetAllRequestAsync(string? status = null);
     }
-    
+
     public class UpgradeRequestService : IUpgradeRequestService
     {
         private readonly IUpgradeRequestRepository _upgradeRequestRepo;
@@ -114,7 +114,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
                         StatusCodeResponse.NotFound,
                         MessageResponse.RequestManagement.UpgradeRequest.USER_NOT_FOUND);
 
-                // Check role qua UserRoles
+                // Check role via UserRoles table
                 var hasCustomerRole = await _userRoleRepo
                     .AnyAsync(ur => ur.UserId == userId && ur.RoleId == RoleTypeConstDTO.Customer);
 
@@ -157,7 +157,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
         {
             try
             {
-                // Tìm request pending của user
+                // Find user's pending request
                 var pendingRequests = await _upgradeRequestRepo.GetPendingByIdAsync(userId);
                 var request = pendingRequests.FirstOrDefault();
 
@@ -166,7 +166,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
                         StatusCodeResponse.NotFound,
                         MessageResponse.RequestManagement.UpgradeRequest.REQUEST_NOT_FOUND);
 
-                // Cập nhật status thành Cancelled
+                // Update status to Cancelled
                 request.Status = RequestStatusConst.Cancelled;
                 await _upgradeRequestRepo.UpdateAsync(request);
 
@@ -228,20 +228,20 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
                         validation.Errors.First().ErrorMessage);
                 }
 
-                // 2. Build filter expression theo status
+                // 2. Build filter expression by status
                 Expression<Func<HotelBooking.infrastructure.Models.UpgradeRequest, bool>>? filter = null;
                 if (!string.IsNullOrEmpty(status))
                 {
                     filter = r => r.Status == status;
                 }
 
-                // 3. Gọi Repository với pagination
+                // 3. Call Repository with pagination
                 var (items, totalCount) = await _upgradeRequestRepo.GetPagedWithUserAsync(
                     filter,
                     pagingRequest.PageIndex ?? 1,
                     pagingRequest.PageSize ?? 10);
 
-                // 4. Map sang DTO
+                // 4. Map to DTO
                 var dtoItems = items.Select(request => new UpgradeRequestDTO
                 {
                     RequestId = request.Id,
@@ -256,7 +256,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
                     RequestedAt = request.RequestedAt
                 }).ToList();
 
-                // 5. Trả về PagedResult
+                // 5. Return PagedResult
                 var pagedResult = new PagedResult<UpgradeRequestDTO>(
                     dtoItems,
                     totalCount,

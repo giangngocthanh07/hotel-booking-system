@@ -1,7 +1,17 @@
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
-using HotelBooking.application.Interfaces;
+using HotelBooking.application.Services.Domains.Media;
 
+namespace HotelBooking.application.Services.Domains.Media
+{
+    public interface IPhotoService
+    {
+        Task<string> UploadPhotoAsync(UploadFileDTO file, int userId);
+        Task<string> UploadHotelCoverImageAsync(UploadFileDTO file, int userId, int hotelId);
+        Task<string> UploadHotelMainImageAsync(UploadFileDTO file, int userId, int hotelId);
+        Task<string> UploadHotelSubImageAsync(UploadFileDTO file, int userId, int hotelId);
+    }
+}
 public class PhotoService : IPhotoService
 {
     private readonly Cloudinary _cloudinary;

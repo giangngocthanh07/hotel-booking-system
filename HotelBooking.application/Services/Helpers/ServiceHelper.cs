@@ -3,7 +3,7 @@ using HotelBooking.infrastructure.Models;
 
 public static class ServiceHelper
 {
-    // Khai báo static readonly để dùng chung, không cần tạo mới liên tục -> Tối ưu bộ nhớ - ĐÂY LÀ 1 STATIC SIMPLE FACTORY PATTERN
+    // Static readonly shared instance — avoids repeated allocations. Implements STATIC SIMPLE FACTORY PATTERN
     private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
     {
         PropertyNameCaseInsensitive = true
@@ -19,53 +19,53 @@ public static class ServiceHelper
         };
     }
 
-    public static ServiceDTO? MapToServiceDTO(Service sv)
+    public static ServiceDTO? MapToServiceDTO(Service service)
     {
-        var additionalJson = sv.Additional ?? "{}";
+        var additionalJson = service.Additional ?? "{}";
 
-        switch ((ServiceTypeEnum)sv.TypeId)
+        switch ((ServiceTypeEnum)service.TypeId)
         {
             case ServiceTypeEnum.Standard: // ID = 1
                 var dict = JsonSerializer.Deserialize<Dictionary<string, string>>(additionalJson, _jsonOptions);
                 return new ServiceStandardDTO
                 {
-                    Id = sv.Id,
-                    Name = sv.Name,
-                    Description = sv.Description,
-                    Price = sv.Price,
-                    IsDeleted = sv.IsDeleted,
-                    TypeId = sv.TypeId,
-                    // Map riêng
+                    Id = service.Id,
+                    Name = service.Name,
+                    Description = service.Description,
+                    Price = service.Price,
+                    IsDeleted = service.IsDeleted,
+                    TypeId = service.TypeId,
+                    // Map Standard-specific field
                     Unit = dict?.GetValueOrDefault("Unit", "") ?? ""
                 };
 
             case ServiceTypeEnum.AirportTransfer: // ID = 2
-                var atData = JsonSerializer.Deserialize<ServiceAirportAdditionalData>(additionalJson, _jsonOptions);
+                var airportTransferData = JsonSerializer.Deserialize<ServiceAirportAdditionalData>(additionalJson, _jsonOptions);
                 return new ServiceAirportTransferDTO
                 {
-                    Id = sv.Id,
-                    Name = sv.Name,
-                    Description = sv.Description,
-                    Price = sv.Price,
-                    IsDeleted = sv.IsDeleted,
-                    TypeId = sv.TypeId,
-                    // Map các câu hỏi logic
-                    IsOneWayPaid = atData?.IsOneWayPaid ?? (sv.Price > 0),
-                    HasRoundTrip = atData?.HasRoundTrip ?? false,
-                    IsRoundTripPaid = atData?.IsRoundTripPaid ?? false,
-                    // Map các giá trị thực tế
-                    MaxPassengers = atData?.MaxPassengers,
-                    MaxLuggage = atData?.MaxLuggage,
-                    RoundTripPrice = atData?.RoundTripPrice,
-                    // Logic: Nếu AdditionalFee có giá trị thì HasNightFee phải là true
-                    HasNightFee = atData?.HasNightFee ?? (atData?.AdditionalFee > 0),
-                    AdditionalFee = atData?.AdditionalFee,
-                    // --- Chuyển từ string (JSON) về TimeOnly (DTO) ---
-                    AdditionalFeeStartTime = !string.IsNullOrEmpty(atData?.AdditionalFeeStartTime)
-            ? TimeOnly.Parse(atData.AdditionalFeeStartTime) : null,
+                    Id = service.Id,
+                    Name = service.Name,
+                    Description = service.Description,
+                    Price = service.Price,
+                    IsDeleted = service.IsDeleted,
+                    TypeId = service.TypeId,
+                    // Map boolean logic flags
+                    IsOneWayPaid = airportTransferData?.IsOneWayPaid ?? (service.Price > 0),
+                    HasRoundTrip = airportTransferData?.HasRoundTrip ?? false,
+                    IsRoundTripPaid = airportTransferData?.IsRoundTripPaid ?? false,
+                    // Map actual data values
+                    MaxPassengers = airportTransferData?.MaxPassengers,
+                    MaxLuggage = airportTransferData?.MaxLuggage,
+                    RoundTripPrice = airportTransferData?.RoundTripPrice,
+                    // Logic: if AdditionalFee has a value then HasNightFee must be true
+                    HasNightFee = airportTransferData?.HasNightFee ?? (airportTransferData?.AdditionalFee > 0),
+                    AdditionalFee = airportTransferData?.AdditionalFee,
+                    // --- Convert string (JSON) to TimeOnly (DTO) ---
+                    AdditionalFeeStartTime = !string.IsNullOrEmpty(airportTransferData?.AdditionalFeeStartTime)
+            ? TimeOnly.Parse(airportTransferData.AdditionalFeeStartTime) : null,
 
-                    AdditionalFeeEndTime = !string.IsNullOrEmpty(atData?.AdditionalFeeEndTime)
-            ? TimeOnly.Parse(atData.AdditionalFeeEndTime) : null
+                    AdditionalFeeEndTime = !string.IsNullOrEmpty(airportTransferData?.AdditionalFeeEndTime)
+            ? TimeOnly.Parse(airportTransferData.AdditionalFeeEndTime) : null
                 };
 
             default:
@@ -73,9 +73,9 @@ public static class ServiceHelper
         }
     }
 
-    // THÊM METHOD NÀY: Dùng để đóng gói dữ liệu khi Create/Update - ĐÂY LÀ STATIC SIMPLE FACTORY PATTERN
+    // Serializes DTO additional data into a JSON string for storage — STATIC SIMPLE FACTORY PATTERN
     // =========================================================================
-    // 2. MAP CREATE DTO -> JSON STRING (Lưu vào DB)
+    // 2. MAP CREATE DTO -> JSON STRING (Persist to DB)
     // =========================================================================
     public static string MapToAdditionalJson(ServiceCreateDTO dto)
     {
@@ -86,7 +86,7 @@ public static class ServiceHelper
 
             case ServiceAirportCreateDTO air:
                 var data = new ServiceAirportAdditionalData();
-                // Map và làm sạch dữ liệu (Sanitize)
+                // Map and sanitize data before persisting
                 ApplyAirportLogic(data, air);
                 return JsonSerializer.Serialize(data, _jsonOptions);
 
@@ -96,7 +96,7 @@ public static class ServiceHelper
     }
 
     // =========================================================================
-    // 3. MAP UPDATE DTO -> JSON STRING (Cập nhật DB)
+    // 3. MAP UPDATE DTO -> JSON STRING (Update DB)
     // =========================================================================
     public static string MapToAdditionalJson(ServiceUpdateDTO dto)
     {
@@ -107,7 +107,7 @@ public static class ServiceHelper
 
             case ServiceAirportUpdateDTO air:
                 var data = new ServiceAirportAdditionalData();
-                // Map và làm sạch dữ liệu (Sanitize)
+                // Map and sanitize data before persisting
                 ApplyAirportLogic(data, air);
                 return JsonSerializer.Serialize(data, _jsonOptions);
 
@@ -117,34 +117,34 @@ public static class ServiceHelper
     }
 
     // =========================================================================
-    // PRIVATE HELPER: Logic nghiệp vụ chung cho Airport (Tránh lặp code)
+    // PRIVATE HELPER: Shared airport business logic (avoids code duplication)
     // =========================================================================
 
-    // Overload cho Create
+    // Overload for Create
     private static void ApplyAirportLogic(ServiceAirportAdditionalData data, ServiceAirportCreateDTO src)
     {
         data.MaxPassengers = src.MaxPassengers;
         data.MaxLuggage = src.MaxLuggage;
         data.IsOneWayPaid = src.IsOneWayPaid;
 
-        // Logic Khứ hồi: Nếu tắt khứ hồi -> Xóa giá và flag trả phí
+        // Round-trip logic: if disabled, clear price and payment flag
         data.HasRoundTrip = src.HasRoundTrip;
         data.IsRoundTripPaid = src.HasRoundTrip && src.IsRoundTripPaid;
         data.RoundTripPrice = (src.HasRoundTrip && src.IsRoundTripPaid) ? src.RoundTripPrice : null;
 
-        // 2. Logic Phụ phí đêm: Chốt chặn an toàn ở đây
+        // 2. Night surcharge logic: enforced here as a safeguard
         data.HasNightFee = src.HasNightFee;
         if (src.HasNightFee && src.AdditionalFeeStartTime.HasValue && src.AdditionalFeeEndTime.HasValue)
         {
-            // Tính toán độ dài khung giờ
+            // Calculate the duration of the surcharge window
             TimeSpan duration = src.AdditionalFeeEndTime.Value - src.AdditionalFeeStartTime.Value;
             double totalHours = duration.TotalHours < 0 ? duration.TotalHours + 24 : duration.TotalHours;
 
             // @--BEST_PRACTICE_LIMIT_12H--@
             if (totalHours > 12)
             {
-                // Có thể throw lỗi hoặc log cảnh báo. Ở đây ta vẫn cho lưu nhưng nên xử lý ở Validation trước.
-                // data.HasNightFee = false; // Một cách chặn cực đoan
+                // Can throw or log a warning here. Currently allows saving — validation should catch this upstream.
+                // data.HasNightFee = false; // More aggressive guard option
             }
 
             data.AdditionalFee = src.AdditionalFee;
@@ -161,7 +161,7 @@ public static class ServiceHelper
         }
     }
 
-    // Overload cho Update
+    // Overload for Update
     private static void ApplyAirportLogic(ServiceAirportAdditionalData data, ServiceAirportUpdateDTO src)
     {
         data.MaxPassengers = src.MaxPassengers;
@@ -172,19 +172,19 @@ public static class ServiceHelper
         data.IsRoundTripPaid = src.HasRoundTrip && src.IsRoundTripPaid;
         data.RoundTripPrice = (src.HasRoundTrip && src.IsRoundTripPaid) ? src.RoundTripPrice : null;
 
-        // 2. Logic Phụ phí đêm: Chốt chặn an toàn ở đây
+        // 2. Night surcharge logic: enforced here as a safeguard
         data.HasNightFee = src.HasNightFee;
         if (src.HasNightFee && src.AdditionalFeeStartTime.HasValue && src.AdditionalFeeEndTime.HasValue)
         {
-            // Tính toán độ dài khung giờ
+            // Calculate the duration of the surcharge window
             TimeSpan duration = src.AdditionalFeeEndTime.Value - src.AdditionalFeeStartTime.Value;
             double totalHours = duration.TotalHours < 0 ? duration.TotalHours + 24 : duration.TotalHours;
 
             // @--BEST_PRACTICE_LIMIT_12H--@
             if (totalHours > 12)
             {
-                // Có thể throw lỗi hoặc log cảnh báo. Ở đây ta vẫn cho lưu nhưng nên xử lý ở Validation trước.
-                // data.HasNightFee = false; // Một cách chặn cực đoan
+                // Can throw or log a warning here. Currently allows saving — validation should catch this upstream.
+                // data.HasNightFee = false; // More aggressive guard option
             }
 
             data.AdditionalFee = src.AdditionalFee;
@@ -193,7 +193,7 @@ public static class ServiceHelper
         }
         else
         {
-            // Xóa sạch như đã làm ở bước trước
+            // Clear night surcharge fields
             data.AdditionalFee = null;
             data.AdditionalFeeStartTime = null;
             data.AdditionalFeeEndTime = null;

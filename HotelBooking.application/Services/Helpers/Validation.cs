@@ -5,7 +5,7 @@ public class ValidationResult
     public bool IsValid { get; set; }
     public string? Message { get; set; }
     // Thêm thuộc tính này để phân biệt lỗi 400 và 404
-    public string StatusCode { get; set; }
+    public string? StatusCode { get; set; }
 
     // Singleton cho trường hợp Success để đỡ tốn bộ nhớ new object liên tục
     public static readonly ValidationResult SuccessResult = new ValidationResult { IsValid = true, StatusCode = StatusCodeResponse.Success };

@@ -5,7 +5,7 @@ using HotelBooking.infrastructure.Models;
 namespace HotelBooking.application.Services.Domains.AdminManagement
 {
     /// <summary>
-    /// Interface cho quản lý Policy - các chính sách của khách sạn
+    /// Interface for managing Policies — hotel rules and conditions
     /// </summary>
     public interface IPolicyService : ITypedManage<PolicyDTO, PolicyTypeDTO, PolicyCreateDTO, PolicyUpdateDTO>
     {
@@ -15,7 +15,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
     public class PolicyService : BaseManage<Policy, IPolicyRepository, PolicyDTO, PolicyCreateDTO, PolicyUpdateDTO>, IPolicyService
     {
         private readonly IPolicyTypeRepository _policyTypeRepo;
-                private readonly IValidator<PagingRequest> _pagingValidator;
+        private readonly IValidator<PagingRequest> _pagingValidator;
 
 
         public PolicyService(
@@ -59,44 +59,44 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
             };
         }
 
-        // --- VALIDATION LOGIC (Quan trọng) ---
+        // --- VALIDATION LOGIC (important) ---
 
         protected override async Task<ValidationResult> ValidateCreateLogicAsync(PolicyCreateDTO dto)
         {
-            // 1. Check trùng tên trong cùng TypeId
+            // 1. Check for duplicate name within the same TypeId
             bool exists = await _repo.AnyAsync(x => x.Name == dto.Name && x.TypeId == dto.TypeId);
             if (exists) return ValidationResult.Fail(MessageResponse.AdminManagement.Policy.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
 
-            // 2. Check Logic nghiệp vụ (Giờ check-in < check-out, v.v...)
-            // Vì đây là Create, ta có dto.TypeId trực tiếp
-            // return PolicyHelper.ValidateBusinessRules(dto.TypeId, dto); 
-            // (Cần viết hàm Helper nhận DTO chung hoặc map sang entity giả để check)
+            // 2. Business rule validation (check-in < check-out, etc.)
+            // For Create, dto.TypeId is available directly
+            // return PolicyHelper.ValidateBusinessRules(dto.TypeId, dto);
+            // (Requires a helper that accepts a common DTO or maps to a mock entity for validation)
 
             return ValidationResult.Success();
         }
 
         protected override async Task<ValidationResult> ValidateUpdateLogicAsync(PolicyUpdateDTO dto, int id)
         {
-            // 1. Lấy Entity gốc để biết TypeId là gì (Vì DTO không có TypeId)
+            // 1. Fetch the original entity to retrieve TypeId (DTO does not include TypeId)
             var currentEntity = await _repo.GetByIdAsync(id);
             if (currentEntity == null || currentEntity.IsDeleted == true) return ValidationResult.Fail(
                     MessageResponse.Common.NOT_FOUND,
                     StatusCodeResponse.NotFound
-                ); // Để hàm chính xử lý 404
+                ); // Let the main handler process the 404
 
-            // 2. Check trùng tên (Dùng TypeId từ DB)
+            // 2. Check for duplicate name (using TypeId from DB)
             bool exists = await _repo.AnyAsync(x =>
                 x.Name == dto.Name &&
-                x.TypeId == currentEntity.TypeId && // Lấy TypeId gốc
+                x.TypeId == currentEntity.TypeId && // Use original TypeId
                 x.IsDeleted == false &&
                 x.Id != id
             );
             if (exists) return ValidationResult.Fail(MessageResponse.AdminManagement.Policy.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
 
-            // 3. Lấy TypeId mong muốn dựa vào kiểu của DTO truyền lên
+            // 3. Determine expected TypeId from the DTO type
             int? expectedTypeId = PolicyHelper.GetTypeIdFromUpdateDto(dto);
 
-            // 4. Kiểm tra chéo: Nếu ID Service trong DB thuộc loại khác với Endpoint đang gọi (DTO)
+            // 4. Cross-check: if the DB Policy belongs to a different type than the calling endpoint (DTO)
             if (expectedTypeId.HasValue && currentEntity.TypeId != expectedTypeId.Value)
             {
                 return ValidationResult.Fail(
@@ -137,7 +137,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
 
         public async Task<ApiResponse<PagedManageResult<PolicyDTO>>> GetPoliciesByTypeAsync(int? typeId, PagingRequest paging)
         {
-             // 1. Validate phân trang
+            // 1. Validate pagination
             var pagingValidation = await _pagingValidator.ValidateAsync(paging);
             if (!pagingValidation.IsValid)
             {
@@ -150,21 +150,21 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
                 typeId,
                 paging,
 
-                // Logic 1: lấy ID mặc định: Query bảng PolicyType, lấy thằng đầu tiên chưa xóa
+                // Logic 1: get default ID — query PolicyType table, take first non-deleted
                 getDefaultIdFunc: async () =>
                 {
                     var firstType = (await _policyTypeRepo.WhereAsync(x => x.IsDeleted != true)).FirstOrDefault();
                     return firstType?.Id;
                 },
 
-                // Logic 2: kiểm tra ID tồn tại: Query bảng PolicyType
+                // Logic 2: check if ID exists — query PolicyType table
                 checkTypeExistsFunc: async (id) =>
                 {
                     var exists = (await _policyTypeRepo.WhereAsync(x => x.Id == id && x.IsDeleted != true)).Any();
                     return exists;
                 },
 
-                // Logic 3: Lấy Entity từ DB
+                // Logic 3: Fetch entities from DB
                 getPagedItemsFunc: async (id, pageIndex, pageSize) =>
                 {
                     return await _repo.GetPagedAsync(
@@ -175,7 +175,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
                     );
                 },
 
-                // Logic 4: Map sang DTO (Tái sử dụng hàm MapToDto có sẵn)
+                // Logic 4: Map to DTO (reuses the existing MapToDto method)
                 mapToDtoFunc: MapToDto
             );
         }

@@ -2,12 +2,12 @@ using System.Text.Json;
 using HotelBooking.infrastructure.Models;
 
 /// <summary>
-/// Helper class cho Policy - xử lý mapping giữa Entity ↔ DTO thông qua JSON
-/// Pattern: Giống ServiceHelper - lưu dữ liệu đa hình vào column Additional
+/// Helper class for Policy — handles Entity ↔ DTO mapping via JSON.
+/// Pattern: Same as ServiceHelper — stores polymorphic data in the Additional column.
 /// </summary>
 public static class PolicyHelper
 {
-    // JSON options dùng chung - tối ưu bộ nhớ
+    // Shared JSON options — avoids repeated allocations
     private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
     {
         PropertyNameCaseInsensitive = true
@@ -29,7 +29,7 @@ public static class PolicyHelper
     }
 
     // ===========================================================================
-    // 2. MAP ENTITY → DTO (Output - Hiển thị)
+    // 2. MAP ENTITY → DTO (Output)
     // ===========================================================================
     public static PolicyDTO? MapToPolicyDTO(Policy entity)
     {
@@ -103,7 +103,7 @@ public static class PolicyHelper
     }
 
     // ===========================================================================
-    // 3. MAP CREATE DTO → JSON STRING (Lưu vào DB)
+    // 3. MAP CREATE DTO → JSON STRING (Persist to DB)
     // ===========================================================================
     public static string MapToAdditionalJson(PolicyCreateDTO dto)
     {
@@ -147,7 +147,7 @@ public static class PolicyHelper
     }
 
     // ===========================================================================
-    // 4. MAP UPDATE DTO → JSON STRING (Cập nhật DB)
+    // 4. MAP UPDATE DTO → JSON STRING (Update DB)
     // ===========================================================================
     public static string MapToAdditionalJson(PolicyUpdateDTO dto)
     {

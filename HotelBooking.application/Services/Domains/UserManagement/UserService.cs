@@ -4,9 +4,10 @@ using HotelBooking.infrastructure.Models;
 using System.Net.Mail;
 using HotelBooking.application.DTOs.User.Register;
 using HotelBooking.application.DTOs.User.Login;
-// Note: MessageRegister, MessageLogin được consolidate vào MessageResponse tại Helpers/Messages/
-// Dùng MessageResponse.UserManagement.Register.* và MessageResponse.UserManagement.Login.* cho code mới
-// Hoặc vẫn dùng MessageRegister/MessageLogin để backward compatible
+using HotelBooking.application.Services.Domains.Auth;
+// Note: MessageRegister and MessageLogin are consolidated into MessageResponse in Helpers/Messages/
+// Use MessageResponse.UserManagement.Register.* and MessageResponse.UserManagement.Login.* for new code
+// Or keep MessageRegister/MessageLogin for backward compatibility
 
 namespace HotelBooking.application.Services.Domains.UserManagement
 {
@@ -124,18 +125,18 @@ namespace HotelBooking.application.Services.Domains.UserManagement
                     IsActive = true
                 };
 
-                // Thêm newUser vào User
+                // Add new user to Users table
                 await _userRepository.AddAsync(user);
-                // Lưu thay đổi vào database
+                // Persist to database
                 await _dbu.SaveChangesAsync(); // Save to generate user.Id
-                                               // Thêm Role vào bảng UserRoles
+                                               // Add role to UserRoles table
                 var userRole = new UserRole
                 {
                     UserId = user.Id,
                     RoleId = newAdmin.GetRoleId()
                 };
 
-                // Thêm bảng tham chiếu
+                // Add role reference
                 user.UserRoles.Add(userRole);
                 await _dbu.SaveChangesAsync(); // Save again to save UserRole
 
@@ -166,14 +167,14 @@ namespace HotelBooking.application.Services.Domains.UserManagement
                     return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, validation.Errors.First().ErrorMessage);
                 }
 
-                // --- 3. CHECK TRÙNG (Code cũ của bạn) ---
-                // 1. Kiểm tra xem user đã tồn tại chưa
+                // --- 3. CHECK DUPLICATES ---
+                // 1. Check if user already exists
                 var checkCustomer = await _userRepository.SingleOrDefaultAsync(customer =>
                     customer.Email == newCustomer.Email ||
                     customer.UserName == newCustomer.Username
                 );
 
-                // 2. Nếu tìm thấy (khác null) thì TRẢ VỀ LỖI NGAY LẬP TỨC
+                // 2. If found (non-null) -> return error immediately
                 if (checkCustomer != null)
                 {
                     return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.Conflict, checkCustomer.UserName == newCustomer.Username ? MessageResponse.UserManagement.Register.USERNAME_EXIST : MessageResponse.UserManagement.Register.EMAIL_EXIST);
@@ -192,20 +193,20 @@ namespace HotelBooking.application.Services.Domains.UserManagement
                     IsActive = true
                 };
 
-                // Thêm newUser vào User
+                // Add new user to Users table
                 await _userRepository.AddAsync(user);
                 await _dbu.SaveChangesAsync(); // Save to generate user.Id
 
-                // Thêm Role vào bảng UserRoles
+                // Add role to UserRoles table
                 var userRole = new UserRole
                 {
                     UserId = user.Id,
                     RoleId = newCustomer.GetRoleId()
                 };
 
-                // Thêm bảng tham chiếu
+                // Add role reference
                 user.UserRoles.Add(userRole);
-                // Lưu thay đổi vào database
+                // Persist changes to database
                 await _dbu.SaveChangesAsync();
 
                 return ResponseFactory.Success(new RegisterResponseDTO
@@ -235,7 +236,7 @@ namespace HotelBooking.application.Services.Domains.UserManagement
 
                 var user = await _userRepository.GetUserWithRoles(u => u.UserName == userLogin.UsernameOrEmail || u.Email == userLogin.UsernameOrEmail);
 
-                // Nếu không tìm thấy user hoặc mật khẩu không khớp thì trả về lỗi Unauthorized
+                // If user not found or password does not match -> return Unauthorized
                 if (user == null || !PasswordHelper.VerifyPassword(userLogin.Password, user.PasswordHash))
                 {
                     return ResponseFactory.Failure<LoginResponseDTO>(
@@ -277,7 +278,7 @@ namespace HotelBooking.application.Services.Domains.UserManagement
                     return ResponseFactory.Failure<bool>(StatusCodeResponse.NotFound, MessageResponse.RequestManagement.UpgradeRequest.USER_NOT_FOUND);
                 }
 
-                // Kiểm tra xem user đã có role Owner chưa
+                // Check if user already has Owner role
                 var hasOwnerRole = await _userRoleRepository
                     .AnyAsync(ur => ur.UserId == user.Id && ur.RoleId == RoleTypeConstDTO.Owner);
 
@@ -286,7 +287,7 @@ namespace HotelBooking.application.Services.Domains.UserManagement
                     return ResponseFactory.Failure<bool>(StatusCodeResponse.Conflict, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_APPROVE_FAILED);
                 }
 
-                // Thêm role Owner cho user
+                // Assign Owner role to user
                 var newUserRole = new UserRole
                 {
                     UserId = user.Id,
@@ -294,7 +295,7 @@ namespace HotelBooking.application.Services.Domains.UserManagement
                 };
                 await _userRoleRepository.AddAsync(newUserRole);
 
-                // Cập nhật trạng thái yêu cầu
+                // Update request status
                 request.Status = "Approved";
                 request.ApprovedAt = DateTime.Now;
                 request.ApprovedBy = adminId;
@@ -312,13 +313,13 @@ namespace HotelBooking.application.Services.Domains.UserManagement
             }
         }
 
-        // Hàm Helper check Regex (có thể để private ở dưới cùng class Service)
+        // Helper method to validate email format (can be private at the bottom of the Service class)
         private bool IsValidEmail(string email)
         {
             if (string.IsNullOrWhiteSpace(email)) return false;
             try
             {
-                // Regex đơn giản để check email
+                // Simple regex to validate email format
                 var addr = new MailAddress(email);
                 return addr.Address == email;
             }

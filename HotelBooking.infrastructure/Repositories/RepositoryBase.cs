@@ -20,15 +20,15 @@ public interface IRepository<T> where T : class
     Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null);
 }
 
-public class Repository<T> : IRepository<T> where T : class     // Đảo ngượv sự phụ thuộc ở đây
+public class Repository<T> : IRepository<T> where T : class     // Dependency Inversion applied here
 {
-    protected readonly HotelBookingDBContext _HBcontext;
+    protected readonly HotelBookingDBContext _context;
     protected readonly DbSet<T> _dbSet;
 
-    public Repository(HotelBookingDBContext HBcontext)
+    public Repository(HotelBookingDBContext context)
     {
-        _HBcontext = HBcontext;
-        _dbSet = _HBcontext.Set<T>();
+        _context = context;
+        _dbSet = _context.Set<T>();
     }
 
     public async Task<IEnumerable<T>> GetAllAsync()
@@ -39,11 +39,11 @@ public class Repository<T> : IRepository<T> where T : class     // Đảo ngư�
 
     public async Task AddAsync(T entity)
     {
-        // Kiểm tra nếu có property "Id" và kiểu là int
+        // Check if the entity has an "Id" property of type int
         var prop = typeof(T).GetProperty("Id");
         if (prop != null && prop.PropertyType == typeof(int))
         {
-            // Reset về 0 để tránh insert thủ công
+            // Reset to 0 to prevent manual ID injection
             prop.SetValue(entity, 0);
         }
 
@@ -78,35 +78,35 @@ public class Repository<T> : IRepository<T> where T : class     // Đảo ngư�
     int pageSize,
     Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null)
     {
-        // 1. Tạo query và lọc
+        // 1. Build query with filter
         var query = _dbSet.AsNoTracking().Where(filter);
 
-        // 2. Đếm tổng số bản ghi (QUAN TRỌNG: Đếm trước khi cắt trang)
+        // 2. Count total records (IMPORTANT: count before slicing)
         int totalCount = await query.CountAsync();
 
-        // 3. Sắp xếp (nếu có) - Bắt buộc phải sort trước khi Skip/Take
+        // 3. Apply ordering (required before Skip/Take)
         if (orderBy != null)
         {
             query = orderBy(query);
         }
         else
         {
-            // EF.Property giúp truy cập thuộc tính bằng chuỗi string
-            // Lưu ý: Phải đúng kiểu dữ liệu (int), nếu Id là Guid hay String thì sẽ lỗi
+            // EF.Property allows accessing properties by string name
+            // Note: Type must match exactly (int); will throw if Id is Guid or string
 
-            // VẤN ĐỀ: Để phân trang (Skip/Take), SQL Server BẮT BUỘC phải có ORDER BY.
-            // Nếu không có Order By, lệnh Skip sẽ bị lỗi hoặc kết quả lung tung.
+            // ISSUE: SQL Server requires ORDER BY when using Skip/Take.
+            // Without it, Skip may fail or return inconsistent results.
 
-            // Nếu bên đối tượng (ví dụ ServiceManager) không quan tâm sắp xếp, để null và không sắp xếp mà code như dưới
+            // If the caller doesn't care about ordering, pass orderBy: null
             // _repo.GetPagedAsync(..., orderBy: null);
-            // GIẢI PHÁP: Repository tự chữa cháy bằng cách sắp xếp theo cột "Id" mặc định như code bên dưới.
+            // SOLUTION: Repository defaults to ordering by "Id" descending.
             query = query.OrderByDescending(x => EF.Property<int>(x, "Id"));
         }
 
-        // 4. Cắt trang (Pagination Logic)
+        // 4. Apply pagination
         var items = await query
-            .Skip((pageIndex - 1) * pageSize) // Bỏ qua các trang trước
-            .Take(pageSize)                   // Lấy số lượng cần thiết
+            .Skip((pageIndex - 1) * pageSize) // Skip previous pages
+            .Take(pageSize)                   // Take the requested page size
             .ToListAsync();
 
         return (items, totalCount);

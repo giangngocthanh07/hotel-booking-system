@@ -1,5 +1,5 @@
 using System.Text.Json;
-using HotelBooking.application.Interfaces;
+using HotelBooking.application.Services.Domains.Media;
 using HotelBooking.infrastructure.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -47,7 +47,7 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
             return await Task.FromResult($"Owner Dashboard for Owner ID: {ownerId}");
         }
 
-        // ================= TÌM KIẾM KHÁCH SẠN THEO FILTER SearchForm.razor ================
+        // ================= SEARCH HOTELS BY FILTER (SearchForm.razor) =================
         public async Task<List<SearchHotelResultDTO>> GetSearchOptionsAsync(string cityName, DateTime? checkIn, DateTime? checkOut,
         int? adults, int? children, int? rooms)
         {
@@ -58,7 +58,7 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
                 Id = r.Id,
                 Name = r.Name,
                 Address = r.Address,
-                Description = string.Empty, // SP không trả Description
+                Description = string.Empty, // Stored Procedure does not return Description
                 CityName = r.CityName,
                 CountryName = r.CountryName,
                 CoverImageUrl = r.CoverImageUrl ?? string.Empty,
@@ -172,13 +172,13 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
         #endregion
 
         #region POST HOTEL (Basic Info + Amenities + Images)
-        // =============== ĐĂNG TẢI KHÁCH SẠN MỚI ================
+        // =============== UPLOAD NEW HOTEL ================
         [Obsolete]
         public async Task<ApiResponse<CreateHotelResponseDTO>> PostHotelAsync(CreateHotelDTO newHotel, int ownerId)
         {
             try
             {
-                // Bước 1: Tạo Hotel trước
+                // Step 1: Create Hotel entity first
                 var hotel = new Hotel
                 {
                     Name = newHotel.Name,
@@ -187,7 +187,7 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
                     CoverImageUrl = null,
                     OwnerId = ownerId,
                     CreatedAt = DateTime.UtcNow,
-                    IsVerified = true,  // mặc định là true, sau này có thể thêm chức năng verify
+                    IsVerified = true,  // default true; verification flow can be added later
                     Status = "Active",
                     IsDeleted = false,
                     CityId = newHotel.CityId,
@@ -199,14 +199,14 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
 
                 int hotelId = hotel.Id;
 
-                // Bước 2: Upload ảnh
+                // Step 2: Upload images
                 if (newHotel.CoverFile != null)
                 {
                     var coverUrl = await _photoService.UploadHotelCoverImageAsync(newHotel.CoverFile, ownerId, hotelId);
                     hotel.CoverImageUrl = coverUrl;
                 }
 
-                // Ảnh chính
+                // Main image
                 if (newHotel.MainFile != null)
                 {
                     var mainUrl = await _photoService.UploadHotelMainImageAsync(newHotel.MainFile, ownerId, hotel.Id);
@@ -218,7 +218,7 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
                     });
                 }
 
-                // 4 ảnh phụ
+                // Up to 4 sub-images
                 if (newHotel.SubFiles != null)
                 {
                     foreach (var file in newHotel.SubFiles)
@@ -233,7 +233,7 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
                     }
                 }
 
-                // Bước 3: Lưu Amenities
+                // Step 3: Save Amenities
                 foreach (var amenityId in newHotel.AmenityIds)
                 {
                     await _hotelAmenityRepository.AddAsync(new HotelAmenity
@@ -243,7 +243,7 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
                     });
                 }
 
-                // Bước 4: Lưu Policies
+                // Step 4: Save Policies
                 if (newHotel.PolicyIds != null && newHotel.PolicyIds.Any())
                 {
                     foreach (var policyId in newHotel.PolicyIds)
@@ -257,7 +257,7 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
                     }
                 }
 
-                // Bước 5: Update lại Hotel + SaveChanges
+                // Step 5: Update Hotel record + SaveChanges
                 await _hotelRepository.UpdateAsync(hotel);
                 await _dbu.SaveChangesAsync();
 
@@ -285,7 +285,7 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
 
         #endregion
 
-        // Test: Up ảnh lên Cloudinary vào folder có mã userId
+        // Test: Upload image to Cloudinary inside a folder named by userId
         [Obsolete]
         public async Task<ApiResponse<UploadResultDTO>> TestUploadImageToCloudinaryAsync(UploadFileDTO file, int userId)
         {

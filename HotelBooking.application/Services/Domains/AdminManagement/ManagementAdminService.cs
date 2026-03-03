@@ -5,12 +5,12 @@ using HotelBooking.infrastructure.Models;
 namespace HotelBooking.application.Services.Domains.AdminManagement
 {
     /// <summary>
-    /// Interface cho AdminDashboard - Quản lý menu và cấu trúc dữ liệu admin
+    /// Interface for AdminDashboard — manages admin menu and data structure
     /// </summary>
     public interface IManagementAdminService
     {
         /// <summary>
-        /// Lấy cấu trúc Menu (Modules + Types) cho từng module quản lý
+        /// Retrieve menu structure (Modules + Types) for each management module
         /// </summary>
         Task<ApiResponse<ManageMenuResult>> GetManageMenuAsync(ManageMenuRequest request);
     }
@@ -24,7 +24,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
 
         private readonly IValidator<ManageMenuRequest> _validator;
 
-        // Tối ưu Validation: Dùng Static HashSet để tra cứu cực nhanh (O(1))
+        // Validation optimization: static HashSet for O(1) lookup
         private static readonly HashSet<ManageModuleEnum> _modulesWithTypeId = new()
         {
             ManageModuleEnum.Service,
@@ -49,10 +49,10 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
 
         public async Task<ApiResponse<ManageMenuResult>> GetManageMenuAsync(ManageMenuRequest request)
         {
-            // --- A. VALIDATION ĐẦU VÀO ---
+            // --- A. INPUT VALIDATION ---
 
-            // Sử dụng chuỗi check liên hoàn. Nếu cái đầu null (OK) thì check cái sau.
-            // Nếu có lỗi, biến validationError sẽ giữ lỗi đó.
+            // Chained null-coalescing check: if the first is null (OK), check the next.
+            // If an error is found, the validationError variable will hold it.
             var validationResult = await _validator.ValidateAsync(request);
 
             if (!validationResult.IsValid)
@@ -65,7 +65,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
 
             try
             {
-                // Switch Case để chọn đúng Repo cho từng Module
+                // Switch-case to select the correct Repo for each Module
                 switch (request.Module)
                 {
                     case ManageModuleEnum.Service:
@@ -92,7 +92,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
                             x => x.Name
                         );
 
-                    // RoomQuality đặc biệt: Nó tự là Type của chính nó
+                    // RoomQuality is special: it acts as its own Type
                     case ManageModuleEnum.RoomQuality:
                         return await ManagementAdminHelper.GetTypesForMenuAsync<RoomQualityGroup, IRoomQualityGroupRepository>(
                             _roomQualityRepo,
@@ -101,7 +101,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
                             x => x.Name
                         );
 
-                    // Các loại không có Type con (Flat Modules)
+                    // Modules without sub-types (Flat Modules)
                     case ManageModuleEnum.UnitType:
                     case ManageModuleEnum.BedType:
                     case ManageModuleEnum.RoomView:

@@ -1,6 +1,0 @@
-@HotelBooking.shared_HostAddress = http://localhost:5166
-
-GET {{HotelBooking.shared_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

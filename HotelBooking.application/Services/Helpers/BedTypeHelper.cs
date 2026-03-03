@@ -2,41 +2,41 @@ using System.Text.Json;
 
 public static class BedTypeHelper
 {
-    // Khai báo static readonly để dùng chung, không cần tạo mới liên tục -> Tối ưu bộ nhớ - ĐÂY LÀ 1 STATIC SIMPLE FACTORY PATTERN
+    // Static readonly shared instance — avoids repeated allocations. Implements STATIC SIMPLE FACTORY PATTERN
     private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
     {
         PropertyNameCaseInsensitive = true
     };
 
-    // --- 1. Map cho CREATE (Nhận BedTypeCreateDTO) ---
+    // --- 1. Map for CREATE (accepts BedTypeCreateDTO) ---
     public static string MapToAdditionalJson(BedTypeCreateDTO dto)
     {
         var data = new BedTypeAdditionalData
         {
-            // Logic nghiệp vụ: Nếu chọn "Đa dạng" thì reset kích thước về 0
+            // Business logic: if "Varying Size" selected, reset dimensions to 0
             MinWidth = dto.IsVaryingSize ? 0 : dto.MinWidth,
             MaxWidth = dto.IsVaryingSize ? 0 : dto.MaxWidth
         };
         return JsonSerializer.Serialize(data, _jsonOptions);
     }
 
-    // --- 2. Map cho UPDATE (Nhận BedTypeUpdateDTO) ---
+    // --- 2. Map for UPDATE (accepts BedTypeUpdateDTO) ---
     public static string MapToAdditionalJson(BedTypeUpdateDTO dto)
     {
         var data = new BedTypeAdditionalData
         {
-            // Logic tương tự Create
+            // Same logic as Create
             MinWidth = dto.IsVaryingSize ? 0 : dto.MinWidth,
             MaxWidth = dto.IsVaryingSize ? 0 : dto.MaxWidth
         };
         return JsonSerializer.Serialize(data, _jsonOptions);
     }
 
-    // --- 3. Map ngược từ JSON ra Object (Dùng cho GetById/GetAll) ---
+    // --- 3. Deserialize JSON back to Object (used by GetById/GetAll) ---
     public static BedTypeAdditionalData MapToAdditionalData(string? json)
     {
         if (string.IsNullOrWhiteSpace(json) || json == "{}")
-            return new BedTypeAdditionalData(); // Trả về object rỗng (0,0, false)
+            return new BedTypeAdditionalData(); // Return empty object (0, 0, false)
 
         try
         {
@@ -45,7 +45,7 @@ public static class BedTypeHelper
         }
         catch
         {
-            // Phòng trường hợp JSON lỗi, trả về default để không crash app
+            // Guard against malformed JSON — return default to prevent app crash
             return new BedTypeAdditionalData();
         }
     }

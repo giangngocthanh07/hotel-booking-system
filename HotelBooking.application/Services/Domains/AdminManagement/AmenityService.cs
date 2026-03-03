@@ -6,7 +6,7 @@ using HotelBooking.infrastructure.Models;
 namespace HotelBooking.application.Services.Domains.AdminManagement
 {
     /// <summary>
-    /// Interface cho quản lý Amenity - các tiện nghi của khách sạn
+    /// Interface for managing Amenities — hotel facilities and features
     /// </summary>
     public interface IAmenityService : ITypedManage<AmenityDTO, AmenityTypeDTO, AmenityCreateDTO, AmenityUpdateDTO>
     {
@@ -66,8 +66,8 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
             };
         }
 
-        // Override hàm check Logic (Thay vì Expression Tree)
-        // Override Logic Create: Check trùng tên (chung chung)
+        // Override business logic checks (instead of Expression Tree)
+        // Override Create Logic: Duplicate name check (general)
         protected override async Task<ValidationResult> ValidateCreateLogicAsync(AmenityCreateDTO dto)
         {
             bool exists = await _repo.AnyAsync(x => x.Name == dto.Name);
@@ -76,20 +76,20 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
             return ValidationResult.Success();
         }
 
-        // Override Logic Update: Check trùng tên (Trừ ID hiện tại ra)
+        // Override Update Logic: Duplicate name check (excluding current ID)
         protected override async Task<ValidationResult> ValidateUpdateLogicAsync(AmenityUpdateDTO dto, int id)
         {
             {
-                // BƯỚC 1: Lấy TypeId gốc từ DB (Vì DTO không có, và ta không tin user)
-                // Dùng AsNoTracking để tối ưu vì chỉ cần đọc TypeId
+                // STEP 1: Fetch the original TypeId from DB (DTO doesn't carry it, and we don't trust user input)
+                // Use AsNoTracking since we only need to read TypeId
                 var currentEntity = await _repo.GetByIdAsync(id);
 
-                if (currentEntity == null) return ValidationResult.Success(); // Để hàm Update chính xử lý lỗi 404 sau
+                if (currentEntity == null) return ValidationResult.Success(); // Let the main Update handle the 404
 
-                // BƯỚC 2: Check trùng tên nhưng phải cùng TypeId GỐC
+                // STEP 2: Check for duplicate name but only within the SAME original TypeId
                 bool isDuplicate = await _repo.AnyAsync(x =>
                     x.Name == dto.Name &&
-                    x.TypeId == currentEntity.TypeId && // Lấy từ DB, không lấy từ DTO
+                    x.TypeId == currentEntity.TypeId && // Fetched from DB, not from DTO
                     x.IsDeleted == false &&
                     x.Id != id
                 );

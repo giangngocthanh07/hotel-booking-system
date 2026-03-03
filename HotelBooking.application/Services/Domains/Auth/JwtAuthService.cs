@@ -5,7 +5,7 @@ using HotelBooking.infrastructure.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
-namespace HotelBooking.application.Services;
+namespace HotelBooking.application.Services.Domains.Auth;
 
 public class JwtAuthService
 {

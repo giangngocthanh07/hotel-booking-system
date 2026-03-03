@@ -5,7 +5,7 @@ using HotelBooking.infrastructure.Models;
 namespace HotelBooking.application.Services.Domains.AdminManagement
 {
     /// <summary>
-    /// Interface cho quản lý Service - các dịch vụ của khách sạn
+    /// Interface for managing Services — hotel service offerings
     /// </summary>
     public interface IServiceService : ITypedManage<ServiceDTO, ServiceTypeDTO, ServiceCreateDTO, ServiceUpdateDTO>
     {
@@ -40,21 +40,21 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
         {
             entity.Name = updateDto.Name;
             entity.Description = updateDto.Description;
-            entity.TypeId = entity.TypeId; // Giữ nguyên TypeId
+            entity.TypeId = entity.TypeId; // Preserve TypeId (do not allow type change)
 
             // [LOGIC NGHIỆP VỤ GIÁ TIỀN]
             entity.Price = updateDto.Price;
 
             if (updateDto is ServiceAirportUpdateDTO airDto)
             {
-                // Nếu Admin bỏ tick "Phí 1 chiều" -> Giá về 0
+                // If Admin unchecks "One-Way Fee" -> Price becomes 0
                 entity.Price = airDto.IsOneWayPaid ? airDto.Price : 0;
             }
 
-            // Dùng Helper overload cho Update
+            // Use Helper overload for Update
             entity.Additional = ServiceHelper.MapToAdditionalJson(updateDto);
 
-            // LƯU Ý: Tuyệt đối KHÔNG map TypeId ở đây để tránh đổi loại dịch vụ
+            // NOTE: Never map TypeId here to prevent changing the service type
         }
 
         protected override Service MapCreateToEntity(ServiceCreateDTO createDto)
@@ -69,7 +69,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
                 Additional = ServiceHelper.MapToAdditionalJson(createDto)
             };
 
-            // Logic phụ: Nếu là Airport và không tính phí 1 chiều -> Price = 0
+            // Side logic: if Airport service and one-way fee not applied -> Price = 0
             if (createDto is ServiceAirportCreateDTO airDto && !airDto.IsOneWayPaid)
             {
                 entity.Price = 0;
@@ -78,10 +78,10 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
             return entity;
         }
 
-        // --- 2. VALIDATION (Tách biệt Create/Update) ---
+        // --- 2. VALIDATION (separated Create/Update) ---
         protected override async Task<ValidationResult> ValidateCreateLogicAsync(ServiceCreateDTO dto)
         {
-            // Check trùng tên trong cùng loại (TargetTypeId)
+            // Check for duplicate name within the same type (TargetTypeId)
             bool isDuplicateName = await _repo.AnyAsync(x =>
                 x.Name == dto.Name);
 
@@ -92,10 +92,10 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
 
         protected override async Task<ValidationResult> ValidateUpdateLogicAsync(ServiceUpdateDTO dto, int id)
         {
-            // UpdateDTO không có TypeId -> Phải lấy từ DB ra để biết scope check trùng
-            // 1. Lấy dữ liệu hiện tại trong DB
+            // UpdateDTO does not include TypeId -> must fetch from DB to determine scope for duplicate check
+            // 1. Fetch current entity from DB
             var currentEntity = await _repo.GetByIdAsync(id);
-            // Nếu entity null hoặc đã bị IsDeleted = true thì báo NotFound
+            // If entity is null or IsDeleted == true, return NotFound
             if (currentEntity == null || currentEntity.IsDeleted == true)
             {
                 return ValidationResult.Fail(
@@ -104,10 +104,10 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
                 );
             }
 
-            // 2. Lấy TypeId mong muốn dựa vào kiểu của DTO truyền lên
+            // 2. Determine expected TypeId from the DTO type
             int? expectedTypeId = ServiceHelper.GetTypeIdFromUpdateDto(dto);
 
-            // 3. Kiểm tra chéo: Nếu ID Service trong DB thuộc loại khác với Endpoint đang gọi (DTO)
+            // 3. Cross-check: if the DB Service belongs to a different type than the calling endpoint (DTO)
             if (expectedTypeId.HasValue && currentEntity.TypeId != expectedTypeId.Value)
             {
                 return ValidationResult.Fail(
@@ -116,10 +116,10 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
                 );
             }
 
-            // 4. Check trùng tên (vẫn phải check để tránh trùng tên trong cùng 1 loại)
+            // 4. Check for duplicate name (still required to prevent naming conflicts within the same type)
             bool isDuplicate = await _repo.AnyAsync(x =>
                 x.Name == dto.Name &&
-                x.TypeId == currentEntity.TypeId && // Check theo TypeId gốc
+                x.TypeId == currentEntity.TypeId && // Check against original TypeId
                 x.Id != id &&
                 x.IsDeleted == false);
 
@@ -159,7 +159,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
 
         public async Task<ApiResponse<PagedManageResult<ServiceDTO>>> GetServicesByTypeAsync(int? typeId, PagingRequest paging)
         {
-            // 1. Validate phân trang
+            // 1. Validate pagination
             var pagingValidation = await _pagingValidator.ValidateAsync(paging);
             if (!pagingValidation.IsValid)
             {
@@ -168,26 +168,26 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
                     pagingValidation.Errors[0].ErrorMessage);
             }
 
-            // 2. Nếu không có lỗi, lấy dữ liệu theo typeId với helper chung
+            // 2. If valid, fetch data by typeId using the shared helper
             return await ManagementAdminHelper.GetDataByTypeAsync<Service, ServiceDTO>(
                 typeId,
                 paging,
 
-                // Logic 1: lấy ID mặc định: Query bảng ServiceType, lấy thằng đầu tiên chưa xóa
+                // Logic 1: get default ID — query ServiceType table, take first non-deleted
                 getDefaultIdFunc: async () =>
                 {
                     var firstType = await _serviceTypeRepo.FirstOrDefaultAsync(x => x.IsDeleted != true);
                     return firstType?.Id;
                 },
 
-                // Logic 2: kiểm tra ID tồn tại: Query bảng ServiceType
+                // Logic 2: check if ID exists — query ServiceType table
                 checkTypeExistsFunc: async (id) =>
                 {
                     var exists = await _serviceTypeRepo.AnyAsync(x => x.Id == id && x.IsDeleted != true);
                     return exists;
                 },
 
-                // Logic 3: Lấy Entity từ DB
+                // Logic 3: Fetch entities from DB
                 getPagedItemsFunc: async (id, page, size) =>
                     await _repo.GetPagedAsync(
                         x => x.TypeId == id && x.IsDeleted == false,
@@ -195,7 +195,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
                         size,
                         q => q.OrderByDescending(x => x.Id)),
 
-                // Logic 4: Map sang DTO (Tái sử dụng hàm MapToDto có sẵn)
+                // Logic 4: Map to DTO (reuses the existing MapToDto method)
                 mapToDtoFunc: MapToDto
             );
         }

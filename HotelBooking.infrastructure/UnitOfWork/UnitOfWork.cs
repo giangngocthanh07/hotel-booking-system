@@ -12,42 +12,39 @@ public interface IUnitOfWork : IAsyncDisposable
 public class UnitOfWork : IUnitOfWork
 {
 
-    private readonly HotelBookingDBContext _HBcontext;
+    private readonly HotelBookingDBContext _context;
 
-    public UnitOfWork(HotelBookingDBContext HBcontext)
+    public UnitOfWork(HotelBookingDBContext context)
     {
-        _HBcontext = HBcontext;
+        _context = context;
 
     }
-    //2 phương thức sử dụng cho LinQ
+    // Methods used for LINQ-based operations
     public async Task<int> SaveChangesAsync()
     {
-        return await _HBcontext.SaveChangesAsync();
+        return await _context.SaveChangesAsync();
     }
-    public async Task<int> SaveChanges()
-    {
-        return _HBcontext.SaveChanges();
-    }
+
     public async ValueTask DisposeAsync()
     {
-        await _HBcontext.DisposeAsync();
+        await _context.DisposeAsync();
     }
 
 
-    //3 phương thức bên dưới sử dụng cho SQLRaw
+    // Methods used for raw SQL transactions
     public async Task BeginTransactionAsync()
     {
-        await _HBcontext.Database.BeginTransactionAsync();
+        await _context.Database.BeginTransactionAsync();
     }
 
     public async Task CommitTransactionAsync()
     {
-        await _HBcontext.Database.CommitTransactionAsync();
+        await _context.Database.CommitTransactionAsync();
 
     }
 
     public async Task RollBackTransactionAsync()
     {
-        await _HBcontext.Database.RollbackTransactionAsync();
+        await _context.Database.RollbackTransactionAsync();
     }
 }

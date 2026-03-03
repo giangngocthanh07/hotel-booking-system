@@ -18,7 +18,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         private readonly IAmenityService _amenityService;
         private readonly IPolicyService _policyService;
         private readonly IServiceService _serviceService;
-        private readonly IRoomQualityService _rqService;
+        private readonly IRoomQualityService _roomQualityService;
         private readonly IRoomAttributeFacade _roomAttributeFacade;
 
         public ManagementController(
@@ -26,31 +26,31 @@ namespace HotelBooking.api.Controllers.V1.Admin
             IAmenityService amenityService,
             IPolicyService policyService,
             IServiceService serviceService,
-            IRoomQualityService rqService,
+            IRoomQualityService roomQualityService,
             IRoomAttributeFacade roomAttributeFacade)
         {
             _managementAdminService = managementAdminService;
             _amenityService = amenityService;
             _policyService = policyService;
             _serviceService = serviceService;
-            _rqService = rqService;
+            _roomQualityService = roomQualityService;
             _roomAttributeFacade = roomAttributeFacade;
 
         }
 
         /// <summary>
-        /// Lấy cấu trúc Menu (Modules + Types)
+        /// Retrieve menu structure (Modules + Types)
         /// </summary>
         /// 
         // ==========================================
-        // 1. API LẤY MENU (SIÊU NHẸ)
+        // 1. GET MENU API (lightweight)
         // ==========================================
         // URL: api/hotel/manage/menu/Service
-        // Nhiệm vụ: Chỉ trả về danh sách Types để Frontend vẽ Dropdown
+        // Purpose: Returns the list of Types for the Frontend to render a Dropdown
         [HttpGet("get-manage-menu/{module}")]
         public async Task<IActionResult> GetManageMenu(ManageModuleEnum module)
         {
-            // 2. Tự tạo Request Object để truyền xuống Service (để Service chạy FluentValidation)
+            // Wrap parameters into a Request Object to pass down to Service (so FluentValidation runs inside Service)
             var request = new ManageMenuRequest
             {
                 Module = module
@@ -316,14 +316,14 @@ namespace HotelBooking.api.Controllers.V1.Admin
         {
             var request = new PagingRequest { PageIndex = pageIndex, PageSize = pageSize };
 
-            var result = await _rqService.GetRoomQualitiesByTypeAsync(typeId, request);
+            var result = await _roomQualityService.GetRoomQualitiesByTypeAsync(typeId, request);
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
         [HttpPost("create-room-quality")]
         public async Task<IActionResult> CreateRoomQualityAsync([FromBody] RoomQualityCreateDTO newRoomQuality)
         {
-            var result = await _rqService.CreateAsync(newRoomQuality);
+            var result = await _roomQualityService.CreateAsync(newRoomQuality);
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
@@ -331,14 +331,14 @@ namespace HotelBooking.api.Controllers.V1.Admin
         public async Task<IActionResult> UpdateRoomQualityAsync(int id, [FromBody] RoomQualityUpdateDTO rq)
         {
 
-            var result = await _rqService.UpdateAsync(id, rq);
+            var result = await _roomQualityService.UpdateAsync(id, rq);
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
         [HttpDelete("delete-room-quality/{id}")]
         public async Task<IActionResult> DeleteRoomQualityAsync(int id)
         {
-            var result = await _rqService.DeleteAsync(id);
+            var result = await _roomQualityService.DeleteAsync(id);
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
         #endregion
@@ -348,24 +348,24 @@ namespace HotelBooking.api.Controllers.V1.Admin
             [FromQuery] RoomAttributeType type, // Enum: UnitType, BedType, RoomView...
             [FromQuery] int pageIndex = 1,
             [FromQuery] int pageSize = 10,
-            [FromQuery] int? typeId = null)     // Chỉ dùng cho RoomQuality
+            [FromQuery] int? typeId = null)     // Only used for RoomQuality
         {
-            // 1. Tạo đối tượng PagingRequest từ tham số rời rạc
+            // 1. Build PagingRequest from individual parameters
             var pagingRequest = new PagingRequest
             {
                 PageIndex = pageIndex,
                 PageSize = pageSize
             };
 
-            // 2. Tạo Request Object để gói dữ liệu lại (Chuẩn bị cho FluentValidation bên trong)
+            // 2. Wrap into Request Object (preparing for FluentValidation inside)
             var request = new GetRoomAttributeRequest
             {
                 Type = type,
-                Paging = pagingRequest, // Gán đối tượng vừa tạo vào đây
+                Paging = pagingRequest, // Assign the object created above
                 TypeId = typeId
             };
 
-            // 3. Gọi Facade (LƯU Ý: Truyền đúng biến 'request' vào)
+            // 3. Call Facade (NOTE: pass the correct 'request' variable)
             var result = await _roomAttributeFacade.GetPagedByTypeAsync(request);
 
             return ApiResponseHandlerHelper.HandleResponse(result);

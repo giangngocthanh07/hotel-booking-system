@@ -1,7 +1,7 @@
 using FluentValidation;
 using HotelBooking.infrastructure.Models;
 
-namespace HotelBooking.application.Validators.AdminManagement.Amenity;
+namespace HotelBooking.application.Validators.AdminManagement.Amenities;
 
 public class AmenityCreateValidator : AbstractValidator<AmenityCreateDTO>
 {

@@ -6,7 +6,7 @@ public interface IUserRepository : IRepository<User>
 {
     Task<User> GetUserWithRoles(Expression<Func<User, bool>> predicate);
 
-    // MÔ PHỎNG 3 TRƯỜNG HỢP LỌC DỮ LIỆU KHÁC NHAU
+    // DEMONSTRATES 3 DIFFERENT DATA FILTERING APPROACHES
     Task<User> GetUserWithRoles_SQL_Filter(Expression<Func<User, bool>> predicate);
     Task<User> GetUserWithRoles_RAM_Explicit(Expression<Func<User, bool>> predicate);
     User GetUserWithRoles_RAM_Trap(Func<User, bool> predicateFunc);
@@ -23,84 +23,83 @@ public class UserRepository : Repository<User>, IUserRepository
             .FirstOrDefaultAsync(predicate);
     }
 
-    #region MÔ PHỎNG 3 TRƯỜNG HỢP LỌC DỮ LIỆU KHÁC NHAU
+    #region DEMONSTRATES 3 DIFFERENT DATA FILTERING APPROACHES
 
     /// <summary>
-    /// Trường hợp 1: Lọc tại SQL (Cách chuẩn - Code hiện tại của bạn)
-    /// Đây là cách tối ưu nhất. EF Core sẽ dịch predicate thành WHERE trong SQL.
+    /// Case 1: Filter at SQL level (Best practice — current approach)
+    /// Most efficient option. EF Core translates the predicate into a SQL WHERE clause.
     /// </summary>
     /// <param name="predicate"></param>
     /// <returns></returns>
     public async Task<User> GetUserWithRoles_SQL_Filter(Expression<Func<User, bool>> predicate)
     {
-        // --- DIỄN BIẾN ---
-        // 1. _dbSet: Bắt đầu IQueryable (Chưa chạy)
-        // 2. .Include(): Vẫn là IQueryable (Chưa chạy, chỉ đánh dấu là sẽ JOIN bảng)
-        // 3. .FirstOrDefaultAsync(predicate): CHỐT ĐƠN!
+        // --- EXECUTION FLOW ---
+        // 1. _dbSet: Starts an IQueryable (not yet executed)
+        // 2. .Include(): Still IQueryable (not executed, just marks JOIN tables)
+        // 3. .FirstOrDefaultAsync(predicate): FIRES THE QUERY!
 
-        // -> EF Core dịch: SELECT ... FROM Users JOIN Roles ... WHERE (Điều kiện của predicate)
-        // -> SQL Server lọc xong, trả về ĐÚNG 1 dòng (hoặc null).
-        // -> RAM Server nhận 1 dòng đó.
+        // -> EF Core generates: SELECT ... FROM Users JOIN Roles ... WHERE (predicate condition)
+        // -> SQL Server filters and returns exactly 1 row (or null).
+        // -> Server RAM receives only that 1 row.
 
         var result = await _dbSet
             .Include(u => u.UserRoles)
             .ThenInclude(ur => ur.Role)
-            .FirstOrDefaultAsync(predicate); // [OK] Predicate được đưa xuống DB
+            .FirstOrDefaultAsync(predicate); // [OK] Predicate is pushed down to DB
 
         return result;
     }
 
     /// <summary>
-    /// Trường hợp 2: Lọc tại RAM (Cách tệ - Dùng .ToListAsync() trước)
-    /// Trường hợp này bạn cố tình tải hết về rồi mới lọc. 
-    /// Thường dùng khi logic lọc quá phức tạp mà SQL không làm được (như mình đã ví dụ ở các câu trả lời trước), 
-    /// nhưng nếu logic đơn giản mà làm thế này là sai lầm.
+    /// Case 2: Filter in RAM (Bad practice — uses .ToListAsync() first)
+    /// Intentionally loads all records into memory before filtering.
+    /// Acceptable only when filtering logic is too complex for SQL, but wasteful for simple conditions.
     /// </summary>
     /// <param name="predicate"></param>
     /// <returns></returns>
 
     public async Task<User> GetUserWithRoles_RAM_Explicit(Expression<Func<User, bool>> predicate)
     {
-        // --- DIỄN BIẾN ---
-        // 1. .ToListAsync(): CHỐT ĐƠN NGAY TẠI ĐÂY!
-        // -> EF Core dịch: SELECT ... FROM Users JOIN Roles ... (KHÔNG CÓ WHERE)
-        // -> SQL Server trả về TOÀN BỘ 1 triệu user.
-        // -> RAM Server nhận 1 triệu user, nhét vào List<User>.
+        // --- EXECUTION FLOW ---
+        // 1. .ToListAsync(): FIRES THE QUERY HERE!
+        // -> EF Core generates: SELECT ... FROM Users JOIN Roles ... (NO WHERE clause)
+        // -> SQL Server returns ALL 1 million users.
+        // -> Server RAM receives 1 million users into a List<User>.
         var allUsersInRam = await _dbSet
             .Include(u => u.UserRoles)
             .ThenInclude(ur => ur.Role)
-            .ToListAsync(); // [X] Lấy hết về RAM
+            .ToListAsync(); // [X] Loads everything into RAM
 
-        // 2. Lọc thủ công trên RAM
-        // Lưu ý: Vì predicate là Expression, muốn dùng cho List (RAM) phải Compile nó thành Func
+        // 2. Filter manually in RAM
+        // Note: Since predicate is an Expression, it must be compiled into a Func before use on a List
         var func = predicate.Compile();
 
-        // CPU server chạy vòng lặp duyệt 1 triệu dòng để tìm
+        // Server CPU iterates over 1 million rows to find the match
         return allUsersInRam.FirstOrDefault(func);
     }
 
     /// <summary>
-    /// Trường hợp 3: Lọc tại RAM (Cách bẫy - Dùng .AsEnumerable() trước)
-    /// Trường hợp này rất dễ bị mắc bẫy nếu bạn không hiểu rõ về IQueryable và IEnumerable.
-    /// Đây là trường hợp "không có ToList" mà bạn hỏi, 
-    /// nhưng nó vẫn lọc tại RAM. Nó nguy hiểm vì nhìn code rất giống trường hợp 1, dễ bị nhầm.
+    /// Case 3: Filter in RAM (Trap — uses .AsEnumerable() first)
+    /// Easy to fall into if you don't fully understand IQueryable vs IEnumerable.
+    /// This case has no .ToList(), but still filters in RAM.
+    /// Dangerous because the code looks almost identical to Case 1, making it easy to confuse.
     /// </summary>
     /// <param name="predicateFunc"></param>
     /// <returns></returns>
-    public User GetUserWithRoles_RAM_Trap(Func<User, bool> predicateFunc) // Lưu ý: Tham số là Func, ko phải Expression
+    public User GetUserWithRoles_RAM_Trap(Func<User, bool> predicateFunc) // Note: Parameter is Func, not Expression
     {
-        // --- DIỄN BIẾN ---
-        // 1. .AsEnumerable(): Chuyển đổi vai trò từ "Giám đốc" (IQueryable) sang "Nhân viên kho" (IEnumerable)
-        // -> Nó CẮT ĐỨT khả năng dịch SQL của đoạn sau.
+        // --- EXECUTION FLOW ---
+        // 1. .AsEnumerable(): Switches the role from "Director" (IQueryable) to "Warehouse worker" (IEnumerable)
+        // -> This BREAKS the SQL translation capability for everything that follows.
         IEnumerable<User> query = _dbSet
             .Include(u => u.UserRoles)
             .ThenInclude(ur => ur.Role)
-            .AsEnumerable(); // [!] Ngắt kết nối logic SQL tại đây
+            .AsEnumerable(); // [!] Disconnects from SQL translation here
 
         // 2. .FirstOrDefault(predicateFunc):
-        // -> Vì biến 'query' là IEnumerable, lệnh này là lệnh chạy trên RAM.
-        // -> Để chạy được lệnh này, nó âm thầm gọi DB: "Lấy hết data về đây cho tao duyệt!"
-        // -> SQL: SELECT ... (KHÔNG WHERE) -> Tải hết về RAM -> CPU lọc.
+        // -> Since 'query' is IEnumerable, this runs in RAM.
+        // -> To execute, it silently fetches all data from DB: "Give me everything so I can iterate!"
+        // -> SQL: SELECT ... (NO WHERE) -> Loads all into RAM -> CPU filters.
 
         return query.FirstOrDefault(predicateFunc);
     }

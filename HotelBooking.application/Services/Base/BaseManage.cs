@@ -15,8 +15,8 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateDTO, TUpdateDTO> :
     protected readonly TRepo _repo;
     protected readonly IUnitOfWork _dbu;
 
-    // Inject Validator (Cho phép null - Optional)
-    // Inject 2 Validator riêng biệt (Có thể null)
+    // Inject validators (optional — can be null)
+    // Inject two separate validators (both nullable)
     protected readonly IValidator<TCreateDTO>? _createValidator;
     protected readonly IValidator<TUpdateDTO>? _updateValidator;
 
@@ -29,31 +29,31 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateDTO, TUpdateDTO> :
         _updateValidator = updateValidator;
     }
 
-    // --- ĐỊNH NGHĨA 3 HÀM BẮT BUỘC CON PHẢI LÀM ---
+    // --- 3 ABSTRACT METHODS THAT SUBCLASSES MUST IMPLEMENT ---
 
-    // Các factory method để map giữa Entity, DTO, CreateDTO, UpdateDTO
+    // Factory methods to map between Entity, DTO, CreateDTO, UpdateDTO
 
-    // 1. Map từ Entity -> DTO (Dùng cho GetAll, GetById, return Create)
+    // 1. Map Entity -> DTO (used by GetAll, GetById, return Create)
     protected abstract TDto MapToDto(TEntity entity);
 
-    // 2. Map từ CreateDTO -> Entity (Dùng cho Create)
+    // 2. Map CreateDTO -> Entity (used by Create)
     protected abstract TEntity MapCreateToEntity(TCreateDTO createDto);
 
-    // 3. Map từ UpdateDTO vào Entity CÓ SẴN (Dùng cho Update, Deleted)
+    // 3. Map UpdateDTO onto an EXISTING Entity (used by Update, Delete)
     protected abstract void MapUpdateToEntity(TUpdateDTO updateDto, TEntity entity);
 
-    // 4. --- VALIDATION METHOD ---
+    // 4. --- VALIDATION METHODS ---
 
-    // Validate Business Logic cho Create (VD: Check trùng tên khi tạo mới)
+    // Validate business logic for Create (e.g., check duplicate name on new entry)
     protected virtual async Task<ValidationResult> ValidateCreateLogicAsync(TCreateDTO dto)
     {
-        return new ValidationResult(); // Mặc định hợp lệ
+        return new ValidationResult(); // Valid by default
     }
 
-    // Validate Business Logic cho Update (VD: Check trùng tên nhưng trừ ID hiện tại)
+    // Validate business logic for Update (e.g., check duplicate name excluding current ID)
     protected virtual async Task<ValidationResult> ValidateUpdateLogicAsync(TUpdateDTO dto, int id)
     {
-        return new ValidationResult(); // Mặc định hợp lệ
+        return new ValidationResult(); // Valid by default
     }
 
     public virtual async Task<ApiResponse<TDto>> GetByIdAsync(int id)
@@ -62,20 +62,20 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateDTO, TUpdateDTO> :
         {
             var entity = await _repo.GetByIdAsync(id);
 
-            // 1.Check null trước
+            // 1. Check for null first
             if (entity == null)
             {
                 return ResponseFactory.Failure<TDto>(StatusCodeResponse.NotFound, MessageResponse.Common.NOT_FOUND);
             }
 
-            // --- DÙNG REFLECTION GIỐNG HÀM ADD CỦA BẠN ---
+            // --- USE REFLECTION (same approach as AddAsync) ---
             var prop = typeof(TEntity).GetProperty("IsDeleted");
             if (prop != null && (prop.PropertyType == typeof(bool) || prop.PropertyType == typeof(bool?)))
             {
-                // Thay vì SetValue (gán), ta dùng GetValue (đọc)
+                // Use GetValue (read) instead of SetValue (write)
                 var value = prop.GetValue(entity);
 
-                // Nếu giá trị đang là true, nghĩa là đã bị xóa mềm
+                // If value is true, entity has been soft-deleted
                 if (value != null && (bool)value == true)
                 {
                     return ResponseFactory.Failure<TDto>(StatusCodeResponse.NotFound, MessageResponse.Common.NOT_FOUND);
@@ -98,9 +98,9 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateDTO, TUpdateDTO> :
     {
         try
         {
-            // [BƯỚC 1] Gọi Validate
-            // A. Chạy FluentValidation (Check format tĩnh)
-            // A. Fluent Validation (Tĩnh) -> Dùng _createValidator
+            // [STEP 1] Run validation
+            // A. Run FluentValidation (static format check)
+            // A. Fluent Validation (static) -> uses _createValidator
             if (_createValidator != null)
             {
                 var valResult = await _createValidator.ValidateAsync(createDto);
@@ -108,14 +108,14 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateDTO, TUpdateDTO> :
                     return ResponseFactory.Failure<TDto>(StatusCodeResponse.BadRequest, valResult.Errors[0].ErrorMessage);
             }
 
-            // B. Chạy Business Logic (Check DB động)
+            // B. Run business logic validation (dynamic DB checks)
             var logicResult = await ValidateCreateLogicAsync(createDto);
             if (!logicResult.IsValid)
             {
                 return ResponseFactory.Failure<TDto>(logicResult.StatusCode, logicResult.Message);
             }
 
-            // [BƯỚC 2] Logic lưu DB bình thường
+            // [STEP 2] Normal DB persistence logic
             var entity = MapCreateToEntity(createDto);
             await _repo.AddAsync(entity);
             await _dbu.SaveChangesAsync();
@@ -127,7 +127,7 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateDTO, TUpdateDTO> :
         }
         catch (Exception ex)
         {
-            // Log ex ở đây
+            // Log ex here if needed
             return ResponseFactory.Failure<TDto>(StatusCodeResponse.Error, ex.InnerException?.Message ?? ex.Message);
         }
     }
@@ -136,12 +136,12 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateDTO, TUpdateDTO> :
     {
         try
         {
-            // A. Check Tồn tại
+            // A. Check existence
             var entity = await _repo.GetByIdAsync(id);
             if (entity == null)
                 return ResponseFactory.Failure<TDto>(StatusCodeResponse.NotFound, MessageResponse.Common.NOT_FOUND);
 
-            // --- DÙNG REFLECTION ĐỂ KIỂM TRA ISDELETED ---
+            // --- USE REFLECTION TO CHECK ISDELETED ---
             var prop = typeof(TEntity).GetProperty("IsDeleted");
             if (prop != null && (prop.PropertyType == typeof(bool) || prop.PropertyType == typeof(bool?)))
             {
@@ -152,7 +152,7 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateDTO, TUpdateDTO> :
                 }
             }
 
-            // B. Fluent Validation (Tĩnh) -> Dùng _updateValidator [Lưu ý dùng updateDto]
+            // B. Fluent Validation (static) -> uses _updateValidator [Note: pass updateDto]
             if (_updateValidator != null)
             {
                 var valResult = await _updateValidator.ValidateAsync(updateDto);
@@ -165,7 +165,7 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateDTO, TUpdateDTO> :
             if (!logicResult.IsValid)
                 return ResponseFactory.Failure<TDto>(logicResult.StatusCode, logicResult.Message);
 
-            // [BƯỚC 2] Update logic bình thường
+            // [STEP 2] Normal update logic
             MapUpdateToEntity(updateDto, entity);
             await _repo.UpdateAsync(entity);
             await _dbu.SaveChangesAsync();
@@ -191,18 +191,18 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateDTO, TUpdateDTO> :
                 return ResponseFactory.Failure<bool>(StatusCodeResponse.NotFound, MessageResponse.Common.NOT_FOUND);
             }
 
-            // Check xem entity có phải là ISoftDelete không
-            // --- XÓA MỀM (Cực nhanh, ko cần Reflection) ---
-            // Dùng Reflection để tìm cột IsDeleted
+            // Check if entity supports soft-delete
+            // --- SOFT DELETE (fast, no Reflection needed for the check itself) ---
+            // Use Reflection to find the IsDeleted column
 
             var isDeletedProp = typeof(TEntity).GetProperty("IsDeleted");
 
-            // Kiểm tra xem có cột IsDeleted hay không (hỗ trợ cả bool và bool?)
+            // Check if the IsDeleted column exists (supports both bool and bool?)
             if (isDeletedProp != null &&
                (isDeletedProp.PropertyType == typeof(bool) || isDeletedProp.PropertyType == typeof(bool?)))
             {
-                // --- LOGIC XÓA MỀM ---
-                // Set giá trị là true (Dù là bool? thì gán true vẫn hợp lệ)
+                // --- SOFT DELETE LOGIC ---
+                // Set value to true (valid for both bool and bool?)
                 isDeletedProp.SetValue(entity, true);
 
                 await _repo.UpdateAsync(entity);
@@ -212,9 +212,9 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateDTO, TUpdateDTO> :
             }
             else
             {
-                // --- KHÔNG XÓA CỨNG ---
-                // Nếu bảng không có cột IsDeleted, ta trả về lỗi báo cho Developer biết
-                // để tránh việc xóa nhầm dữ liệu quan trọng.
+                // --- NO HARD DELETE ---
+                // If the table has no IsDeleted column, return an error to alert the developer
+                // and prevent accidental deletion of important data.
                 return ResponseFactory.Failure<bool>(StatusCodeResponse.BadRequest, MessageResponse.Common.DELETE_FAILED);
             }
         }

@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace HotelBooking.application.Validators.AdminManagement.Policy;
+namespace HotelBooking.application.Validators.AdminManagement.Policies;
 
 // 1. Validator cha cho CREATE (điều phối đa hình)
 public class PolicyCreateValidator : AbstractValidator<PolicyCreateDTO>

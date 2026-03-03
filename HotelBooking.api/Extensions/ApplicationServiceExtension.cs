@@ -1,5 +1,5 @@
-using HotelBooking.application.Interfaces;
-using HotelBooking.application.Services;
+using HotelBooking.application.Services.Domains.Auth;
+using HotelBooking.application.Services.Domains.Media;
 using HotelBooking.application.Services.Domains.AdminManagement;
 using HotelBooking.application.Services.Domains.HotelManagement;
 using HotelBooking.application.Services.Domains.RequestManagement;

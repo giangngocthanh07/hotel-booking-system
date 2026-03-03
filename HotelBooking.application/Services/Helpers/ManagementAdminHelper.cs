@@ -5,14 +5,14 @@ using HotelBooking.application.Validators.Common;
 
 public static class ManagementAdminHelper
 {
-    // --- PHẦN 1: HELPER CHO API MENU (Lấy danh sách Types) ---
+    // --- PART 1: MENU API HELPER (Retrieve list of Types) ---
     public static async Task<ApiResponse<ManageMenuResult>> GetTypesForMenuAsync<TTypeEntity, TTypeRepo>(
         TTypeRepo typeRepo,
-        // Filter: VD lấy những type chưa bị xóa
+        // Filter: e.g. fetch only non-deleted types
         Expression<Func<TTypeEntity, bool>> activeTypeFilter,
-        // Func lấy Id
+        // Func to extract Id
         Func<TTypeEntity, int> getTypeIdFunc,
-        // Func lấy Name
+        // Func to extract Name
         Func<TTypeEntity, string> getTypeNameFunc)
 
         where TTypeRepo : IRepository<TTypeEntity>
@@ -20,10 +20,10 @@ public static class ManagementAdminHelper
     {
         try
         {
-            // 1. Query DB lấy Types
+            // 1. Query DB for types
             var typeEntities = await typeRepo.WhereAsync(activeTypeFilter);
 
-            // 2. Map sang DTO
+            // 2. Map to DTO
             var menuResult = new ManageMenuResult
             {
                 Types = typeEntities.Select(t => new ManageTypeDTO
@@ -33,8 +33,8 @@ public static class ManagementAdminHelper
                 }).ToList()
             };
 
-            // 3. Logic chọn Default (Option)
-            // Lấy cái đầu tiên làm gợi ý cho FE (nếu cần)
+            // 3. Select default (optional hint for FE)
+            // Suggest the first item as the default selection
             menuResult.DefaultSelectedId = menuResult.Types.FirstOrDefault()?.Id;
 
             return ResponseFactory.Success(menuResult, MessageResponse.Common.GET_SUCCESSFULLY);
@@ -45,23 +45,23 @@ public static class ManagementAdminHelper
         }
     }
 
-    // --- PHẦN 2: HELPER CHO API DATA (Lấy Items theo TypeId) ---
+    // --- PART 2: DATA API HELPER (Retrieve items by TypeId) ---
     public static async Task<ApiResponse<PagedManageResult<TDto>>> GetDataByTypeAsync<TEntity, TDto>(
         int? typeId,
-        PagingRequest paging, // 1. Nhận tham số phân trang
+        PagingRequest paging, // 1. Receive pagination parameters
 
-        // Nếu user không truyền typeId -> chạy logic lấy ID mặc định này
-        // Logic lấy ID mặc định (nếu typeId == null)
+        // If user did not provide typeId -> run this logic to get the default ID
+        // Logic to retrieve default ID (when typeId == null)
         Func<Task<int?>> getDefaultIdFunc,
 
-        // Nếu user có truyền typeId -> chạy logic kiểm tra tồn tại này
-        // Logic kiểm tra ID có tồn tại trong DB không (Input: int -> Output: bool)
+        // If user provided typeId -> run this logic to check existence
+        // Logic to verify whether the ID exists in DB (Input: int -> Output: bool)
         Func<int, Task<bool>> checkTypeExistsFunc,
 
-        // 2. Hàm lấy dữ liệu trả về Tuple (Items, TotalCount)
+        // 2. Function to fetch paged data, returns Tuple (Items, TotalCount)
         Func<int, int, int, Task<(IEnumerable<TEntity> Items, int TotalCount)>> getPagedItemsFunc,
 
-        // Logic map từ Entity sang DTO
+        // Logic to map from Entity to DTO
         Func<TEntity, TDto> mapToDtoFunc)
 
         where TEntity : class
@@ -69,21 +69,21 @@ public static class ManagementAdminHelper
     {
         try
         {
-            // [BƯỚC 1] Validate Phân trang bằng Validator bạn vừa tạo
-            // Vì Helper là static, ta khởi tạo Validator trực tiếp (Safe & Fast)
+            // [STEP 1] Validate pagination using FluentValidation
+            // Since this is a static helper, instantiate the validator directly (Safe & Fast)
             var pagingValidator = new PagingRequestValidator();
             var validationResult = await pagingValidator.ValidateAsync(paging);
 
             if (!validationResult.IsValid)
             {
-                // Lấy lỗi đầu tiên trả về
+                // Return the first validation error
                 return ResponseFactory.Failure<PagedManageResult<TDto>>(
                     StatusCodeResponse.BadRequest,
                     validationResult.Errors[0].ErrorMessage
                 );
             }
 
-            // [BƯỚC 2] Validate TypeId (Logic đơn giản check thủ công cho lẹ)
+            // [STEP 2] Validate TypeId (simple manual check for performance)
             if (typeId.HasValue && typeId <= 0)
             {
                 return ResponseFactory.Failure<PagedManageResult<TDto>>(
@@ -94,15 +94,15 @@ public static class ManagementAdminHelper
 
             int currentTypeId;
 
-            // --- XỬ LÝ CHỌN ID ---
+            // --- RESOLVE TYPE ID ---
             if (typeId.HasValue)
             {
-                // Case A: User truyền ID -> Phải kiểm tra xem ID này có thật không
+                // Case A: User provided an ID -> verify it exists in DB
                 bool isExist = await checkTypeExistsFunc(typeId.Value);
 
                 if (!isExist)
                 {
-                    // --- VALIDATION 2: ID không tồn tại trong DB ---
+                    // VALIDATION: ID does not exist in DB
                     return ResponseFactory.Failure<PagedManageResult<TDto>>(
                         StatusCodeResponse.NotFound,
                         MessageResponse.Common.NOT_FOUND
@@ -113,7 +113,7 @@ public static class ManagementAdminHelper
             }
             else
             {
-                // Case B: User không truyền (null) -> Tự lấy Default
+                // Case B: User did not provide typeId (null) -> fetch default
                 var defaultId = await getDefaultIdFunc();
 
                 if (defaultId.HasValue)
@@ -122,8 +122,7 @@ public static class ManagementAdminHelper
                 }
                 else
                 {
-                    // Case C: Bảng Type trống trơn -> Trả về list rỗng (Hợp lệ)
-                    // Trường hợp không có Type nào trong DB -> Trả về rỗng
+                    // Case C: No types exist in DB -> return empty list (valid state)
                     return ResponseFactory.Success(
                         new PagedManageResult<TDto>(new List<TDto>(), 0, paging.PageIndex.Value, paging.PageSize.Value, null),
                         MessageResponse.Common.EMPTY_LIST
@@ -131,14 +130,14 @@ public static class ManagementAdminHelper
                 }
             }
 
-            // 3. LẤY DỮ LIỆU PHÂN TRANG (Gọi Repo)
+            // 3. FETCH PAGED DATA (call repository)
             var (entities, totalCount) = await getPagedItemsFunc(currentTypeId, paging.PageIndex.Value, paging.PageSize.Value);
 
-            // 4. MAP SANG DTO
+            // 4. MAP TO DTO
             var dtos = entities.Select(e => mapToDtoFunc(e)).ToList();
 
-            // 5. ĐÓNG GÓI KẾT QUẢ (Dùng PagedManageResult)
-            // Truyền currentTypeId vào để FE biết đường highlight menu
+            // 5. WRAP RESULT (using PagedManageResult)
+            // Pass currentTypeId so FE knows which menu item to highlight
             var result = new PagedManageResult<TDto>(dtos, totalCount, paging.PageIndex.Value, paging.PageSize.Value, currentTypeId);
 
             return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
@@ -149,4 +148,3 @@ public static class ManagementAdminHelper
         }
     }
 }
-
