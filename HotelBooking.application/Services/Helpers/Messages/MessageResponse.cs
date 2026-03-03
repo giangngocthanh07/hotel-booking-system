@@ -188,6 +188,8 @@ public static class MessageResponse
             public const string EMPTY_USERNAME_OR_EMAIL = "Username hoặc Email không được để trống!";
             public const string MAX_LENGTH_USERNAME_OR_EMAIL = "Username hoặc Email không được vượt quá 255 ký tự!";
             public const string MAX_LENGTH_PASSWORD = "Mật khẩu không được vượt quá 100 ký tự!";
+
+            public static string USER_NOT_FOUND { get; set; }
         }
 
         // Register Messages

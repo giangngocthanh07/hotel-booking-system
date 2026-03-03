@@ -1,0 +1,282 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="5b4be407-4582-4062-8311-d6d7414c61b9" name="ACERs@LAPTOP-JSEQEBUK 2026-03-03 07:13:44" runUser="LAPTOP-JSEQEBUK\ACERs" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-03-03T07:13:44.2987728+07:00" queuing="2026-03-03T07:13:44.2987734+07:00" start="2026-03-03T07:13:20.5016783+07:00" finish="2026-03-03T07:15:09.0808176+07:00" />
+  <TestSettings name="default" id="a208b1fc-d5e5-42f3-b08b-bae70689fd41">
+    <Deployment runDeploymentRoot="ACERs_LAPTOP-JSEQEBUK_2026-03-03_07_13_44" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="8a380370-806f-4b7e-b2b8-00a163a813cd" testId="e42ac6df-36b6-ea03-3a70-094b4a7949b9" testName="HotelBooking.Tests.Integration.UserServiceIntegrationTest.RegisterCustomer_WhenDuplicateEmail_ShouldReturnConflict" computerName="LAPTOP-JSEQEBUK" duration="00:00:00.0248041" startTime="2026-03-03T07:14:06.1656224+07:00" endTime="2026-03-03T07:14:06.1656226+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8a380370-806f-4b7e-b2b8-00a163a813cd">
+      <Output>
+        <ErrorInfo>
+          <Message>Expected result.StatusCode to be a match with the expectation, but it differs at index 0:&#xD;
+   ↓ (actual)&#xD;
+  "Bad Request"&#xD;
+  "Conflict"&#xD;
+   ↑ (expected)</Message>
+          <StackTrace>   at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)&#xD;
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)&#xD;
+   at FluentAssertions.Execution.AssertionScope.AddPreFormattedFailure(String formattedFailureMessage)&#xD;
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)&#xD;
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)&#xD;
+   at FluentAssertions.Execution.AssertionChain.FailWith(String message)&#xD;
+   at FluentAssertions.Primitives.StringEqualityStrategy.AssertForEquality(AssertionChain assertionChain, String subject, String expected)&#xD;
+   at FluentAssertions.Primitives.StringValidator.Validate(String subject, String expected)&#xD;
+   at FluentAssertions.Primitives.StringAssertions`1.Be(String expected, String because, Object[] becauseArgs)&#xD;
+   at HotelBooking.Tests.Integration.UserServiceIntegrationTest.RegisterCustomer_WhenDuplicateEmail_ShouldReturnConflict() in E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.test\Services\UserServiceIntegrationTest.cs:line 186&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="cfe351ee-0d07-4309-95bc-67133d2d95df" testId="7b9d8f22-5a2c-cb87-df4f-9881f9639bea" testName="HotelBooking.Tests.Integration.UserServiceIntegrationTest.LoginUser_WhenValid_ShouldReturnToken" computerName="LAPTOP-JSEQEBUK" duration="00:00:00.0320318" startTime="2026-03-03T07:15:09.0039529+07:00" endTime="2026-03-03T07:15:09.0039535+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="cfe351ee-0d07-4309-95bc-67133d2d95df">
+      <Output>
+        <ErrorInfo>
+          <Message>Expected result.StatusCode to be a match with the expectation, but it differs at index 0:&#xD;
+   ↓ (actual)&#xD;
+  "Unauthorized"&#xD;
+  "Success"&#xD;
+   ↑ (expected)</Message>
+          <StackTrace>   at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)&#xD;
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)&#xD;
+   at FluentAssertions.Execution.AssertionScope.AddPreFormattedFailure(String formattedFailureMessage)&#xD;
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)&#xD;
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)&#xD;
+   at FluentAssertions.Execution.AssertionChain.FailWith(String message)&#xD;
+   at FluentAssertions.Primitives.StringEqualityStrategy.AssertForEquality(AssertionChain assertionChain, String subject, String expected)&#xD;
+   at FluentAssertions.Primitives.StringValidator.Validate(String subject, String expected)&#xD;
+   at FluentAssertions.Primitives.StringAssertions`1.Be(String expected, String because, Object[] becauseArgs)&#xD;
+   at HotelBooking.Tests.Integration.UserServiceIntegrationTest.LoginUser_WhenValid_ShouldReturnToken() in E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.test\Services\UserServiceIntegrationTest.cs:line 226&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="ddc1c7db-121c-42b1-9d06-2e5ec2e3c8ea" testId="4eba0c0d-c08a-550a-79f9-bb26e28f834f" testName="HotelBooking.Tests.Integration.UserServiceIntegrationTest.RegisterCustomer_WhenValid_ShouldSaveToDatabase" computerName="LAPTOP-JSEQEBUK" duration="00:00:00.0070870" startTime="2026-03-03T07:14:27.1979085+07:00" endTime="2026-03-03T07:14:27.1979087+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ddc1c7db-121c-42b1-9d06-2e5ec2e3c8ea">
+      <Output>
+        <ErrorInfo>
+          <Message>Expected result.StatusCode to be a match with the expectation, but it differs at index 0:&#xD;
+   ↓ (actual)&#xD;
+  "Bad Request"&#xD;
+  "Success"&#xD;
+   ↑ (expected)</Message>
+          <StackTrace>   at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)&#xD;
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)&#xD;
+   at FluentAssertions.Execution.AssertionScope.AddPreFormattedFailure(String formattedFailureMessage)&#xD;
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)&#xD;
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)&#xD;
+   at FluentAssertions.Execution.AssertionChain.FailWith(String message)&#xD;
+   at FluentAssertions.Primitives.StringEqualityStrategy.AssertForEquality(AssertionChain assertionChain, String subject, String expected)&#xD;
+   at FluentAssertions.Primitives.StringValidator.Validate(String subject, String expected)&#xD;
+   at FluentAssertions.Primitives.StringAssertions`1.Be(String expected, String because, Object[] becauseArgs)&#xD;
+   at HotelBooking.Tests.Integration.UserServiceIntegrationTest.RegisterCustomer_WhenValid_ShouldSaveToDatabase() in E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.test\Services\UserServiceIntegrationTest.cs:line 94&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="9402c6b6-3b93-49d5-9ea0-7b5c4ff1792e" testId="31d6a7f9-2d09-4eec-d648-bef9dc68b432" testName="HotelBooking.Tests.Integration.UserServiceIntegrationTest.RegisterCustomer_WhenDuplicateUsername_ShouldReturnConflict" computerName="LAPTOP-JSEQEBUK" duration="00:00:00.0063870" startTime="2026-03-03T07:14:48.1267581+07:00" endTime="2026-03-03T07:14:48.1267584+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9402c6b6-3b93-49d5-9ea0-7b5c4ff1792e">
+      <Output>
+        <ErrorInfo>
+          <Message>Expected result.StatusCode to be a match with the expectation, but it differs at index 0:&#xD;
+   ↓ (actual)&#xD;
+  "Bad Request"&#xD;
+  "Conflict"&#xD;
+   ↑ (expected)</Message>
+          <StackTrace>   at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)&#xD;
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)&#xD;
+   at FluentAssertions.Execution.AssertionScope.AddPreFormattedFailure(String formattedFailureMessage)&#xD;
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)&#xD;
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)&#xD;
+   at FluentAssertions.Execution.AssertionChain.FailWith(String message)&#xD;
+   at FluentAssertions.Primitives.StringEqualityStrategy.AssertForEquality(AssertionChain assertionChain, String subject, String expected)&#xD;
+   at FluentAssertions.Primitives.StringValidator.Validate(String subject, String expected)&#xD;
+   at FluentAssertions.Primitives.StringAssertions`1.Be(String expected, String because, Object[] becauseArgs)&#xD;
+   at HotelBooking.Tests.Integration.UserServiceIntegrationTest.RegisterCustomer_WhenDuplicateUsername_ShouldReturnConflict() in E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.test\Services\UserServiceIntegrationTest.cs:line 148&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="3cf42e89-9481-43dd-8907-f381f309b886" testId="bcceda42-2254-2d70-7d62-94c26d91a5b4" testName="HotelBooking.Tests.Integration.UserServiceIntegrationTest.LoginUser_WhenWrongPassword_ShouldFail" computerName="LAPTOP-JSEQEBUK" duration="00:00:00.3193297" startTime="2026-03-03T07:13:44.2723902+07:00" endTime="2026-03-03T07:13:44.2724065+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3cf42e89-9481-43dd-8907-f381f309b886" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="HotelBooking.Tests.Integration.UserServiceIntegrationTest.RegisterCustomer_WhenDuplicateEmail_ShouldReturnConflict" storage="e:\cybersoft\finalproject\hotel_blazor\hotelbooking.test\bin\debug\net9.0\hotelbooking.test.dll" id="e42ac6df-36b6-ea03-3a70-094b4a7949b9">
+      <Execution id="8a380370-806f-4b7e-b2b8-00a163a813cd" />
+      <TestMethod codeBase="E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.test\bin\Debug\net9.0\HotelBooking.test.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="HotelBooking.Tests.Integration.UserServiceIntegrationTest" name="RegisterCustomer_WhenDuplicateEmail_ShouldReturnConflict" />
+    </UnitTest>
+    <UnitTest name="HotelBooking.Tests.Integration.UserServiceIntegrationTest.LoginUser_WhenValid_ShouldReturnToken" storage="e:\cybersoft\finalproject\hotel_blazor\hotelbooking.test\bin\debug\net9.0\hotelbooking.test.dll" id="7b9d8f22-5a2c-cb87-df4f-9881f9639bea">
+      <Execution id="cfe351ee-0d07-4309-95bc-67133d2d95df" />
+      <TestMethod codeBase="E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.test\bin\Debug\net9.0\HotelBooking.test.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="HotelBooking.Tests.Integration.UserServiceIntegrationTest" name="LoginUser_WhenValid_ShouldReturnToken" />
+    </UnitTest>
+    <UnitTest name="HotelBooking.Tests.Integration.UserServiceIntegrationTest.RegisterCustomer_WhenDuplicateUsername_ShouldReturnConflict" storage="e:\cybersoft\finalproject\hotel_blazor\hotelbooking.test\bin\debug\net9.0\hotelbooking.test.dll" id="31d6a7f9-2d09-4eec-d648-bef9dc68b432">
+      <Execution id="9402c6b6-3b93-49d5-9ea0-7b5c4ff1792e" />
+      <TestMethod codeBase="E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.test\bin\Debug\net9.0\HotelBooking.test.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="HotelBooking.Tests.Integration.UserServiceIntegrationTest" name="RegisterCustomer_WhenDuplicateUsername_ShouldReturnConflict" />
+    </UnitTest>
+    <UnitTest name="HotelBooking.Tests.Integration.UserServiceIntegrationTest.LoginUser_WhenWrongPassword_ShouldFail" storage="e:\cybersoft\finalproject\hotel_blazor\hotelbooking.test\bin\debug\net9.0\hotelbooking.test.dll" id="bcceda42-2254-2d70-7d62-94c26d91a5b4">
+      <Execution id="3cf42e89-9481-43dd-8907-f381f309b886" />
+      <TestMethod codeBase="E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.test\bin\Debug\net9.0\HotelBooking.test.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="HotelBooking.Tests.Integration.UserServiceIntegrationTest" name="LoginUser_WhenWrongPassword_ShouldFail" />
+    </UnitTest>
+    <UnitTest name="HotelBooking.Tests.Integration.UserServiceIntegrationTest.RegisterCustomer_WhenValid_ShouldSaveToDatabase" storage="e:\cybersoft\finalproject\hotel_blazor\hotelbooking.test\bin\debug\net9.0\hotelbooking.test.dll" id="4eba0c0d-c08a-550a-79f9-bb26e28f834f">
+      <Execution id="ddc1c7db-121c-42b1-9d06-2e5ec2e3c8ea" />
+      <TestMethod codeBase="E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.test\bin\Debug\net9.0\HotelBooking.test.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="HotelBooking.Tests.Integration.UserServiceIntegrationTest" name="RegisterCustomer_WhenValid_ShouldSaveToDatabase" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="e42ac6df-36b6-ea03-3a70-094b4a7949b9" executionId="8a380370-806f-4b7e-b2b8-00a163a813cd" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7b9d8f22-5a2c-cb87-df4f-9881f9639bea" executionId="cfe351ee-0d07-4309-95bc-67133d2d95df" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4eba0c0d-c08a-550a-79f9-bb26e28f834f" executionId="ddc1c7db-121c-42b1-9d06-2e5ec2e3c8ea" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="31d6a7f9-2d09-4eec-d648-bef9dc68b432" executionId="9402c6b6-3b93-49d5-9ea0-7b5c4ff1792e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bcceda42-2254-2d70-7d62-94c26d91a5b4" executionId="3cf42e89-9481-43dd-8907-f381f309b886" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="5" executed="5" passed="1" failed="4" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 9.0.13)&#xD;
+[xUnit.net 00:00:00.06]   Discovering: HotelBooking.test&#xD;
+[xUnit.net 00:00:00.11]   Discovered:  HotelBooking.test&#xD;
+[xUnit.net 00:00:00.11]   Starting:    HotelBooking.test&#xD;
+[testcontainers.org 00:00:00.11] Connected to Docker:&#xD;
+  Host: npipe://./pipe/docker_engine&#xD;
+  Server Version: 29.2.1&#xD;
+  Kernel Version: 5.15.153.1-microsoft-standard-WSL2&#xD;
+  API Version: 1.53&#xD;
+  Operating System: Docker Desktop&#xD;
+  Total Memory: 7.76 GB&#xD;
+  Labels: &#xD;
+    com.docker.desktop.address=npipe://\\.\pipe\docker_cli&#xD;
+[testcontainers.org 00:00:00.34] Docker container 72963a143fe2 created&#xD;
+[testcontainers.org 00:00:00.42] Start Docker container 72963a143fe2&#xD;
+[testcontainers.org 00:00:00.75] Wait for Docker container 72963a143fe2 to complete readiness checks&#xD;
+[testcontainers.org 00:00:00.76] Docker container 72963a143fe2 ready&#xD;
+[testcontainers.org 00:00:00.86] Docker container e6c8fbfea06e created&#xD;
+[testcontainers.org 00:00:00.87] Start Docker container e6c8fbfea06e&#xD;
+[testcontainers.org 00:00:01.15] Wait for Docker container e6c8fbfea06e to complete readiness checks&#xD;
+[testcontainers.org 00:00:01.16] Execute "/bin/sh -c find /opt/mssql-tools*/bin/sqlcmd -type f -print -quit" at Docker container e6c8fbfea06e&#xD;
+[testcontainers.org 00:00:01.27] Execute "/opt/mssql-tools18/bin/sqlcmd -C -Q SELECT 1;" at Docker container e6c8fbfea06e&#xD;
+[testcontainers.org 00:00:05.87] Docker container e6c8fbfea06e ready&#xD;
+     Warning:&#xD;
+     The component "Fluent Assertions" is governed by the rules defined in the Xceed License Agreement and&#xD;
+     the Xceed Fluent Assertions Community License. You may use Fluent Assertions free of charge for&#xD;
+     non-commercial use only. An active subscription is required to use Fluent Assertions for commercial use.&#xD;
+     Please contact Xceed Sales mailto:sales@xceed.com to acquire a subscription at a very low cost.&#xD;
+     A paid commercial license supports the development and continued increasing support of&#xD;
+     Fluent Assertions users under both commercial and community licenses. Help us&#xD;
+     keep Fluent Assertions at the forefront of unit testing.&#xD;
+     For more information, visit https://xceed.com/products/unit-testing/fluent-assertions/&#xD;
+[testcontainers.org 00:00:07.44] Stop Docker container e6c8fbfea06e&#xD;
+[testcontainers.org 00:00:23.19] Docker container afea8e6ac6a9 created&#xD;
+[testcontainers.org 00:00:23.21] Start Docker container afea8e6ac6a9&#xD;
+[testcontainers.org 00:00:23.43] Wait for Docker container afea8e6ac6a9 to complete readiness checks&#xD;
+[testcontainers.org 00:00:23.44] Execute "/bin/sh -c find /opt/mssql-tools*/bin/sqlcmd -type f -print -quit" at Docker container afea8e6ac6a9&#xD;
+[testcontainers.org 00:00:23.49] Execute "/opt/mssql-tools18/bin/sqlcmd -C -Q SELECT 1;" at Docker container afea8e6ac6a9&#xD;
+[testcontainers.org 00:00:29.07] Execute "/opt/mssql-tools18/bin/sqlcmd -C -Q SELECT 1;" at Docker container afea8e6ac6a9&#xD;
+[testcontainers.org 00:00:29.13] Docker container afea8e6ac6a9 ready&#xD;
+[testcontainers.org 00:00:29.45] Stop Docker container afea8e6ac6a9&#xD;
+[xUnit.net 00:00:45.28]       Expected result.StatusCode to be a match with the expectation, but it differs at index 0:&#xD;
+[xUnit.net 00:00:45.28]          ↓ (actual)&#xD;
+[xUnit.net 00:00:45.28]         "Bad Request"&#xD;
+[xUnit.net 00:00:45.28]         "Conflict"&#xD;
+[xUnit.net 00:00:45.28]          ↑ (expected)&#xD;
+[xUnit.net 00:00:45.28]       Stack Trace:&#xD;
+[xUnit.net 00:00:45.28]            at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)&#xD;
+[xUnit.net 00:00:45.28]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)&#xD;
+[xUnit.net 00:00:45.28]            at FluentAssertions.Execution.AssertionScope.AddPreFormattedFailure(String formattedFailureMessage)&#xD;
+[xUnit.net 00:00:45.28]            at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)&#xD;
+[xUnit.net 00:00:45.28]            at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)&#xD;
+[xUnit.net 00:00:45.28]            at FluentAssertions.Execution.AssertionChain.FailWith(String message)&#xD;
+[xUnit.net 00:00:45.28]            at FluentAssertions.Primitives.StringEqualityStrategy.AssertForEquality(AssertionChain assertionChain, String subject, String expected)&#xD;
+[xUnit.net 00:00:45.28]            at FluentAssertions.Primitives.StringValidator.Validate(String subject, String expected)&#xD;
+[xUnit.net 00:00:45.28]            at FluentAssertions.Primitives.StringAssertions`1.Be(String expected, String because, Object[] becauseArgs)&#xD;
+[xUnit.net 00:00:45.28]         E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.test\Services\UserServiceIntegrationTest.cs(186,0): at HotelBooking.Tests.Integration.UserServiceIntegrationTest.RegisterCustomer_WhenDuplicateEmail_ShouldReturnConflict()&#xD;
+[xUnit.net 00:00:45.28]         --- End of stack trace from previous location ---&#xD;
+[testcontainers.org 00:00:45.07] Docker container 313e46eb7f10 created&#xD;
+[testcontainers.org 00:00:45.08] Start Docker container 313e46eb7f10&#xD;
+[testcontainers.org 00:00:45.32] Wait for Docker container 313e46eb7f10 to complete readiness checks&#xD;
+[testcontainers.org 00:00:45.34] Execute "/bin/sh -c find /opt/mssql-tools*/bin/sqlcmd -type f -print -quit" at Docker container 313e46eb7f10&#xD;
+[testcontainers.org 00:00:45.43] Execute "/opt/mssql-tools18/bin/sqlcmd -C -Q SELECT 1;" at Docker container 313e46eb7f10&#xD;
+[testcontainers.org 00:00:50.01] Docker container 313e46eb7f10 ready&#xD;
+[testcontainers.org 00:00:50.34] Stop Docker container 313e46eb7f10&#xD;
+[xUnit.net 00:01:06.31]       Expected result.StatusCode to be a match with the expectation, but it differs at index 0:&#xD;
+[xUnit.net 00:01:06.31]          ↓ (actual)&#xD;
+[xUnit.net 00:01:06.31]         "Bad Request"&#xD;
+[xUnit.net 00:01:06.31]         "Success"&#xD;
+[xUnit.net 00:01:06.31]          ↑ (expected)&#xD;
+[xUnit.net 00:01:06.31]       Stack Trace:&#xD;
+[xUnit.net 00:01:06.31]            at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)&#xD;
+[xUnit.net 00:01:06.31]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)&#xD;
+[xUnit.net 00:01:06.31]            at FluentAssertions.Execution.AssertionScope.AddPreFormattedFailure(String formattedFailureMessage)&#xD;
+[xUnit.net 00:01:06.31]            at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)&#xD;
+[xUnit.net 00:01:06.31]            at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)&#xD;
+[xUnit.net 00:01:06.31]            at FluentAssertions.Execution.AssertionChain.FailWith(String message)&#xD;
+[xUnit.net 00:01:06.31]            at FluentAssertions.Primitives.StringEqualityStrategy.AssertForEquality(AssertionChain assertionChain, String subject, String expected)&#xD;
+[xUnit.net 00:01:06.31]            at FluentAssertions.Primitives.StringValidator.Validate(String subject, String expected)&#xD;
+[xUnit.net 00:01:06.31]            at FluentAssertions.Primitives.StringAssertions`1.Be(String expected, String because, Object[] becauseArgs)&#xD;
+[xUnit.net 00:01:06.31]         E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.test\Services\UserServiceIntegrationTest.cs(94,0): at HotelBooking.Tests.Integration.UserServiceIntegrationTest.RegisterCustomer_WhenValid_ShouldSaveToDatabase()&#xD;
+[xUnit.net 00:01:06.31]         --- End of stack trace from previous location ---&#xD;
+[testcontainers.org 00:01:06.11] Docker container 879e471fcbf4 created&#xD;
+[testcontainers.org 00:01:06.13] Start Docker container 879e471fcbf4&#xD;
+[testcontainers.org 00:01:06.36] Wait for Docker container 879e471fcbf4 to complete readiness checks&#xD;
+[testcontainers.org 00:01:06.37] Execute "/bin/sh -c find /opt/mssql-tools*/bin/sqlcmd -type f -print -quit" at Docker container 879e471fcbf4&#xD;
+[testcontainers.org 00:01:06.43] Execute "/opt/mssql-tools18/bin/sqlcmd -C -Q SELECT 1;" at Docker container 879e471fcbf4&#xD;
+[testcontainers.org 00:01:10.99] Docker container 879e471fcbf4 ready&#xD;
+[testcontainers.org 00:01:11.23] Stop Docker container 879e471fcbf4&#xD;
+[xUnit.net 00:01:27.24]       Expected result.StatusCode to be a match with the expectation, but it differs at index 0:&#xD;
+[xUnit.net 00:01:27.24]          ↓ (actual)&#xD;
+[xUnit.net 00:01:27.24]         "Bad Request"&#xD;
+[xUnit.net 00:01:27.24]         "Conflict"&#xD;
+[xUnit.net 00:01:27.24]          ↑ (expected)&#xD;
+[xUnit.net 00:01:27.24]       Stack Trace:&#xD;
+[xUnit.net 00:01:27.24]            at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)&#xD;
+[xUnit.net 00:01:27.24]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)&#xD;
+[xUnit.net 00:01:27.24]            at FluentAssertions.Execution.AssertionScope.AddPreFormattedFailure(String formattedFailureMessage)&#xD;
+[xUnit.net 00:01:27.24]            at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)&#xD;
+[xUnit.net 00:01:27.24]            at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)&#xD;
+[xUnit.net 00:01:27.24]            at FluentAssertions.Execution.AssertionChain.FailWith(String message)&#xD;
+[xUnit.net 00:01:27.24]            at FluentAssertions.Primitives.StringEqualityStrategy.AssertForEquality(AssertionChain assertionChain, String subject, String expected)&#xD;
+[xUnit.net 00:01:27.24]            at FluentAssertions.Primitives.StringValidator.Validate(String subject, String expected)&#xD;
+[xUnit.net 00:01:27.24]            at FluentAssertions.Primitives.StringAssertions`1.Be(String expected, String because, Object[] becauseArgs)&#xD;
+[xUnit.net 00:01:27.24]         E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.test\Services\UserServiceIntegrationTest.cs(148,0): at HotelBooking.Tests.Integration.UserServiceIntegrationTest.RegisterCustomer_WhenDuplicateUsername_ShouldReturnConflict()&#xD;
+[xUnit.net 00:01:27.24]         --- End of stack trace from previous location ---&#xD;
+[testcontainers.org 00:01:27.04] Docker container d96701b5f3f0 created&#xD;
+[testcontainers.org 00:01:27.05] Start Docker container d96701b5f3f0&#xD;
+[testcontainers.org 00:01:27.29] Wait for Docker container d96701b5f3f0 to complete readiness checks&#xD;
+[testcontainers.org 00:01:27.30] Execute "/bin/sh -c find /opt/mssql-tools*/bin/sqlcmd -type f -print -quit" at Docker container d96701b5f3f0&#xD;
+[testcontainers.org 00:01:27.36] Execute "/opt/mssql-tools18/bin/sqlcmd -C -Q SELECT 1;" at Docker container d96701b5f3f0&#xD;
+[testcontainers.org 00:01:31.96] Docker container d96701b5f3f0 ready&#xD;
+[testcontainers.org 00:01:32.25] Stop Docker container d96701b5f3f0&#xD;
+[xUnit.net 00:01:48.12]       Expected result.StatusCode to be a match with the expectation, but it differs at index 0:&#xD;
+[xUnit.net 00:01:48.12]          ↓ (actual)&#xD;
+[xUnit.net 00:01:48.12]         "Unauthorized"&#xD;
+[xUnit.net 00:01:48.12]         "Success"&#xD;
+[xUnit.net 00:01:48.12]          ↑ (expected)&#xD;
+[xUnit.net 00:01:48.12]       Stack Trace:&#xD;
+[xUnit.net 00:01:48.12]            at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)&#xD;
+[xUnit.net 00:01:48.12]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)&#xD;
+[xUnit.net 00:01:48.12]            at FluentAssertions.Execution.AssertionScope.AddPreFormattedFailure(String formattedFailureMessage)&#xD;
+[xUnit.net 00:01:48.12]            at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)&#xD;
+[xUnit.net 00:01:48.12]            at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)&#xD;
+[xUnit.net 00:01:48.12]            at FluentAssertions.Execution.AssertionChain.FailWith(String message)&#xD;
+[xUnit.net 00:01:48.12]            at FluentAssertions.Primitives.StringEqualityStrategy.AssertForEquality(AssertionChain assertionChain, String subject, String expected)&#xD;
+[xUnit.net 00:01:48.12]            at FluentAssertions.Primitives.StringValidator.Validate(String subject, String expected)&#xD;
+[xUnit.net 00:01:48.12]            at FluentAssertions.Primitives.StringAssertions`1.Be(String expected, String because, Object[] becauseArgs)&#xD;
+[xUnit.net 00:01:48.12]         E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.test\Services\UserServiceIntegrationTest.cs(226,0): at HotelBooking.Tests.Integration.UserServiceIntegrationTest.LoginUser_WhenValid_ShouldReturnToken()&#xD;
+[xUnit.net 00:01:48.12]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:01:48.12]   Finished:    HotelBooking.test&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="LAPTOP-JSEQEBUK" outcome="Error" timestamp="2026-03-03T07:14:06.1629340+07:00">
+        <Text>[xUnit.net 00:00:45.28]     HotelBooking.Tests.Integration.UserServiceIntegrationTest.RegisterCustomer_WhenDuplicateEmail_ShouldReturnConflict [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="LAPTOP-JSEQEBUK" outcome="Error" timestamp="2026-03-03T07:14:27.1971067+07:00">
+        <Text>[xUnit.net 00:01:06.31]     HotelBooking.Tests.Integration.UserServiceIntegrationTest.RegisterCustomer_WhenValid_ShouldSaveToDatabase [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="LAPTOP-JSEQEBUK" outcome="Error" timestamp="2026-03-03T07:14:48.1260829+07:00">
+        <Text>[xUnit.net 00:01:27.24]     HotelBooking.Tests.Integration.UserServiceIntegrationTest.RegisterCustomer_WhenDuplicateUsername_ShouldReturnConflict [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="LAPTOP-JSEQEBUK" outcome="Error" timestamp="2026-03-03T07:15:09.0026867+07:00">
+        <Text>[xUnit.net 00:01:48.12]     HotelBooking.Tests.Integration.UserServiceIntegrationTest.LoginUser_WhenValid_ShouldReturnToken [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

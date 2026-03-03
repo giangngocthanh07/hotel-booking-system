@@ -22,8 +22,6 @@ using HotelBooking.application.DTOs.User.Register;
 using HotelBooking.application.DTOs.User.Login;
 
 
-
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Service EF

@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="7bcf6466-b21c-408f-8482-c053e6ec5715" name="ACERs@LAPTOP-JSEQEBUK 2026-03-03 07:17:56" runUser="LAPTOP-JSEQEBUK\ACERs" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-03-03T07:17:56.1906508+07:00" queuing="2026-03-03T07:17:56.1906516+07:00" start="2026-03-03T07:17:26.9911468+07:00" finish="2026-03-03T07:19:23.1435899+07:00" />
+  <TestSettings name="default" id="e5b0eec5-c062-4273-b8d2-be91123c394b">
+    <Deployment runDeploymentRoot="ACERs_LAPTOP-JSEQEBUK_2026-03-03_07_17_56" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="609c837e-256f-43d3-a853-d5126e18c89c" testId="e42ac6df-36b6-ea03-3a70-094b4a7949b9" testName="HotelBooking.Tests.Integration.UserServiceIntegrationTest.RegisterCustomer_WhenDuplicateEmail_ShouldReturnConflict" computerName="LAPTOP-JSEQEBUK" duration="00:00:00.3161320" startTime="2026-03-03T07:18:17.4027777+07:00" endTime="2026-03-03T07:18:17.4027779+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="609c837e-256f-43d3-a853-d5126e18c89c" />
+    <UnitTestResult executionId="7d019161-01bd-4548-a366-b2d64f76be1d" testId="4eba0c0d-c08a-550a-79f9-bb26e28f834f" testName="HotelBooking.Tests.Integration.UserServiceIntegrationTest.RegisterCustomer_WhenValid_ShouldSaveToDatabase" computerName="LAPTOP-JSEQEBUK" duration="00:00:00.3308556" startTime="2026-03-03T07:18:38.6600286+07:00" endTime="2026-03-03T07:18:38.6600288+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7d019161-01bd-4548-a366-b2d64f76be1d" />
+    <UnitTestResult executionId="48cdb961-26cc-4ea3-a850-f34183fc7121" testId="7b9d8f22-5a2c-cb87-df4f-9881f9639bea" testName="HotelBooking.Tests.Integration.UserServiceIntegrationTest.LoginUser_WhenValid_ShouldReturnToken" computerName="LAPTOP-JSEQEBUK" duration="00:00:01.4762649" startTime="2026-03-03T07:19:23.0582198+07:00" endTime="2026-03-03T07:19:23.0582199+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="48cdb961-26cc-4ea3-a850-f34183fc7121" />
+    <UnitTestResult executionId="20518b10-fe1e-4796-9161-85cfb4fd9efc" testId="31d6a7f9-2d09-4eec-d648-bef9dc68b432" testName="HotelBooking.Tests.Integration.UserServiceIntegrationTest.RegisterCustomer_WhenDuplicateUsername_ShouldReturnConflict" computerName="LAPTOP-JSEQEBUK" duration="00:00:00.2959521" startTime="2026-03-03T07:19:00.8372093+07:00" endTime="2026-03-03T07:19:00.8372095+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="20518b10-fe1e-4796-9161-85cfb4fd9efc" />
+    <UnitTestResult executionId="18b7f8bc-86a5-4a0a-9e6b-f4fff47d8fb4" testId="bcceda42-2254-2d70-7d62-94c26d91a5b4" testName="HotelBooking.Tests.Integration.UserServiceIntegrationTest.LoginUser_WhenWrongPassword_ShouldFail" computerName="LAPTOP-JSEQEBUK" duration="00:00:02.2136835" startTime="2026-03-03T07:17:56.1570184+07:00" endTime="2026-03-03T07:17:56.1570389+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="18b7f8bc-86a5-4a0a-9e6b-f4fff47d8fb4" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="HotelBooking.Tests.Integration.UserServiceIntegrationTest.RegisterCustomer_WhenDuplicateEmail_ShouldReturnConflict" storage="e:\cybersoft\finalproject\hotel_blazor\hotelbooking.test\bin\debug\net9.0\hotelbooking.test.dll" id="e42ac6df-36b6-ea03-3a70-094b4a7949b9">
+      <Execution id="609c837e-256f-43d3-a853-d5126e18c89c" />
+      <TestMethod codeBase="E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.test\bin\Debug\net9.0\HotelBooking.test.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="HotelBooking.Tests.Integration.UserServiceIntegrationTest" name="RegisterCustomer_WhenDuplicateEmail_ShouldReturnConflict" />
+    </UnitTest>
+    <UnitTest name="HotelBooking.Tests.Integration.UserServiceIntegrationTest.LoginUser_WhenValid_ShouldReturnToken" storage="e:\cybersoft\finalproject\hotel_blazor\hotelbooking.test\bin\debug\net9.0\hotelbooking.test.dll" id="7b9d8f22-5a2c-cb87-df4f-9881f9639bea">
+      <Execution id="48cdb961-26cc-4ea3-a850-f34183fc7121" />
+      <TestMethod codeBase="E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.test\bin\Debug\net9.0\HotelBooking.test.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="HotelBooking.Tests.Integration.UserServiceIntegrationTest" name="LoginUser_WhenValid_ShouldReturnToken" />
+    </UnitTest>
+    <UnitTest name="HotelBooking.Tests.Integration.UserServiceIntegrationTest.RegisterCustomer_WhenDuplicateUsername_ShouldReturnConflict" storage="e:\cybersoft\finalproject\hotel_blazor\hotelbooking.test\bin\debug\net9.0\hotelbooking.test.dll" id="31d6a7f9-2d09-4eec-d648-bef9dc68b432">
+      <Execution id="20518b10-fe1e-4796-9161-85cfb4fd9efc" />
+      <TestMethod codeBase="E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.test\bin\Debug\net9.0\HotelBooking.test.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="HotelBooking.Tests.Integration.UserServiceIntegrationTest" name="RegisterCustomer_WhenDuplicateUsername_ShouldReturnConflict" />
+    </UnitTest>
+    <UnitTest name="HotelBooking.Tests.Integration.UserServiceIntegrationTest.LoginUser_WhenWrongPassword_ShouldFail" storage="e:\cybersoft\finalproject\hotel_blazor\hotelbooking.test\bin\debug\net9.0\hotelbooking.test.dll" id="bcceda42-2254-2d70-7d62-94c26d91a5b4">
+      <Execution id="18b7f8bc-86a5-4a0a-9e6b-f4fff47d8fb4" />
+      <TestMethod codeBase="E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.test\bin\Debug\net9.0\HotelBooking.test.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="HotelBooking.Tests.Integration.UserServiceIntegrationTest" name="LoginUser_WhenWrongPassword_ShouldFail" />
+    </UnitTest>
+    <UnitTest name="HotelBooking.Tests.Integration.UserServiceIntegrationTest.RegisterCustomer_WhenValid_ShouldSaveToDatabase" storage="e:\cybersoft\finalproject\hotel_blazor\hotelbooking.test\bin\debug\net9.0\hotelbooking.test.dll" id="4eba0c0d-c08a-550a-79f9-bb26e28f834f">
+      <Execution id="7d019161-01bd-4548-a366-b2d64f76be1d" />
+      <TestMethod codeBase="E:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.test\bin\Debug\net9.0\HotelBooking.test.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="HotelBooking.Tests.Integration.UserServiceIntegrationTest" name="RegisterCustomer_WhenValid_ShouldSaveToDatabase" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="e42ac6df-36b6-ea03-3a70-094b4a7949b9" executionId="609c837e-256f-43d3-a853-d5126e18c89c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4eba0c0d-c08a-550a-79f9-bb26e28f834f" executionId="7d019161-01bd-4548-a366-b2d64f76be1d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7b9d8f22-5a2c-cb87-df4f-9881f9639bea" executionId="48cdb961-26cc-4ea3-a850-f34183fc7121" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="31d6a7f9-2d09-4eec-d648-bef9dc68b432" executionId="20518b10-fe1e-4796-9161-85cfb4fd9efc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bcceda42-2254-2d70-7d62-94c26d91a5b4" executionId="18b7f8bc-86a5-4a0a-9e6b-f4fff47d8fb4" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="5" executed="5" passed="5" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 9.0.13)&#xD;
+[xUnit.net 00:00:00.63]   Discovering: HotelBooking.test&#xD;
+[xUnit.net 00:00:00.68]   Discovered:  HotelBooking.test&#xD;
+[xUnit.net 00:00:00.68]   Starting:    HotelBooking.test&#xD;
+[testcontainers.org 00:00:00.44] Connected to Docker:&#xD;
+  Host: npipe://./pipe/docker_engine&#xD;
+  Server Version: 29.2.1&#xD;
+  Kernel Version: 5.15.153.1-microsoft-standard-WSL2&#xD;
+  API Version: 1.53&#xD;
+  Operating System: Docker Desktop&#xD;
+  Total Memory: 7.76 GB&#xD;
+  Labels: &#xD;
+    com.docker.desktop.address=npipe://\\.\pipe\docker_cli&#xD;
+[testcontainers.org 00:00:00.59] Docker container 1cdcc0c97252 created&#xD;
+[testcontainers.org 00:00:00.65] Start Docker container 1cdcc0c97252&#xD;
+[testcontainers.org 00:00:00.86] Wait for Docker container 1cdcc0c97252 to complete readiness checks&#xD;
+[testcontainers.org 00:00:00.86] Docker container 1cdcc0c97252 ready&#xD;
+[testcontainers.org 00:00:00.94] Docker container 88f94109586c created&#xD;
+[testcontainers.org 00:00:00.95] Start Docker container 88f94109586c&#xD;
+[testcontainers.org 00:00:01.16] Wait for Docker container 88f94109586c to complete readiness checks&#xD;
+[testcontainers.org 00:00:01.18] Execute "/bin/sh -c find /opt/mssql-tools*/bin/sqlcmd -type f -print -quit" at Docker container 88f94109586c&#xD;
+[testcontainers.org 00:00:01.25] Execute "/opt/mssql-tools18/bin/sqlcmd -C -Q SELECT 1;" at Docker container 88f94109586c&#xD;
+[testcontainers.org 00:00:06.82] Execute "/opt/mssql-tools18/bin/sqlcmd -C -Q SELECT 1;" at Docker container 88f94109586c&#xD;
+[testcontainers.org 00:00:06.88] Docker container 88f94109586c ready&#xD;
+     Warning:&#xD;
+     The component "Fluent Assertions" is governed by the rules defined in the Xceed License Agreement and&#xD;
+     the Xceed Fluent Assertions Community License. You may use Fluent Assertions free of charge for&#xD;
+     non-commercial use only. An active subscription is required to use Fluent Assertions for commercial use.&#xD;
+     Please contact Xceed Sales mailto:sales@xceed.com to acquire a subscription at a very low cost.&#xD;
+     A paid commercial license supports the development and continued increasing support of&#xD;
+     Fluent Assertions users under both commercial and community licenses. Help us&#xD;
+     keep Fluent Assertions at the forefront of unit testing.&#xD;
+     For more information, visit https://xceed.com/products/unit-testing/fluent-assertions/&#xD;
+[testcontainers.org 00:00:10.83] Stop Docker container 88f94109586c&#xD;
+[testcontainers.org 00:00:26.62] Docker container abcb55a03164 created&#xD;
+[testcontainers.org 00:00:26.63] Start Docker container abcb55a03164&#xD;
+[testcontainers.org 00:00:26.82] Wait for Docker container abcb55a03164 to complete readiness checks&#xD;
+[testcontainers.org 00:00:26.83] Execute "/bin/sh -c find /opt/mssql-tools*/bin/sqlcmd -type f -print -quit" at Docker container abcb55a03164&#xD;
+[testcontainers.org 00:00:26.88] Execute "/opt/mssql-tools18/bin/sqlcmd -C -Q SELECT 1;" at Docker container abcb55a03164&#xD;
+[testcontainers.org 00:00:31.46] Docker container abcb55a03164 ready&#xD;
+[testcontainers.org 00:00:32.09] Stop Docker container abcb55a03164&#xD;
+[testcontainers.org 00:00:47.86] Docker container 45fbaa7b352f created&#xD;
+[testcontainers.org 00:00:47.87] Start Docker container 45fbaa7b352f&#xD;
+[testcontainers.org 00:00:48.11] Wait for Docker container 45fbaa7b352f to complete readiness checks&#xD;
+[testcontainers.org 00:00:48.12] Execute "/bin/sh -c find /opt/mssql-tools*/bin/sqlcmd -type f -print -quit" at Docker container 45fbaa7b352f&#xD;
+[testcontainers.org 00:00:48.17] Execute "/opt/mssql-tools18/bin/sqlcmd -C -Q SELECT 1;" at Docker container 45fbaa7b352f&#xD;
+[testcontainers.org 00:00:52.74] Docker container 45fbaa7b352f ready&#xD;
+[testcontainers.org 00:00:53.47] Stop Docker container 45fbaa7b352f&#xD;
+[testcontainers.org 00:01:09.12] Docker container eae69332854a created&#xD;
+[testcontainers.org 00:01:09.12] Start Docker container eae69332854a&#xD;
+[testcontainers.org 00:01:09.31] Wait for Docker container eae69332854a to complete readiness checks&#xD;
+[testcontainers.org 00:01:09.32] Execute "/bin/sh -c find /opt/mssql-tools*/bin/sqlcmd -type f -print -quit" at Docker container eae69332854a&#xD;
+[testcontainers.org 00:01:09.37] Execute "/opt/mssql-tools18/bin/sqlcmd -C -Q SELECT 1;" at Docker container eae69332854a&#xD;
+[testcontainers.org 00:01:14.95] Execute "/opt/mssql-tools18/bin/sqlcmd -C -Q SELECT 1;" at Docker container eae69332854a&#xD;
+[testcontainers.org 00:01:15.01] Docker container eae69332854a ready&#xD;
+[testcontainers.org 00:01:15.57] Stop Docker container eae69332854a&#xD;
+[testcontainers.org 00:01:31.29] Docker container fe28756f3e92 created&#xD;
+[testcontainers.org 00:01:31.30] Start Docker container fe28756f3e92&#xD;
+[testcontainers.org 00:01:31.50] Wait for Docker container fe28756f3e92 to complete readiness checks&#xD;
+[testcontainers.org 00:01:31.51] Execute "/bin/sh -c find /opt/mssql-tools*/bin/sqlcmd -type f -print -quit" at Docker container fe28756f3e92&#xD;
+[testcontainers.org 00:01:31.55] Execute "/opt/mssql-tools18/bin/sqlcmd -C -Q SELECT 1;" at Docker container fe28756f3e92&#xD;
+[testcontainers.org 00:01:36.12] Docker container fe28756f3e92 ready&#xD;
+[testcontainers.org 00:01:37.84] Stop Docker container fe28756f3e92&#xD;
+[xUnit.net 00:01:54.58]   Finished:    HotelBooking.test&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

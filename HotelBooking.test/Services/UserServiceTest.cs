@@ -10,7 +10,9 @@ using HotelBooking.application.Validators.UserManagement.Login; // Nơi chứa L
 using HotelBooking.infrastructure.Models;
 using FluentValidation;
 using HotelBooking.application.Helpers;
-using System.Linq.Expressions; // Nơi chứa class User, Room...
+using System.Linq.Expressions;
+using HotelBooking.application.DTOs.User.Register;
+using HotelBooking.application.DTOs.User.Login; // Nơi chứa class User, Room...
 
 namespace HotelBooking.Tests.Services
 {
@@ -54,9 +56,8 @@ namespace HotelBooking.Tests.Services
             // 4. Khởi tạo Service với đầy đủ tham số (thêm 3 validator ở cuối)
             // Thứ tự phải CHÍNH XÁC như trong file UserService.cs
             _userService = new UserService(
-                null!,                       // 1. DBContext (Unit Test ko cần DB thật -> null)
-                _mockUserRepo.Object,       // 2. UserRepository (Cái chính ta dùng)
-                _mockUserRoleRepo.Object,   // 3. UserRoleRepository (Mock thêm cho đủ tụ)
+                _mockUserRepo.Object,       // 1. UserRepository (Cái chính ta dùng)
+                _mockUserRoleRepo.Object,   // 2. UserRoleRepository (Mock thêm cho đủ tụ)
                 _mockUpgradeRepo.Object,    // 4. UpgradeRequestRepository (Mock thêm cho đủ tụ)
                 null!,                       // 5. JwtAuthService (Hàm Register ko dùng Token -> null)
                 _mockUnitOfWork.Object,     // 6. UnitOfWork
@@ -511,7 +512,7 @@ namespace HotelBooking.Tests.Services
 
             // 3. ASSERT
             result.Content.Should().BeNull();
-            result.Message.Should().Be(MessageResponse.UserManagement.Login.USER_NOT_FOUND);
+            result.Message.Should().Be(MessageResponse.UserManagement.Login.INVALID_CREDENTIALS);
             result.StatusCode.Should().Be(StatusCodeResponse.NotFound);
         }
 
@@ -546,7 +547,7 @@ namespace HotelBooking.Tests.Services
 
             // 3. ASSERT
             result.Content.Should().BeNull();
-            result.Message.Should().Be(MessageResponse.UserManagement.Login.PASSWORD_INCORRECT);
+            result.Message.Should().Be(MessageResponse.UserManagement.Login.INVALID_CREDENTIALS);
             result.StatusCode.Should().Be(StatusCodeResponse.NotFound);
         }
 
@@ -624,4 +625,4 @@ namespace HotelBooking.Tests.Services
         }
     }
 }
-        #endregion
+#endregion
