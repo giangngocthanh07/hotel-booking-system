@@ -4,14 +4,14 @@
 
 <MudForm @ref="_form" Model="FormState.BasicInfo" Class="pa-2">
     <!-- Hotel Name -->
-    <MudTextField @bind-Value="FormState.BasicInfo.Name" Label="Tên khách sạn" For="@(() => FormState.BasicInfo.Name)"
+    <MudTextField @bind-Value="FormState.BasicInfo.Name" Label="Hotel Name" For="@(() => FormState.BasicInfo.Name)"
         Required="true" Class="mb-3" />
 
     <!-- City -->
-    <MudSelect T="int" Label="Thành phố" Variant="Variant.Outlined" @bind-Value="FormState.BasicInfo.CityId"
+    <MudSelect T="int" Label="City" Variant="Variant.Outlined" @bind-Value="FormState.BasicInfo.CityId"
         For="@(() => FormState.BasicInfo.CityId)" Required="true" Class="mb-3">
 
-        <MudSelectItem T="int" Value="0">Vui lòng chọn thành phố</MudSelectItem>
+        <MudSelectItem T="int" Value="0">Please select a city</MudSelectItem>
 
         @foreach (var city in FormState.BasicInfo.Cities)
         {
@@ -19,15 +19,15 @@
         }
     </MudSelect>
 
-    <!-- Address: chỉ hiển thị khi đã chọn City -->
+    <!--- Address: only shown when a City has been selected -->
     @if (FormState.BasicInfo.CityId > 0)
     {
-        <MudTextField @bind-Value="FormState.BasicInfo.Address" Label="Địa chỉ" For="@(() => FormState.BasicInfo.Address)"
+        <MudTextField @bind-Value="FormState.BasicInfo.Address" Label="Address" For="@(() => FormState.BasicInfo.Address)"
             Required="true" Class="mb-3" />
     }
 
     <!-- Description -->
-    <MudTextField @bind-Value="FormState.BasicInfo.Description" Label="Mô tả"
+    <MudTextField @bind-Value="FormState.BasicInfo.Description" Label="Description"
         For="@(() => FormState.BasicInfo.Description)" Lines="3" Class="mb-3" />
 
     <!-- Cover Image Upload -->
@@ -35,7 +35,7 @@
     @if (FormState.BasicInfo.CoverFile == null)
     {
         <MudPaper Class="pa-2 mb-3" Style="background:#FFF3CD; color:#856404; border:1px solid #ffeeba; border-radius:6px;">
-            Hãy chọn <b>1 ảnh bìa</b> cho khách sạn
+            Please select <b>1 cover photo</b> for the hotel
         </MudPaper>
 
         <InputFile OnChange="HandleFileSelected" accept="image/*" Class="mb-3" />
@@ -63,10 +63,10 @@
     {
         FormState.OnChange += StateHasChanged;
 
-        // Chỉ gọi API nếu danh sách thành phố đang rỗng
+        // Only call API if the city list is empty
         if (FormState.BasicInfo.Cities == null || !FormState.BasicInfo.Cities.Any())
         {
-            // Gọi hàm trong FormState để lấy dữ liệu
+            // Call the method in FormState to load data
             await FormState.LoadCitiesAsync();
         }
     }
@@ -80,7 +80,7 @@
             FormState.BasicInfo.CoverImageSize = file.Size / 1024;
 
 
-            // 1. Khởi tạo đối tượng
+            // 1. Initialize the object
             FormState.BasicInfo.CoverFile = new UploadFileVM
             {
                 FileName = file.Name,
@@ -95,11 +95,11 @@
 
             ms.Position = 0;
 
-            // Lưu file gốc để khi submit gửi sang BE
+            // Save the original file to be sent to the backend on submit
 
             FormState.BasicInfo.CoverFile.Content = ms;
 
-            // 4. Tạo chuỗi Base64 để hiển thị preview (Fix 2)
+            // 4. Generate Base64 string for preview display
             var bytes = ms.ToArray();
             FormState.BasicInfo.CoverImagePreviewUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(bytes)}";
 
@@ -115,7 +115,7 @@
 
         FormState.BasicInfo.CoverImagePreviewUrl = null;
 
-        // Xoá cả preview và file gốc
+        // Remove both preview and original file
         FormState.BasicInfo.CoverFile = null;
 
     }
@@ -127,24 +127,24 @@
 
     public class HotelVM
     {
-        [Required(ErrorMessage = "Vui lòng điền tên khách sạn!")]
+        [Required(ErrorMessage = "Please enter the hotel name!")]
         public string Name { get; set; } = "";
 
-        [Required(ErrorMessage = "Vui lòng điền địa chỉ!")]
-        [MinLength(10, ErrorMessage = "Địa chỉ phải có ít nhất 10 ký tự!")]
+        [Required(ErrorMessage = "Please enter the address!")]
+        [MinLength(10, ErrorMessage = "Address must be at least 10 characters!")]
         public string Address { get; set; } = "";
 
-        [Required(ErrorMessage = "Vui lòng chọn thành phố!")]
-        [Range(1, int.MaxValue, ErrorMessage = "Vui lòng chọn thành phố!")]
-        public int CityId { get; set; } = 0; // Lưu ID
+        [Required(ErrorMessage = "Please select a city!")]
+        [Range(1, int.MaxValue, ErrorMessage = "Please select a city!")]
+        public int CityId { get; set; } = 0; // Stores ID
 
-        // Danh sách nguồn
+        // Source list
         public List<CityVM> Cities { get; set; } = new();
 
-        [MinLength(20, ErrorMessage = "Mô tả phải có ít nhất 20 ký tự!")]
+        [MinLength(20, ErrorMessage = "Description must be at least 20 characters!")]
         public string Description { get; set; } = "";
 
-        [Required(ErrorMessage = "Vui lòng chọn ảnh bìa hợp lệ!")]
+        [Required(ErrorMessage = "Please select a valid cover photo!")]
         public UploadFileVM? CoverFile { get; set; }
 
         public string? CoverImageName { get; set; }

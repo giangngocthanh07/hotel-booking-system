@@ -2,15 +2,15 @@
 @inject HotelFormState FormState
 
 <MudForm @ref="_form" Model="FormState.Amenities" Class="pa-2">
-    <MudText Typo="Typo.h6" Class="mb-3">Chọn các tiện ích (Amenities) cho khách sạn của bạn:</MudText>
+    <MudText Typo="Typo.h6" Class="mb-3">Select amenities for your hotel:</MudText>
 
     @if (!FormState.Amenities.Any())
     {
-        <MudText Color="Color.Warning">Không có tiện ích nào. Vui lòng liên hệ quản trị viên.</MudText>
+        <MudText Color="Color.Warning">No amenities found. Please contact the administrator.</MudText>
     }
     else
     {
-        <!-- Hiển thị danh sách amenities dưới dạng checkbox -->
+        <!-- Display amenities list as checkboxes -->
         @foreach (var amenity in FormState.Amenities)
         {
             <MudCheckBox T="bool" @bind-Value="amenity.IsSelected" Label="@amenity.Name" />
@@ -19,7 +19,7 @@
 
     @if (!FormState.ValidateAmenities())
     {
-        <MudText Color="Color.Error">Vui lòng chọn ít nhất 1 tiện ích</MudText>
+        <MudText Color="Color.Error">Please select at least 1 amenity</MudText>
     }
 
 </MudForm>
@@ -42,7 +42,7 @@
         public int Id { get; set; }
         public string Name { get; set; } = "";
 
-        // Dùng cho UI chọn
+    // Used for UI selection
         public bool IsSelected { get; set; } = false;
     }
 }

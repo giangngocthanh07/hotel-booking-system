@@ -1,7 +1,7 @@
 ﻿@page "/"
 @layout MainLayout
 @inject IJSRuntime JS
-@* trang chủ chứa nội dung tổng quan về dịch vụ của website *@
+@* Home page — contains overview content about the website's hotel services *@
 
 <!-- Hero Carousel -->
 <div id="heroCarousel" class="carousel slide carousel-fade position-relative" data-bs-ride="carousel">
@@ -14,7 +14,7 @@
       style="background-image: url('https://source.unsplash.com/1600x900/?beach,hotel');"></div>
   </div>
 
-  <!-- Nút điều hướng trái/phải -->
+  <!-- Left/Right navigation buttons -->
   <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
     <span class="carousel-control-prev-icon"></span>
   </button>
@@ -22,7 +22,7 @@
     <span class="carousel-control-next-icon"></span>
   </button>
 
-  <!-- Overlay mờ để chữ nổi bật -->
+  <!-- Dark overlay to make text stand out -->
   <div class="overlay position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-25"></div>
 
   <!-- Text Caption -->
@@ -37,9 +37,9 @@
 </div>
 
 
-<!-- địa điểm du lịch để booking-->
+<!-- Travel destinations for booking -->
 <div class="container mt-5">
-  <h2 class="mb-4 text-center">Khám phá Việt Nam</h2>
+  <h2 class="mb-4 text-center">Explore Vietnam</h2>
   <div class="position-relative carousel-wrapper">
     <!-- Carousel wrapper -->
     <div class="overflow-hidden" id="carouselWrapper">
@@ -48,61 +48,61 @@
         <div class="card flex-shrink-0 destination-card">
           <img src="https://source.unsplash.com/400x300/?city,travel" class="card-img-top">
           <div class="card-body text-center">
-            <h5 class="card-title">Hà Nội</h5>
+            <h5 class="card-title">Hanoi</h5>
           </div>
         </div>
         <div class="card flex-shrink-0 destination-card">
           <img src="https://source.unsplash.com/400x300/?city,travel" class="card-img-top">
           <div class="card-body text-center">
-            <h5 class="card-title">Hà Nội 2</h5>
+            <h5 class="card-title">Hanoi 2</h5>
           </div>
         </div>
         <div class="card flex-shrink-0 destination-card">
           <img src="https://source.unsplash.com/400x300/?city,travel" class="card-img-top">
           <div class="card-body text-center">
-            <h5 class="card-title">Hà Nội 3</h5>
+            <h5 class="card-title">Hanoi 3</h5>
           </div>
         </div>
         <div class="card flex-shrink-0 destination-card">
           <img src="https://source.unsplash.com/400x300/?city,travel" class="card-img-top">
           <div class="card-body text-center">
-            <h5 class="card-title">Hà Nội4</h5>
+            <h5 class="card-title">Hanoi 4</h5>
           </div>
         </div>
         <div class="card flex-shrink-0 destination-card">
           <img src="https://source.unsplash.com/400x300/?city,travel" class="card-img-top">
           <div class="card-body text-center">
-            <h5 class="card-title">Hà Nội5</h5>
+            <h5 class="card-title">Hanoi 5</h5>
           </div>
         </div>
         <div class="card flex-shrink-0 destination-card">
           <img src="https://source.unsplash.com/400x300/?city,travel" class="card-img-top">
           <div class="card-body text-center">
-            <h5 class="card-title">Hà Nội6</h5>
+            <h5 class="card-title">Hanoi 6</h5>
           </div>
         </div>
         <div class="card flex-shrink-0 destination-card">
           <img src="https://source.unsplash.com/400x300/?city,travel" class="card-img-top">
           <div class="card-body text-center">
-            <h5 class="card-title">Hà Nội7</h5>
+            <h5 class="card-title">Hanoi 7</h5>
           </div>
         </div>
         <div class="card flex-shrink-0 destination-card">
           <img src="https://source.unsplash.com/400x300/?city,travel" class="card-img-top">
           <div class="card-body text-center">
-            <h5 class="card-title">Hà Nội8</h5>
+            <h5 class="card-title">Hanoi 8</h5>
           </div>
         </div>
         <div class="card flex-shrink-0 destination-card">
           <img src="https://source.unsplash.com/400x300/?city,travel" class="card-img-top">
           <div class="card-body text-center">
-            <h5 class="card-title">Hà Nội9</h5>
+            <h5 class="card-title">Hanoi 9</h5>
           </div>
         </div>
         <div class="card flex-shrink-0 destination-card">
           <img src="https://source.unsplash.com/400x300/?city,travel" class="card-img-top">
           <div class="card-body text-center">
-            <h5 class="card-title">Hà Nội0</h5>
+            <h5 class="card-title">Hanoi 10</h5>
           </div>
         </div>
       </div>
@@ -114,16 +114,16 @@
   </div>
 </div>
 
-<!-- loại chỗ ở -->
+<!-- Accommodation types -->
 <div class="container mt-5">
-  <h2>Loại chỗ ở</h2>
+  <h2>Accommodation Types</h2>
   <div class="accommodation-grid">
     <div class="accommodation-card">
-      <span class="title-accommodation">Khách sạn</span>
+      <span class="title-accommodation">Hotel</span>
       <img src="https://picsum.photos/200/150?random=1" alt="">
     </div>
     <div class="accommodation-card">
-      <span class="title-accommodation">Căn hộ</span>
+      <span class="title-accommodation">Apartment</span>
       <img src="https://picsum.photos/200/150?random=2" alt="">
     </div>
     <div class="accommodation-card">
@@ -135,77 +135,77 @@
       <img src="https://picsum.photos/200/150?random=4" alt="">
     </div>
     <div class="accommodation-card">
-      <span class="title-accommodation">Biệt thự</span>
+      <span class="title-accommodation">Villa</span>
       <img src="https://picsum.photos/200/150?random=5" alt="">
     </div>
     <div class="accommodation-card">
-      <span class="title-accommodation">Lều trại sang trọng</span>
+      <span class="title-accommodation">Luxury Glamping</span>
       <img src="https://picsum.photos/200/150?random=6" alt="">
     </div>
     <div class="accommodation-card">
-      <span class="title-accommodation">Nhà trọ</span>
+      <span class="title-accommodation">Guesthouse</span>
       <img src="https://picsum.photos/200/150?random=7" alt="">
     </div>
   </div>
 </div>
 
 
-<!-- Chỗ ở được đánh giá cao -->
+<!-- Top-rated accommodations -->
 <div class="container mt-5">
-  <h2 class="mb-4 text-center">Chỗ ở được đánh giá cao</h2>
+  <h2 class="mb-4 text-center">Top-Rated Accommodations</h2>
   <div class="row">
     @foreach (var hotel in Hotels)
     {
-      <div class="col-sm-6 col-md-3 mb-4">
-        <div class="card h-100 shadow-sm position-relative">
+        <div class="col-sm-6 col-md-3 mb-4">
+          <div class="card h-100 shadow-sm position-relative">
 
-          <!-- Carousel -->
+            <!-- Carousel -->
           <div id="@($"hotelCarousel{hotel.Id}")" class="carousel slide" data-bs-ride="carousel">
-            <div class="carousel-inner">
+              <div class="carousel-inner">
               @for (int i = 0; i < hotel.Images.Count; i++)
               {
-                <div class="carousel-item @(i == 0 ? "active" : "")">
-                  <img src="@hotel.Images[i]" class="d-block w-100" style="height: 200px; object-fit: cover;"
+                    <div class="carousel-item @(i == 0 ? "active" : "")">
+                      <img src="@hotel.Images[i]" class="d-block w-100" style="height: 200px; object-fit: cover;"
                     alt="Hotel Image">
-                </div>
+                    </div>
               }
-            </div>
+              </div>
 
-            <!-- Prev -->
+              <!-- Prev -->
             <button class="carousel-control-prev" type="button" data-bs-target="@($"#hotelCarousel{hotel.Id}")"
               data-bs-slide="prev" @onclick:stopPropagation="true"
               style="position: absolute; top: 50%; transform: translateY(-50%);">
-              <span class="carousel-control-prev-icon"></span>
-            </button>
+                <span class="carousel-control-prev-icon"></span>
+              </button>
 
-            <!-- Next -->
+              <!-- Next -->
             <button class="carousel-control-next" type="button" data-bs-target="@($"#hotelCarousel{hotel.Id}")"
               data-bs-slide="next" @onclick:stopPropagation="true"
               style="position: absolute; top: 50%; transform: translateY(-50%);">
-              <span class="carousel-control-next-icon"></span>
-            </button>
-          </div>
-          <!-- Wishlist Button (đặt sau cùng để luôn nằm trên) -->
+                <span class="carousel-control-next-icon"></span>
+              </button>
+            </div>
+            <!-- Wishlist Button (placed last so it always appears on top) -->
           <button class="wishlist-btn position-absolute top-0 end-0 m-2 btn btn-sm" style="z-index: 5;"
             @onclick:stopPropagation="true" @onclick="() => ToggleWishlist(hotel.Id)">
-            <i class="bi @(hotel.IsWishlist ? "bi-heart-fill text-danger" : "bi-heart text-dark")"></i>
-          </button>
+              <i class="bi @(hotel.IsWishlist ? "bi-heart-fill text-danger" : "bi-heart text-dark")"></i>
+            </button>
 
-          <!-- Card body -->
+            <!-- Card body -->
           <div class="card-body d-flex flex-column justify-content-between">
-            <div>
-              <h5 class="card-title">@hotel.Name</h5>
-              <small class="text-muted">Địa điểm: @hotel.Location</small>
-              <p class="card-text">
+              <div>
+                <h5 class="card-title">@hotel.Name</h5>
+                <small class="text-muted">Location: @hotel.Location</small>
+                <p class="card-text">
                 @hotel.ReviewText, <span class="text-success">@hotel.Score</span>
-              </p>
-            </div>
-            <div class="mt-2 d-flex justify-content-end">
-              Giá từ: <span class="text-warning">@hotel.Price VNĐ</span>
+                </p>
+              </div>
+              <div class="mt-2 d-flex justify-content-end">
+                Price from: <span class="text-warning">@hotel.Price VND</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
     }
   </div>
 </div>
@@ -213,68 +213,68 @@
 
 @code {
   private List<Hotel> Hotels { get; set; } = new()
-{
-new Hotel
-{
-Id = 1,
-Name = "Khách sạn sang trọng",
-Location = "Phan Thiết",
-Score = 9.5,
-ReviewText = "Tuyệt vời",
-Price = "1.200.000",
-Images = new List<string>
+  {
+    new Hotel
+    {
+      Id = 1,
+      Name = "Luxury Hotel",
+      Location = "Phan Thiết",
+      Score = 9.5,
+      ReviewText = "Outstanding",
+      Price = "1.200.000",
+      Images = new List<string>
 {
 "https://picsum.photos/400/300/?random=7",
 "https://picsum.photos/400/300/?random=8",
 "https://picsum.photos/400/300/?random=9",
 "https://picsum.photos/400/300/?random=10"
 }
-},
-new Hotel
-{
-Id = 2,
-Name = "Căn hộ dịch vụ",
-Location = "Hồ Chí Minh",
-Score = 8.9,
-ReviewText = "Rất tốt",
-Price = "950.000",
-Images = new List<string>
+    },
+    new Hotel
+    {
+      Id = 2,
+      Name = "Serviced Apartment",
+      Location = "Ho Chi Minh City",
+      Score = 8.9,
+      ReviewText = "Very Good",
+      Price = "950.000",
+      Images = new List<string>
 {
 "https://source.unsplash.com/400x300/?apartment,city",
 "https://picsum.photos/400/300/?random=11",
 "https://picsum.photos/400/300/?random=12"
 }
-},
-new Hotel
-{
-Id = 3,
-Name = "Resort biển",
-Location = "Nha Trang",
-Score = 9.2,
-ReviewText = "Xuất sắc",
-Price = "1.500.000",
-Images = new List<string>
+    },
+    new Hotel
+    {
+      Id = 3,
+      Name = "Beach Resort",
+      Location = "Nha Trang",
+      Score = 9.2,
+      ReviewText = "Excellent",
+      Price = "1.500.000",
+      Images = new List<string>
 {
 "https://source.unsplash.com/400x300/?resort,beach",
 "https://picsum.photos/400/300/?random=14",
 "https://picsum.photos/400/300/?random=15"
 }
-},
-new Hotel
-{
-Id = 4,
-Name = "Khách sạn đẹp",
-Location = "Đà Nẵng",
-Score = 9.7,
-ReviewText = "Trên cả tuyệt vời",
-Price = "1.800.000",
-Images = new List<string>
+    },
+    new Hotel
+    {
+      Id = 4,
+      Name = "Beautiful Hotel",
+      Location = "Da Nang",
+      Score = 9.7,
+      ReviewText = "Beyond Excellent",
+      Price = "1.800.000",
+      Images = new List<string>
 {
 "https://picsum.photos/400/300/?random=17",
 "https://picsum.photos/400/300/?random=18"
 }
-}
-};
+    }
+  };
 
   private void ToggleWishlist(int id)
   {
@@ -298,16 +298,16 @@ Images = new List<string>
   }
 }
 
-<!-- Các tính năng khác -->
+<!-- Other features -->
 <div class="container mt-5">
-  <h2 class="mb-4 text-center">Tại sao chọn chúng tôi?</h2>
+  <h2 class="mb-4 text-center">Why Choose Us?</h2>
   <div class="row">
     <div class="col-md-4 mb-4">
       <div class="card h-100 shadow-sm">
         <div class="card-body text-center">
           <i class="bi bi-house fs-1 text-primary mb-3"></i>
-          <h5 class="card-title">Đa dạng lựa chọn</h5>
-          <p class="card-text">Khám phá hàng ngàn khách sạn, nhà nghỉ và căn hộ trên khắp thế giới.</p>
+          <h5 class="card-title">Wide Selection</h5>
+          <p class="card-text">Explore thousands of hotels, guesthouses, and apartments worldwide.</p>
         </div>
       </div>
     </div>
@@ -315,8 +315,8 @@ Images = new List<string>
       <div class="card h-100 shadow-sm">
         <div class="card-body text-center">
           <i class="bi bi-percent fs-1 text-primary mb-3"></i>
-          <h5 class="card-title">Giá tốt nhất</h5>
-          <p class="card-text">Chúng tôi cam kết cung cấp giá cạnh tranh nhất trên thị trường.</p>
+          <h5 class="card-title">Best Prices</h5>
+          <p class="card-text">We are committed to offering the most competitive prices on the market.</p>
         </div>
       </div>
     </div>
@@ -324,21 +324,21 @@ Images = new List<string>
       <div class="card h-100 shadow-sm">
         <div class="card-body text-center">
           <i class="bi bi-shield-check fs-1 text-primary mb-3"></i>
-          <h5 class="card-title">An toàn & Bảo mật</h5>
-          <p class="card-text">Đặt phòng an toàn và bảo mật với hệ thống thanh toán đáng tin cậy.</p>
+          <h5 class="card-title">Safe &amp; Secure</h5>
+          <p class="card-text">Book safely and securely with our reliable payment system.</p>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Đăng ký đối tác -->
+<!-- Partner registration -->
 <div class="container mt-5">
   <div class="card bg-light text-center py-5">
     <div class="card-body">
-      <h2 class="card-title mb-4">Bạn là chủ khách sạn?</h2>
-      <p class="card-text mb-4">Đăng ký ngay để quảng bá khách sạn của bạn và tiếp cận hàng triệu khách hàng.</p>
-      <a href="#" class="btn btn-primary">Đăng ký đối tác</a>
+      <h2 class="card-title mb-4">Are you a hotel owner?</h2>
+      <p class="card-text mb-4">Register now to promote your hotel and reach millions of customers.</p>
+      <a href="#" class="btn btn-primary">Become a Partner</a>
     </div>
   </div>
 </div>
@@ -348,7 +348,7 @@ Images = new List<string>
   {
     if (firstRender)
     {
-      // Gọi JS init carousel sau khi render xong lần đầu
+      // Call JS to initialize the multi-card carousel after first render
       await JS.InvokeVoidAsync("initMultiCardCarousel");
     }
   }

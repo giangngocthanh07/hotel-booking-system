@@ -8,7 +8,7 @@
 
 @if (message == null)
 {
-    <p>Đang tải...</p>
+    <p>Loading...</p>
 }
 else
 {
@@ -27,21 +27,21 @@ else
             {
                 _httpClient = HttpClientFactory.CreateClient("HotelBookingAPI");
 
-                // Lấy token từ LocalStorage (lưu sau khi login thành công)
+                // Retrieve token from LocalStorage (saved after successful login)
                 var token = await localStorage.GetItemAsync<string>("accessToken");
 
                 if (string.IsNullOrEmpty(token))
                 {
-                    message = "Chưa có token, vui lòng đăng nhập lại.";
+                    message = "No token found, please log in again.";
                     StateHasChanged();
                     return;
                 }
 
-                // Gắn Authorization Header: Bearer <token>
+                // Attach Authorization Header: Bearer <token>
                 _httpClient.DefaultRequestHeaders.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-                // Gọi API OwnerDashboard
+                // Call OwnerDashboard API
                 var response = await _httpClient.GetAsync("Hotel/get-owner-dashboard");
 
                 if (response.IsSuccessStatusCode)
@@ -50,20 +50,20 @@ else
                 }
                 else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                 {
-                    message = "⚠️ Token hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại.";
+                    message = "⚠️ Token has expired or is invalid. Please log in again.";
                 }
                 else if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
                 {
-                    message = "❌ Bạn không có quyền truy cập trang này.";
+                    message = "❌ You do not have permission to access this page.";
                 }
                 else
                 {
-                    message = $"Lỗi: {response.StatusCode}";
+                    message = $"Error: {response.StatusCode}";
                 }
             }
             catch (Exception ex)
             {
-                message = $"Lỗi hệ thống: {ex.Message}";
+                message = $"System error: {ex.Message}";
             }
 
             StateHasChanged();

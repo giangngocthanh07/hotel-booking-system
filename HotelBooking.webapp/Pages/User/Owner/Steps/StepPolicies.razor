@@ -5,11 +5,11 @@
 
 <MudForm @ref="_form" Class="pa-2">
 
-    <h2 class="text-primary mb-4">Thiết lập chính sách Khách sạn</h2>
+    <h2 class="text-primary mb-4">Configure Hotel Policies</h2>
 
     @if (FormState.IsLoading)
     {
-        <p><em>Đang tải tất cả chính sách...</em></p>
+        <p><em>Loading all policies...</em></p>
     }
     else
     {
@@ -22,12 +22,12 @@
 
                         @if (group.AvailablePolicies == null)
                         {
-                            <p><em>Đang tải...</em></p>
+                            <p><em>Loading...</em></p>
                         }
                         else
                         {
                             <select class="form-control" @bind="group.SelectedPolicyId">
-                                <option value="0">-- Chọn @group.PolicyType.Name --</option>
+                                <option value="0">-- Select @group.PolicyType.Name --</option>
                                 @foreach (var policy in group.AvailablePolicies)
                                 {
                                     <option value="@policy.Id">@policy.Name</option>
@@ -41,9 +41,9 @@
     }
 
     @* @if (!FormState.PolicyGroups.Any())
-    {
-        <MudText Color="Color.Error">Vui lòng chọn ít nhất 1 policy</MudText>
-    } *@
+        {
+        <MudText Color="Color.Error">Please select at least 1 policy</MudText>
+        } *@
 </MudForm>
 
 
@@ -53,7 +53,7 @@
     {
         FormState.OnChange += StateHasChanged;
 
-        // Yêu cầu State tải dữ liệu (chỉ tải nếu list rỗng)
+        // Request State to load data (only load if list is empty)
         if (FormState.PolicyGroups.Count == 0)
         {
             await FormState.LoadPolicies();

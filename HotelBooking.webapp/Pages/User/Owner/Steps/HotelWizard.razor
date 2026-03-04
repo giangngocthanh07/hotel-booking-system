@@ -10,17 +10,17 @@
 <MudPaper Class="pa-4 mt-4" Style="max-width:900px;margin:auto;">
     <MudStepper @bind-ActiveIndex="_activeStep">
         <ChildContent>
-            <MudStep Title="Basic Info" SecondaryText="Thông tin cơ bản" />
-            <MudStep Title="Amenities" SecondaryText="Tiện ích" />
-            <MudStep Title="Policies" SecondaryText="Chính sách" />
-            <MudStep Title="Images" SecondaryText="Ảnh khách sạn" />
+            <MudStep Title="Basic Info" SecondaryText="Basic Information" />
+            <MudStep Title="Amenities" SecondaryText="Amenities &amp; Facilities" />
+            <MudStep Title="Policies" SecondaryText="Hotel Policies" />
+            <MudStep Title="Images" SecondaryText="Hotel Photos" />
         </ChildContent>
         <ActionContent Context="stepper">
-            <!-- Nút điều hướng sẽ đặt ở đây -->
-            <!-- Nút Previous -->
-            <!-- Nút Next / Complete -->
-            <!-- Nút Reset -->
-            <!-- Hiển thị nút Reset ở tất cả các bước -->
+            <!-- Navigation buttons go here -->
+            <!-- Previous button -->
+            <!-- Next / Complete button -->
+            <!-- Reset button -->
+            <!-- Show Reset button on all steps -->
         </ActionContent>
     </MudStepper>
 
@@ -46,7 +46,7 @@
             }
         </div>
 
-        <!-- Điều khiển -->
+        <!-- Navigation controls -->
         <div class="d-flex justify-content-between mt-4">
             <MudButton Variant="Variant.Outlined" Disabled="@(_activeStep == 0)" OnClick="PrevStep">
                 PREVIOUS
@@ -85,19 +85,19 @@
     protected override async Task OnInitializedAsync()
     {
         _httpClient = _httpClientFactory.CreateClient("HotelBookingAPI");
-        // Gọi API để lấy danh sách amenities
+        // Call API to load the list of amenities
         await FormState.LoadAmenitiesAsync();
-        // Chỉ gọi API nếu danh sách thành phố đang rỗng
-        
+        // Only call API if the city list is empty
 
 
-        // Gọi API lấy toàn bộ PolicyType (Hủy phòng, Nhận phòng, Trả phòng)
+
+        // Call API to load all PolicyTypes (Cancellation, Check-in, Check-out)
         
     }
 
     private void NextStep()
     {
-        // validate từng step trước khi Next
+        // Validate each step before proceeding to Next
         bool valid = _activeStep switch
         {
             0 => FormState.ValidateBasicInfo(),
@@ -114,7 +114,7 @@
         }
         else
         {
-            Snackbar.Add("Vui lòng kiểm tra lại thông tin!", Severity.Error);
+            Snackbar.Add("Please review the information!", Severity.Error);
             // Console.WriteLine($"CheckInId={FormState.SelectedCheckInId}, CheckOutId={FormState.SelectedCheckOutId}, CancelId={FormState.SelectedCancellationId}");
         }
     }
@@ -129,7 +129,7 @@
     {
         FormState.Reset();
         _activeStep = 0;
-        Snackbar.Add("Form đã được reset", Severity.Info);
+        Snackbar.Add("Form has been reset", Severity.Info);
     }
 
     private async Task HandleSubmit()
@@ -146,18 +146,18 @@
             // 
             if (success)
             {
-                Snackbar.Add("Gửi thành công!", Severity.Success);
+                Snackbar.Add("Submitted successfully!", Severity.Success);
                 FormState.Reset();
                 _activeStep = 0;
             }
             else
             {
-                Snackbar.Add("Đã có lỗi xảy ra. Vui lòng thử lại!", Severity.Error);
+                Snackbar.Add("An error occurred. Please try again!", Severity.Error);
             }
         }
         else
         {
-            Snackbar.Add("Vui lòng kiểm tra lại thông tin!", Severity.Error);
+            Snackbar.Add("Please review the information!", Severity.Error);
         }
 
         

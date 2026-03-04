@@ -4,54 +4,54 @@
 
 <MudForm @ref="_form" Model="FormState.HotelImages" Class="pa-2">
     <MudPaper Class="pa-2 mb-3" Style="background:#FFF3CD; color:#856404; border:1px solid #ffeeba; border-radius:6px;">
-        Hãy chọn <b>5 ảnh</b> cho khách sạn của bạn
+        Please select <b>5 photos</b> for your hotel
     </MudPaper>
 
     <InputFile OnChange="HandleFiles" multiple accept="image/*" Class="mb-3" />
 
     <MudText Class="mb-3">Uploaded: @( (FormState.HotelImages.MainFile != null ? 1 : 0) +
-                FormState.HotelImages.SubFiles.Count ) / 5 ảnh
+        FormState.HotelImages.SubFiles.Count ) / 5 photos
     </MudText>
 
     @if (FormState.HotelImages.MainFile != null)
     {
         <MudGrid Class="mt-3">
             <!-- Main photo -->
-            <MudItem xs="12" sm="6">
+        <MudItem xs="12" sm="6">
                 <div style="width:100%; position:relative;">
                     <img src="@FormState.HotelImages.MainImagePreviewUrl"
-                        style="width:100%;height:250px;object-fit:cover; border-radius:8px;border:3px solid blue;" />
+                    style="width:100%;height:250px;object-fit:cover; border-radius:8px;border:3px solid blue;" />
 
                     <span
-                        style="position:absolute;bottom:6px;left:6px; background:blue;color:#fff;
+                    style="position:absolute;bottom:6px;left:6px; background:blue;color:#fff;
                                                                                                                                                      padding:3px 8px; border-radius:4px;font-size:12px;">
                         Main Photo
                     </span>
 
                     <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Error" Size="Size.Small"
-                        Style="position:absolute;top:6px;right:6px; background:#fff;
+                    Style="position:absolute;top:6px;right:6px; background:#fff;
                                                                                                                                                               border-radius:50%;z-index:10;"
-                        OnClick="RemoveMain" />
+                    OnClick="RemoveMain" />
                 </div>
             </MudItem>
 
             <!-- Sub photos -->
-            <MudItem xs="12" sm="6">
+        <MudItem xs="12" sm="6">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                     @for (int i = 0; i < FormState.HotelImages.SubImagesPreviewUrl.Count; i++)
                     {
                         var idx = i;
                         <div style="position:relative;cursor:pointer;">
                             <img src="@FormState.HotelImages.SubImagesPreviewUrl[idx]"
-                                style="width:100%;height:120px;object-fit:cover; border-radius:6px;border:2px solid #ddd;" />
+                        style="width:100%;height:120px;object-fit:cover; border-radius:6px;border:2px solid #ddd;" />
 
                             <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Error" Size="Size.Small"
-                                Style="position:absolute;top:4px;right:4px; background:#fff;
+                        Style="position:absolute;top:4px;right:4px; background:#fff;
                                                                                                                                                                                                                                                                                           border-radius:50%;z-index:10;"
-                                OnClick="@(() => RemoveSub(idx))" />
+                        OnClick="@(() => RemoveSub(idx))" />
 
                             <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
-                                Style="position:absolute;bottom:6px;left:6px;z-index:10;" OnClick="@(() => SetMainPhoto(idx))">
+                        Style="position:absolute;bottom:6px;left:6px;z-index:10;" OnClick="@(() => SetMainPhoto(idx))">
                                 Set Main
                             </MudButton>
                         </div>
@@ -109,22 +109,22 @@
     {
         if (subIndex < 0 || subIndex >= FormState.HotelImages.SubFiles.Count) return;
 
-        // Lấy file/preview Main hiện tại ra
+        // Retrieve the current Main file and preview
         var currentMainFile = FormState.HotelImages.MainFile;
         var currentMainPreview = FormState.HotelImages.MainImagePreviewUrl;
 
-        // 1. Đặt Sub được chọn lên làm Main
+        // 1. Set the selected Sub as the new Main
         FormState.HotelImages.MainFile = FormState.HotelImages.SubFiles[subIndex];
         FormState.HotelImages.MainImagePreviewUrl = FormState.HotelImages.SubImagesPreviewUrl[subIndex];
 
-        // 2. Xóa Sub đó khỏi danh sách Sub
+        // 2. Remove the used Sub from the Sub list
         FormState.HotelImages.SubFiles.RemoveAt(subIndex);
         FormState.HotelImages.SubImagesPreviewUrl.RemoveAt(subIndex);
 
-        // 3. Thêm Main cũ vào lại danh sách Sub (nếu Main cũ tồn tại)
+        // 3. Push the old Main back into the Sub list (if old Main existed)
         if (currentMainFile != null)
         {
-            // Chèn vào đúng vị trí cũ của Sub
+            // Insert at the old Sub's position
             FormState.HotelImages.SubFiles.Insert(subIndex, currentMainFile);
             FormState.HotelImages.SubImagesPreviewUrl.Insert(subIndex, currentMainPreview);
         }
@@ -134,7 +134,7 @@
 
     private void RemoveMain()
     {
-        // Nếu có ảnh Sub, đôn ảnh Sub đầu tiên lên làm Main
+        // If there are Sub photos, promote the first Sub to Main
         if (FormState.HotelImages.SubFiles.Count > 0)
         {
             FormState.HotelImages.MainFile = FormState.HotelImages.SubFiles[0];
@@ -145,7 +145,7 @@
         }
         else
         {
-            // Nếu không còn Sub, chỉ cần xóa Main
+            // If no Sub photos remain, just clear Main
             FormState.HotelImages.MainFile = null;
             FormState.HotelImages.MainImagePreviewUrl = null;
         }

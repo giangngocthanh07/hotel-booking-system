@@ -1,6 +1,6 @@
 public interface IFileHelper
 {
-    // Các phương thức liên quan đến file (ảnh)
+    // Methods related to file (image) handling
     public Task<UploadFileDTO> ConvertToUploadFileVM(IFormFile file);
 };
 
@@ -15,7 +15,7 @@ public class FileHelper : IFileHelper
         try
         {
             await file.CopyToAsync(ms);
-            ms.Position = 0; // Quan trọng: Reset stream
+            ms.Position = 0; // Important: Reset the stream position
 
             var uploadFileDTO = new UploadFileDTO
             {
@@ -28,9 +28,9 @@ public class FileHelper : IFileHelper
         }
         catch (Exception)
         {
-            // Nếu có lỗi, hãy tự dọn dẹp stream
+            // On error, dispose the stream to avoid memory leaks
             await ms.DisposeAsync();
-            throw; // Ném lỗi ra ngoài
+            throw; // Re-throw to caller
         }
 
     }
