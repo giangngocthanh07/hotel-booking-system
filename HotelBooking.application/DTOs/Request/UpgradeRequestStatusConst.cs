@@ -3,9 +3,8 @@ using HotelBooking.application.DTOs.Request.Base;
 namespace HotelBooking.application.DTOs.Request;
 
 /// <summary>
-/// Các trạng thái của yêu cầu nâng cấp Owner.
-/// [OBSOLETE] Sử dụng RequestStatusConst từ Base namespace thay thế.
-/// Class này giữ lại để backward compatibility.
+/// Status constants for Upgrade Request.
+/// [OBSOLETE] Use HotelBooking.application.DTOs.Request.Base.RequestStatusConst instead.
 /// </summary>
 [Obsolete("Use HotelBooking.application.DTOs.Request.Base.RequestStatusConst instead")]
 public static class UpgradeRequestStatusConst
@@ -17,13 +16,13 @@ public static class UpgradeRequestStatusConst
     public const string None = RequestStatusConst.None;
 
     /// <summary>
-    /// Kiểm tra xem status có hợp lệ không
+    /// Check if status is valid
     /// </summary>
     [Obsolete("Use RequestStatusConst.IsValid instead")]
     public static bool IsValid(string? status) => RequestStatusConst.IsValid(status);
 
     /// <summary>
-    /// Lấy danh sách tất cả status hợp lệ
+    /// Get all valid statuses
     /// </summary>
     [Obsolete("Use RequestStatusConst.GetAll instead")]
     public static List<string> GetAll() => RequestStatusConst.GetAll();

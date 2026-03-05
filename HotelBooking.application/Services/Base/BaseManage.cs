@@ -1,5 +1,6 @@
 using FluentValidation;
 using HotelBooking.application.Helpers;
+using HotelBooking.application.Interfaces;
 
 public interface IBaseManage<TEntity, TRepo, TDto, TCreateDTO, TUpdateDTO> : ICommonManage<TDto, TCreateDTO, TUpdateDTO>
 {
@@ -47,13 +48,13 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateDTO, TUpdateDTO> :
     // Validate business logic for Create (e.g., check duplicate name on new entry)
     protected virtual async Task<ValidationResult> ValidateCreateLogicAsync(TCreateDTO dto)
     {
-        return new ValidationResult(); // Valid by default
+        return await Task.FromResult(new ValidationResult()); // Valid by default
     }
 
     // Validate business logic for Update (e.g., check duplicate name excluding current ID)
     protected virtual async Task<ValidationResult> ValidateUpdateLogicAsync(TUpdateDTO dto, int id)
     {
-        return new ValidationResult(); // Valid by default
+        return await Task.FromResult(new ValidationResult()); // Valid by default
     }
 
     public virtual async Task<ApiResponse<TDto>> GetByIdAsync(int id)

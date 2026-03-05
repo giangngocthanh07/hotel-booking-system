@@ -1,8 +1,8 @@
 namespace HotelBooking.application.DTOs.User.Login
 {
     /// <summary>
-    /// DTO dùng để đăng nhập tài khoản.
-    /// Chứa thông tin cần thiết để xác thực người dùng.
+    /// DTO used to login an account.
+    /// Contains only the necessary information for authentication.
     /// </summary>
     public class LoginUserDTO
     {

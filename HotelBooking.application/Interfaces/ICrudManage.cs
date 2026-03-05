@@ -1,3 +1,4 @@
+namespace HotelBooking.application.Interfaces;
 public interface ICommonManage<TDto, TCreateDTO, TUpdateDTO>
 {
     Task<ApiResponse<TDto>> GetByIdAsync(int id);

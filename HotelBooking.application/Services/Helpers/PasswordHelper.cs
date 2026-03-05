@@ -1,5 +1,3 @@
-using BCrypt.Net;
-
 namespace HotelBooking.application.Helpers;
 
 public static class PasswordHelper

@@ -1,18 +1,18 @@
-// 1. Class nhận tham số phân trang từ Client gửi lên
+// 1. Class for receiving pagination parameters from Client
 public class PagingRequest
 {
-    public int? PageIndex { get; set; } = 1; // Mặc định trang 1
-    public int? PageSize { get; set; } = 10; // Mặc định 10 dòng
+    public int? PageIndex { get; set; } = 1; // Default page 1
+    public int? PageSize { get; set; } = 10; // Default 10 items per page
 }
 
-// 2. Class trả về kết quả kèm tổng số trang
+// 2. Class for returning results with total pages
 public class PagedResult<T>
 {
     public List<T> Items { get; set; }
-    public int TotalCount { get; set; }      // Tổng số bản ghi (để tính số trang)
+    public int TotalCount { get; set; }      // Total number of records (to calculate pages)
     public int PageIndex { get; set; }
     public int PageSize { get; set; }
-    // Tính toán an toàn hơn (tránh chia cho 0)
+    // Safer calculation (avoid division by 0)
     public int TotalPages
     {
         get

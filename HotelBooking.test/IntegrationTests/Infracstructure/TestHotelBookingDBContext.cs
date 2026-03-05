@@ -4,16 +4,16 @@ using Microsoft.EntityFrameworkCore;
 namespace HotelBooking.Tests.Integration;
 
 /// <summary>
-/// DbContext dùng RIÊNG cho Integration Test.
+/// DbContext specifically designed for Integration Testing.
 /// 
-/// VẤN ĐỀ: Vì project dùng DB-First, file HotelBookingDBContext.cs được scaffold tự động.
-/// Trong đó OnConfiguring() luôn gọi UseSqlServer("Name=connectionStringHotelBooking")
-/// → Khi ta truyền connection string khác (từ Docker container) qua constructor, nó bị conflict.
+/// THE CHALLENGE: Since the project uses a DB-First approach, the HotelBookingDBContext.cs file is automatically scaffolded.
+/// By default, OnConfiguring() always calls UseSqlServer("Name=connectionStringHotelBooking").
+/// This causes a conflict when we try to inject a different connection string (from the Docker container) via the constructor.
 /// 
-/// GIẢI PHÁP: Tạo class con, override OnConfiguring() để BỎ QUA cái connection string cứng.
-/// Như vậy ta KHÔNG CẦN SỬA file generated (production code vẫn nguyên).
+/// THE SOLUTION: Create this derived class and override OnConfiguring() to BYPASS the hardcoded connection string.
+/// This way, we DON'T NEED TO MODIFY the generated file, keeping production code intact.
 /// 
-/// Schema (OnModelCreating) vẫn được kế thừa 100% từ cha → Tables tạo ra giống hệt production.
+/// The schema (OnModelCreating) is 100% inherited from the parent -> generated tables will be identical to production.
 /// </summary>
 public class TestHotelBookingDBContext : HotelBookingDBContext
 {
@@ -23,12 +23,12 @@ public class TestHotelBookingDBContext : HotelBookingDBContext
     }
 
     /// <summary>
-    /// Override để BỎ QUA connection string cứng trong file scaffold.
-    /// Connection thật sẽ được lấy từ DbContextOptions (truyền qua constructor).
+    /// Overrides to BYPASS the hardcoded connection string in the scaffolded file.
+    /// The actual connection will be resolved from DbContextOptions passed via the constructor.
     /// </summary>
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        // KHÔNG gọi base.OnConfiguring() → bỏ qua UseSqlServer("Name=...")
-        // Connection string từ Testcontainers đã được set qua DbContextOptions rồi
+        // DO NOT call base.OnConfiguring() -> this avoids executing UseSqlServer("Name=...")
+        // The connection string from Testcontainers is already configured through DbContextOptions.
     }
 }

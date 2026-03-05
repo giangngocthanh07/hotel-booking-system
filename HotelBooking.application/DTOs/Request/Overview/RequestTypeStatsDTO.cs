@@ -1,7 +1,7 @@
 namespace HotelBooking.application.DTOs.Request.Overview
 {
     /// <summary>
-    /// Stats cho từng loại request
+    /// Statistics for each request type
     /// </summary>
     public class RequestTypeStatsDTO
     {

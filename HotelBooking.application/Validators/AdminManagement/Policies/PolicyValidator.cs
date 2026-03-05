@@ -1,22 +1,22 @@
 using FluentValidation;
+using HotelBooking.application.Helpers; // Giả sử MessageResponse nằm ở đây
 
 namespace HotelBooking.application.Validators.AdminManagement.Policies;
 
-// 1. Validator cha cho CREATE (điều phối đa hình)
+// 1. Parent Validator for CREATE (Polymorphic coordination)
 public class PolicyCreateValidator : AbstractValidator<PolicyCreateDTO>
 {
     public PolicyCreateValidator()
     {
         RuleFor(x => x.Name)
-            .NotEmpty().WithMessage("Policy name is required.")
-            .MaximumLength(150).WithMessage("Policy name is too long.");
+            .NotEmpty().WithMessage(MessageResponse.AdminManagement.Policy.EMPTY_NAME)
+            .MaximumLength(50).WithMessage(MessageResponse.AdminManagement.Policy.LONG_NAME);
 
         RuleFor(x => x.Description)
-            .MaximumLength(500).WithMessage("Description is too long.");
+            .MaximumLength(500).WithMessage(MessageResponse.AdminManagement.Policy.LONG_DESCRIPTION);
 
-        // Kiểm tra TypeId phải thuộc Enum đã định nghĩa
         RuleFor(x => x.TypeId)
-            .IsInEnum().WithMessage("Invalid Policy Type ID.");
+            .IsInEnum().WithMessage(MessageResponse.AdminManagement.Policy.INVALID_TYPE);
 
         RuleFor(x => x).SetInheritanceValidator(v =>
         {
@@ -28,19 +28,18 @@ public class PolicyCreateValidator : AbstractValidator<PolicyCreateDTO>
     }
 }
 
-// 2. Validator cha cho UPDATE (điều phối đa hình)
+// 2. Parent Validator for UPDATE (Polymorphic coordination)
 public class PolicyUpdateValidator : AbstractValidator<PolicyUpdateDTO>
 {
     public PolicyUpdateValidator()
     {
         RuleFor(x => x.Name)
-            .NotEmpty().WithMessage("Policy name is required.")
-            .MaximumLength(150).WithMessage("Policy name is too long.");
+            .NotEmpty().WithMessage(MessageResponse.AdminManagement.Policy.EMPTY_NAME)
+            .MaximumLength(50).WithMessage(MessageResponse.AdminManagement.Policy.LONG_NAME);
 
         RuleFor(x => x.Description)
-            .MaximumLength(500).WithMessage("Description is too long.");
+            .MaximumLength(500).WithMessage(MessageResponse.AdminManagement.Policy.LONG_DESCRIPTION);
 
-        // Đa hình: tự động chọn validator con theo kiểu thực tế
         RuleFor(x => x).SetInheritanceValidator(v =>
         {
             v.Add(new CheckInOutPolicyUpdateValidator());
@@ -51,26 +50,25 @@ public class PolicyUpdateValidator : AbstractValidator<PolicyUpdateDTO>
     }
 }
 
-// 3. Các validator con cho từng loại policy (CREATE)
+// 3. Child Validators for each policy type (CREATE)
 public class CheckInOutPolicyCreateValidator : AbstractValidator<CheckInOutPolicyCreateDTO>
 {
     public CheckInOutPolicyCreateValidator()
     {
-        // Kiểm tra nếu dùng DTO này thì TypeId BẮT BUỘC phải là 1002
         RuleFor(x => x.TypeId)
             .Equal((int)PolicyTypeEnum.CheckInOut)
-            .WithMessage("TypeId mismatch: Expected 1002 for CheckInOut policy.");
+            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_ID_BY_TYPE);
 
-        RuleFor(x => x.CheckInTime).NotNull().WithMessage("Check-in time is required.");
-        RuleFor(x => x.CheckOutTime).NotNull().WithMessage("Check-out time is required.");
+        RuleFor(x => x.CheckInTime).NotNull().WithMessage(MessageResponse.AdminManagement.Policy.EMPTY_CHECKIN_TIME);
+        RuleFor(x => x.CheckOutTime).NotNull().WithMessage(MessageResponse.AdminManagement.Policy.EMPTY_CHECKOUT_TIME);
 
         RuleFor(x => x.EarlyCheckInFee)
             .GreaterThanOrEqualTo(0).When(x => x.EarlyCheckInFee.HasValue)
-            .WithMessage("Early check-in fee must be >= 0.");
+            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_EARLY_CHECKIN_FEE);
 
         RuleFor(x => x.LateCheckOutFee)
             .GreaterThanOrEqualTo(0).When(x => x.LateCheckOutFee.HasValue)
-            .WithMessage("Late check-out fee must be >= 0.");
+            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_LATE_CHECKOUT_FEE);
     }
 }
 
@@ -80,11 +78,11 @@ public class CancellationPolicyCreateValidator : AbstractValidator<CancellationP
     {
         RuleFor(x => x.DaysBeforeCheckIn)
             .GreaterThanOrEqualTo(0).When(x => x.DaysBeforeCheckIn.HasValue)
-            .WithMessage("Days before check-in must be >= 0.");
+            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_DAYS_BEFORE_CHECKIN);
 
         RuleFor(x => x.RefundPercent)
             .InclusiveBetween(0, 100).When(x => x.RefundPercent.HasValue)
-            .WithMessage("Refund percent must be between 0 and 100.");
+            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_REFUND_PERCENT);
     }
 }
 
@@ -93,14 +91,16 @@ public class ChildrenPolicyCreateValidator : AbstractValidator<ChildrenPolicyCre
     public ChildrenPolicyCreateValidator()
     {
         RuleFor(x => x.MinAge)
-            .GreaterThanOrEqualTo(0).When(x => x.MinAge.HasValue);
+            .GreaterThanOrEqualTo(0).When(x => x.MinAge.HasValue)
+            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_MIN_AGE);
 
         RuleFor(x => x.MaxAge)
             .GreaterThanOrEqualTo(x => x.MinAge ?? 0).When(x => x.MaxAge.HasValue && x.MinAge.HasValue)
-            .WithMessage("Max age must be greater than or equal to min age.");
+            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_MAX_AGE);
 
         RuleFor(x => x.ExtraBedFee)
-            .GreaterThanOrEqualTo(0).When(x => x.ExtraBedFee.HasValue);
+            .GreaterThanOrEqualTo(0).When(x => x.ExtraBedFee.HasValue)
+            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_EXTRA_BED_FEE);
     }
 }
 
@@ -109,30 +109,26 @@ public class PetPolicyCreateValidator : AbstractValidator<PetPolicyCreateDTO>
     public PetPolicyCreateValidator()
     {
         RuleFor(x => x.PetFee)
-            .GreaterThanOrEqualTo(0).When(x => x.PetFee.HasValue);
-
-        // Không cần validate IsPetAllowed vì bool luôn có giá trị
+            .GreaterThanOrEqualTo(0).When(x => x.PetFee.HasValue)
+            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_PET_FEE);
     }
 }
 
-// 4. Các validator con cho từng loại policy (UPDATE)
+// 4. Child Validators for each policy type (UPDATE)
 public class CheckInOutPolicyUpdateValidator : AbstractValidator<CheckInOutPolicyUpdateDTO>
 {
     public CheckInOutPolicyUpdateValidator()
     {
-        RuleFor(x => x.CheckInTime)
-            .NotNull().WithMessage("Check-in time is required.");
-
-        RuleFor(x => x.CheckOutTime)
-            .NotNull().WithMessage("Check-out time is required.");
+        RuleFor(x => x.CheckInTime).NotNull().WithMessage(MessageResponse.AdminManagement.Policy.EMPTY_CHECKIN_TIME);
+        RuleFor(x => x.CheckOutTime).NotNull().WithMessage(MessageResponse.AdminManagement.Policy.EMPTY_CHECKOUT_TIME);
 
         RuleFor(x => x.EarlyCheckInFee)
             .GreaterThanOrEqualTo(0).When(x => x.EarlyCheckInFee.HasValue)
-            .WithMessage("Early check-in fee must be >= 0.");
+            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_EARLY_CHECKIN_FEE);
 
         RuleFor(x => x.LateCheckOutFee)
             .GreaterThanOrEqualTo(0).When(x => x.LateCheckOutFee.HasValue)
-            .WithMessage("Late check-out fee must be >= 0.");
+            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_LATE_CHECKOUT_FEE);
     }
 }
 
@@ -142,11 +138,11 @@ public class CancellationPolicyUpdateValidator : AbstractValidator<CancellationP
     {
         RuleFor(x => x.DaysBeforeCheckIn)
             .GreaterThanOrEqualTo(0).When(x => x.DaysBeforeCheckIn.HasValue)
-            .WithMessage("Days before check-in must be >= 0.");
+            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_DAYS_BEFORE_CHECKIN);
 
         RuleFor(x => x.RefundPercent)
             .InclusiveBetween(0, 100).When(x => x.RefundPercent.HasValue)
-            .WithMessage("Refund percent must be between 0 and 100.");
+            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_REFUND_PERCENT);
     }
 }
 
@@ -155,14 +151,16 @@ public class ChildrenPolicyUpdateValidator : AbstractValidator<ChildrenPolicyUpd
     public ChildrenPolicyUpdateValidator()
     {
         RuleFor(x => x.MinAge)
-            .GreaterThanOrEqualTo(0).When(x => x.MinAge.HasValue);
+            .GreaterThanOrEqualTo(0).When(x => x.MinAge.HasValue)
+            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_MIN_AGE);
 
         RuleFor(x => x.MaxAge)
             .GreaterThanOrEqualTo(x => x.MinAge ?? 0).When(x => x.MaxAge.HasValue && x.MinAge.HasValue)
-            .WithMessage("Max age must be greater than or equal to min age.");
+            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_MAX_AGE);
 
         RuleFor(x => x.ExtraBedFee)
-            .GreaterThanOrEqualTo(0).When(x => x.ExtraBedFee.HasValue);
+            .GreaterThanOrEqualTo(0).When(x => x.ExtraBedFee.HasValue)
+            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_EXTRA_BED_FEE);
     }
 }
 
@@ -171,6 +169,7 @@ public class PetPolicyUpdateValidator : AbstractValidator<PetPolicyUpdateDTO>
     public PetPolicyUpdateValidator()
     {
         RuleFor(x => x.PetFee)
-            .GreaterThanOrEqualTo(0).When(x => x.PetFee.HasValue);
+            .GreaterThanOrEqualTo(0).When(x => x.PetFee.HasValue)
+            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_PET_FEE);
     }
 }

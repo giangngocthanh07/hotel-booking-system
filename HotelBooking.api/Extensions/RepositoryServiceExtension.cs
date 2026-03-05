@@ -11,7 +11,7 @@ public static class RepositoryServiceExtension
         services.AddScoped<IPolicyTypeRepository, PolicyTypeRepository>();
         services.AddScoped<IRoomQualityGroupRepository, RoomQualityGroupRepository>();
 
-        // Đảm bảo các repo liên quan khác cũng có mặt
+        // Ensure related repos are present
         services.AddScoped<ICityRepository, CityRepository>();
         services.AddScoped<IPolicyRepository, PolicyRepository>();
         services.AddScoped<IServiceRepository, ServiceRepository>();
@@ -37,7 +37,7 @@ public static class RepositoryServiceExtension
         services.AddScoped<IHotelPolicyRepository, HotelPolicyRepository>();
         services.AddScoped<IHotelAmenityRepository, HotelAmenityRepository>();
         services.AddScoped<IHotelImageRepository, HotelImageRepository>();
-        // ... Thêm các repo liên quan đến Hotel ở đây
+        // ... Add related hotel repos here
         return services;
     }
 
@@ -47,7 +47,7 @@ public static class RepositoryServiceExtension
         services.AddScoped<IAmenityRepository, AmenityRepository>();
         services.AddScoped<IPolicyRepository, PolicyRepository>();
         services.AddScoped<IServiceRepository, ServiceRepository>();
-        // ... Thêm các repo quản trị hệ thống ở đây
+        // ... Add related admin repos here
         return services;
     }
 }

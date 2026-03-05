@@ -16,7 +16,7 @@ public enum PolicyTypeEnum
 }
 
 // ===========================================================================
-// POLYMORPHIC DTO (Output - Hiển thị)
+// POLYMORPHIC DTO (Output - Display)
 // ===========================================================================
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "discriminator")]
 [JsonDerivedType(typeof(CheckInOutPolicyDTO), typeDiscriminator: "checkInOut")]
@@ -69,7 +69,7 @@ public class PetPolicyDTO : PolicyDTO
 }
 
 // ===========================================================================
-// ADDITIONAL DATA CLASSES (Dùng cho JSON serialization)
+// ADDITIONAL DATA CLASSES (Used for JSON serialization)
 // ===========================================================================
 public class CheckInOutAdditionalData
 {
@@ -100,7 +100,7 @@ public class PetAdditionalData
 }
 
 // ===========================================================================
-// POLYMORPHIC CREATE DTO (Input - Tạo mới)
+// POLYMORPHIC CREATE DTO (Input - Create)
 // ===========================================================================
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "discriminator")]
 [JsonDerivedType(typeof(CheckInOutPolicyCreateDTO), typeDiscriminator: "checkInOut")]
@@ -141,7 +141,7 @@ public class PetPolicyCreateDTO : PolicyCreateDTO
 }
 
 // ===========================================================================
-// POLYMORPHIC UPDATE DTO (Input - Cập nhật)
+// POLYMORPHIC UPDATE DTO (Input - Update)
 // ===========================================================================
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "discriminator")]
 [JsonDerivedType(typeof(CheckInOutPolicyUpdateDTO), typeDiscriminator: "checkInOut")]

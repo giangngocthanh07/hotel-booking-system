@@ -6,13 +6,12 @@ public class PagingRequestValidator : AbstractValidator<PagingRequest>
 {
     public PagingRequestValidator()
     {
-        // 1. Kiểm tra PageIndex (Trang số mấy)
-        // Nếu null hoặc <= 0 -> Bắt lỗi
+        // 1. PageIndex Validation
         RuleFor(x => x.PageIndex)
             .NotNull().WithMessage(MessageResponse.Pagination.MISSING_PAGE_INDEX)
             .GreaterThan(0).WithMessage(MessageResponse.Pagination.INVALID_PAGE_INDEX);
 
-        // 2. Kiểm tra PageSize (Số dòng trên trang)
+        // 2. PageSize Validation
         RuleFor(x => x.PageSize)
             .NotNull().WithMessage(MessageResponse.Pagination.MISSING_PAGE_SIZE)
             .GreaterThan(0).WithMessage(MessageResponse.Pagination.INVALID_PAGE_SIZE)

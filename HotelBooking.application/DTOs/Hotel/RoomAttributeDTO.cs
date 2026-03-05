@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 public class GetRoomAttributeRequest
 {
     public RoomAttributeType Type { get; set; }
-    public PagingRequest Paging { get; set; } = new(); // Init sẵn để tránh null
+    public PagingRequest Paging { get; set; } = new(); // Init to avoid null
     public int? TypeId { get; set; }
 }
 
@@ -16,9 +16,9 @@ public enum RoomAttributeType
     RoomQuality = 4
 }
 
-// Báo hiệu đây là lớp đa hình
+// Indicate this is a polymorphic class
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "discriminator")]
-// Khai báo các con và đặt tên định danh (discriminator) cho chúng
+// Declare children and set identifiers (discriminators) for them
 [JsonDerivedType(typeof(UnitTypeDTO), typeDiscriminator: "unit")]
 [JsonDerivedType(typeof(RoomViewDTO), typeDiscriminator: "roomview")]
 [JsonDerivedType(typeof(BedTypeDTO), typeDiscriminator: "bed")]
@@ -30,63 +30,63 @@ public abstract class RoomAttributeDTO : BaseAdminDTO
 
 public class UnitTypeDTO : RoomAttributeDTO
 {
-    public override RoomAttributeType AttributeType => RoomAttributeType.UnitType; // Tự động gán số 1
+    public override RoomAttributeType AttributeType => RoomAttributeType.UnitType; // Auto assign 1
     public bool? IsEntirePlace { get; set; } = false;
 }
 
 public class RoomViewDTO : RoomAttributeDTO
 {
-    public override RoomAttributeType AttributeType => RoomAttributeType.RoomView; // Tự động gán số 3
+    public override RoomAttributeType AttributeType => RoomAttributeType.RoomView; // Auto assign 3
 }
 
 public class BedTypeDTO : RoomAttributeDTO
 {
-    public override RoomAttributeType AttributeType => RoomAttributeType.BedType; // Tự động gán số 2
+    public override RoomAttributeType AttributeType => RoomAttributeType.BedType; // Auto assign 2
     public int? DefaultCapacity { get; set; } = 1;
 
-    // --- CÁC TRƯỜNG THÔNG SỐ KỸ THUẬT BỔ SUNG ---
+    // --- ADDITIONAL TECHNICAL PARAMETER FIELDS ---
 
-    // Kích thước chiều ngang tối thiểu (Inch)
+    // Minimum width (Inch)
     public double MinWidth { get; set; }
 
-    // Kích thước chiều ngang tối đa (Inch)
+    // Maximum width (Inch)
     public double MaxWidth { get; set; }
 
-    // Cờ logic để hiển thị Badge "Varying Size" hoặc khoảng số trên UI
+    // Logic flag to display "Varying Size" Badge or number range on UI
     public bool IsVaryingSize => MinWidth <= 0 && MaxWidth <= 0;
 
-    // Helper property để hiển thị text cho đẹp (VD: "39 - 75 inch" hoặc "Đa dạng")
+    // Helper property to display text nicely (e.g., "39 - 75 inch" or "Varying size")
     public string SizeDisplay => IsVaryingSize
-        ? "Kích thước đa dạng"
+        ? "Varying size"
         : $"{MinWidth}\" - {MaxWidth}\"";
 }
 
 public class BedTypeAdditionalData
 {
-    // Kích thước chiều ngang (Inch)
+    // Width (Inch)
     public double MinWidth { get; set; }
     public double MaxWidth { get; set; }
 
-    // Cờ đánh dấu nếu kích thước không cố định
+    // Flag if size is not fixed
     public bool IsVaryingSize => MinWidth <= 0 && MaxWidth <= 0;
 }
 
 public class RoomQualityGroupDTO : RoomAttributeDTO
 {
-    public override RoomAttributeType AttributeType => RoomAttributeType.RoomQuality; // Tự động gán số 4
+    public override RoomAttributeType AttributeType => RoomAttributeType.RoomQuality; // Auto assign 4
     public int? SortOrder { get; set; } = 0;
 
 }
 
 public class RoomQualityDTO : RoomAttributeDTO
 {
-    public override RoomAttributeType AttributeType => RoomAttributeType.RoomQuality; // Tự động gán số 4
+    public override RoomAttributeType AttributeType => RoomAttributeType.RoomQuality; // Auto assign 4
     public int? SortOrder { get; set; } = 0;
     public int TypeId { get; set; }
 }
 
 // CreateOrUpdate DTOs
-// Dùng cho Unit Type (Cần hứng thêm IsEntirePlace từ Form)
+// Used for Unit Type (Needs to catch IsEntirePlace from Form)
 public class UnitTypeCreateDTO : BaseCreateOrUpdateAdminDTO
 {
     public bool IsEntirePlace { get; set; } = false;
@@ -98,11 +98,11 @@ public class UnitTypeUpdateDTO : BaseCreateOrUpdateAdminDTO
     public bool IsEntirePlace { get; set; }
 }
 
-// Dùng cho Bed Type (Cần hứng thêm DefaultCapacity từ Form)
+// Used for Bed Type (Needs to catch DefaultCapacity from Form)
 // Create
 public class BedTypeCreateDTO : BaseCreateOrUpdateAdminDTO
 {
-    [Range(1, 10, ErrorMessage = "Sức chứa tối thiểu là 1")]
+    [Range(1, 10, ErrorMessage = "Minimum capacity is 1")]
     public int DefaultCapacity { get; set; } = 1;
 
     public bool IsVaryingSize { get; set; }
@@ -121,7 +121,7 @@ public class BedTypeUpdateDTO : BaseCreateOrUpdateAdminDTO
     public double MaxWidth { get; set; }
 }
 
-// Dùng cho Room View (Không có field riêng, dùng lại base cũng được, hoặc tạo rỗng cho đồng bộ)
+// Used for Room View (No separate field, reusing base is fine, or create empty for consistency)
 // Create
 public class RoomViewCreateDTO : BaseCreateOrUpdateAdminDTO
 {
@@ -134,16 +134,16 @@ public class RoomViewUpdateDTO : BaseCreateOrUpdateAdminDTO
 
 public class RoomQualityCreateDTO : BaseCreateOrUpdateAdminDTO
 {
-    [Required(ErrorMessage = "Vui lòng chọn nhóm hạng phòng")]
+    [Required(ErrorMessage = "Please select a room quality group")]
     public int TypeId { get; set; }
 
-    [Range(0, 100, ErrorMessage = "Thứ tự ưu tiên từ 0-100")]
+    [Range(0, 100, ErrorMessage = "Priority order from 0-100")]
     public int SortOrder { get; set; } = 0;
 }
 
-// 3. DTO Cập nhật (Sạch bóng TypeId)
+// 3. Update DTO (Clean of TypeId)
 public class RoomQualityUpdateDTO : BaseCreateOrUpdateAdminDTO
 {
-    [Range(0, 100, ErrorMessage = "Thứ tự ưu tiên từ 0-100")]
+    [Range(0, 100, ErrorMessage = "Priority order from 0-100")]
     public int SortOrder { get; set; }
 }

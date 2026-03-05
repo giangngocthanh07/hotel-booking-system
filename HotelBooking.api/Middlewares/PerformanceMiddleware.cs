@@ -11,17 +11,17 @@ public class PerformanceMiddleware
 
     public async Task Invoke(HttpContext context)
     {
-        // 1. Bấm giờ bắt đầu
+        // 1. Start timing
         var sw = System.Diagnostics.Stopwatch.StartNew();
 
-        // 2. Cho code chạy tiếp (Controller, Service, DB...)
+        // 2. Let the code run (Controller, Service, DB...)
         await _next(context);
 
-        // 3. Code chạy xong -> Dừng đồng hồ
+        // 3. Stop timing
         sw.Stop();
 
-        // 4. Ghi log
-        // Chỉ log những cái chậm > 500ms (hoặc log hết nếu muốn)
+        // 4. Log
+        // Only log slow requests (> 500ms)
         if (sw.ElapsedMilliseconds > 500) 
         {
             _logger.LogWarning($"⚠️ SLOW API: {context.Request.Method} {context.Request.Path} took {sw.ElapsedMilliseconds}ms");

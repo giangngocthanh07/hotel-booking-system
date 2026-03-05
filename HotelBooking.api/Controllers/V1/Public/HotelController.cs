@@ -12,7 +12,7 @@ namespace HotelBooking.api.Controllers.V1.Public
     {
         private readonly IHotelService _hotelService;
         private readonly IFileHelper _fileHelper;
-        public HotelController(IHotelService hotelService,  IFileHelper fileHelper )
+        public HotelController(IHotelService hotelService, IFileHelper fileHelper)
         {
             _hotelService = hotelService;
             _fileHelper = fileHelper;
@@ -28,7 +28,7 @@ namespace HotelBooking.api.Controllers.V1.Public
             return Ok(response);
         }
 
-        // ================= TÌM KIẾM KHÁCH SẠN THEO FILTER SearchForm.razor ================
+        // ================= GET HOTEL SEARCH OPTIONS BY SearchForm.razor FILTER ================
 
         [HttpGet("get-search-options")]
         public async Task<IActionResult> GetSearchOptionsAsync([FromQuery] string cityName,
@@ -49,7 +49,7 @@ namespace HotelBooking.api.Controllers.V1.Public
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
-        // ================= ĐĂNG KHÁCH SẠN MỚI ================
+        // ================= POST NEW HOTEL ================
         [Authorize(Roles = "Owner")]
         [HttpPost("post-new-hotel")]
         public async Task<IActionResult> PostNewHotelAsync([FromForm] CreateHotelRequestDTO newHotelRequest)

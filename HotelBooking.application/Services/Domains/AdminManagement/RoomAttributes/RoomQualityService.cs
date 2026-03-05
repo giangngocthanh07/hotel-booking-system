@@ -1,6 +1,7 @@
 using FluentValidation;
 using HotelBooking.application.Helpers;
 using HotelBooking.infrastructure.Models;
+using HotelBooking.application.Interfaces;
 
 public interface IRoomQualityService : ITypedManage<RoomQualityDTO, RoomQualityGroupDTO, RoomQualityCreateDTO, RoomQualityUpdateDTO>
 {
@@ -52,26 +53,26 @@ public class RoomQualityService : BaseManage<RoomQuality, IRoomQualityRepository
     // Validation
     protected override async Task<ValidationResult> ValidateCreateLogicAsync(RoomQualityCreateDTO dto)
     {
-        // Check trùng tên TRONG CÙNG NHÓM (TypeId)
+        // Check for duplicate name WITHIN THE SAME GROUP (TypeId)
         bool exists = await _repo.AnyAsync(x =>
             x.Name == dto.Name &&
             x.TypeId == dto.TypeId);
 
-        if (exists) return ValidationResult.Fail(MessageResponse.AdminManagement.Amenity.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
+        if (exists) return ValidationResult.Fail(MessageResponse.AdminManagement.RoomAttribute.RoomQuality.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
 
         return ValidationResult.Success();
     }
 
     protected override async Task<ValidationResult> ValidateUpdateLogicAsync(RoomQualityUpdateDTO dto, int id)
     {
-        // Lấy Entity gốc để biết nó đang thuộc nhóm nào
+        // Get original entity to know which group it belongs to
         var currentEntity = await _repo.GetByIdAsync(id);
         if (currentEntity == null) return ValidationResult.Success();
 
-        // Check trùng tên (Dùng TypeId gốc từ DB)
+        // Check for duplicate name (Using original TypeId from DB)
         bool exists = await _repo.AnyAsync(x =>
             x.Name == dto.Name &&
-            x.TypeId == currentEntity.TypeId && // Lấy TypeId từ DB
+            x.TypeId == currentEntity.TypeId && // Get TypeId from DB
             x.Id != id &&
             x.IsDeleted == false);
 
@@ -82,7 +83,7 @@ public class RoomQualityService : BaseManage<RoomQuality, IRoomQualityRepository
     }
 
 
-    // Hàm này dùng cho RoomAttributeFacade.cs
+    // This method is used for RoomAttributeFacade.cs
     public async Task<ApiResponse<List<RoomQualityDTO>>> GetAllByTypeAsync(int? typeId = null)
     {
 
@@ -144,35 +145,35 @@ public class RoomQualityService : BaseManage<RoomQuality, IRoomQualityRepository
         }
     }
 
-    // Hàm này dùng cho ManagementAdmin.cs
+    // This method is used for ManagementAdmin.cs
     public async Task<ApiResponse<PagedManageResult<RoomQualityDTO>>> GetRoomQualitiesByTypeAsync(int? typeId, PagingRequest paging)
     {
         return await ManagementAdminHelper.GetDataByTypeAsync<RoomQuality, RoomQualityDTO>(
             typeId,
             paging,
 
-            // Logic 1: lấy ID mặc định: Query bảng RoomQualityGroup, lấy thằng đầu tiên chưa xóa
+            // Logic 1: get default ID: Query RoomQualityGroup table, get the first non-deleted one
             getDefaultIdFunc: async () =>
             {
-                // query DB lấy 1 dòng
+                // query DB to get 1 row
                 var firstType = (await _roomQualityTypeRepo.WhereAsync(x => x.IsDeleted != true)).FirstOrDefault();
                 return firstType?.Id;
             },
-            // Logic 2: kiểm tra ID tồn tại: Query bảng RoomQualityGroup
+            // Logic 2: check if ID exists: Query RoomQualityGroup table
             checkTypeExistsFunc: async (id) =>
             {
-                // Kiểm tra xem có dòng nào có Id này và chưa bị xóa không
+                // Check if there is any row with this Id that is not deleted
                 var exists = (await _roomQualityTypeRepo.WhereAsync(x => x.Id == id && x.IsDeleted != true)).Any();
                 return exists;
             },
-            // Logic 3: Lấy Entity từ DB
+            // Logic 3: Get Entity from DB
             getPagedItemsFunc: async (id, page, size) =>
             await _repo.GetPagedAsync(
                 x => x.TypeId == id && x.IsDeleted == false,
                 page,
                 size,
                 q => q.OrderByDescending(x => x.Id)),
-            // Logic 4: Map sang DTO (Tái sử dụng hàm MapToDto có sẵn)
+            // Logic 4: Map to DTO (Reuse existing MapToDto method)
             mapToDtoFunc: MapToDto
         );
     }

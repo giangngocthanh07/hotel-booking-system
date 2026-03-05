@@ -1,3 +1,4 @@
+namespace HotelBooking.application.DTOs.Request.UpgradeRequest;
 public class UserForUpgradeDTO
 {
     public int UserId { get; set; }

@@ -6,13 +6,15 @@ public class UnitTypeCreateValidator : AbstractValidator<UnitTypeCreateDTO>
 {
     public UnitTypeCreateValidator()
     {
+        // Name Validation
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage(MessageResponse.AdminManagement.RoomAttribute.UnitType.EMPTY_NAME)
-            .MaximumLength(20).WithMessage(MessageResponse.AdminManagement.RoomAttribute.UnitType.LONG_NAME);
+            .MaximumLength(50).WithMessage(MessageResponse.AdminManagement.RoomAttribute.UnitType.LONG_NAME);
 
-        // IsEntirePlace là bool nên không cần validate (true/false đều hợp lệ)
+        // Note: IsEntirePlace is a boolean, so explicit validation is not required 
+        // as both true and false are inherently valid values.
 
-        // Validate Description (Optional)
+        // Description Validation (Optional)
         RuleFor(x => x.Description)
             .MaximumLength(500).WithMessage(MessageResponse.Validation.LONG_DESCRIPTION);
     }
@@ -22,11 +24,12 @@ public class UnitTypeUpdateValidator : AbstractValidator<UnitTypeUpdateDTO>
 {
     public UnitTypeUpdateValidator()
     {
+        // Name Validation
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage(MessageResponse.AdminManagement.RoomAttribute.UnitType.EMPTY_NAME)
             .MaximumLength(50).WithMessage(MessageResponse.AdminManagement.RoomAttribute.UnitType.LONG_NAME);
 
-        // Validate Description (Optional)
+        // Description Validation (Optional)
         RuleFor(x => x.Description)
             .MaximumLength(500).WithMessage(MessageResponse.Validation.LONG_DESCRIPTION);
     }

@@ -40,7 +40,7 @@ public static class TestServiceCollections
         return services;
     }
 
-    // Sau này thêm domain mới thì thêm vào đây
+    // New domain
     // public static IServiceCollection AddHotelServiceDependencies(
     //     this IServiceCollection services)
     // {

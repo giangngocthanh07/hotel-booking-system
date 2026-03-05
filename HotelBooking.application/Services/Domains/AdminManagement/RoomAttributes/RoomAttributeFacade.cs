@@ -3,13 +3,13 @@ using HotelBooking.application.Helpers;
 
 public interface IRoomAttributeFacade
 {
-    // Gom nhóm 1: Các thuộc tính cơ bản
+    // Group 1: Basic attributes
     IUnitTypeService UnitTypeService { get; }
     IBedTypeService BedTypeService { get; }
     IRoomViewService RoomViewService { get; }
     IRoomQualityService RoomQualityService { get; }
 
-    // --- HÀM: LẤY DANH SÁCH PHÂN TRANG THEO ENUM ---
+    // --- METHOD: GET PAGED LIST BY ENUM ---
     Task<ApiResponse<PagedManageResult<RoomAttributeDTO>>> GetPagedByTypeAsync(
         GetRoomAttributeRequest request);
 }
@@ -37,7 +37,7 @@ public class RoomAttributeFacade : IRoomAttributeFacade
     public async Task<ApiResponse<PagedManageResult<RoomAttributeDTO>>> GetPagedByTypeAsync(
         GetRoomAttributeRequest request)
     {
-        // --- BƯỚC 1: VALIDATION ĐẦU VÀO ---
+        // --- STEP 1: VALIDATION INPUT ---
         var validationResult = await _validator.ValidateAsync(request);
 
         if (!validationResult.IsValid)
@@ -53,9 +53,9 @@ public class RoomAttributeFacade : IRoomAttributeFacade
             switch (request.Type)
             {
                 case RoomAttributeType.UnitType:
-                    // Gọi Manager con
+                    // Call child manager
                     var r1 = await UnitTypeService.GetPagedListAsync(request.Paging);
-                    // Convert kết quả con sang kết quả cha (xem hàm Helper bên dưới)
+                    // Convert child result to parent result (see helper function below)
                     return ConvertToBasePagedResult(r1);
 
                 case RoomAttributeType.BedType:
@@ -67,7 +67,7 @@ public class RoomAttributeFacade : IRoomAttributeFacade
                     return ConvertToBasePagedResult(r3);
 
                 case RoomAttributeType.RoomQuality:
-                    // RoomQuality cần TypeId
+                    // RoomQuality needs TypeId
                     var r4 = await RoomQualityService.GetRoomQualitiesByTypeAsync(request.TypeId, request.Paging);
                     return ConvertToBasePagedResult(r4);
 
@@ -83,13 +83,13 @@ public class RoomAttributeFacade : IRoomAttributeFacade
         }
     }
 
-    // --- HELPER CHUYỂN ĐỔI KẾT QUẢ TỪ CON SANG CHA ---
-    // T: Kiểu dữ liệu con (VD: UnitTypeDTO)
-    // Hàm này giúp Facade trả về kiểu chung RoomAttributeDTO
+    // --- HELPER: CONVERT CHILD RESULT TO PARENT RESULT ---
+    // T: Child data type (e.g: UnitTypeDTO)
+    // This function helps Facade return a common type: RoomAttributeDTO
     private ApiResponse<PagedManageResult<RoomAttributeDTO>> ConvertToBasePagedResult<T>(
         ApiResponse<PagedManageResult<T>> sourceResponse) where T : RoomAttributeDTO
     {
-        // Nếu API con thất bại, trả về lỗi y hệt
+        // If child API fails, return the same error
         if (sourceResponse.StatusCode != StatusCodeResponse.Success || sourceResponse.Content == null)
         {
             return ResponseFactory.Failure<PagedManageResult<RoomAttributeDTO>>(
@@ -99,9 +99,9 @@ public class RoomAttributeFacade : IRoomAttributeFacade
 
         var sourceContent = sourceResponse.Content;
 
-        // Sử dụng Constructor thay vì Object Initializer
+        // Use Constructor instead of Object Initializer
         var baseResult = new PagedManageResult<RoomAttributeDTO>(
-            // 1. Items (Cast từ con sang cha)
+            // 1. Items (Cast from child to parent)
             sourceContent.Items.Cast<RoomAttributeDTO>().ToList(),
 
             // 2. TotalCount
@@ -117,7 +117,7 @@ public class RoomAttributeFacade : IRoomAttributeFacade
             sourceContent.SelectedTypeId
         );
 
-        // Lưu ý: Không cần truyền TotalPages, vì Constructor sẽ tự tính dựa trên Count và Size.
+        // Note: No need to pass TotalPages, because Constructor will calculate automatically based on Count and Size.
         return ResponseFactory.Success(baseResult, sourceResponse.Message);
     }
 }

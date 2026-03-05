@@ -1,6 +1,7 @@
 using FluentValidation;
 using HotelBooking.application.DTOs.User.Login;
 using HotelBooking.application.DTOs.User.Register;
+using HotelBooking.application.DTOs.Request.UpgradeRequest;
 using HotelBooking.application.Validators.AdminManagement.Amenities;
 using HotelBooking.application.Validators.AdminManagement.Policies;
 using HotelBooking.application.Validators.AdminManagement.Services;

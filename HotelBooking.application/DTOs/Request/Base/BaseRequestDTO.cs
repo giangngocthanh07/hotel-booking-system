@@ -1,75 +1,75 @@
 namespace HotelBooking.application.DTOs.Request.Base;
 /// <summary>
-/// Interface marker cho tất cả Request DTOs.
-/// Định nghĩa các properties chung mà MỌI loại request đều phải có.
-/// Sử dụng Polymorphism: cho phép xử lý chung các loại request khác nhau.
+/// Interface marker for all Request DTOs.
+/// Defines common properties that ALL types of requests must have.
+/// Uses Polymorphism: allows common handling of different types of requests.
 /// </summary>
 public interface IRequestDTO
 {
     /// <summary>
-    /// ID của request - Primary Key
+    /// Request ID - Primary Key
     /// </summary>
     int RequestId { get; set; }
 
     /// <summary>
-    /// Loại request (UpgradeOwner, HotelApproval, etc.)
+    /// Request type (UpgradeOwner, HotelApproval, etc.)
     /// </summary>
     RequestType Type { get; }
 
     /// <summary>
-    /// Tên hiển thị của loại request
+    /// Display name of the request type
     /// </summary>
     string TypeDisplay { get; }
 
     /// <summary>
-    /// Trạng thái hiện tại của request
+    /// Current status of the request
     /// </summary>
     string Status { get; set; }
 
     /// <summary>
-    /// Thời gian tạo request
+    /// Request creation time
     /// </summary>
     DateTime RequestedAt { get; set; }
 
     /// <summary>
-    /// ID người xử lý (Admin)
+    /// Processor ID (Admin)
     /// </summary>
     int? ProcessedBy { get; set; }
 
     /// <summary>
-    /// Thời gian xử lý
+    /// Processing time
     /// </summary>
     DateTime? ProcessedAt { get; set; }
 
     /// <summary>
-    /// Tên người yêu cầu (để hiển thị nhanh)
+    /// Requester name (for quick display)
     /// </summary>
     string RequesterName { get; }
 
     /// <summary>
-    /// Kiểm tra có thể Approve không
+    /// Check if Can Approve
     /// </summary>
     bool CanApprove { get; }
 
     /// <summary>
-    /// Kiểm tra có thể Reject không
+    /// Check if Can Reject
     /// </summary>
     bool CanReject { get; }
 }
 
 /// <summary>
-/// Enum định nghĩa các loại Request trong hệ thống.
-/// Dễ dàng mở rộng khi có loại mới.
+/// Enum defining the types of Requests in the system.
+/// Easily extensible when there are new types.
 /// </summary>
 public enum RequestType
 {
     UpgradeOwner = 1,
     HotelApproval = 2
-    // Thêm loại mới ở đây khi cần
+    // Add new type here when needed
 }
 
 /// <summary>
-/// Các trạng thái chung của Request - dùng cho tất cả loại
+/// Common statuses of Request - used for all types
 /// </summary>
 public static class RequestStatusConst
 {
@@ -80,29 +80,29 @@ public static class RequestStatusConst
     public const string None = "None";
 
     /// <summary>
-    /// Kiểm tra status có hợp lệ không
+    /// Check if status is valid
     /// </summary>
     public static bool IsValid(string? status)
         => status == Pending || status == Approved || status == Rejected || status == Cancelled || status == None;
 
     /// <summary>
-    /// Lấy tất cả status
+    /// Get all statuses
     /// </summary>
     public static List<string> GetAll() => new() { Pending, Approved, Rejected, Cancelled, None };
 
     /// <summary>
-    /// Lấy status có thể filter (không bao gồm None)
+    /// Get filterable statuses (excluding None)
     /// </summary>
     public static List<string> GetFilterable() => new() { Pending, Approved, Rejected, Cancelled };
 }
 
 /// <summary>
-/// Extension methods cho RequestType enum
+/// Extension methods for RequestType enum
 /// </summary>
 public static class RequestTypeExtensions
 {
     /// <summary>
-    /// Lấy tên hiển thị tiếng Việt
+    /// Get Vietnamese display name
     /// </summary>
     public static string GetDisplayName(this RequestType type) => type switch
     {
@@ -112,7 +112,7 @@ public static class RequestTypeExtensions
     };
 
     /// <summary>
-    /// Lấy tên hiển thị tiếng Anh
+    /// Get English display name
     /// </summary>
     public static string GetDisplayNameEn(this RequestType type) => type switch
     {
@@ -122,7 +122,7 @@ public static class RequestTypeExtensions
     };
 
     /// <summary>
-    /// Parse từ string sang RequestType
+    /// Parse from string to RequestType
     /// </summary>
     public static RequestType? FromString(string? typeString) => typeString?.ToLower() switch
     {
@@ -135,32 +135,32 @@ public static class RequestTypeExtensions
 }
 
 /// <summary>
-/// Abstract base class cho tất cả Request DTOs.
-/// Implement các properties chung, để các concrete class chỉ cần định nghĩa properties riêng.
+/// Abstract base class for all Request DTOs.
+/// Implements common properties, so concrete classes only need to define specific properties.
 /// 
 /// Design Pattern: Template Method + Polymorphism
-/// - Common properties được implement ở đây
-/// - Abstract properties bắt buộc concrete class phải override
+/// - Common properties are implemented here
+/// - Abstract properties force concrete classes to override
 /// </summary>
 public abstract class BaseRequestDTO : IRequestDTO
 {
     // ==========================================
-    // ABSTRACT PROPERTIES (Mỗi loại request khác nhau)
+    // ABSTRACT PROPERTIES (Each request type is different)
     // ==========================================
 
     /// <summary>
-    /// Loại request - MỖI concrete class PHẢI định nghĩa
+    /// Request type - EACH concrete class MUST define
     /// </summary>
     public abstract RequestType Type { get; }
 
     /// <summary>
-    /// Tên người yêu cầu - MỖI concrete class PHẢI định nghĩa
-    /// (vì field name có thể khác: UserName, OwnerName, HotelName...)
+    /// Requester name - EACH concrete class MUST define
+    /// (because field name could be different: UserName, OwnerName, HotelName...)
     /// </summary>
     public abstract string RequesterName { get; }
 
     // ==========================================
-    // COMMON PROPERTIES (Dùng chung cho mọi loại)
+    // COMMON PROPERTIES (Shared across all types)
     // ==========================================
 
     public int RequestId { get; set; }
@@ -171,31 +171,31 @@ public abstract class BaseRequestDTO : IRequestDTO
     public string? ProcessedByName { get; set; }
 
     // ==========================================
-    // COMPUTED PROPERTIES (Tự động tính toán)
+    // COMPUTED PROPERTIES (Auto-calculated)
     // ==========================================
 
     /// <summary>
-    /// Tên hiển thị của loại request
+    /// Request type display name
     /// </summary>
     public string TypeDisplay => Type.GetDisplayName();
 
     /// <summary>
-    /// Kiểm tra có thể Approve không
+    /// Check if it Can Approve
     /// </summary>
     public bool CanApprove => Status == RequestStatusConst.Pending;
 
     /// <summary>
-    /// Kiểm tra có thể Reject không
+    /// Check if it Can Reject
     /// </summary>
     public bool CanReject => Status == RequestStatusConst.Pending;
 
     /// <summary>
-    /// Kiểm tra request đã được xử lý chưa
+    /// Check if request has been processed
     /// </summary>
     public bool IsProcessed => Status != RequestStatusConst.Pending;
 
     /// <summary>
-    /// Kiểm tra request thành công
+    /// Check if request is successful
     /// </summary>
     public bool IsSuccessful => Status == RequestStatusConst.Approved;
 }

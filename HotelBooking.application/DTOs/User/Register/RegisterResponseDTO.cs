@@ -1,8 +1,8 @@
 namespace HotelBooking.application.DTOs.User.Register
 {
     /// <summary>
-    /// DTO dùng để trả về kết quả sau khi đăng ký tài khoản.
-    /// Chỉ chứa thông tin cần thiết để xác nhận việc tạo tài khoản đã thành công hay chưa.
+    /// DTO used to return the result after registering an account.
+    /// Contains only the necessary information to confirm whether the account creation was successful or not.
     /// </summary>
 
     public class RegisterResponseDTO

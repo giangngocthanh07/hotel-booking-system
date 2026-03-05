@@ -3,15 +3,14 @@
 @inject NavigationManager _navManager
 
 <div class="hero-search position-absolute bottom-0 start-50 translate-middle-x w-100 mb-5"
-    style="z-index: 3; max-width: 1000px;">
+     style="z-index: 3; max-width: 1000px;">
     <div class="search-form container p-3 bg-white rounded-3">
         <EditForm Model="this" OnValidSubmit="SearchHotels" class="row g-2 align-items-stretch">
             <DataAnnotationsValidator />
             <ValidationSummary />
 
-            <!-- Điểm đến -->
             <div class="col-12 col-md-4 position-relative">
-                <MudTextField T="string" Label="Địa điểm đến" @bind-Value="Destination" For="@(() => Destination)"
+                <MudTextField T="string" Label="Destination" @bind-Value="Destination" For="@(() => Destination)"
                     Variant="Variant.Outlined" Adornment="Adornment.Start"
                     AdornmentIcon="@Icons.Material.Filled.LocationOn" Class="w-100 location-input" Required="true"
                     Immediate="true" Validation="@(new Func<string, string>(ValidateDestination))"
@@ -30,18 +29,16 @@
                 }
             </div>
 
-            <!-- Ngày nhận - trả -->
             <div class="col-12 col-md-4">
                 <MudDateRangePicker @bind-DateRange="SelectedRange" DisablePastDates="true"
-                    Label="Ngày nhận - trả phòng" Variant="Variant.Outlined" DateFormat="dd/MM/yyyy"
+                    Label="Check-in - Check-out" Variant="Variant.Outlined" DateFormat="dd/MM/yyyy"
                     Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.CalendarToday"
                     PickerClosed="OnDateRangeClosed" Class="w-100 custom-date-range" />
             </div>
 
-            <!-- Khách & phòng -->
             <div class="col-12 col-md-3 position-relative">
-                <MudTextField T="string" Label="Khách & Phòng"
-                    Value="@($"{Adults} Người lớn · {Children} Trẻ em · {Rooms} Phòng")" Variant="Variant.Outlined"
+                <MudTextField T="string" Label="Guests & Rooms"
+                    Value="@($"{Adults} Adults · {Children} Children · {Rooms} Rooms")" Variant="Variant.Outlined"
                     Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person"
                     Class="w-100 guest-room-input" ReadOnly="true"
                     @onclick="() => ShowGuestDropdown = !ShowGuestDropdown" />
@@ -50,7 +47,7 @@
                 {
                     <ul class="list-group suggestion-list guest-dropdown">
                         <li class="d-flex justify-content-between align-items-center p-2">
-                            <span>Người lớn</span>
+                            <span>Adults</span>
                             <div class="input-stepper">
                                 <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="() => ChangeAdults(-1)">-
                                 </MudButton>
@@ -60,7 +57,7 @@
                             </div>
                         </li>
                         <li class="d-flex justify-content-between align-items-center p-2">
-                            <span>Trẻ em</span>
+                            <span>Children</span>
                             <div class="input-stepper">
                                 <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="() => ChangeChildren(-1)">-
                                 </MudButton>
@@ -70,7 +67,7 @@
                             </div>
                         </li>
                         <li class="d-flex justify-content-between align-items-center p-2">
-                            <span>Phòng</span>
+                            <span>Rooms</span>
                             <div class="input-stepper">
                                 <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="() => ChangeRooms(-1)">-
                                 </MudButton>
@@ -83,10 +80,9 @@
                 }
             </div>
 
-            <!-- Nút tìm -->
             <div class="col-12 col-md-1 grid">
                 <MudButton Variant="Variant.Filled" Class="w-100 search-btn" ButtonType="ButtonType.Submit">
-                    <MudIcon Icon="@Icons.Material.Filled.Search" Class="me-1" /> Tìm
+                    <MudIcon Icon="@Icons.Material.Filled.Search" Class="me-1" /> Search
                 </MudButton>
             </div>
         </EditForm>
@@ -94,11 +90,11 @@
 </div>
 
 @code {
-    // 1. Điểm đến
-    [Required(ErrorMessage = "Vui lòng nhập điểm đến")]
+    // 1. Destination
+    [Required(ErrorMessage = "Please enter a destination")]
     private string Destination { get; set; } = "";
     private bool ShowPopularDestinations { get; set; } = false;
-    private List<string> PopularDestinations { get; set; } = new() { "Da Nang", "Ho Chi Minh", "Bangkok" };
+    private List<string> PopularDestinations { get; set; } = new() { "Da Nang", "Ho Chi Minh City", "Bangkok" };
 
     private void SelectDestination(string destination)
     {
@@ -109,11 +105,11 @@
     private string ValidateDestination(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
-            return "Vui lòng nhập điểm đến";
+            return "Please enter a destination";
         return null;
     }
 
-    // 2. Ngày nhận - trả
+    // 2. Date Range
     private MudBlazor.DateRange SelectedRange { get; set; } = new DateRange(DateTime.Today, DateTime.Today.AddDays(1));
 
     private void OnDateRangeClosed()
@@ -128,7 +124,7 @@
         }
     }
 
-    // 3. Khách & phòng
+    // 3. Guests & Rooms
     private int Adults { get; set; } = 1;
     private int Children { get; set; } = 0;
     private int Rooms { get; set; } = 1;
@@ -138,7 +134,7 @@
     private void ChangeChildren(int value) => Children = Math.Max(0, Children + value);
     private void ChangeRooms(int value) => Rooms = Math.Max(1, Rooms + value);
 
-    // 4. Xử lý tìm kiếm
+    // 4. Search Handling
     private void SearchHotels()
     {
         var checkin = SelectedRange?.Start?.ToString("yyyy-MM-dd") ?? DateTime.Today.ToString("yyyy-MM-dd");

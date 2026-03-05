@@ -7,7 +7,7 @@ using HotelBooking.application.DTOs.Request.Overview;
 namespace HotelBooking.api.Controllers.V1.Admin
 {
     /// <summary>
-    /// Admin - Tổng quan tất cả loại requests (Dashboard)
+    /// Admin - Overview of all request types (Dashboard)
     /// </summary>
     [Route("api/v1/admin/requests")]
     [ApiController]
@@ -23,13 +23,13 @@ namespace HotelBooking.api.Controllers.V1.Admin
         }
 
         /// <summary>
-        /// Thống kê tổng quan tất cả loại requests
+        /// Overview statistics of all request types
         /// </summary>
         /// <remarks>
-        /// Trả về stats của:
+        /// Returns stats of:
         /// - Upgrade Owner requests
-        /// - Hotel Approval requests (sau này)
-        /// - Tổng pending, tổng hôm nay
+        /// - Hotel Approval requests (later)
+        /// - Total pending, total today
         /// </remarks>
         [HttpGet("stats")]
         [ProducesResponseType(typeof(ApiResponse<RequestStatsDTO>), 200)]
@@ -40,9 +40,9 @@ namespace HotelBooking.api.Controllers.V1.Admin
         }
 
         /// <summary>
-        /// Lấy requests gần đây (tất cả loại) - Widget Dashboard
+        /// Get recent requests (all types) - Dashboard Widget
         /// </summary>
-        /// <param name="count">Số lượng request muốn lấy (default: 10)</param>
+        /// <param name="count">Number of requests to retrieve (default: 10)</param>
         [HttpGet("recent")]
         [ProducesResponseType(typeof(ApiResponse<List<RecentRequestDTO>>), 200)]
         public async Task<IActionResult> GetRecent([FromQuery] int count = 10)

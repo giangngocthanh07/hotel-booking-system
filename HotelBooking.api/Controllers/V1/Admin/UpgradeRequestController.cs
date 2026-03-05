@@ -7,7 +7,7 @@ using HotelBooking.application.Services.Domains.RequestManagement;
 namespace HotelBooking.api.Controllers.V1.Admin
 {
     /// <summary>
-    /// Admin Upgrade Requests Controller - Admin quản lý các đơn yêu cầu nâng cấp từ khách hàng
+    /// Admin Upgrade Requests Controller - Admin manages customer upgrade requests
     /// </summary>
     [Route("api/v1/admin/upgrade-requests")]
     [ApiController]
@@ -23,7 +23,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         }
 
         /// <summary>
-        /// Lấy danh sách các Status từ DB (để Swagger biết mà nhập)
+        /// Get list of Statuses from DB (for Swagger inputs)
         /// </summary>
         [HttpGet("statuses")]
         public async Task<IActionResult> GetStatuses()
@@ -33,7 +33,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         }
 
         /// <summary>
-        /// Lấy danh sách Request có phân trang (Reuse PagingRequest)
+        /// Get paginated list of Requests (Reuse PagingRequest)
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetPagedRequestsAsync([FromQuery] PagingRequest pagingRequest, [FromQuery] string? status)
@@ -51,7 +51,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         // }
 
         /// <summary>
-        /// Lấy chi tiết request theo ID
+        /// Get request details by ID
         /// </summary>
         [HttpGet("{requestId:int}")]
         public async Task<IActionResult> GetByRequestIdAsync(int requestId)
@@ -61,7 +61,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         }
 
         /// <summary>
-        /// Duyệt request
+        /// Approve request
         /// </summary>
         [HttpPost("{requestId:int}/approve")]
         public async Task<IActionResult> Approve(int requestId)
@@ -74,7 +74,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         }
 
         /// <summary>
-        /// Từ chối request
+        /// Reject request
         /// </summary>
         [HttpPost("{requestId:int}/reject")]
         public async Task<IActionResult> Reject(int requestId)

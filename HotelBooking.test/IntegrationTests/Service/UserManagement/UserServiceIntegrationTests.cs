@@ -1,12 +1,16 @@
 using FluentAssertions;
-using HotelBooking.application.DTOs.User.Register;
-using HotelBooking.application.DTOs.User.Login;
-using HotelBooking.application.Services.Domains.UserManagement;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using HotelBooking.Tests.Integration.Base;
-using HotelBooking.infrastructure.Models;
 using Microsoft.Extensions.Configuration;
+
+using HotelBooking.application.DTOs.User.Register;
+using HotelBooking.application.DTOs.User.Login;
+using HotelBooking.application.DTOs.Role;
+using HotelBooking.application.Services.Domains.UserManagement;
+
+using HotelBooking.infrastructure.Models;
+
+using HotelBooking.Tests.Integration.Base;
 
 namespace HotelBooking.Tests.Integration;
 

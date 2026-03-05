@@ -2,6 +2,7 @@ using System.Text.Json;
 using FluentValidation;
 using HotelBooking.application.Helpers;
 using HotelBooking.infrastructure.Models;
+using HotelBooking.application.Interfaces;
 
 namespace HotelBooking.application.Services.Domains.AdminManagement
 {

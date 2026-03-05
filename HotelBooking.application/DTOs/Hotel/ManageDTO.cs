@@ -10,36 +10,36 @@ public enum ManageModuleEnum
     BedType = 6,
     RoomView = 7
 
-    // Sau này thêm Room = 3, Staff = 4...
+    // Add Room = 3, Staff = 4... later
 }
 
 
-// DTO dùng cho danh sách Sidebar
-public class ManageTypeDTO // Hoặc dùng lại BaseAdminDTO nếu bạn muốn sửa trực tiếp
+// DTO used for Sidebar list
+public class ManageTypeDTO // Or reuse BaseAdminDTO if you want to edit directly
 {
-    public int? Id { get; set; } // Null nếu là module phẳng
+    public int? Id { get; set; } // Null if it's a flat module
     public string Name { get; set; } = string.Empty;
 }
 
-// DTO dùng để hứng tham số đầu vào cho API lấy Menu
+// DTO to capture input parameters for the Get Menu API
 public class ManageMenuRequest
 {
-    // Đây là tham số chính mà ta muốn validate
+    // This is the main parameter we want to validate
     public ManageModuleEnum Module { get; set; }
 }
 
-// Result cho API: /get-types/{module}
+// Result for API: /get-types/{module}
 public class ManageMenuResult
 {
-    // Danh sách các loại (VD: Standard, VIP...)
+    // List of types (e.g., Standard, VIP...)
     public List<ManageTypeDTO> Types { get; set; } = new();
 
-    // (Tùy chọn) Gợi ý ID mặc định nếu muốn BE quyết định logic default
-    // Nếu bạn để FE tự chọn cái đầu tiên thì không cần dòng này.
+    // (Optional) Suggest default ID if you want BE to decide the default logic
+    // If you let FE select the first one by itself, this line is not needed.
     public int? DefaultSelectedId { get; set; }
 }
 
-// T là kiểu dữ liệu của item (VD: ServiceBaseDTO, PolicyDTO...)
+// T is the data type of the item (e.g., ServiceBaseDTO, PolicyDTO...)
 public class PagedManageResult<T> : PagedResult<T>
 {
     public int? SelectedTypeId { get; set; }

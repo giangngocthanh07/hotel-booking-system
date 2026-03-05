@@ -40,7 +40,7 @@ app.UseMiddleware<PerformanceMiddleware>();
 //use middleware controller
 app.MapControllers();
 
-if (app.Environment.IsDevelopment()) // Chỉ hiện Swagger ở môi trường Dev cho bảo mật
+if (app.Environment.IsDevelopment()) // Only show Swagger in Development for security
 {
     app.UseSwagger();
     app.UseSwaggerUI();

@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 
 public abstract class BaseServiceTest
 {
-    // Để protected để các class con (UserServiceTest) dùng được
+    // Protected to allow derived classes (e.g., UserServiceTest) access
     protected readonly Fixture _fixture;
     protected readonly Mock<IUnitOfWork> _mockUnitOfWork;
 
@@ -13,18 +13,18 @@ public abstract class BaseServiceTest
         _fixture = new Fixture();
         _mockUnitOfWork = new Mock<IUnitOfWork>();
 
-        // Setup mặc định cho UoW (99% các test đều cần cái này)
-        // Giả lập SaveChangesAsync trả về 1 (lưu thành công)
+        // Default setup for Unit of Work (required by ~99% of tests)
+        // Simulates SaveChangesAsync returning 1 (successful persistence)
         _mockUnitOfWork.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
     }
 
     // ==========================================
-    // 1. HELPER GENERIC: GIẢ LẬP TÌM KIẾM (Find)
+    // 1. GENERIC HELPER: MOCK FIND OPERATION
     // ==========================================
-    // TRepo: Kiểu Repository (IUserRepository, IRoomRepository...)
-    // TEntity: Kiểu Entity (User, Room...)
+    // TRepo: Repository type (IUserRepository, IRoomRepository, etc.)
+    // TEntity: Entity type (User, Room, etc.)
     protected void MockRepo_Find_Returns<TRepo, TEntity>(Mock<TRepo> mockRepo, TEntity? returnResult)
-        where TRepo : class, IRepository<TEntity> // Bắt buộc Repo phải có hàm của cha
+        where TRepo : class, IRepository<TEntity> // Ensures Repo inherits from base interface
         where TEntity : class
     {
         mockRepo.Setup(x => x.SingleOrDefaultAsync(It.IsAny<Expression<Func<TEntity, bool>>>()))
@@ -32,9 +32,9 @@ public abstract class BaseServiceTest
     }
 
     // ==========================================
-    // 2. HELPER GENERIC: GIẢ LẬP THÊM MỚI (Add) - BỊ LỖI
+    // 2. GENERIC HELPER: MOCK ADD OPERATION FAILURE
     // ==========================================
-    // Helper này dùng để giả lập lỗi khi Add (ví dụ DB sập)
+    // Simulates an exception during the Add operation (e.g., database crash)
     protected void MockRepo_Add_ThrowsException<TRepo, TEntity>(Mock<TRepo> mockRepo)
         where TRepo : class, IRepository<TEntity>
         where TEntity : class
@@ -45,13 +45,11 @@ public abstract class BaseServiceTest
 
     #region VERIFY HELPERS
     // ==========================================
-    // 3. HELPER GENERIC: VERIFY LẦN GỌI HÀM AddAsync
+    // 3. GENERIC HELPER: VERIFY AddAsync CALLS
     // ==========================================
 
-    // Helper chuyên dùng để Verify hàm AddAsync của bất kỳ Repository nào
-    // TRepo: Kiểu Mock (vd: IUserRepository)
-    // TEntity: Kiểu Entity (vd: User)
-    protected void Verify_Repo_AddAsync<TRepo, TEntity>(Mock<TRepo> mockRepo, int times = 1) // Mặc định là 1 lần
+    // Verifies the AddAsync method call for any Repository
+    protected void Verify_Repo_AddAsync<TRepo, TEntity>(Mock<TRepo> mockRepo, int times = 1) 
         where TRepo : class, IRepository<TEntity>
         where TEntity : class
     {
@@ -59,45 +57,47 @@ public abstract class BaseServiceTest
     }
 
     protected void Verify_Repo_Never_AddAsync<TRepo, TEntity>(Mock<TRepo> mockRepo)
-        where TRepo : class, IRepository<TEntity> // Đảm bảo Repo này có hàm AddAsync
+        where TRepo : class, IRepository<TEntity>
         where TEntity : class
     {
         mockRepo.Verify(x => x.AddAsync(It.IsAny<TEntity>()), Times.Never);
     }
 
     // ==========================================
-    // 4. HELPER GENERIC: VERIFY LẦN GỌI HÀM UpdateAsync
+    // 4. GENERIC HELPER: VERIFY UpdateAsync CALLS
     // ==========================================
-    protected void Verify_Repo_UpdateAsync<TRepo, TEntity>(Mock<TRepo> mockRepo, int times = 1) // Mặc định là 1 lần
+    protected void Verify_Repo_UpdateAsync<TRepo, TEntity>(Mock<TRepo> mockRepo, int times = 1)
         where TRepo : class, IRepository<TEntity>
         where TEntity : class
     {
         mockRepo.Verify(x => x.UpdateAsync(It.IsAny<TEntity>()), Times.Exactly(times));
     }
 
-    protected void Verify_Repo_Never_UpdateAsync<TRepo, TEntity>(Mock<TRepo> mockRepo) // Mặc định là 1 lần
+    protected void Verify_Repo_Never_UpdateAsync<TRepo, TEntity>(Mock<TRepo> mockRepo)
         where TRepo : class, IRepository<TEntity>
         where TEntity : class
     {
         mockRepo.Verify(x => x.UpdateAsync(It.IsAny<TEntity>()), Times.Never);
     }
+
     // ==========================================
-    // 5. HELPER GENERIC: VERIFY LẦN GỌI HÀM SaveChangesAsync
+    // 5. GENERIC HELPER: VERIFY SaveChangesAsync CALLS
     // ==========================================
-    // 1. Verify đã lưu DB (Mặc định 1 lần)
+    
+    // Verifies that database changes were saved
     protected void Verify_Saved(int times = 1)
     {
         _mockUnitOfWork.Verify(x => x.SaveChangesAsync(), Times.Exactly(times));
     }
 
-    // 2. Verify KHÔNG lưu DB (Dùng cho case lỗi)
+    // Verifies that NO database changes were saved (used for failure cases)
     protected void Verify_Never_Saved()
     {
         _mockUnitOfWork.Verify(x => x.SaveChangesAsync(), Times.Never);
     }
 
     // ==========================================
-    // 6. HELPER GENERIC: VERIFY LẦN GỌI HÀM SingleOrDefaultAsync
+    // 6. GENERIC HELPER: VERIFY SingleOrDefaultAsync CALLS
     // ==========================================
     protected void Verify_Repo_SingleOrDefaultAsync<TRepo, TEntity>(Mock<TRepo> mockRepo, int times = 1)
         where TRepo : class, IRepository<TEntity>
@@ -112,7 +112,6 @@ public abstract class BaseServiceTest
     {
         mockRepo.Verify(x => x.SingleOrDefaultAsync(It.IsAny<Expression<Func<TEntity, bool>>>()), Times.Never);
     }
-
 
     #endregion
 }

@@ -1,7 +1,7 @@
-using System.Text.Json;
 using FluentValidation;
 using HotelBooking.application.Helpers;
 using HotelBooking.infrastructure.Models;
+using HotelBooking.application.Interfaces;
 
 public interface IRoomViewService : IStandardManage<RoomViewDTO, RoomViewCreateDTO, RoomViewUpdateDTO>
 {
@@ -40,13 +40,13 @@ public class RoomViewService : BaseManage<RoomView, IRoomViewRepository, RoomVie
         entity.Description = updateDto.Description;
     }
 
-    // Validation
+    // Validation Logic
     protected override async Task<ValidationResult> ValidateCreateLogicAsync(RoomViewCreateDTO dto)
     {
-        bool exists = await _repo.AnyAsync(x =>
-            x.Name == dto.Name);
+        bool exists = await _repo.AnyAsync(x => x.Name == dto.Name);
 
-        if (exists) return ValidationResult.Fail(MessageResponse.AdminManagement.RoomAttribute.RoomView.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
+        if (exists) 
+            return ValidationResult.Fail(MessageResponse.AdminManagement.RoomAttribute.RoomView.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
 
         return ValidationResult.Success();
     }
@@ -68,7 +68,7 @@ public class RoomViewService : BaseManage<RoomView, IRoomViewRepository, RoomVie
     {
         var rvList = await _repo.WhereAsync(rv => rv.IsDeleted == false);
 
-        if (rvList == null || rvList.Count() == 0)
+        if (rvList == null || !rvList.Any())
         {
             return ResponseFactory.Failure<List<RoomViewDTO>>(StatusCodeResponse.NotFound, MessageResponse.Common.EMPTY_LIST);
         }
@@ -76,7 +76,6 @@ public class RoomViewService : BaseManage<RoomView, IRoomViewRepository, RoomVie
         try
         {
             var result = rvList.Select(rv => MapToDto(rv)).ToList();
-
             return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
         }
         catch (Exception)
@@ -85,26 +84,26 @@ public class RoomViewService : BaseManage<RoomView, IRoomViewRepository, RoomVie
         }
     }
 
-    // --- IMPLEMENT HÀM: LẤY DANH SÁCH PHÂN TRANG ---
+    // --- IMPLEMENTATION: GET PAGINATED LIST ---
     public async Task<ApiResponse<PagedManageResult<RoomViewDTO>>> GetPagedListAsync(PagingRequest paging)
     {
         try
         {
-            // [BƯỚC 1] Dùng FluentValidation
-            // ValidateAsync check cả null, > 0, max size... cực sạch sẽ
+            // [STEP 1] Using FluentValidation
+            // ValidateAsync checks for null, > 0, max size, etc.
             var validationResult = await _pagingValidator.ValidateAsync(paging);
 
             if (!validationResult.IsValid)
             {
-                // Lấy lỗi đầu tiên trả về
+                // Return the first error found
                 return ResponseFactory.Failure<PagedManageResult<RoomViewDTO>>(
                     StatusCodeResponse.BadRequest,
                     validationResult.Errors[0].ErrorMessage);
             }
 
-            // 2. Gọi Repository lấy dữ liệu phân trang
-            // Filter: Lấy tất cả cái chưa xóa (!IsDeleted)
-            // OrderBy: Sắp xếp theo ID giảm dần (Mới nhất lên đầu)
+            // [STEP 2] Call Repository to fetch paginated data
+            // Filter: Retrieve all active records (!IsDeleted)
+            // OrderBy: Sort by ID descending (Newest first)
             var (items, totalCount) = await _repo.GetPagedAsync(
                 pageIndex: paging.PageIndex!.Value,
                 pageSize: paging.PageSize!.Value,
@@ -112,12 +111,12 @@ public class RoomViewService : BaseManage<RoomView, IRoomViewRepository, RoomVie
                 orderBy: q => q.OrderByDescending(x => x.Id)
             );
 
-            // 3. Map Entity sang DTO
-            // Sử dụng hàm MapToDto đã viết sẵn trong class này
+            // [STEP 3] Map Entity to DTO
+            // Using the pre-defined MapToDto method
             var dtos = items.Select(MapToDto).ToList();
 
-            // 4. Đóng gói kết quả
-            // [QUAN TRỌNG] Chỉ cần truyền TotalCount và PageSize, TotalPages sẽ tự động được tính
+            // [STEP 4] Wrap the result
+            // [NOTE] TotalPages is automatically calculated by providing TotalCount and PageSize
             var result = new PagedManageResult<RoomViewDTO>(
                 dtos,
                 totalCount,
@@ -130,7 +129,7 @@ public class RoomViewService : BaseManage<RoomView, IRoomViewRepository, RoomVie
         }
         catch (Exception)
         {
-            // Log lỗi nếu cần thiết
+            // Log the exception if necessary
             return ResponseFactory.ServerError<PagedManageResult<RoomViewDTO>>();
         }
     }

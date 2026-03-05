@@ -72,12 +72,34 @@ public static class MessageResponse
         // Policy Messages
         public static class Policy
         {
-            public const string EMPTY_NAME = "Policy name must not be empty!";
+            public const string EMPTY_NAME = "Policy name is required!";
             public const string LONG_NAME = "Policy name is too long (max 50 characters)!";
-            public const string EMPTY_TYPE = "Policy type must not be empty!";
+            public const string EMPTY_TYPE = "Policy type is required!";
+            public const string INVALID_TYPE = "Invalid Policy Type ID!";
             public const string INVALID_AMOUNT = "Amount must be greater than 0!";
+            public const string INVALID_ID_BY_TYPE = "TypeId mismatch for the selected policy!";
             public const string NAME_ALREADY_EXISTS = "Policy name already exists!";
-            public const string INVALID_ID_BY_TYPE = "ID is not valid for this policy type!";
+            public const string LONG_DESCRIPTION = "Description is too long (max 500 characters)!";
+            public const string EMPTY_CHECKIN_TIME = "Check-in time is required!";
+            public const string EMPTY_CHECKOUT_TIME = "Check-out time is required!";
+            public const string EMPTY_EARLY_CHECKIN_FEE = "Early check-in fee is required!";
+            public const string EMPTY_LATE_CHECKOUT_FEE = "Late check-out fee is required!";
+            public const string EMPTY_DAYS_BEFORE_CHECKIN = "Days before check-in is required!";
+            public const string EMPTY_REFUND_PERCENT = "Refund percent is required!";
+            public const string EMPTY_MIN_AGE = "Min age is required!";
+            public const string EMPTY_MAX_AGE = "Max age is required!";
+            public const string EMPTY_EXTRA_BED_FEE = "Extra bed fee is required!";
+            public const string EMPTY_PET_FEE = "Pet fee is required!";
+            public const string EMPTY_IS_PET_ALLOWED = "Is pet allowed is required!";
+            public const string INVALID_EARLY_CHECKIN_FEE = "Early check-in fee must be >= 0.";
+            public const string INVALID_LATE_CHECKOUT_FEE = "Late check-out fee must be >= 0.";
+            public const string INVALID_DAYS_BEFORE_CHECKIN = "Days before check-in must be >= 0.";
+            public const string INVALID_REFUND_PERCENT = "Refund percent must be between 0 and 100.";
+            public const string INVALID_MIN_AGE = "Min age must be >= 0.";
+            public const string INVALID_MAX_AGE = "Max age must be >= 0.";
+            public const string INVALID_EXTRA_BED_FEE = "Extra bed fee must be >= 0.";
+            public const string INVALID_PET_FEE = "Pet fee must be >= 0.";
+            public const string INVALID_IS_PET_ALLOWED = "Is pet allowed must be true or false.";
         }
 
         // Service Messages
@@ -160,6 +182,9 @@ public static class MessageResponse
         {
             public const string NOT_FOUND = "Role not found!";
             public const string ALREADY_EXISTS = "Role already exists!";
+            public const string NAME_ALREADY_EXISTS = "Role name already exists!";
+            public const string EMPTY_NAME = "Role name must not be empty!";
+            public const string LONG_NAME = "Role name is too long (max 20 characters)!";
             public const string ADD_SUCCESS = "Role added successfully!";
             public const string ADD_FAILED = "Failed to add role!";
             public const string UPDATE_SUCCESS = "Role updated successfully!";
@@ -188,8 +213,6 @@ public static class MessageResponse
             public const string EMPTY_USERNAME_OR_EMAIL = "Username or Email must not be empty!";
             public const string MAX_LENGTH_USERNAME_OR_EMAIL = "Username or Email must not exceed 255 characters!";
             public const string MAX_LENGTH_PASSWORD = "Password must not exceed 100 characters!";
-
-            public static string USER_NOT_FOUND { get; set; }
         }
 
         // Register Messages

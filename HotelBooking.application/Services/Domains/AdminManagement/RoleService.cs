@@ -1,10 +1,12 @@
 using HotelBooking.infrastructure.Models;
+using HotelBooking.application.DTOs.Role;
+using HotelBooking.application.Helpers;
 
 namespace HotelBooking.application.Services.Domains.AdminManagement
 {
     public interface IRoleService
     {
-        public Task<bool> AddAsync(RoleDTO entity);
+        public Task<ApiResponse<bool>> AddAsync(RoleDTO entity);
     }
 
     public class RoleService : IRoleService
@@ -18,14 +20,14 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
             _dbu = dbu;
         }
 
-        public async Task<bool> AddAsync(RoleDTO newRole)
+        public async Task<ApiResponse<bool>> AddAsync(RoleDTO newRole)
         {
             try
             {
                 var checkRole = await _roleRepository.SingleOrDefaultAsync(r => r.Name == newRole.Name);
                 if (checkRole != null)
                 {
-                    return false;
+                    return ResponseFactory.Failure<bool>(StatusCodeResponse.Conflict, MessageResponse.AdminManagement.Role.NAME_ALREADY_EXISTS);
                 }
 
                 Role role = new Role();
@@ -34,12 +36,12 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
                 role.IsDeleted = false;
                 await _roleRepository.AddAsync(role);
                 await _dbu.SaveChangesAsync();
-                return true;
+                return ResponseFactory.Success<bool>(true, MessageResponse.AdminManagement.Role.ADD_SUCCESS);
 
             }
-            catch (Exception error)
+            catch (Exception)
             {
-                throw new Exception(error.Message);
+                return ResponseFactory.ServerError<bool>();
             }
         }
     }

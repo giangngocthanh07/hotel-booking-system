@@ -8,17 +8,17 @@ public class SearchHotelResultDTO
     public string CountryName { get; set; } = string.Empty;   // co.Name
     public string CoverImageUrl { get; set; } = string.Empty; // h.CoverImageUrl
 
-    // Giá ép kiểu DECIMAL(18,2) trong SP → DTO để decimal
+    // Price casted to DECIMAL(18,2) in SP → DTO uses decimal
     public decimal PriceFrom { get; set; }
 
-    // Ép kiểu INT → DTO để int
+    // Casted to INT → DTO uses int
     public int MaxAdultCapacity { get; set; }
     public int MaxChildCapacity { get; set; }
 
-    // AVG ép về DECIMAL(18,2) → DTO để decimal
+    // AVG casted to DECIMAL(18,2) → DTO uses decimal
     public decimal AvgRating { get; set; }
 
-    // COUNT ép về INT → DTO để int
+    // COUNT casted to INT → DTO uses int
     public int ReviewCount { get; set; }
     public int AvailableRooms { get; set; }
 }

@@ -1,10 +1,11 @@
-// Validator chung cho lớp cha ServiceCreateOrUpdateDTO
+// Common Validator for ServiceDTO base class
 using FluentValidation;
 
 namespace HotelBooking.application.Validators.AdminManagement.Services;
+
 public class ServiceValidator : AbstractValidator<ServiceDTO>
 {
-    // Giả định mức tối thiểu là 10,000đ
+    // Assume minimum price is 10,000 VND
     private const decimal minPrice = 10000;
 
     public ServiceValidator()
@@ -15,7 +16,7 @@ public class ServiceValidator : AbstractValidator<ServiceDTO>
 
         RuleFor(x => x.Price)
             .Must(p => p == 0 || p >= minPrice)
-            .WithMessage(MessageResponse.AdminManagement.Service.INVALID_AMOUNT + "hoặc tối thiểu " + minPrice.ToString("N0") + "đ!");
+            .WithMessage($"{MessageResponse.AdminManagement.Service.INVALID_AMOUNT} or minimum {minPrice:N0} VND!");
 
         RuleFor(x => x.Description)
             .MaximumLength(500).WithMessage(MessageResponse.Validation.LONG_DESCRIPTION);
@@ -26,41 +27,37 @@ public class ServiceValidator : AbstractValidator<ServiceDTO>
 }
 
 // =========================================================================
-// 1. VALIDATOR CHO CREATE (Lớp cha & Điều phối đa hình)
+// 1. VALIDATOR FOR CREATE (Parent Class & Polymorphic Coordination)
 // =========================================================================
 public class ServiceCreateValidator : AbstractValidator<ServiceCreateDTO>
 {
-
     public ServiceCreateValidator()
     {
-        // A. Validate các trường chung (Base)
+        // A. Validate common fields (Base)
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage(MessageResponse.AdminManagement.Service.EMPTY_NAME)
             .MaximumLength(50).WithMessage(MessageResponse.AdminManagement.Service.LONG_NAME);
 
-
         RuleFor(x => x.Description)
             .MaximumLength(500).WithMessage(MessageResponse.Validation.LONG_DESCRIPTION);
 
-        // B. Cấu hình Đa hình (Quan trọng nhất)
-        // Dựa vào kiểu dữ liệu thực tế (Standard hay Airport), nó sẽ chạy validator con tương ứng
+        // B. Polymorphic Configuration
+        // Automatically selects the corresponding child validator based on concrete type (Standard or Airport)
         RuleFor(x => x).SetInheritanceValidator(v =>
         {
-            v.Add(new ServiceStandardCreateValidator()); // Đăng ký validator con
-            v.Add(new ServiceAirportCreateValidator());  // Đăng ký validator con
+            v.Add(new ServiceStandardCreateValidator()); // Register child validator
+            v.Add(new ServiceAirportCreateValidator());  // Register child validator
         });
     }
 }
 
-// --- CREATE ---
+// --- CREATE: Standard Service ---
 public class ServiceStandardCreateValidator : AbstractValidator<ServiceStandardCreateDTO>
 {
-    // Giả định mức tối thiểu là 10,000đ
     private const decimal minPrice = 10000;
     public ServiceStandardCreateValidator()
     {
-
-        // 1. Validate riêng (Unit)
+        // 1. Specific Validation (Unit)
         RuleFor(x => x.Unit)
             .NotEmpty().WithMessage(MessageResponse.AdminManagement.Service.EMPTY_UNIT_NAME)
             .MaximumLength(20).WithMessage(MessageResponse.AdminManagement.Service.LONG_UNIT);
@@ -71,14 +68,14 @@ public class ServiceStandardCreateValidator : AbstractValidator<ServiceStandardC
     }
 }
 
+// --- CREATE: Airport Service ---
 public class ServiceAirportCreateValidator : AbstractValidator<ServiceAirportCreateDTO>
 {
-    // Giả định mức tối thiểu là 10,000đ
     private const decimal minPrice = 10000;
 
     public ServiceAirportCreateValidator()
     {
-        // Validate số lượng
+        // Validate Capacity
         RuleFor(x => x.MaxPassengers)
             .GreaterThan(0).When(x => x.MaxPassengers.HasValue)
             .WithMessage(MessageResponse.AdminManagement.Service.MIN_PASSENGERS)
@@ -91,23 +88,24 @@ public class ServiceAirportCreateValidator : AbstractValidator<ServiceAirportCre
             .LessThanOrEqualTo(45).When(x => x.MaxLuggage.HasValue)
             .WithMessage(MessageResponse.AdminManagement.Service.MAX_LUGGAGE);
 
-        // Validate Khứ hồi - (Nếu có thu phí khứ hồi)
+        // Validate Round-trip (If applicable)
         RuleFor(x => x.RoundTripPrice)
             .Must(p => p == 0 || p >= minPrice)
             .When(x => x.HasRoundTrip && x.IsRoundTripPaid)
-            .WithMessage(MessageResponse.AdminManagement.Service.INVALID_ROUND_TRIP_PRICE + "hoặc tối thiểu " + minPrice.ToString("N0") + "đ!");
+            .WithMessage($"{MessageResponse.AdminManagement.Service.INVALID_ROUND_TRIP_PRICE} or minimum {minPrice:N0} VND!");
 
-        // Validate Phụ phí đêm
+        // Validate Night Fee
         When(x => x.HasNightFee, () =>
         {
             RuleFor(x => x.AdditionalFee).NotNull().Must(f => f == 0 || f >= minPrice)
-                .WithMessage(MessageResponse.AdminManagement.Service.DEFAULT_ADDITIONAL_FEE + " " + minPrice.ToString("N0") + "đ!");
+                .WithMessage($"{MessageResponse.AdminManagement.Service.DEFAULT_ADDITIONAL_FEE} {minPrice:N0} VND!");
             RuleFor(x => x.AdditionalFeeStartTime).NotNull()
                 .WithMessage(MessageResponse.AdminManagement.Service.MISSING_ADDITIONAL_FEE_START_TIME);
             RuleFor(x => x.AdditionalFeeEndTime).NotNull()
                 .WithMessage(MessageResponse.AdminManagement.Service.MISSING_ADDITIONAL_FEE_END_TIME);
         });
 
+        // Custom Validation for Night Fee Time Range
         RuleFor(x => x).Custom((dto, context) =>
         {
             if (dto.HasNightFee && dto.AdditionalFeeStartTime.HasValue && dto.AdditionalFeeEndTime.HasValue)
@@ -117,12 +115,12 @@ public class ServiceAirportCreateValidator : AbstractValidator<ServiceAirportCre
 
                 if (totalHours > 12)
                 {
-                    context.AddFailure("AdditionalFeeEndTime", "Khung giờ phụ phí đêm không được quá 12 tiếng.");
+                    context.AddFailure("AdditionalFeeEndTime", MessageResponse.AdminManagement.Service.ADDITIONAL_FEE_TIME_EXCEEDS_LIMIT);
                 }
 
                 if (dto.AdditionalFeeStartTime == dto.AdditionalFeeEndTime)
                 {
-                    context.AddFailure("AdditionalFeeEndTime", "Giờ bắt đầu và kết thúc không được trùng nhau.");
+                    context.AddFailure("AdditionalFeeEndTime", MessageResponse.AdminManagement.Service.INVALID_ADDITIONAL_FEE_START_END_TIME);
                 }
             }
         });
@@ -130,10 +128,10 @@ public class ServiceAirportCreateValidator : AbstractValidator<ServiceAirportCre
 }
 
 // =========================================================================
-// 2. GROUP VALIDATOR CHO UPDATE
+// 2. GROUP VALIDATOR FOR UPDATE
 // =========================================================================
 
-// 2.1. Validator Cha (Điều phối)
+// 2.1. Parent Validator (Coordination)
 public class ServiceUpdateValidator : AbstractValidator<ServiceUpdateDTO>
 {
     public ServiceUpdateValidator()
@@ -150,15 +148,14 @@ public class ServiceUpdateValidator : AbstractValidator<ServiceUpdateDTO>
     }
 }
 
-// --- UPDATE ---
+// --- UPDATE: Standard Service ---
 public class ServiceStandardUpdateValidator : AbstractValidator<ServiceStandardUpdateDTO>
 {
-    // Giả định mức tối thiểu là 10,000đ
     private const decimal minPrice = 10000;
 
     public ServiceStandardUpdateValidator()
     {
-        // Logic y hệt Create
+        // Same logic as Create
         RuleFor(x => x.Unit)
             .NotEmpty().WithMessage(MessageResponse.AdminManagement.Service.EMPTY_UNIT_NAME)
             .MaximumLength(20).WithMessage(MessageResponse.AdminManagement.Service.LONG_UNIT);
@@ -169,9 +166,9 @@ public class ServiceStandardUpdateValidator : AbstractValidator<ServiceStandardU
     }
 }
 
+// --- UPDATE: Airport Service ---
 public class ServiceAirportUpdateValidator : AbstractValidator<ServiceAirportUpdateDTO>
 {
-    // Giả định mức tối thiểu là 10,000đ
     private const decimal minPrice = 10000;
 
     public ServiceAirportUpdateValidator()
@@ -191,12 +188,12 @@ public class ServiceAirportUpdateValidator : AbstractValidator<ServiceAirportUpd
         RuleFor(x => x.RoundTripPrice)
             .Must(p => p == 0 || p >= minPrice)
             .When(x => x.HasRoundTrip && x.IsRoundTripPaid)
-            .WithMessage(MessageResponse.AdminManagement.Service.INVALID_ROUND_TRIP_PRICE + "hoặc tối thiểu " + minPrice.ToString("N0") + "đ!");
+            .WithMessage($"{MessageResponse.AdminManagement.Service.INVALID_ROUND_TRIP_PRICE} or minimum {minPrice:N0} VND!");
 
         When(x => x.HasNightFee, () =>
         {
             RuleFor(x => x.AdditionalFee).NotNull().Must(f => f == 0 || f >= minPrice)
-                .WithMessage(MessageResponse.AdminManagement.Service.DEFAULT_ADDITIONAL_FEE + " " + minPrice.ToString("N0") + "đ!");
+                .WithMessage($"{MessageResponse.AdminManagement.Service.DEFAULT_ADDITIONAL_FEE} {minPrice:N0} VND!");
             RuleFor(x => x.AdditionalFeeStartTime).NotNull()
                 .WithMessage(MessageResponse.AdminManagement.Service.MISSING_ADDITIONAL_FEE_START_TIME);
             RuleFor(x => x.AdditionalFeeEndTime).NotNull()

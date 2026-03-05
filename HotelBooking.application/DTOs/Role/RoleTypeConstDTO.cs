@@ -1,3 +1,4 @@
+namespace HotelBooking.application.DTOs.Role;
 public class RoleTypeConstDTO
 {
     public static int Admin = 1;

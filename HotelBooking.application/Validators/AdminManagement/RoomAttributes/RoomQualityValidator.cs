@@ -9,7 +9,7 @@ public class RoomQualityCreateValidator : AbstractValidator<RoomQualityCreateDTO
     {
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage(MessageResponse.AdminManagement.RoomAttribute.RoomQuality.EMPTY_NAME)
-            .MaximumLength(50);
+            .MaximumLength(50).WithMessage(MessageResponse.AdminManagement.RoomAttribute.RoomQuality.LONG_NAME);
 
         RuleFor(x => x.SortOrder)
             .InclusiveBetween(0, 10).WithMessage(MessageResponse.AdminManagement.RoomAttribute.RoomQuality.INVALID_SORT_ORDER);
@@ -26,7 +26,7 @@ public class RoomQualityUpdateValidator : AbstractValidator<RoomQualityUpdateDTO
     {
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage(MessageResponse.AdminManagement.RoomAttribute.RoomQuality.EMPTY_NAME)
-            .MaximumLength(50);
+            .MaximumLength(50).WithMessage(MessageResponse.AdminManagement.RoomAttribute.RoomQuality.LONG_NAME);
 
         RuleFor(x => x.SortOrder)
             .InclusiveBetween(0, 10).WithMessage(MessageResponse.AdminManagement.RoomAttribute.RoomQuality.INVALID_SORT_ORDER);

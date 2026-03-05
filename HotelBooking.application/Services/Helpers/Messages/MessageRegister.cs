@@ -1,6 +1,6 @@
 using System;
 
-[Obsolete("Sử dụng MessageResponse.UserManagement.Register thay vào")]
+[Obsolete("Using MessageResponse.UserManagement.Register")]
 public static class MessageRegister
 {
     public const string REGISTER_SUCCESS = MessageResponse.UserManagement.Register.SUCCESS;

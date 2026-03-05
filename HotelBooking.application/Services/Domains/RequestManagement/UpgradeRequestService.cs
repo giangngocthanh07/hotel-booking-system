@@ -2,7 +2,7 @@ using HotelBooking.infrastructure.Models;
 using HotelBooking.application.Helpers;
 using FluentValidation;
 using System.Linq.Expressions;
-using HotelBooking.application.DTOs.Request;
+using HotelBooking.application.DTOs.Role;
 using HotelBooking.application.DTOs.Request.Base;
 using HotelBooking.application.DTOs.Request.UpgradeRequest;
 using HotelBooking.application.Services.Domains.RequestManagement.Base;

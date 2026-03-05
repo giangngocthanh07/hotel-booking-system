@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace HotelBooking.api.Controllers.V1.Admin
 {
     /// <summary>
-    /// Admin Management Controller - Quản lý các module (Amenity, Policy, Service)
+    /// Admin Management Controller - Manage modules (Amenity, Policy, Service)
     /// </summary>
     [Route("api/v1/admin/[controller]")]
     [ApiController]
@@ -60,14 +60,14 @@ namespace HotelBooking.api.Controllers.V1.Admin
         }
 
         // ==========================================
-        // 2. API LẤY DỮ LIỆU (THEO TỪNG MODULE)
+        // 2. API GET DATA (BY MODULE)
         // ==========================================
-        // Tại sao không gom 1 cái generic? -> Để Swagger hiển thị rõ DTO trả về cho từng loại
+        // Why not use a generic one? -> To clearly show the returned DTO in Swagger for each type
 
         #region AMENITY MANAGEMENT
 
         /// <summary>
-        /// Lấy danh sách các loại amenity
+        /// Get list of amenity types
         /// </summary>
         /// 
         [HttpGet("get-all-amenity-types")]
@@ -78,7 +78,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         }
 
         /// <summary>
-        /// Lấy danh sách amenity theo loại (có phân trang)
+        /// Get list of amenities by type (paginated)
         /// </summary>
         /// 
         // URL: api/hotel/get-amenity-data?typeId=1
@@ -94,7 +94,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         }
 
         /// <summary>
-        /// Thêm amenity mới
+        /// Create new amenity
         /// </summary>
         /// 
         [HttpPost("create-amenity")]
@@ -105,7 +105,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         }
 
         /// <summary>
-        /// Cập nhật amenity
+        /// Update amenity
         /// </summary>
         /// 
         [HttpPut("update-amenity/{id}")]
@@ -116,7 +116,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         }
 
         /// <summary>
-        /// Xóa amenity
+        /// Delete amenity
         /// </summary>
         /// 
         [HttpDelete("delete-amenity/{id}")]
@@ -131,7 +131,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         #region POLICY MANAGEMENT
 
         /// <summary>
-        /// Lấy danh sách các loại policy
+        /// Get list of policy types
         /// </summary>
         /// 
         [HttpGet("get-all-policy-types")]
@@ -142,7 +142,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         }
 
         /// <summary>
-        /// Lấy danh sách policy theo loại (có phân trang)
+        /// Get list of policies by type (paginated)
         /// </summary>
         /// 
         [HttpGet("get-policy-data")]
@@ -157,7 +157,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         }
 
         /// <summary>
-        /// Thêm policy mới
+        /// Create new policy
         /// </summary>
         /// 
         [HttpPost("create-check-in-out-policy")]
@@ -189,7 +189,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         }
 
         /// <summary>
-        /// Cập nhật policy
+        /// Update policy
         /// </summary>
         /// 
         [HttpPut("update-check-in-out-policy/{id}")]
@@ -221,7 +221,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         }
 
         /// <summary>
-        /// Xóa policy
+        /// Delete policy
         /// </summary>
         /// 
         [HttpDelete("delete-policy/{id}")]
@@ -236,7 +236,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         #region SERVICE MANAGEMENT
 
         /// <summary>
-        /// Lấy danh sách các loại service
+        /// Get list of service types
         /// </summary>
         /// 
         [HttpGet("get-all-service-types")]
@@ -247,7 +247,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         }
 
         /// <summary>
-        /// Lấy danh sách service theo loại (có phân trang)
+        /// Get list of services by type (paginated)
         /// </summary>
         /// 
         // URL: api/hotel/get-service-data?typeId=1
@@ -263,7 +263,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         }
 
         /// <summary>
-        /// Thêm service mới
+        /// Create new service
         /// </summary>
         [HttpPost("create-standard-service")]
         public async Task<IActionResult> CreateStandardServiceAsync([FromBody] ServiceStandardCreateDTO newService)
@@ -280,7 +280,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         }
 
         /// <summary>
-        /// Cập nhật service
+        /// Update service
         /// </summary>
 
         [HttpPut("update-standard-service/{id}")]
@@ -298,7 +298,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         }
 
         /// <summary>
-        /// Xóa service
+        /// Delete service
         /// </summary>
         /// 
         [HttpDelete("delete-service/{id}")]

@@ -1,7 +1,7 @@
-using System.Text.Json;
 using FluentValidation;
 using HotelBooking.application.Helpers;
 using HotelBooking.infrastructure.Models;
+using HotelBooking.application.Interfaces;
 
 
 public interface IBedTypeService : IStandardManage<BedTypeDTO, BedTypeCreateDTO, BedTypeUpdateDTO>
@@ -20,10 +20,10 @@ public class BedTypeService : BaseManage<BedType, IBedTypeRepository, BedTypeDTO
         _pagingValidator = pagingValidator;
     }
 
-    // Map Entity -> DTO (Hiển thị ra UI)
+    // Map Entity -> DTO (Display to UI) 
     protected override BedTypeDTO MapToDto(BedType entity)
     {
-        // Gọi Helper để giải nén
+        // Call Helper to extract
         var extraData = BedTypeHelper.MapToAdditionalData(entity.Additional);
 
         return new BedTypeDTO
@@ -31,15 +31,15 @@ public class BedTypeService : BaseManage<BedType, IBedTypeRepository, BedTypeDTO
             Id = entity.Id,
             Name = entity.Name,
             Description = entity.Description,
-            // Field riêng
+            // Separate field
             DefaultCapacity = entity.DefaultCapacity ?? 1,
-            // Map thông số từ JSON
+            // Map parameters from JSON
             MinWidth = extraData.MinWidth,
             MaxWidth = extraData.MaxWidth
         };
     }
 
-    // Map CreateDTO -> Entity (Tạo mới)
+    // Map CreateDTO -> Entity (Create new)
     protected override BedType MapCreateToEntity(BedTypeCreateDTO createDto)
     {
         return new BedType
@@ -47,28 +47,28 @@ public class BedTypeService : BaseManage<BedType, IBedTypeRepository, BedTypeDTO
             Name = createDto.Name,
             IsDeleted = false,
             Description = createDto.Description,
-            // Field riêng
+            // Separate field
             DefaultCapacity = createDto.DefaultCapacity,
-            // Đóng gói thông số vào JSON Additional
+            // Pack parameters into JSON Additional
             Additional = BedTypeHelper.MapToAdditionalJson(createDto)
         };
     }
 
-    // Map UpdateDTO -> Entity (Cập nhật)
+    // Map UpdateDTO -> Entity (Update)
     protected override void MapUpdateToEntity(BedTypeUpdateDTO updateDto, BedType entity)
     {
         entity.Name = updateDto.Name;
         entity.Description = updateDto.Description;
-        // Field riêng
+        // Separate field
         entity.DefaultCapacity = updateDto.DefaultCapacity;
-        // Cập nhật lại chuỗi JSON
+        // Update JSON string
         entity.Additional = BedTypeHelper.MapToAdditionalJson(updateDto);
     }
 
     // Validation
     protected override async Task<ValidationResult> ValidateCreateLogicAsync(BedTypeCreateDTO dto)
     {
-        // Check trùng tên (Chỉ trong nhóm BedType)
+        // Check for duplicate name (Only within BedType group)
         bool isDuplicate = await _repo.AnyAsync(x =>
             x.Name == dto.Name);
 
@@ -79,7 +79,7 @@ public class BedTypeService : BaseManage<BedType, IBedTypeRepository, BedTypeDTO
 
     protected override async Task<ValidationResult> ValidateUpdateLogicAsync(BedTypeUpdateDTO dto, int id)
     {
-        // Check trùng tên (Chỉ trong nhóm BedType, trừ chính nó)
+        // Check for duplicate name (Only within BedType group, excluding itself)
         bool isDuplicate = await _repo.AnyAsync(x =>
             x.Name == dto.Name &&
             x.Id != id &&
@@ -112,26 +112,26 @@ public class BedTypeService : BaseManage<BedType, IBedTypeRepository, BedTypeDTO
         }
     }
 
-    // --- IMPLEMENT HÀM: LẤY DANH SÁCH PHÂN TRANG ---
+    // --- IMPLEMENT METHOD: GET PAGED LIST ---
     public async Task<ApiResponse<PagedManageResult<BedTypeDTO>>> GetPagedListAsync(PagingRequest paging)
     {
         try
         {
-            // [BƯỚC 1] Dùng FluentValidation
-            // ValidateAsync check cả null, > 0, max size... cực sạch sẽ
+            // [STEP 1] Use FluentValidation
+            // ValidateAsync checks for null, > 0, max size... very cleanly
             var validationResult = await _pagingValidator.ValidateAsync(paging);
 
             if (!validationResult.IsValid)
             {
-                // Lấy lỗi đầu tiên trả về
+                // Get the first error and return
                 return ResponseFactory.Failure<PagedManageResult<BedTypeDTO>>(
                     StatusCodeResponse.BadRequest,
                     validationResult.Errors[0].ErrorMessage);
             }
 
-            // [BƯỚC 2] Gọi Repository lấy dữ liệu phân trang
-            // Filter: Lấy tất cả cái chưa xóa (!IsDeleted)
-            // OrderBy: Sắp xếp theo ID giảm dần (Mới nhất lên đầu)
+            // [STEP 2] Call Repository to get paged data
+            // Filter: Get all that are not deleted (!IsDeleted)
+            // OrderBy: Sort by ID descending (Newest first)
             var (items, totalCount) = await _repo.GetPagedAsync(
                 pageIndex: paging.PageIndex!.Value,
                 pageSize: paging.PageSize!.Value,
@@ -139,12 +139,12 @@ public class BedTypeService : BaseManage<BedType, IBedTypeRepository, BedTypeDTO
                 orderBy: q => q.OrderByDescending(x => x.Id)
             );
 
-            // [Bước 3] Map Entity sang DTO
-            // Sử dụng hàm MapToDto đã viết sẵn trong class này
+            // [STEP 3] Map Entity to DTO
+            // Use the pre-written MapToDto method in this class
             var dtos = items.Select(MapToDto).ToList();
 
-            // [Bước 4] Đóng gói kết quả
-            // [QUAN TRỌNG] Chỉ cần truyền TotalCount và PageSize, TotalPages sẽ tự động được tính
+            // [STEP 4] Package the result
+            // [IMPORTANT] Only TotalCount and PageSize need to be passed, TotalPages will be calculated automatically
             var result = new PagedManageResult<BedTypeDTO>(
                 dtos,
                 totalCount,
@@ -157,7 +157,7 @@ public class BedTypeService : BaseManage<BedType, IBedTypeRepository, BedTypeDTO
         }
         catch (Exception)
         {
-            // Log lỗi nếu cần thiết
+            // Log error if necessary
             return ResponseFactory.ServerError<PagedManageResult<BedTypeDTO>>();
         }
     }

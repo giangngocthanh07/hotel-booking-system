@@ -1,14 +1,16 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+
+using HotelBooking.application.DTOs.User;
 using HotelBooking.application.DTOs.User.Register;
 using HotelBooking.application.Helpers;
 using HotelBooking.application.Services.Domains.UserManagement;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 
 namespace HotelBooking.api.Controllers.V1.Admin
 {
     /// <summary>
-    /// Admin Account Controller - Quản lý tài khoản, Đăng ký Admin
+    /// Admin Account Controller - Account Management, Admin Registration
     /// </summary>
     [Route("api/v1/admin/[controller]")]
     [ApiController]
@@ -24,7 +26,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         }
 
         /// <summary>
-        /// Lấy thông tin người dùng hiện tại (Admin)
+        /// Get current user information (Admin)
         /// </summary>
         [HttpGet("me")]
         public async Task<IActionResult> GetCurrentUser()
@@ -41,7 +43,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         }
 
         /// <summary>
-        /// Lấy thông tin người dùng theo ID (Admin)
+        /// Get user information by ID (Admin)
         /// </summary>
         [HttpGet("{userId}")]
         public async Task<IActionResult> GetUserById(int userId)
@@ -51,7 +53,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         }
 
         /// <summary>
-        /// Đăng ký tài khoản Admin (Yêu cầu Admin)
+        /// Register Admin account (Requires Admin)
         /// </summary>
         [HttpPost("register")]
         public async Task<IActionResult> RegisterAdmin([FromBody] RegisterAdminDTO newAdmin)
@@ -61,7 +63,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         }
 
         /// <summary>
-        /// Phé duyệt yêu cầu nâng cấp thành chủ khách sạn
+        /// Approve upgrade request to hotel owner
         /// </summary>
         [HttpPost("{requestId}/upgrade-approve")]
         public async Task<IActionResult> ApproveUpgradeAsync(int requestId)

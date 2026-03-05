@@ -1,13 +1,14 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using HotelBooking.application.DTOs.Request.UpgradeRequest;
 using HotelBooking.application.Services.Domains.RequestManagement;
 using HotelBooking.application.Helpers;
 
 namespace HotelBooking.api.Controllers.V1.Public
 {
     /// <summary>
-    /// Public Upgrade Request Controller - endpoints dành cho khách hàng
+    /// Public Upgrade Request Controller - endpoints for customers
     /// </summary>
     [Route("api/v1/upgrade-requests")]
     [ApiController]
@@ -23,7 +24,7 @@ namespace HotelBooking.api.Controllers.V1.Public
         }
 
         /// <summary>
-        /// Lấy thông tin user + trạng thái request hiện tại
+        /// Get user info and current request status
         /// </summary>
         [HttpGet("my-info")]
         public async Task<IActionResult> GetMyInfo()
@@ -39,7 +40,7 @@ namespace HotelBooking.api.Controllers.V1.Public
         }
 
         /// <summary>
-        /// Lấy lịch sử requests của user
+        /// Get user's request history
         /// </summary>
         [HttpGet("my-requests")]
         [Authorize(Roles = "Customer,Owner")]
@@ -53,7 +54,7 @@ namespace HotelBooking.api.Controllers.V1.Public
         }
 
         /// <summary>
-        /// Tạo yêu cầu nâng cấp (Customer only)
+        /// Create upgrade request (Customer only)
         /// </summary>
         [HttpPost("create-request")]
         public async Task<IActionResult> CreateRequestAsync([FromBody] CreateUpgradeRequestDTO request)
@@ -66,7 +67,7 @@ namespace HotelBooking.api.Controllers.V1.Public
         }
 
         /// <summary>
-        /// Hủy request đang Pending
+        /// Cancel a pending request
         /// </summary>
         [HttpPost("cancel")]
         public async Task<IActionResult> Cancel()

@@ -2,21 +2,21 @@ using FluentValidation;
 
 namespace HotelBooking.application.Validators.AdminManagement.RoomAttributes;
 
-// 1. Validate cho CREATE
+// 1. Validator for CREATE
 public class BedTypeCreateValidator : AbstractValidator<BedTypeCreateDTO>
 {
     public BedTypeCreateValidator()
     {
-        // Check Tên
+        // Name Validation
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage(MessageResponse.AdminManagement.RoomAttribute.BedType.EMPTY_NAME)
             .MaximumLength(50).WithMessage(MessageResponse.AdminManagement.RoomAttribute.BedType.LONG_NAME);
 
-        // Check Sức chứa
+        // Capacity Validation
         RuleFor(x => x.DefaultCapacity)
             .InclusiveBetween(1, 10).WithMessage(MessageResponse.AdminManagement.RoomAttribute.BedType.INVALID_DEFAULT_CAPACITY);
 
-        // Check Logic Kích thước (Chỉ check khi KHÔNG PHẢI là loại đa dạng)
+        // Size Logic Validation (Only applicable if the bed is NOT a varying size type)
         When(x => !x.IsVaryingSize, () =>
         {
             RuleFor(x => x.MinWidth)
@@ -27,24 +27,27 @@ public class BedTypeCreateValidator : AbstractValidator<BedTypeCreateDTO>
                 .WithMessage(MessageResponse.AdminManagement.RoomAttribute.BedType.INVALID_MAX_WIDTH);
         });
 
-        // Validate Description (Optional)
+        // Description Validation (Optional)
         RuleFor(x => x.Description)
             .MaximumLength(500).WithMessage(MessageResponse.Validation.LONG_DESCRIPTION);
     }
 }
 
-// 2. Validate cho UPDATE (Logic tương tự Create nhưng áp dụng cho DTO Update)
+// 2. Validator for UPDATE (Similar logic to Create but applied to UpdateDTO)
 public class BedTypeUpdateValidator : AbstractValidator<BedTypeUpdateDTO>
 {
     public BedTypeUpdateValidator()
     {
+        // Name Validation
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage(MessageResponse.AdminManagement.RoomAttribute.BedType.EMPTY_NAME)
-            .MaximumLength(20).WithMessage(MessageResponse.AdminManagement.RoomAttribute.BedType.LONG_NAME);
+            .MaximumLength(50).WithMessage(MessageResponse.AdminManagement.RoomAttribute.BedType.LONG_NAME);
 
+        // Capacity Validation
         RuleFor(x => x.DefaultCapacity)
             .InclusiveBetween(1, 10).WithMessage(MessageResponse.AdminManagement.RoomAttribute.BedType.INVALID_DEFAULT_CAPACITY);
 
+        // Size Logic Validation
         When(x => !x.IsVaryingSize, () =>
         {
             RuleFor(x => x.MinWidth)
@@ -55,7 +58,7 @@ public class BedTypeUpdateValidator : AbstractValidator<BedTypeUpdateDTO>
                 .WithMessage(MessageResponse.AdminManagement.RoomAttribute.BedType.INVALID_MAX_WIDTH);
         });
 
-        // Validate Description (Optional)
+        // Description Validation (Optional)
         RuleFor(x => x.Description)
             .MaximumLength(500).WithMessage(MessageResponse.Validation.LONG_DESCRIPTION);
     }

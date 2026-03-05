@@ -2,9 +2,12 @@ using HotelBooking.application.Helpers;
 using FluentValidation;
 using HotelBooking.infrastructure.Models;
 using System.Net.Mail;
+using HotelBooking.application.DTOs.Role;
+using HotelBooking.application.DTOs.User;
 using HotelBooking.application.DTOs.User.Register;
 using HotelBooking.application.DTOs.User.Login;
 using HotelBooking.application.Services.Domains.Auth;
+
 // Note: MessageRegister and MessageLogin are consolidated into MessageResponse in Helpers/Messages/
 // Use MessageResponse.UserManagement.Register.* and MessageResponse.UserManagement.Login.* for new code
 // Or keep MessageRegister/MessageLogin for backward compatibility

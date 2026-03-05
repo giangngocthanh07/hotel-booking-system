@@ -12,29 +12,29 @@ public enum AmenityTypeEnum
 
 public class AmenityTypeDTO : BaseAdminDTO
 {
-    // Parse từ Additional JSON
+    // Parsed from Additional JSON
 
     // [Required(ErrorMessage = "Icon class is required")]
     public string? IconClass { get; set; }
     public string? IconColor { get; set; }
 }
 
-// 1. DTO hiển thị
+// 1. Display DTO
 public class AmenityDTO : BaseAdminDTO
 {
     public int TypeId { get; set; }
 }
 
-// 2. DTO Thêm/Sửa
-// 1. DTO dùng cho TẠO MỚI (Cần TypeId) -> Kế thừa Base để lấy Name, Description
+// 2. Add/Edit DTOs
+// 1. DTO used for CREATING (Requires TypeId) -> Inherits Base to get Name, Description
 public class AmenityCreateDTO : BaseCreateOrUpdateAdminDTO
 {
-    [Required(ErrorMessage = "Loại tiện nghi không được để trống")]
+    [Required(ErrorMessage = "Amenity type cannot be empty")]
     public int TypeId { get; set; }
 }
 
-// 2. DTO dùng cho CẬP NHẬT (Không có TypeId) -> Sạch bóng trên Swagger!
+// 2. DTO used for UPDATING (No TypeId) -> Clean on Swagger!
 public class AmenityUpdateDTO : BaseCreateOrUpdateAdminDTO
 {
-    // Rỗng, chỉ lấy Name và Description từ Base
+    // Empty, only gets Name and Description from Base
 }

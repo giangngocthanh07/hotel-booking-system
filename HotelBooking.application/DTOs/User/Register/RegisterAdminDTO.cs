@@ -1,9 +1,11 @@
+using HotelBooking.application.DTOs.Role;
+
 namespace HotelBooking.application.DTOs.User.Register
 {
     /// <summary>
-    /// DTO dùng để đăng ký tài khoản khách hàng mới.
-    /// Chỉ chứa thông tin cần thiết cho việc tạo tài khoản.
-    /// RoleId được mặc định là Customer và không cho phép thay đổi từ client.
+    /// DTO used to register a new admin user.
+    /// Contains only the necessary information for creating an account.
+    /// RoleId is set to Admin by default and cannot be changed from client.
     /// </summary>
 
     public class RegisterAdminDTO

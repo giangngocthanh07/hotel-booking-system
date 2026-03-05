@@ -1,15 +1,17 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+using HotelBooking.application.DTOs.User;
 using HotelBooking.application.DTOs.User.Login;
 using HotelBooking.application.DTOs.User.Register;
 using HotelBooking.application.Helpers;
 using HotelBooking.application.Services.Domains.UserManagement;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 
 namespace HotelBooking.api.Controllers.V1.Public
 {
     /// <summary>
-    /// Public Authentication Controller - Đăng ký, đăng nhập, quản lý thông tin người dùng
+    /// Public Authentication Controller - Registration, login, user information management
     /// </summary>
     [Route("api/v1/[controller]")]
     [ApiController]
@@ -23,7 +25,7 @@ namespace HotelBooking.api.Controllers.V1.Public
         }
 
         /// <summary>
-        /// Lấy thông tin người dùng hiện tại (Yêu cầu xác thực)
+        /// Get current user information (Requires authentication)
         /// </summary>
         [HttpGet("me")]
         [Authorize]
@@ -41,7 +43,7 @@ namespace HotelBooking.api.Controllers.V1.Public
         }
 
         /// <summary>
-        /// Đăng ký tài khoản khách hàng (công khai)
+        /// Register customer account (public)
         /// </summary>
         [HttpPost("register")]
         public async Task<IActionResult> RegisterCustomer([FromBody] RegisterCustomerDTO newCustomer)
@@ -51,7 +53,7 @@ namespace HotelBooking.api.Controllers.V1.Public
         }
 
         /// <summary>
-        /// Đăng nhập (công khai)
+        /// Login (public)
         /// </summary>
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginUserDTO loginRequest)

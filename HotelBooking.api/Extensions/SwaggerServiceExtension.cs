@@ -10,7 +10,7 @@ public static class SwaggerServiceExtension
         {
             options.SwaggerDoc("v1", new OpenApiInfo { Title = "HotelBooking API", Version = "v1" });
 
-            // Cấu hình JWT Bearer cho Swagger
+            // Configure JWT Bearer for Swagger
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
                 Name = "Authorization",
@@ -32,11 +32,11 @@ public static class SwaggerServiceExtension
                 }
             });
 
-            // Hỗ trợ Kế thừa & Đa hình
+            // Support Inheritance & Polymorphism
             options.UseAllOfForInheritance();
             options.UseOneOfForPolymorphism();
 
-            // Filter cho Enum
+            // Filter for Enum
             options.SchemaFilter<EnumSchemaFilter>();
         });
 
