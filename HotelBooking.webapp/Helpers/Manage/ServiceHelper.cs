@@ -1,15 +1,13 @@
-using HotelBooking.webapp.ViewModels.Hotel;
-
 namespace HotelBooking.webapp.Helpers
 {
     public static class ServiceHelper
     {
         /// <summary>
-        /// 1. Factory Pattern: Tạo object CreateVM rỗng dựa trên TypeId
+        /// 1. Factory Pattern: Creates an empty CreateVM object based on TypeId
         /// </summary>
         public static ServiceCreateVM CreateNewServiceModel(int typeId)
         {
-            // Bước 1: Tạo instance đúng kiểu
+            // Step 1: Create the correct instance type
             ServiceCreateVM model = typeId switch
             {
                 1 => new ServiceStandardCreateVM(),
@@ -17,15 +15,15 @@ namespace HotelBooking.webapp.Helpers
                 _ => new ServiceStandardCreateVM()
             };
 
-            // Bước 2: Chạy Smart Fill ngay lập tức (Để có giá sàn 100k/350k)
+            // Step 2: Execute Smart Fill immediately (to set floor prices like 100k/350k)
             ApplyDefaultValues(model, typeId);
 
             return model;
         }
 
         /// <summary>
-        /// 2. Mapping: Chuyển từ Dữ liệu hiển thị (ServiceVM) sang Dữ liệu Update (ServiceUpdateVM)
-        /// Dùng khi bấm nút "Edit" trên bảng
+        /// 2. Mapping: Converts from Display Data (ServiceVM) to Update Data (ServiceUpdateVM)
+        /// Triggered when the "Edit" button is clicked on the management table.
         /// </summary>
         public static ServiceUpdateVM? MapToUpdateVM(ServiceVM source)
         {
@@ -45,12 +43,12 @@ namespace HotelBooking.webapp.Helpers
                 // Case 2: Airport Transfer
                 ServiceAirportTransferVM air => new ServiceAirportUpdateVM
                 {
-                    // Copy các trường cơ bản
+                    // Copy basic fields
                     Name = air.Name,
                     Description = air.Description,
                     Price = air.Price,
 
-                    // Copy các trường logic
+                    // Copy logic fields
                     IsOneWayPaid = air.IsOneWayPaid,
 
                     HasRoundTrip = air.HasRoundTrip,
@@ -72,50 +70,51 @@ namespace HotelBooking.webapp.Helpers
         }
 
         /// <summary>
-        /// 3. Helper lấy tên hiển thị
+        /// 3. Helper to get Display Names
         /// </summary>
         public static string GetServiceTypeName(int typeId)
         {
             return typeId switch
             {
-                1 => "Dịch vụ tiêu chuẩn",
-                2 => "Đưa đón sân bay",
-                _ => "Khác",
+                1 => "Standard Service",
+                2 => "Airport Transfer",
+                _ => "Other",
             };
         }
 
         /// <summary>
-        /// 4. Smart Fill: Tự động gợi ý thông số dựa trên tên dịch vụ
+        /// 4. Smart Fill: Automatically suggests parameters based on the service name
         /// </summary>
-        // --- 1. ÁP DỤNG CHO CREATE MODEL ---
+
+        // --- 4a. APPLY TO CREATE MODEL ---
         public static void ApplyDefaultValues(ServiceCreateVM model, int typeId)
         {
             if (model == null) return;
 
-            // BƯỚC A: GÁN GIÁ SÀN (Để Form không bao giờ trống giá)
+            // STEP A: SET FLOOR PRICE (Ensure the form is never empty)
             if (model.Price == 0)
             {
                 model.Price = typeId == 2 ? 350000 : 100000;
-                // Type 2 (Sân bay) mặc định 350k, Type 1 (Tiêu chuẩn) mặc định 100k
+                // Type 2 (Airport) defaults to 350k, Type 1 (Standard) defaults to 100k
             }
 
-            // BƯỚC B: CHẠY LOGIC TỪ KHÓA (Ghi đè giá sàn nếu khớp từ khóa)
+            // STEP B: KEYWORD LOGIC (Overrides floor price if keywords match)
             ApplyLogic(typeId, model.Name ?? "",
 
-                // 1. Giá tiền: Chỉ ghi đè giá sàn hoặc giá 0
+                // 1. Pricing: Only override floor price or zero price
                 v => { if (model.Price == 0 || model.Price == 100000 || model.Price == 350000) model.Price = v; },
 
-                // 2. Đơn vị tính: 
+                // 2. Unit: 
                 v =>
                 {
                     if (model is ServiceStandardCreateVM std)
                     {
-                        // Chỉ đổi nếu đang trống HOẶC đang là mặc định "Lượt"
-                        if (string.IsNullOrEmpty(std.Unit) || std.Unit == "Lượt") std.Unit = v;
+                        // Only change if empty OR current value is default "Trip"
+                        if (string.IsNullOrEmpty(std.Unit) || std.Unit == "Trip" || std.Unit == "Lượt") std.Unit = v;
                     }
                 },
 
-                // 3. Sức chứa
+                // 3. Capacity
                 (pax, lug) =>
                 {
                     if (model is ServiceAirportCreateVM air)
@@ -125,17 +124,18 @@ namespace HotelBooking.webapp.Helpers
                     }
                 },
 
+                // 4. Round Trip
                 (hasRT, isPaid, rtPrice) =>
                 {
                     if (model is ServiceAirportCreateVM air)
                     {
-                        // 1. Chỉ tự bật switch nếu người dùng chưa đụng vào (HasRoundTrip đang tắt)
+                        // Enable switch only if user hasn't touched it (HasRoundTrip is off)
                         if (!air.HasRoundTrip)
                         {
                             air.HasRoundTrip = hasRT;
                             air.IsRoundTripPaid = isPaid;
                         }
-                        // 2. Chỉ điền giá nếu giá đang trống hoặc là giá mặc định cũ (300k)
+                        // Fill price only if empty or old default (300k)
                         if (air.RoundTripPrice == 0 || air.RoundTripPrice == null || air.RoundTripPrice == 300000)
                         {
                             air.RoundTripPrice = rtPrice;
@@ -143,7 +143,7 @@ namespace HotelBooking.webapp.Helpers
                     }
                 },
 
-                // 4. Phí đêm
+                // 5. Night Fee
                 (nightFeeOrNot, fee, start, end) =>
                 {
                     if (model is ServiceAirportCreateVM air)
@@ -157,7 +157,7 @@ namespace HotelBooking.webapp.Helpers
             );
         }
 
-        // --- 2. ÁP DỤNG CHO UPDATE MODEL ---
+        // --- 4b. APPLY TO UPDATE MODEL ---
         public static void ApplyDefaultValues(ServiceUpdateVM model, int typeId)
         {
             if (model == null) return;
@@ -190,7 +190,7 @@ namespace HotelBooking.webapp.Helpers
              );
         }
 
-        // --- 3. LOGIC NGHIỆP VỤ TRUNG TÂM (Private) ---
+        // --- 5. CENTRALIZED BUSINESS LOGIC (Private) ---
         private static void ApplyLogic(int typeId, string nameCheck,
             Action<decimal> setPrice, Action<string> setUnit,
             Action<int, int> setCapacity, Action<bool, bool, decimal> setRoundTripFee, Action<bool, decimal, TimeOnly, TimeOnly> setNightFee)
@@ -199,17 +199,18 @@ namespace HotelBooking.webapp.Helpers
             switch (typeId)
             {
                 case 1: // Standard
-                    if (name.Contains("ăn sáng") || name.Contains("breakfast")) { setPrice(150000); setUnit("Suất"); }
-                    else if (name.Contains("giặt")) { setPrice(30000); setUnit("Kg"); }
-                    else if (name.Contains("thuê xe")) { setPrice(200000); setUnit("Ngày"); }
-                    else { setPrice(100000); setUnit("Lượt"); }
+                    if (name.Contains("ăn sáng") || name.Contains("breakfast")) { setPrice(150000); setUnit("Person"); }
+                    else if (name.Contains("giặt") || name.Contains("laundry")) { setPrice(30000); setUnit("Kg"); }
+                    else if (name.Contains("thuê xe") || name.Contains("rental")) { setPrice(200000); setUnit("Day"); }
+                    else { setPrice(100000); setUnit("Trip"); }
                     break;
 
-                case 2: // Airport
-                    if (name.Contains("7 chỗ")) { setPrice(500000); setCapacity(7, 4); setRoundTripFee(true, true, 900000); }
-                    else if (name.Contains("16 chỗ")) { setPrice(850000); setCapacity(16, 10); setRoundTripFee(true, true, 1600000); }
+                case 2: // Airport Transfer
+                    if (name.Contains("7 chỗ") || name.Contains("7-seater")) { setPrice(500000); setCapacity(7, 4); setRoundTripFee(true, true, 900000); }
+                    else if (name.Contains("16 chỗ") || name.Contains("16-seater")) { setPrice(850000); setCapacity(16, 10); setRoundTripFee(true, true, 1600000); }
                     else { setPrice(350000); setCapacity(4, 2); setRoundTripFee(true, true, 650000); }
 
+                    // General defaults for Airport Transfer
                     setRoundTripFee(true, true, 500000);
                     setNightFee(true, 200000, new TimeOnly(22, 0), new TimeOnly(5, 0));
                     break;

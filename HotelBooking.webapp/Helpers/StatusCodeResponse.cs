@@ -1,3 +1,5 @@
+namespace HotelBooking.webapp.Helpers;
+
 public static class StatusCodeResponse
 {
     public const string Success = "Success";

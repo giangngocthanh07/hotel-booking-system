@@ -1,3 +1,5 @@
+namespace HotelBooking.webapp.Helpers.Common;
+
 using MudBlazor;
 
 public static class SnackbarHelper

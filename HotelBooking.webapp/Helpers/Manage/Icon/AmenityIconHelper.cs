@@ -1,13 +1,13 @@
-namespace HotelBooking.webapp.Helpers;
+namespace HotelBooking.webapp.Helpers.Manage.Icon;
 
 /// <summary>
-/// Helper class để map tên Amenity sang FontAwesome icon.
-/// Tách logic ra khỏi component để dễ maintain và test.
+/// Helper class to map Amenity names to FontAwesome icons.
+/// Decouples logic from components for better maintainability and testing.
 /// </summary>
 public static class AmenityIconHelper
 {
     /// <summary>
-    /// Icon mặc định khi không match được keyword nào
+    /// Default icon when no keywords match
     /// </summary>
     public const string DefaultIcon = "fa-solid fa-plus-circle";
 
@@ -17,7 +17,7 @@ public static class AmenityIconHelper
     /// </summary>
     private static readonly Dictionary<string, string> _iconMappings = new(StringComparer.OrdinalIgnoreCase)
     {
-        // Nhóm Vệ sinh / Phòng tắm
+        // Hygiene / Bathroom Group
         { "towel", "fa-solid fa-pump-soap" },
         { "khăn", "fa-solid fa-pump-soap" },
         { "soap", "fa-solid fa-pump-soap" },
@@ -31,7 +31,7 @@ public static class AmenityIconHelper
         { "bathtub", "fa-solid fa-bath" },
         { "bồn tắm", "fa-solid fa-bath" },
 
-        // Nhóm Điện tử / Giải trí
+        // Electronics / Entertainment Group
         { "tv", "fa-solid fa-tv" },
         { "tivi", "fa-solid fa-tv" },
         { "television", "fa-solid fa-tv" },
@@ -41,7 +41,7 @@ public static class AmenityIconHelper
         { "phone", "fa-solid fa-phone" },
         { "điện thoại", "fa-solid fa-phone" },
 
-        // Nhóm Đồ gia dụng
+        // Appliances Group
         { "fan", "fa-solid fa-fan" },
         { "quạt", "fa-solid fa-fan" },
         { "heat", "fa-solid fa-temperature-arrow-up" },
@@ -57,7 +57,7 @@ public static class AmenityIconHelper
         { "coffee", "fa-solid fa-mug-hot" },
         { "cà phê", "fa-solid fa-mug-hot" },
 
-        // Nhóm Nội thất
+        // Furniture Group
         { "desk", "fa-solid fa-desktop" },
         { "bàn làm việc", "fa-solid fa-desktop" },
         { "chair", "fa-solid fa-chair" },
@@ -70,7 +70,7 @@ public static class AmenityIconHelper
         { "mirror", "fa-solid fa-square" },
         { "gương", "fa-solid fa-square" },
 
-        // Nhóm Tiện ích khác
+        // Utilities & Services Group
         { "parking", "fa-solid fa-square-parking" },
         { "đỗ xe", "fa-solid fa-square-parking" },
         { "pool", "fa-solid fa-person-swimming" },
@@ -100,10 +100,10 @@ public static class AmenityIconHelper
     };
 
     /// <summary>
-    /// Lấy icon dựa trên tên amenity.
-    /// Tìm keyword trong tên và trả về icon tương ứng.
+    /// Retrieves an icon based on the amenity name.
+    /// Scans for keywords in the name and returns the corresponding FontAwesome class.
     /// </summary>
-    /// <param name="amenityName">Tên tiện nghi</param>
+    /// <param name="amenityName">The name of the amenity</param>
     /// <returns>FontAwesome icon class</returns>
     public static string GetIcon(string? amenityName)
     {
@@ -112,7 +112,7 @@ public static class AmenityIconHelper
 
         var nameLower = amenityName.ToLower();
 
-        // Tìm keyword đầu tiên match
+        // Find the first matching keyword
         foreach (var mapping in _iconMappings)
         {
             if (nameLower.Contains(mapping.Key))
@@ -125,7 +125,7 @@ public static class AmenityIconHelper
     }
 
     /// <summary>
-    /// Lấy icon với màu sắc dựa trên type
+    /// Retrieves an icon along with its associated color based on type.
     /// </summary>
     public static (string Icon, string Color) GetIconWithColor(string? amenityName, string? typeName = null)
     {
@@ -135,7 +135,7 @@ public static class AmenityIconHelper
     }
 
     /// <summary>
-    /// Lấy màu CSS dựa trên loại amenity
+    /// Retrieves the CSS color class based on the amenity type.
     /// </summary>
     private static string GetColorByType(string? typeName)
     {

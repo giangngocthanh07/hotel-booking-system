@@ -1,7 +1,9 @@
+namespace HotelBooking.webapp.Helpers.Common;
+
 public static class ResponseFactory
 {
     // ==========================================
-    // 1. NHÓM SUCCESS (Thành công - 2xx)
+    // 1. SUCCESS GROUP (2xx Status Codes)
     // ==========================================
     public static ApiResponse<T> Success<T>(T? data, string? message)
     {
@@ -9,17 +11,17 @@ public static class ResponseFactory
     }
 
     // ==========================================
-    // 2. NHÓM FAILURE (Lỗi logic/Client - 4xx)
-    // Bao gồm: BadRequest, NotFound, Conflict, Unauthorized...
+    // 2. FAILURE GROUP (Logic/Client Errors - 4xx)
+    // Includes: BadRequest, NotFound, Conflict, Unauthorized, etc.
     // ==========================================
     public static ApiResponse<T> Failure<T>(string? statusCode, string? message)
     {
-        // Bạn có thể thêm validation ở đây để đảm bảo statusCode là 4xx nếu muốn
+        // Optional: Add validation here to ensure statusCode belongs to 4xx range
         return CreateResponse<T>(statusCode, message, default!);
     }
 
     // ==========================================
-    // 3. NHÓM SERVER ERROR (Lỗi hệ thống - 5xx)
+    // 3. SERVER ERROR GROUP (System Errors - 5xx)
     // ==========================================
     public static ApiResponse<T> ServerError<T>()
     {
@@ -27,7 +29,7 @@ public static class ResponseFactory
     }
 
     // ==========================================
-    // HÀM PRIVATE (Core) - Để tránh lặp code (DRY)
+    // CORE PRIVATE METHOD - DRY (Don't Repeat Yourself) Implementation
     // ==========================================
     private static ApiResponse<T> CreateResponse<T>(string? statusCode, string? message, T? content)
     {
@@ -39,4 +41,3 @@ public static class ResponseFactory
         };
     }
 }
-

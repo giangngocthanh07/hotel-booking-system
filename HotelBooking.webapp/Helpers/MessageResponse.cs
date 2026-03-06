@@ -1,42 +1,46 @@
+namespace HotelBooking.webapp.Helpers;
+
 /// <summary>
-/// Tập hợp tất cả các message response trong hệ thống.
-/// Tổ chức theo domain: AdminManagement, UserManagement, Common
-/// Mỗi domain có các nested class theo functionality
+/// Centralized repository for all system message responses.
+/// Organized by domain: AdminManagement, UserManagement, Common.
+/// Each domain contains nested classes categorized by functionality.
 /// </summary>
 public static class MessageResponse
 {
     // =====================================================
-    // 1. COMMON MESSAGES (Các message chung cho tất cả)
+    // 1. COMMON MESSAGES (General system-wide messages)
     // =====================================================
     public static class Common
     {
         // Basic CRUD messages
-        public const string GET_SUCCESSFULLY = "Lấy thành công!";
-        public const string GET_FAILED = "Lấy thất bại!";
-        public const string CREATE_SUCCESSFULLY = "Tạo thành công!";
-        public const string CREATE_FAILED = "Tạo thất bại!";
-        public const string UPDATE_SUCCESSFULLY = "Cập nhật thành công!";
-        public const string UPDATE_FAILED = "Cập nhật thất bại!";
-        public const string DELETE_SUCCESSFULLY = "Xóa thành công!";
-        public const string DELETE_FAILED = "Xóa thất bại!";
+        public const string GET_SUCCESSFULLY = "Data retrieved successfully!";
+        public const string GET_FAILED = "Failed to retrieve data!";
+        public const string CREATE_SUCCESSFULLY = "Created successfully!";
+        public const string CREATE_FAILED = "Failed to create!";
+        public const string UPDATE_SUCCESSFULLY = "Updated successfully!";
+        public const string UPDATE_FAILED = "Failed to update!";
+        public const string DELETE_SUCCESSFULLY = "Deleted successfully!";
+        public const string DELETE_FAILED = "Failed to delete!";
 
         // Status messages
-        public const string NOT_FOUND = "Không tìm thấy!";
-        public const string BAD_REQUEST = "Yêu cầu không hợp lệ!";
-        public const string EMPTY_LIST = "Danh sách rỗng!";
-        public const string ERROR_IN_SERVER = "Lỗi ở phía máy chủ!";
+        public const string NOT_FOUND = "Resource not found!";
+        public const string BAD_REQUEST = "Invalid request!";
+        public const string EMPTY_LIST = "The list is empty!";
+        public const string ERROR_IN_SERVER = "Internal server error!";
     }
 
     // =====================================================
-    // 2. VALIDATION MESSAGES (Các message validation chung)
+    // 2. VALIDATION MESSAGES (Common validation rules)
     // =====================================================
     public static class Validation
     {
-        public const string EMPTY_NAME = "Tên không được để trống!";
-        public const string LONG_NAME = "Tên quá dài!";
-        public const string EMPTY_TYPE = "Loại không được để trống!";
-        public const string NAME_ALREADY_EXISTS = "Tên đã tồn tại!";
-        public const string INVALID_AMOUNT = "Số tiền phải lớn hơn 0!";
+        public const string EMPTY_NAME = "Name cannot be empty!";
+        public const string LONG_NAME = "Name is too long!";
+        public const string EMPTY_TYPE = "Type cannot be empty!";
+        public const string NAME_ALREADY_EXISTS = "Name already exists!";
+        public const string INVALID_AMOUNT = "Amount must be greater than 0!";
+        public const string LONG_DESCRIPTION = "Description is too long (max 500 characters)!";
+        public const string TYPE_ID_REQUIRED = "Type ID is required!";
     }
 
     // =====================================================
@@ -47,84 +51,103 @@ public static class MessageResponse
         // Amenity Messages
         public static class Amenity
         {
-            public const string EMPTY_NAME = "Tên tiện ích không được để trống!";
-            public const string LONG_NAME = "Tên tiện ích quá dài (tối đa 20 ký tự)!";
-            public const string EMPTY_TYPE = "Loại tiện ích không được để trống!";
+            public const string EMPTY_NAME = "Amenity name is required!";
+            public const string LONG_NAME = "Amenity name is too long (max 20 characters)!";
+            public const string EMPTY_TYPE = "Amenity type is required!";
         }
 
         // Policy Messages
         public static class Policy
         {
-            public const string EMPTY_NAME = "Tên chính sách không được để trống!";
-            public const string LONG_NAME = "Tên chính sách quá dài (tối đa 50 ký tự)!";
-            public const string EMPTY_TYPE = "Loại chính sách không được để trống!";
-            public const string INVALID_AMOUNT = "Số tiền phải lớn hơn 0!";
-            public const string INVALID_DIFF_TIME = "Mốc thời gian chuẩn phải tối thiểu cách nhau từ 1 tiếng!";
-            public const string MAX_DIFF_TIME = "Mốc thời gian chuẩn không được vượt quá 23 tiếng!";
-            public const string INVALID_AGE_RANGE = "Khoảng tuổi không hợp lệ!";
+            public const string EMPTY_NAME = "Policy name is required!";
+            public const string LONG_NAME = "Policy name is too long (max 50 characters)!";
+            public const string EMPTY_TYPE = "Policy type is required!";
+            public const string INVALID_TYPE = "Invalid policy type!";
+            public const string INVALID_AMOUNT = "Amount must be greater than 0!";
+            public const string INVALID_DIFF_TIME = "Standard time slots must be at least 1 hour apart!";
+            public const string MAX_DIFF_TIME = "Time difference cannot exceed 23 hours!";
+            public const string INVALID_AGE_RANGE = "Invalid age range!";
+            public const string TYPE_MISMATCH = "TypeId mismatch for the selected policy!";
+
+            public const string EMPTY_CHECKIN_TIME = "Check-in time is required!";
+            public const string EMPTY_CHECKOUT_TIME = "Check-out time is required!";
+            public const string INVALID_FEE = "Fee must be greater than or equal to 0!";
+            public const string INVALID_PERCENT = "Refund percent must be between 0 and 100!";
+            public const string AGE_RANGE_INVALID = "Max age must be greater than or equal to min age!";
         }
 
         // Service Messages
         public static class Service
         {
-            public const string EMPTY_NAME = "Tên dịch vụ không được để trống!";
-            public const string INVALID_TYPE = "Loại dịch vụ không hợp lệ!";
-            public const string EMPTY_UNIT = "Đơn vị tính không được để trống!";
-            public const string REQUIRED_PRICE = "Giá dịch vụ là bắt buộc lớn hơn 1000!";
+            public const string EMPTY_NAME = "Service name is required!";
+            public const string INVALID_TYPE = "Invalid service type!";
+            public const string EMPTY_UNIT_NAME = "Unit of measurement is required!";
+            public const string LONG_UNIT = "Unit name is too long (max 20 characters)!";
+            public const string REQUIRED_PRICE = "Service price must be greater than 1,000!";
+            public const string STANDARD_SERVICE_PRICE_GREATER_THAN_ZERO = "Standard service price must be >= 10,000!";
+            public const string MIN_PASSENGERS = "Passengers must be at least 1!";
+            public const string MAX_PASSENGERS = "Maximum capacity is 45 passengers!";
+            public const string MIN_LUGGAGE = "Luggage count cannot be negative!";
+            public const string MAX_LUGGAGE = "Maximum capacity is 45 luggage items!";
+            public const string INVALID_ROUND_TRIP_PRICE = "Invalid round-trip price!";
+            public const string DEFAULT_ADDITIONAL_FEE = "Additional fee must be at least";
+            public const string MISSING_ADDITIONAL_FEE_START_TIME = "Night fee start time is required!";
+            public const string MISSING_ADDITIONAL_FEE_END_TIME = "Night fee end time is required!";
+            public const string ADDITIONAL_FEE_TIME_EXCEEDS_LIMIT = "Night fee duration cannot exceed 12 hours!";
+            public const string INVALID_ADDITIONAL_FEE_START_END_TIME = "Start and end times cannot be identical!";
         }
 
-        // Room Attributes Messages (BedType, RoomView, RoomQuality, UnitType)
+        // Room Attributes Messages
         public static class RoomAttribute
         {
-            // BedType Messages
             public static class BedType
             {
-                public const string EMPTY_NAME = "Tên loại giường không được để trống!";
-                public const string LONG_NAME = "Tên loại giường quá dài (tối đa 20 ký tự)!";
+                public const string EMPTY_NAME = "Bed type name is required!";
+                public const string LONG_NAME = "Bed type name is too long (max 50 characters)!";
+                public const string INVALID_DEFAULT_CAPACITY = "Capacity must be between 1 and 10!";
+                public const string INVALID_MIN_WIDTH = "Minimum width must be greater than 0!";
+                public const string INVALID_MAX_WIDTH = "Maximum width must be greater than or equal to minimum width!";
             }
 
-            // RoomView Messages
             public static class RoomView
             {
-                public const string EMPTY_NAME = "Tên hướng phòng không được để trống!";
-                public const string LONG_NAME = "Tên hướng phòng quá dài (tối đa 20 ký tự)!";
+                public const string EMPTY_NAME = "Room view name is required!";
+                public const string LONG_NAME = "Room view name is too long (max 20 characters)!";
+                public const string NAME_ALREADY_EXISTS = "Room view name already exists!";
             }
 
-            // RoomQuality Messages
             public static class RoomQuality
             {
-                public const string EMPTY_NAME = "Tên chất lượng phòng không được để trống!";
-                public const string LONG_NAME = "Tên chất lượng phòng quá dài (tối đa 20 ký tự)!";
+                public const string EMPTY_NAME = "Room quality name is required!";
+                public const string LONG_NAME = "Room quality name is too long (max 20 characters)!";
             }
 
-            // UnitType Messages
             public static class UnitType
             {
-                public const string EMPTY_NAME = "Tên đơn vị không được để trống!";
-                public const string LONG_NAME = "Tên đơn vị quá dài (tối đa 20 ký tự)!";
+                public const string EMPTY_NAME = "Unit type name is required!";
+                public const string LONG_NAME = "Unit type name is too long (max 50 characters)!";
             }
 
-            // Request Validation Messages
             public static class Request
             {
-                public const string INVALID_TYPE = "Loại thuộc tính không hợp lệ!";
-                public const string MISSING_ROOM_QUALITY_TYPE = "Vui lòng chọn Loại chất lượng phòng!";
-                public const string INVALID_TYPE_ID = "TypeId phải lớn hơn 0!";
-                public const string UNSUPPORTED_TYPE_ID_FILTER = "Loại thuộc tính này không hỗ trợ lọc theo TypeId (vui lòng để null)!";
+                public const string INVALID_TYPE = "Invalid attribute type!";
+                public const string MISSING_ROOM_QUALITY_TYPE = "Please select a Room Quality type!";
+                public const string INVALID_TYPE_ID = "TypeId must be greater than 0!";
+                public const string UNSUPPORTED_TYPE_ID_FILTER = "This attribute type does not support TypeId filtering (please set to null)!";
             }
         }
 
         // Role Messages
         public static class Role
         {
-            public const string NOT_FOUND = "Role không tìm thấy!";
-            public const string ALREADY_EXISTS = "Role đã tồn tại!";
-            public const string ADD_SUCCESS = "Thêm role thành công!";
-            public const string ADD_FAILED = "Thêm role thất bại!";
-            public const string UPDATE_SUCCESS = "Cập nhật role thành công!";
-            public const string UPDATE_FAILED = "Cập nhật role thất bại!";
-            public const string DELETE_SUCCESS = "Xóa role thành công!";
-            public const string DELETE_FAILED = "Xóa role thất bại!";
+            public const string NOT_FOUND = "Role not found!";
+            public const string ALREADY_EXISTS = "Role already exists!";
+            public const string ADD_SUCCESS = "Role added successfully!";
+            public const string ADD_FAILED = "Failed to add role!";
+            public const string UPDATE_SUCCESS = "Role updated successfully!";
+            public const string UPDATE_FAILED = "Failed to update role!";
+            public const string DELETE_SUCCESS = "Role deleted successfully!";
+            public const string DELETE_FAILED = "Failed to delete role!";
         }
     }
 
@@ -133,46 +156,44 @@ public static class MessageResponse
     // =====================================================
     public static class UserManagement
     {
-        // Login Messages
         public static class Login
         {
-            public const string FAIL = "Đăng nhập thất bại!";
-            public const string SUCCESS = "Đăng nhập thành công!";
-            public const string USER_NOT_FOUND = "Tài khoản không tìm thấy!";
-            public const string PASSWORD_INCORRECT = "Mật khẩu không chính xác!";
-            public const string USER_BLOCKED = "Tài khoản của bạn đã bị khóa! Vui lòng liên hệ hỗ trợ.";
-            public const string USER_DELETED = "Tài khoản của bạn đã bị xóa! Vui lòng liên hệ hỗ trợ.";
-            public const string ERROR_IN_SERVER = "Đã xảy ra lỗi trên máy chủ. Vui lòng thử lại sau.";
+            public const string FAIL = "Login failed!";
+            public const string SUCCESS = "Login successful!";
+            public const string USER_NOT_FOUND = "Account not found!";
+            public const string PASSWORD_INCORRECT = "Incorrect password!";
+            public const string INVALID_CREDENTIALS = "Invalid username or password!";
+            public const string USER_BLOCKED = "Your account has been blocked! Please contact support.";
+            public const string USER_DELETED = "Your account has been deleted! Please contact support.";
+            public const string ERROR_IN_SERVER = "A server error occurred. Please try again later.";
         }
 
-        // Register Messages
         public static class Register
         {
-            public const string SUCCESS = "Tài khoản đã đăng ký thành công!";
-            public const string FAIL = "Đăng ký tài khoản thất bại!";
-            public const string USERNAME_EXIST = "Tên tài khoản đã tồn tại!";
-            public const string EMAIL_EXIST = "Email đã tồn tại!";
-            public const string INVALID_EMAIL = "Định dạng email không hợp lệ!";
+            public const string SUCCESS = "Account registered successfully!";
+            public const string FAIL = "Account registration failed!";
+            public const string USERNAME_EXIST = "Username already exists!";
+            public const string EMAIL_EXIST = "Email already exists!";
+            public const string INVALID_EMAIL = "Invalid email format!";
 
-            // Password validation messages
-            public const string SHORT_PASSWORD = "Mật khẩu phải có ít nhất 8 ký tự!";
-            public const string EMPTY_PASSWORD = "Mật khẩu không được để trống!";
-            public const string UPPERCASE_LETTER_PASSWORD = "Mật khẩu phải chứa ít nhất một chữ cái viết hoa!";
-            public const string LOWERCASE_LETTER_PASSWORD = "Mật khẩu phải chứa ít nhất một chữ cái viết thường!";
-            public const string SPECIAL_CHARACTER_PASSWORD = "Mật khẩu phải chứa ít nhất một ký tự đặc biệt!";
+            // Password validation
+            public const string SHORT_PASSWORD = "Password must be at least 8 characters long!";
+            public const string EMPTY_PASSWORD = "Password is required!";
+            public const string UPPERCASE_LETTER_PASSWORD = "Password must contain at least one uppercase letter!";
+            public const string LOWERCASE_LETTER_PASSWORD = "Password must contain at least one lowercase letter!";
+            public const string SPECIAL_CHARACTER_PASSWORD = "Password must contain at least one special character!";
         }
 
-        // User Management Messages
         public static class User
         {
-            public const string NOT_FOUND = "Tài khoản người dùng không tìm thấy!";
-            public const string ALREADY_EXISTS = "Người dùng đã tồn tại!";
-            public const string ADD_SUCCESS = "Thêm người dùng thành công!";
-            public const string ADD_FAILED = "Thêm người dùng thất bại!";
-            public const string UPDATE_SUCCESS = "Cập nhật người dùng thành công!";
-            public const string UPDATE_FAILED = "Cập nhật người dùng thất bại!";
-            public const string DELETE_SUCCESS = "Xóa người dùng thành công!";
-            public const string DELETE_FAILED = "Xóa người dùng thất bại!";
+            public const string NOT_FOUND = "User account not found!";
+            public const string ALREADY_EXISTS = "User already exists!";
+            public const string ADD_SUCCESS = "User added successfully!";
+            public const string ADD_FAILED = "Failed to add user!";
+            public const string UPDATE_SUCCESS = "User updated successfully!";
+            public const string UPDATE_FAILED = "Failed to update user!";
+            public const string DELETE_SUCCESS = "User deleted successfully!";
+            public const string DELETE_FAILED = "Failed to delete user!";
         }
     }
 
@@ -181,90 +202,79 @@ public static class MessageResponse
     // =====================================================
     public static class Pagination
     {
-        public const string MISSING_PAGE_INDEX = "Số trang không được để trống!";
-        public const string INVALID_PAGE_INDEX = "Số trang phải lớn hơn 0!";
-        public const string MISSING_PAGE_SIZE = "Kích thước trang không được để trống!";
-        public const string INVALID_PAGE_SIZE = "Kích thước trang phải lớn hơn 0!";
-        public const string PAGE_SIZE_TOO_LARGE = "Kích thước trang tối đa là 100!";
+        public const string MISSING_PAGE_INDEX = "Page index is required!";
+        public const string INVALID_PAGE_INDEX = "Page index must be greater than 0!";
+        public const string MISSING_PAGE_SIZE = "Page size is required!";
+        public const string INVALID_PAGE_SIZE = "Page size must be greater than 0!";
+        public const string PAGE_SIZE_TOO_LARGE = "Maximum page size is 100!";
     }
 
     // =====================================================
-    // 6. MENU REQUEST MESSAGES
-    // =====================================================
-    public static class ManageMenu
-    {
-        public const string INVALID_MODULE = "Module không hợp lệ!";
-    }
-
-    // =====================================================
-    // 7. UPGRADE REQUEST MESSAGES
+    // 6. REQUEST MANAGEMENT MESSAGES
     // =====================================================
     public static class RequestManagement
     {
         public static class UpgradeRequest
         {
-            public const string NOT_FOUND = "Không tìm thấy yêu cầu!";
-            public const string ERROR_LOADING_DETAILS = "Lỗi khi tải chi tiết yêu cầu!";
-            public const string ERROR_LOADING_STATS = "Lỗi khi tải thống kê";
-            public const string ERROR_LOADING_PAGED = "Lỗi khi tải danh sách yêu cầu";
-            public const string NO_REQUESTS_FOUND = "Không có yêu cầu nào";
+            public const string NOT_FOUND = "Request not found!";
+            public const string ERROR_LOADING_DETAILS = "Error loading request details!";
+            public const string ERROR_LOADING_STATS = "Error loading statistics!";
+            public const string ERROR_LOADING_PAGED = "Error loading paginated requests!";
+            public const string NO_REQUESTS_FOUND = "No requests found!";
 
-            public const string APPROVE_SUCCESS = "Phê duyệt yêu cầu thành công!";
-            public const string APPROVE_FAILED = "Phê duyệt yêu cầu thất bại!";
-            public const string REJECT_SUCCESS = "Từ chối yêu cầu thành công!";
-            public const string REJECT_FAILED = "Từ chối yêu cầu thất bại!";
+            public const string APPROVE_SUCCESS = "Request approved successfully!";
+            public const string APPROVE_FAILED = "Failed to approve request!";
+            public const string REJECT_SUCCESS = "Request rejected successfully!";
+            public const string REJECT_FAILED = "Failed to reject request!";
         }
     }
 
     // =====================================================
-    // BACKWARD COMPATIBILITY (Để không break code cũ)
+    // BACKWARD COMPATIBILITY (Obsolete)
     // =====================================================
-    [Obsolete("Sử dụng MessageResponse.Common.GET_SUCCESSFULLY thay vào")]
+    [Obsolete("Use MessageResponse.Common.GET_SUCCESSFULLY")]
     public static string GET_SUCCESSFULLY => Common.GET_SUCCESSFULLY;
-    [Obsolete("Sử dụng MessageResponse.Common.GET_FAILED thay vào")]
+    [Obsolete("Use MessageResponse.Common.GET_FAILED")]
     public static string GET_FAILED => Common.GET_FAILED;
-    [Obsolete("Sử dụng MessageResponse.Common.CREATE_SUCCESSFULLY thay vào")]
+    [Obsolete("Use MessageResponse.Common.CREATE_SUCCESSFULLY")]
     public static string CREATE_SUCCESSFULLY => Common.CREATE_SUCCESSFULLY;
-    [Obsolete("Sử dụng MessageResponse.Common.CREATE_FAILED thay vào")]
+    [Obsolete("Use MessageResponse.Common.CREATE_FAILED")]
     public static string CREATE_FAILED => Common.CREATE_FAILED;
-    [Obsolete("Sử dụng MessageResponse.Common.UPDATE_SUCCESSFULLY thay vào")]
+    [Obsolete("Use MessageResponse.Common.UPDATE_SUCCESSFULLY")]
     public static string UPDATE_SUCCESSFULLY => Common.UPDATE_SUCCESSFULLY;
-    [Obsolete("Sử dụng MessageResponse.Common.UPDATE_FAILED thay vào")]
+    [Obsolete("Use MessageResponse.Common.UPDATE_FAILED")]
     public static string UPDATE_FAILED => Common.UPDATE_FAILED;
-    [Obsolete("Sử dụng MessageResponse.Common.DELETE_SUCCESSFULLY thay vào")]
+    [Obsolete("Use MessageResponse.Common.DELETE_SUCCESSFULLY")]
     public static string DELETE_SUCCESSFULLY => Common.DELETE_SUCCESSFULLY;
-    [Obsolete("Sử dụng MessageResponse.Common.DELETE_FAILED thay vào")]
+    [Obsolete("Use MessageResponse.Common.DELETE_FAILED")]
     public static string DELETE_FAILED => Common.DELETE_FAILED;
-    [Obsolete("Sử dụng MessageResponse.Common.NOT_FOUND thay vào")]
+    [Obsolete("Use MessageResponse.Common.NOT_FOUND")]
     public static string NOT_FOUND => Common.NOT_FOUND;
-    [Obsolete("Sử dụng MessageResponse.Common.BAD_REQUEST thay vào")]
+    [Obsolete("Use MessageResponse.Common.BAD_REQUEST")]
     public static string BAD_REQUEST => Common.BAD_REQUEST;
-    [Obsolete("Sử dụng MessageResponse.Validation.NAME_ALREADY_EXISTS thay vào")]
+    [Obsolete("Use MessageResponse.Validation.NAME_ALREADY_EXISTS")]
     public static string NAME_ALREADY_EXISTS => Validation.NAME_ALREADY_EXISTS;
-    [Obsolete("Sử dụng MessageResponse.Validation.LONG_NAME thay vào")]
+    [Obsolete("Use MessageResponse.Validation.LONG_NAME")]
     public static string LONG_NAME => Validation.LONG_NAME;
-    [Obsolete("Sử dụng MessageResponse.Validation.EMPTY_NAME thay vào")]
+    [Obsolete("Use MessageResponse.Validation.EMPTY_NAME")]
     public static string EMPTY_NAME => Validation.EMPTY_NAME;
-    [Obsolete("Sử dụng MessageResponse.Common.EMPTY_LIST thay vào")]
+    [Obsolete("Use MessageResponse.Common.EMPTY_LIST")]
     public static string EMPTY_LIST => Common.EMPTY_LIST;
-    [Obsolete("Sử dụng MessageResponse.Validation.EMPTY_TYPE thay vào")]
+    [Obsolete("Use MessageResponse.Validation.EMPTY_TYPE")]
     public static string EMPTY_TYPE => Validation.EMPTY_TYPE;
-    [Obsolete("Sử dụng MessageResponse.Common.ERROR_IN_SERVER thay vào")]
+    [Obsolete("Use MessageResponse.Common.ERROR_IN_SERVER")]
     public static string ERROR_IN_SERVER => Common.ERROR_IN_SERVER;
 
-    // Backward compatibility for old message classes
-    [Obsolete("Sử dụng MessageResponse.UserManagement.Login thay vào")]
+    [Obsolete("Use MessageResponse.UserManagement.Login")]
     public static class MessageLogin
     {
         public static string LOGIN_FAIL => UserManagement.Login.FAIL;
         public static string LOGIN_SUCCESS => UserManagement.Login.SUCCESS;
         public static string USER_NOT_FOUND => UserManagement.Login.USER_NOT_FOUND;
         public static string PASSWORD_INCORRECT => UserManagement.Login.PASSWORD_INCORRECT;
-        public static string USER_BLOCKED => UserManagement.Login.USER_BLOCKED;
-        public static string USER_DELETED => UserManagement.Login.USER_DELETED;
     }
 
-    [Obsolete("Sử dụng MessageResponse.UserManagement.Register thay vào")]
+    [Obsolete("Use MessageResponse.UserManagement.Register")]
     public static class MessageRegister
     {
         public static string REGISTER_SUCCESS => UserManagement.Register.SUCCESS;
@@ -277,18 +287,5 @@ public static class MessageResponse
         public static string UPPERCASE_LETTER_PASSWORD => UserManagement.Register.UPPERCASE_LETTER_PASSWORD;
         public static string LOWERCASE_LETTER_PASSWORD => UserManagement.Register.LOWERCASE_LETTER_PASSWORD;
         public static string SPECIAL_CHARACTER_PASSWORD => UserManagement.Register.SPECIAL_CHARACTER_PASSWORD;
-    }
-
-    [Obsolete("Sử dụng MessageResponse.AdminManagement.Role thay vào")]
-    public static class RoleMessage
-    {
-        public static string ROLE_NOT_FOUND => AdminManagement.Role.NOT_FOUND;
-        public static string ROLE_ALREADY_EXISTS => AdminManagement.Role.ALREADY_EXISTS;
-        public static string ROLE_ADD_SUCCESS => AdminManagement.Role.ADD_SUCCESS;
-        public static string ROLE_ADD_FAILED => AdminManagement.Role.ADD_FAILED;
-        public static string ROLE_UPDATE_SUCCESS => AdminManagement.Role.UPDATE_SUCCESS;
-        public static string ROLE_UPDATE_FAILED => AdminManagement.Role.UPDATE_FAILED;
-        public static string ROLE_DELETE_SUCCESS => AdminManagement.Role.DELETE_SUCCESS;
-        public static string ROLE_DELETE_FAILED => AdminManagement.Role.DELETE_FAILED;
     }
 }

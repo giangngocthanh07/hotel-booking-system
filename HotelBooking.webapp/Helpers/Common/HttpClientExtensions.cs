@@ -1,12 +1,14 @@
+namespace HotelBooking.webapp.Helpers.Common;
+
 using System.Text.Json;
 
 public static class HttpClientExtensions
 {
-    // 1. [QUAN TRỌNG] Tạo cấu hình JSON dùng chung
+    // 1. [IMPORTANT] Shared JSON Configuration
     private static readonly JsonSerializerOptions _options = new JsonSerializerOptions
     {
-        PropertyNameCaseInsensitive = true, // Bỏ qua phân biệt hoa thường (items == Items)
-        PropertyNamingPolicy = null // Giữ nguyên tên property nếu cần
+        PropertyNameCaseInsensitive = true, // Ignores case (items == Items)
+        PropertyNamingPolicy = null // Preserves original property names if needed
     };
 
     // 1. GET Helper
@@ -23,12 +25,13 @@ public static class HttpClientExtensions
         }
     }
 
-    // --- 2. POST: 
-    // ========== a) With Body --- Nhận TResponse (đầu ra) và TRequest (đầu vào) ---
+    // --- 2. POST HELPERS ---
+    
+    // a) With Body: Accepts TRequest (input) and returns TResponse (output)
     public static async Task<ApiResponse<TResponse>> PostApiAsync<TResponse, TRequest>(
         this HttpClient client,
         string url,
-        TRequest data) // <--- Type Safe tuyệt đối ở đây
+        TRequest data) // <--- Provides full Type Safety
     {
         try
         {
@@ -41,7 +44,7 @@ public static class HttpClientExtensions
         }
     }
 
-    // ========== b) No Body --- Nhận TResponse (đầu ra) nhưng không có TRequest (đầu vào)
+    // b) No Body: Returns TResponse (output) without requiring an input payload
     public static async Task<ApiResponse<TResponse>> PostApiAsync<TResponse>(
         this HttpClient client,
         string url)
@@ -57,11 +60,11 @@ public static class HttpClientExtensions
         }
     }
 
-    // --- 3. PUT: Nhận TResponse (đầu ra) và TRequest (đầu vào) ---
+    // --- 3. PUT HELPER: Accepts TRequest (input) and returns TResponse (output) ---
     public static async Task<ApiResponse<TResponse>> PutApiAsync<TResponse, TRequest>(
         this HttpClient client,
         string url,
-        TRequest data) // <--- Type Safe tuyệt đối ở đây
+        TRequest data) // <--- Type Safe implementation
     {
         try
         {
@@ -87,18 +90,20 @@ public static class HttpClientExtensions
             return ResponseFactory.Failure<T>(StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
         }
     }
-    // --- Private Helpers để xử lý chung việc đọc JSON ---
 
-    // Dành cho API trả về dữ liệu (GET)
+    // --- Private Helpers for centralized JSON Response handling ---
+
     private static async Task<ApiResponse<T>> HandleResponse<T>(HttpResponseMessage response)
     {
+        // Successful Response (2xx)
         if (response.IsSuccessStatusCode)
         {
             var result = await response.Content.ReadFromJsonAsync<ApiResponse<T>>(_options);
             return result ?? ResponseFactory.Failure<T>(StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
         }
 
-        // Nếu lỗi (400, 500...), thử đọc message lỗi từ server trả về
+        // Error Handling (400, 500, etc.)
+        // Attempt to extract the error message returned by the server
         try
         {
             var errorResult = await response.Content.ReadFromJsonAsync<ApiResponse<T>>(_options);

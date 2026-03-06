@@ -1,13 +1,13 @@
 namespace HotelBooking.webapp.Helpers
 {
     /// <summary>
-    /// Helper class cho Policy - xử lý factory, mapping, và default values
-    /// Pattern: Giống ServiceHelper FE - polymorphic ViewModels
+    /// Helper class for Policy - handles factory creation, mapping, and default values.
+    /// Pattern: Similar to ServiceHelper FE - uses polymorphic ViewModels.
     /// </summary>
     public static class PolicyHelper
     {
         // ===========================================================================
-        // 1. FACTORY PATTERN: Tạo object CreateVM rỗng dựa trên TypeId
+        // 1. FACTORY PATTERN: Create empty CreateVM object based on TypeId
         // ===========================================================================
         public static PolicyCreateVM CreateNewPolicyModel(int typeId)
         {
@@ -22,7 +22,7 @@ namespace HotelBooking.webapp.Helpers
         }
 
         // ===========================================================================
-        // 2. MAPPING: Chuyển từ Dữ liệu hiển thị (PolicyVM) sang Dữ liệu Update (PolicyUpdateVM)
+        // 2. MAPPING: Convert from Display Data (PolicyVM) to Update Data (PolicyUpdateVM)
         // ===========================================================================
         public static PolicyUpdateVM? MapToUpdateVM(PolicyVM source)
         {
@@ -67,25 +67,25 @@ namespace HotelBooking.webapp.Helpers
         }
 
         // ===========================================================================
-        // 3. HELPER: Lấy tên hiển thị của PolicyType
+        // 3. HELPER: Get display name of PolicyType
         // ===========================================================================
         public static string GetPolicyTypeName(int typeId)
         {
             return typeId switch
             {
                 (int)PolicyTypeEnum.CheckInOut => "Check-In/Check-Out",
-                (int)PolicyTypeEnum.Cancellation => "Hủy phòng",
-                (int)PolicyTypeEnum.Children => "Trẻ em & Giường phụ",
-                (int)PolicyTypeEnum.Pets => "Thú cưng",
-                _ => "Khác"
+                (int)PolicyTypeEnum.Cancellation => "Cancellation",
+                (int)PolicyTypeEnum.Children => "Children & Extra Beds",
+                (int)PolicyTypeEnum.Pets => "Pets",
+                _ => "Other"
             };
         }
 
         // ===========================================================================
-        // 4. SMART FILL: Tự động gợi ý thông số dựa trên tên chính sách
+        // 4. SMART FILL: Automatically suggest parameters based on policy name
         // ===========================================================================
-        
-        // --- 4a. ÁP DỤNG CHO CREATE MODEL ---
+
+        // --- 4a. APPLY TO CREATE MODEL ---
         public static void ApplyDefaultValues(PolicyCreateVM model, int typeId)
         {
             if (model == null) return;
@@ -108,7 +108,7 @@ namespace HotelBooking.webapp.Helpers
             }
         }
 
-        // --- 4b. ÁP DỤNG CHO UPDATE MODEL ---
+        // --- 4b. APPLY TO UPDATE MODEL ---
         public static void ApplyDefaultValues(PolicyUpdateVM model, int typeId)
         {
             if (model == null) return;
@@ -132,9 +132,9 @@ namespace HotelBooking.webapp.Helpers
         }
 
         // ===========================================================================
-        // PRIVATE: Logic nghiệp vụ cho từng loại Policy
+        // PRIVATE: Business logic for each Policy type
         // ===========================================================================
-        
+
         private static void ApplyCheckInOutDefaults(CheckInOutPolicyCreateVM model, string name)
         {
             if (name.Contains("Early", StringComparison.OrdinalIgnoreCase))
@@ -223,7 +223,7 @@ namespace HotelBooking.webapp.Helpers
 
         private static void ApplyChildrenDefaults(ChildrenPolicyCreateVM model, string name)
         {
-            if (name.Contains("Extra Bed", StringComparison.OrdinalIgnoreCase) 
+            if (name.Contains("Extra Bed", StringComparison.OrdinalIgnoreCase)
                 || name.Contains("Adult", StringComparison.OrdinalIgnoreCase))
             {
                 model.MinAge ??= 12;
@@ -240,7 +240,7 @@ namespace HotelBooking.webapp.Helpers
 
         private static void ApplyChildrenDefaults(ChildrenPolicyUpdateVM model, string name)
         {
-            if (name.Contains("Extra Bed", StringComparison.OrdinalIgnoreCase) 
+            if (name.Contains("Extra Bed", StringComparison.OrdinalIgnoreCase)
                 || name.Contains("Adult", StringComparison.OrdinalIgnoreCase))
             {
                 model.MinAge ??= 12;
@@ -258,7 +258,7 @@ namespace HotelBooking.webapp.Helpers
         private static void ApplyPetDefaults(PetPolicyCreateVM model, string name)
         {
             model.PetFee ??= 200000;
-            // Default: cho phép thú cưng
+            // Default: allow pets
             if (!model.IsPetAllowed && model.PetFee > 0)
                 model.IsPetAllowed = true;
         }
