@@ -214,6 +214,14 @@ public static class MessageResponse
     // =====================================================
     public static class RequestManagement
     {
+        public static class Request
+        {
+            public const string NOT_FOUND = "Request not found!";
+            public const string ERROR_LOADING_DETAILS = "Error loading request details!";
+            public const string ERROR_LOADING_STATS = "Error loading statistics!";
+            public const string ERROR_LOADING_PAGED = "Error loading paginated requests!";
+            public const string NO_REQUESTS_FOUND = "No requests found!";
+        }
         public static class UpgradeRequest
         {
             public const string NOT_FOUND = "Request not found!";

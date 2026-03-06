@@ -1,22 +1,52 @@
-// 1. Class nhận tham số phân trang từ Client gửi lên
+// 1. DTO for receiving pagination parameters from the Client
 public class PagingRequest
 {
-    public int? PageIndex { get; set; } = 1; // Mặc định trang 1
-    public int? PageSize { get; set; } = 10; // Mặc định 10 dòng
+    /// <summary>
+    /// Current page number (1-based index). Defaults to 1.
+    /// </summary>
+    public int? PageIndex { get; set; } = 1;
+
+    /// <summary>
+    /// Number of items per page. Defaults to 10.
+    /// </summary>
+    public int? PageSize { get; set; } = 10;
 }
 
-// 2. Class trả về kết quả kèm tổng số trang
+// 2. Generic wrapper for returning paginated results with metadata
 public class PagedResult<T>
 {
+    /// <summary>
+    /// List of data items for the current page.
+    /// </summary>
     public List<T> Items { get; set; } = new();
-    public int TotalCount { get; set; }      // Tổng số bản ghi (để tính số trang)
+
+    /// <summary>
+    /// Total number of records across all pages.
+    /// </summary>
+    public int TotalCount { get; set; }
+
+    /// <summary>
+    /// The current page index.
+    /// </summary>
     public int PageIndex { get; set; }
+
+    /// <summary>
+    /// The number of items per page.
+    /// </summary>
     public int PageSize { get; set; }
 
-    // Backend đã tính toán và gửi số này về trong JSON,
-    // Frontend chỉ việc hứng lấy (get; set;)
+    /// <summary>
+    /// Total number of available pages (calculated by the backend).
+    /// </summary>
     public int TotalPages { get; set; }
-    public bool HasPreviousPage => PageIndex > 1;
-    public bool HasNextPage => PageIndex < TotalPages;
 
+    /// <summary>
+    /// Indicates if there is a page before the current one.
+    /// </summary>
+    public bool HasPreviousPage => PageIndex > 1;
+
+    /// <summary>
+    /// Indicates if there is another page after the current one.
+    /// </summary>
+    public bool HasNextPage => PageIndex < TotalPages;
 }

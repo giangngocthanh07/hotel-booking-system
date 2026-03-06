@@ -1,26 +1,33 @@
 using System.ComponentModel.DataAnnotations;
 
+namespace HotelBooking.webapp.ViewModels.Admin.Base;
+
+/// <summary>
+/// Base class for Admin Data Transfer Objects / ViewModels used in listing and details.
+/// </summary>
 public abstract class BaseAdminVM
 {
     public int Id { get; set; }
 
-    [Required(ErrorMessage = "Tên không được để trống!")]
-    [MaxLength(500, ErrorMessage = "Tên quá dài (tối đa 500 ký tự)!")]
+    [Required(ErrorMessage = "Name is required!")]
+    [MaxLength(500, ErrorMessage = "Name is too long (maximum 500 characters)!")]
     public string Name { get; set; } = string.Empty;
 
-    [MaxLength(500, ErrorMessage = "Mô tả quá dài (tối đa 500 ký tự)!")]
+    [MaxLength(500, ErrorMessage = "Description is too long (maximum 500 characters)!")]
     public string? Description { get; set; }
 
     public bool? IsDeleted { get; set; }
 }
 
+/// <summary>
+/// Base class for Create and Update operations.
+/// </summary>
 public abstract class BaseCreateOrUpdateAdminVM
 {
-    [Required(ErrorMessage = "Tên không được để trống!")]
-    [MaxLength(50, ErrorMessage = "Tên quá dài (tối đa 50 ký tự)!")]
+    [Required(ErrorMessage = "Name is required!")]
+    [MaxLength(50, ErrorMessage = "Name is too long (maximum 50 characters)!")]
     public string Name { get; set; } = string.Empty;
 
-    [MaxLength(500, ErrorMessage = "Mô tả quá dài (tối đa 500 ký tự)!")]
+    [MaxLength(500, ErrorMessage = "Description is too long (maximum 500 characters)!")]
     public string? Description { get; set; }
-
 }

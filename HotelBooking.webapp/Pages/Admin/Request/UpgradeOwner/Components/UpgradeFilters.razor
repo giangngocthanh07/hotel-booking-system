@@ -4,11 +4,11 @@
     <div class="card-body">
         <div class="row g-3 align-items-end">
             <div class="col-md-4">
-                <label class="form-label">Tìm kiếm</label>
+                <label class="form-label">Search</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="fas fa-search"></i></span>
-                    <input type="text" class="form-control" placeholder="Username, Họ tên, SĐT..."
-                           value="@SearchTerm" @oninput="OnSearchInput" />
+                    <input type="text" class="form-control" placeholder="Username, Name, Phone..." value="@SearchTerm"
+                           @oninput="OnSearchInput" />
                     @if (!string.IsNullOrEmpty(SearchTerm))
                     {
                         <button class="btn btn-outline-secondary" @onclick="ClearSearch">
@@ -17,18 +17,20 @@
                     }
                 </div>
             </div>
+
             <div class="col-md-3">
-                <label class="form-label">Trạng thái</label>
+                <label class="form-label">Status</label>
                 <select class="form-select" value="@SelectedStatus" @onchange="OnStatusChange">
-                    <option value="">Tất cả</option>
+                    <option value="">All Statuses</option>
                     @foreach (var status in StatusList)
                     {
                         <option value="@status">@status</option>
                     }
                 </select>
             </div>
+
             <div class="col-md-2">
-                <label class="form-label">Số dòng</label>
+                <label class="form-label">Page Size</label>
                 <select class="form-select" @onchange="OnPageSizeChange">
                     <option value="5" selected="@(PageSize == 5)">5</option>
                     <option value="10" selected="@(PageSize == 10)">10</option>
@@ -36,12 +38,13 @@
                     <option value="50" selected="@(PageSize == 50)">50</option>
                 </select>
             </div>
+
             <div class="col-md-3 text-end">
                 <button class="btn btn-outline-secondary me-2" @onclick="OnReset">
                     <i class="fas fa-undo"></i> Reset
                 </button>
                 <button class="btn btn-primary" @onclick="OnApply">
-                    <i class="fas fa-filter"></i> Lọc
+                    <i class="fas fa-filter"></i> Apply Filter
                 </button>
             </div>
         </div>
@@ -51,15 +54,15 @@
 @code {
     [Parameter] public string SearchTerm { get; set; } = "";
     [Parameter] public EventCallback<string> SearchTermChanged { get; set; }
-    
+
     [Parameter] public string? SelectedStatus { get; set; }
     [Parameter] public EventCallback<string?> SelectedStatusChanged { get; set; }
-    
+
     [Parameter] public int PageSize { get; set; } = 10;
     [Parameter] public EventCallback<int> PageSizeChanged { get; set; }
-    
+
     [Parameter] public List<string> StatusList { get; set; } = new();
-    
+
     [Parameter] public EventCallback OnApply { get; set; }
     [Parameter] public EventCallback OnReset { get; set; }
 

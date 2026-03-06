@@ -1,12 +1,14 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using HotelBooking.webapp.ViewModels.Admin.Base;
+
+namespace HotelBooking.webapp.ViewModels.Admin;
 
 // ===========================================================================
 // ENUMS & TYPE DEFINITIONS
 // ===========================================================================
-public class PolicyTypeVM : BaseAdminVM
-{
-}
+
+public class PolicyTypeVM : BaseAdminVM { }
 
 public enum PolicyTypeEnum
 {
@@ -17,8 +19,9 @@ public enum PolicyTypeEnum
 }
 
 // ===========================================================================
-// POLYMORPHIC VM (Output - Hiển thị)
+// POLYMORPHIC VM (Output - Display)
 // ===========================================================================
+
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "discriminator")]
 [JsonDerivedType(typeof(CheckInOutPolicyVM), typeDiscriminator: "checkInOut")]
 [JsonDerivedType(typeof(CancellationPolicyVM), typeDiscriminator: "cancellation")]
@@ -30,63 +33,64 @@ public abstract class PolicyVM : BaseAdminVM
 }
 
 /// <summary>
-/// Check-In/Check-Out Policy (TypeId: 1002)
+/// Policy regarding Check-In and Check-Out timings and fees.
 /// </summary>
 public class CheckInOutPolicyVM : PolicyVM
 {
     public TimeOnly? CheckInTime { get; set; }
     public TimeOnly? CheckOutTime { get; set; }
-    
-    [Range(0, double.MaxValue, ErrorMessage = "Phí check-in sớm không được âm!")]
+
+    [Range(0, double.MaxValue, ErrorMessage = "Early check-in fee cannot be negative!")]
     public decimal? EarlyCheckInFee { get; set; }
-    
-    [Range(0, double.MaxValue, ErrorMessage = "Phí check-out muộn không được âm!")]
+
+    [Range(0, double.MaxValue, ErrorMessage = "Late check-out fee cannot be negative!")]
     public decimal? LateCheckOutFee { get; set; }
 }
 
 /// <summary>
-/// Cancellation Policy (TypeId: 1003)
+/// Policy regarding booking cancellations and refunds.
 /// </summary>
 public class CancellationPolicyVM : PolicyVM
 {
-    [Range(0, 365, ErrorMessage = "Số ngày phải từ 0 đến 365!")]
+    [Range(0, 365, ErrorMessage = "Days must be between 0 and 365!")]
     public int? DaysBeforeCheckIn { get; set; }
-    
-    [Range(0, 100, ErrorMessage = "Phần trăm hoàn tiền phải từ 0 đến 100!")]
+
+    [Range(0, 100, ErrorMessage = "Refund percentage must be between 0 and 100!")]
     public double? RefundPercent { get; set; }
-    
+
     public bool IsRefundable { get; set; }
 }
 
 /// <summary>
-/// Children & Extra Bed Policy (TypeId: 1004)
+/// Policy regarding children ages and extra bed requirements.
 /// </summary>
 public class ChildrenPolicyVM : PolicyVM
 {
-    [Range(0, 17, ErrorMessage = "Tuổi tối thiểu phải từ 0 đến 17!")]
+    [Range(0, 17, ErrorMessage = "Minimum age must be between 0 and 17!")]
     public int? MinAge { get; set; }
-    
-    [Range(0, 17, ErrorMessage = "Tuổi tối đa phải từ 0 đến 17!")]
+
+    [Range(0, 17, ErrorMessage = "Maximum age must be between 0 and 17!")]
     public int? MaxAge { get; set; }
-    
-    [Range(0, double.MaxValue, ErrorMessage = "Phí giường phụ không được âm!")]
+
+    [Range(0, double.MaxValue, ErrorMessage = "Extra bed fee cannot be negative!")]
     public decimal? ExtraBedFee { get; set; }
 }
 
 /// <summary>
-/// Pet Policy (TypeId: 2002)
+/// Policy regarding pet stays and related fees.
 /// </summary>
 public class PetPolicyVM : PolicyVM
 {
-    [Range(0, double.MaxValue, ErrorMessage = "Phí thú cưng không được âm!")]
+    [Range(0, double.MaxValue, ErrorMessage = "Pet fee cannot be negative!")]
     public decimal? PetFee { get; set; }
-    
+
     public bool IsPetAllowed { get; set; }
 }
 
 // ===========================================================================
-// POLYMORPHIC CREATE VM (Input - Tạo mới)
+// POLYMORPHIC CREATE VM (Input - POST)
 // ===========================================================================
+
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "discriminator")]
 [JsonDerivedType(typeof(CheckInOutPolicyCreateVM), typeDiscriminator: "checkInOut")]
 [JsonDerivedType(typeof(CancellationPolicyCreateVM), typeDiscriminator: "cancellation")]
@@ -94,7 +98,7 @@ public class PetPolicyVM : PolicyVM
 [JsonDerivedType(typeof(PetPolicyCreateVM), typeDiscriminator: "pets")]
 public abstract class PolicyCreateVM : BaseCreateOrUpdateAdminVM
 {
-    [Required(ErrorMessage = "Loại chính sách không được để trống!")]
+    [Required(ErrorMessage = "Policy Type is required!")]
     public int TypeId { get; set; }
 }
 
@@ -102,96 +106,95 @@ public class CheckInOutPolicyCreateVM : PolicyCreateVM
 {
     public TimeOnly? CheckInTime { get; set; }
     public TimeOnly? CheckOutTime { get; set; }
-    
-    [Range(0, double.MaxValue, ErrorMessage = "Phí check-in sớm không được âm!")]
+
+    [Range(0, double.MaxValue, ErrorMessage = "Early check-in fee cannot be negative!")]
     public decimal? EarlyCheckInFee { get; set; }
-    
-    [Range(0, double.MaxValue, ErrorMessage = "Phí check-out muộn không được âm!")]
+
+    [Range(0, double.MaxValue, ErrorMessage = "Late check-out fee cannot be negative!")]
     public decimal? LateCheckOutFee { get; set; }
 }
 
 public class CancellationPolicyCreateVM : PolicyCreateVM
 {
-    [Range(0, 365, ErrorMessage = "Số ngày phải từ 0 đến 365!")]
+    [Range(0, 365, ErrorMessage = "Days must be between 0 and 365!")]
     public int? DaysBeforeCheckIn { get; set; }
-    
-    [Range(0, 100, ErrorMessage = "Phần trăm hoàn tiền phải từ 0 đến 100!")]
+
+    [Range(0, 100, ErrorMessage = "Refund percentage must be between 0 and 100!")]
     public double? RefundPercent { get; set; }
-    
+
     public bool IsRefundable { get; set; }
 }
 
 public class ChildrenPolicyCreateVM : PolicyCreateVM
 {
-    [Range(0, 17, ErrorMessage = "Tuổi tối thiểu phải từ 0 đến 17!")]
+    [Range(0, 17, ErrorMessage = "Minimum age must be between 0 and 17!")]
     public int? MinAge { get; set; }
-    
-    [Range(0, 17, ErrorMessage = "Tuổi tối đa phải từ 0 đến 17!")]
+
+    [Range(0, 17, ErrorMessage = "Maximum age must be between 0 and 17!")]
     public int? MaxAge { get; set; }
-    
-    [Range(0, double.MaxValue, ErrorMessage = "Phí giường phụ không được âm!")]
+
+    [Range(0, double.MaxValue, ErrorMessage = "Extra bed fee cannot be negative!")]
     public decimal? ExtraBedFee { get; set; }
 }
 
 public class PetPolicyCreateVM : PolicyCreateVM
 {
-    [Range(0, double.MaxValue, ErrorMessage = "Phí thú cưng không được âm!")]
+    [Range(0, double.MaxValue, ErrorMessage = "Pet fee cannot be negative!")]
     public decimal? PetFee { get; set; }
-    
+
     public bool IsPetAllowed { get; set; }
 }
 
 // ===========================================================================
-// POLYMORPHIC UPDATE VM (Input - Cập nhật)
+// POLYMORPHIC UPDATE VM (Input - PUT)
 // ===========================================================================
+
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "discriminator")]
 [JsonDerivedType(typeof(CheckInOutPolicyUpdateVM), typeDiscriminator: "checkInOut")]
 [JsonDerivedType(typeof(CancellationPolicyUpdateVM), typeDiscriminator: "cancellation")]
 [JsonDerivedType(typeof(ChildrenPolicyUpdateVM), typeDiscriminator: "children")]
 [JsonDerivedType(typeof(PetPolicyUpdateVM), typeDiscriminator: "pets")]
-public abstract class PolicyUpdateVM : BaseCreateOrUpdateAdminVM
-{
-}
+public abstract class PolicyUpdateVM : BaseCreateOrUpdateAdminVM { }
 
 public class CheckInOutPolicyUpdateVM : PolicyUpdateVM
 {
     public TimeOnly? CheckInTime { get; set; }
     public TimeOnly? CheckOutTime { get; set; }
-    
-    [Range(0, double.MaxValue, ErrorMessage = "Phí check-in sớm không được âm!")]
+
+    [Range(0, double.MaxValue, ErrorMessage = "Early check-in fee cannot be negative!")]
     public decimal? EarlyCheckInFee { get; set; }
-    
-    [Range(0, double.MaxValue, ErrorMessage = "Phí check-out muộn không được âm!")]
+
+    [Range(0, double.MaxValue, ErrorMessage = "Late check-out fee cannot be negative!")]
     public decimal? LateCheckOutFee { get; set; }
 }
 
 public class CancellationPolicyUpdateVM : PolicyUpdateVM
 {
-    [Range(0, 365, ErrorMessage = "Số ngày phải từ 0 đến 365!")]
+    [Range(0, 365, ErrorMessage = "Days must be between 0 and 365!")]
     public int? DaysBeforeCheckIn { get; set; }
-    
-    [Range(0, 100, ErrorMessage = "Phần trăm hoàn tiền phải từ 0 đến 100!")]
+
+    [Range(0, 100, ErrorMessage = "Refund percentage must be between 0 and 100!")]
     public double? RefundPercent { get; set; }
-    
+
     public bool IsRefundable { get; set; }
 }
 
 public class ChildrenPolicyUpdateVM : PolicyUpdateVM
 {
-    [Range(0, 17, ErrorMessage = "Tuổi tối thiểu phải từ 0 đến 17!")]
+    [Range(0, 17, ErrorMessage = "Minimum age must be between 0 and 17!")]
     public int? MinAge { get; set; }
-    
-    [Range(0, 17, ErrorMessage = "Tuổi tối đa phải từ 0 đến 17!")]
+
+    [Range(0, 17, ErrorMessage = "Maximum age must be between 0 and 17!")]
     public int? MaxAge { get; set; }
-    
-    [Range(0, double.MaxValue, ErrorMessage = "Phí giường phụ không được âm!")]
+
+    [Range(0, double.MaxValue, ErrorMessage = "Extra bed fee cannot be negative!")]
     public decimal? ExtraBedFee { get; set; }
 }
 
 public class PetPolicyUpdateVM : PolicyUpdateVM
 {
-    [Range(0, double.MaxValue, ErrorMessage = "Phí thú cưng không được âm!")]
+    [Range(0, double.MaxValue, ErrorMessage = "Pet fee cannot be negative!")]
     public decimal? PetFee { get; set; }
-    
+
     public bool IsPetAllowed { get; set; }
 }

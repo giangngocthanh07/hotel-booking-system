@@ -6,37 +6,48 @@
 @inject NavigationManager NavManager
 @inject IHttpClientFactory _httpClientFactory
 
-<h3>Kết quả tìm kiếm</h3>
+<PageTitle>Search Results</PageTitle>
+
+<h3>Search Results</h3>
 
 @if (Hotels == null)
 {
-    <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+    <div class="d-flex align-items-center p-4">
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" Class="me-3" />
+        <span>Searching for the best deals...</span>
+    </div>
 }
 else if (Hotels.Count == 0)
 {
-    <p>Không tìm thấy khách sạn nào phù hợp.</p>
+    <div class="alert alert-info border-0 shadow-sm mt-4">
+        <i class="fas fa-search-location me-2"></i>
+        No hotels found matching your criteria. Please try different dates or locations.
+    </div>
 }
 else
 {
-    @foreach (var hotel in Hotels)
-    {
-        <HotelCard Hotel="hotel" />
-    }
+    <div class="hotel-list-container mt-4">
+        @foreach (var hotel in Hotels)
+        {
+            <HotelCard Hotel="hotel" />
+        }
+    </div>
 }
 
 
 @code {
-    public List<SearchHotelResultDTO>? Hotels;
-    HttpClient _httpClient;
+    private List<SearchHotelResultDTO>? Hotels;
+    private HttpClient _httpClient = null!;
+
     protected override async Task OnInitializedAsync()
     {
         _httpClient = _httpClientFactory.CreateClient("HotelBookingAPI");
 
-        // Lấy query string từ URL
+        // Parse query strings from the URL
         var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
         var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
 
-        // Lấy giá trị từ query string
+        // Extract search parameters
         var destination = query["destination"];
         var checkin = query["checkin"];
         var checkout = query["checkout"];
@@ -44,13 +55,19 @@ else
         var children = query["children"];
         var rooms = query["rooms"];
 
-
+        // Construct API URL with parameters
         var apiUrl =
-        $"v1/hotel/get-search-options?cityName={destination}&checkin={checkin}&checkout={checkout}&adults={adults}&children={children}&rooms={rooms}";
+$"v1/hotel/get-search-options?cityName={destination}&checkin={checkin}&checkout={checkout}&adults={adults}&children={children}&rooms={rooms}";
 
-        Hotels = await _httpClient.GetFromJsonAsync<List<SearchHotelResultDTO>>(apiUrl);
-
-        Console.WriteLine($"Fetched {Hotels?.Count} hotels from API.");
-
+        try
+        {
+            Hotels = await _httpClient.GetFromJsonAsync<List<SearchHotelResultDTO>>(apiUrl);
+            Console.WriteLine($"Successfully fetched {Hotels?.Count} hotels.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching search results: {ex.Message}");
+            Hotels = new List<SearchHotelResultDTO>();
+        }
     }
 }

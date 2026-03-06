@@ -1,5 +1,12 @@
 using System.Text.Json.Serialization;
 using System.ComponentModel.DataAnnotations;
+using HotelBooking.webapp.ViewModels.Admin.Base;
+
+namespace HotelBooking.webapp.ViewModels.Admin;
+
+// ===========================================================================
+// ENUMS & REQUEST DTOs
+// ===========================================================================
 
 public enum RoomAttributeType
 {
@@ -11,14 +18,16 @@ public enum RoomAttributeType
 
 public class GetRoomAttributeRequest
 {
-    public RoomAttributeType Type { get; set; } = RoomAttributeType.UnitType; // Mặc định
+    public RoomAttributeType Type { get; set; } = RoomAttributeType.UnitType;
     public PagingRequest Paging { get; set; } = new PagingRequest();
-    public int? TypeId { get; set; } // Chỉ dùng cho RoomQuality
+    public int? TypeId { get; set; } // Specifically used for RoomQuality filtering
 }
 
-// Báo hiệu đây là lớp đa hình
+// ===========================================================================
+// POLYMORPHIC BASE (Output - Display)
+// ===========================================================================
+
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "discriminator")]
-// Khai báo các con và đặt tên định danh (discriminator) cho chúng
 [JsonDerivedType(typeof(UnitTypeVM), typeDiscriminator: "unit")]
 [JsonDerivedType(typeof(RoomViewVM), typeDiscriminator: "roomview")]
 [JsonDerivedType(typeof(BedTypeVM), typeDiscriminator: "bed")]
@@ -28,71 +37,56 @@ public abstract class RoomAttributeVM : BaseAdminVM
     public abstract RoomAttributeType AttributeType { get; }
 }
 
+// --- 1. UNIT TYPE ---
 public class UnitTypeVM : RoomAttributeVM
 {
-    public override RoomAttributeType AttributeType => RoomAttributeType.UnitType; // Tự động gán số 1
+    public override RoomAttributeType AttributeType => RoomAttributeType.UnitType;
     public bool? IsEntirePlace { get; set; } = false;
 }
 
-// 2. Create
 public class UnitTypeCreateVM : BaseCreateOrUpdateAdminVM
 {
     public bool? IsEntirePlace { get; set; } = false;
 }
 
-// 3. Update
 public class UnitTypeUpdateVM : BaseCreateOrUpdateAdminVM
 {
     public bool? IsEntirePlace { get; set; }
 }
 
+// --- 2. ROOM VIEW ---
 public class RoomViewVM : RoomAttributeVM
 {
-    public override RoomAttributeType AttributeType => RoomAttributeType.RoomView; // Tự động gán số 3
+    public override RoomAttributeType AttributeType => RoomAttributeType.RoomView;
 }
 
-// 2. Create
-public class RoomViewCreateVM : BaseCreateOrUpdateAdminVM
-{
-}
+public class RoomViewCreateVM : BaseCreateOrUpdateAdminVM { }
 
-// 3. Update
-public class RoomViewUpdateVM : BaseCreateOrUpdateAdminVM
-{
-}
+public class RoomViewUpdateVM : BaseCreateOrUpdateAdminVM { }
 
+// --- 3. BED TYPE ---
 public class BedTypeVM : RoomAttributeVM
 {
-    public override RoomAttributeType AttributeType => RoomAttributeType.BedType; // Tự động gán số 2
+    public override RoomAttributeType AttributeType => RoomAttributeType.BedType;
 
-    // 1. Sức chứa (Bắt buộc và phải > 0)
-    [Required(ErrorMessage = "Vui lòng nhập sức chứa mặc định!")]
-    [Range(1, int.MaxValue, ErrorMessage = "Sức chứa phải lớn hơn 0!")]
+    [Required(ErrorMessage = "Default capacity is required!")]
+    [Range(1, int.MaxValue, ErrorMessage = "Capacity must be greater than 0!")]
     public int? DefaultCapacity { get; set; } = 1;
 
-    // --- CÁC TRƯỜNG THÔNG SỐ KỸ THUẬT BỔ SUNG ---
-
-    // Kích thước chiều ngang tối thiểu (Inch)
-    // 2. Kích thước tối thiểu
-    [Range(0, 300, ErrorMessage = "Kích thước không được âm hoặc vượt quá 300 inches!")]
+    [Range(0, 300, ErrorMessage = "Size cannot be negative or exceed 300 inches!")]
     public double MinWidth { get; set; }
 
-    // Kích thước chiều ngang tối đa (Inch)
-    // 3. Kích thước tối đa
-    [Range(0, 300, ErrorMessage = "Kích thước không được âm hoặc vượt quá 300 inches!")]
+    [Range(0, 300, ErrorMessage = "Size cannot be negative or exceed 300 inches!")]
     public double MaxWidth { get; set; }
 
-    // Thêm set để hỗ trợ Binding từ UI
     private bool? _isVaryingSize;
     public bool IsVaryingSize
     {
-        // Logic hiển thị: Nếu chưa tác động thì tính dựa trên MinWidth, 
-        // nếu đã gạt switch thì lấy giá trị của switch.
         get => _isVaryingSize ?? (MinWidth <= 0 && MaxWidth <= 0);
         set
         {
             _isVaryingSize = value;
-            if (value) // Nếu người dùng bật switch "Đa dạng kích thước"
+            if (value)
             {
                 MinWidth = 0;
                 MaxWidth = 0;
@@ -100,29 +94,24 @@ public class BedTypeVM : RoomAttributeVM
         }
     }
 
-    public string SizeDisplay => IsVaryingSize ? "Đa dạng" : $"{MinWidth}\" - {MaxWidth}\"";
+    public string SizeDisplay => IsVaryingSize ? "Varying" : $"{MinWidth}\" - {MaxWidth}\"";
 }
 
-// 2. Create
 public class BedTypeCreateVM : BaseCreateOrUpdateAdminVM
 {
-    // 1. Sức chứa (Bắt buộc và phải > 0)
-    [Required(ErrorMessage = "Vui lòng nhập sức chứa mặc định!")]
-    [Range(1, int.MaxValue, ErrorMessage = "Sức chứa phải lớn hơn 0!")]
+    [Required(ErrorMessage = "Default capacity is required!")]
+    [Range(1, int.MaxValue, ErrorMessage = "Capacity must be greater than 0!")]
     public int? DefaultCapacity { get; set; } = 1;
 
-    [Range(0, 300, ErrorMessage = "Kích thước không được âm hoặc vượt quá 300 inches!")]
+    [Range(0, 300, ErrorMessage = "Size cannot be negative or exceed 300 inches!")]
     public double MinWidth { get; set; }
-    [Range(0, 300, ErrorMessage = "Kích thước không được âm hoặc vượt quá 300 inches!")]
+
+    [Range(0, 300, ErrorMessage = "Size cannot be negative or exceed 300 inches!")]
     public double MaxWidth { get; set; }
 
-    // Hỗ trợ Binding cho Switch
     private bool? _isVaryingSize;
     public bool IsVaryingSize
     {
-        // Nếu người dùng chưa gạt switch (_isVaryingSize == null), 
-        // ta tính toán dựa trên dữ liệu hiện có (dùng khi Edit).
-        // Nếu đã gạt switch, ta tin tưởng hoàn toàn vào giá trị của switch.
         get => _isVaryingSize ?? (MinWidth <= 0 && MaxWidth <= 0);
         set
         {
@@ -136,25 +125,21 @@ public class BedTypeCreateVM : BaseCreateOrUpdateAdminVM
     }
 }
 
-// 3. Update (Giống Create nhưng tách ra để dễ mở rộng sau này)
 public class BedTypeUpdateVM : BaseCreateOrUpdateAdminVM
 {
-    // 1. Sức chứa (Bắt buộc và phải > 0)
-    [Required(ErrorMessage = "Vui lòng nhập sức chứa mặc định!")]
-    [Range(1, int.MaxValue, ErrorMessage = "Sức chứa phải lớn hơn 0!")]
+    [Required(ErrorMessage = "Default capacity is required!")]
+    [Range(1, int.MaxValue, ErrorMessage = "Capacity must be greater than 0!")]
     public int? DefaultCapacity { get; set; } = 1;
 
-    [Range(0, 300, ErrorMessage = "Kích thước không được âm hoặc vượt quá 300 inches!")]
+    [Range(0, 300, ErrorMessage = "Size cannot be negative or exceed 300 inches!")]
     public double MinWidth { get; set; }
-    [Range(0, 300, ErrorMessage = "Kích thước không được âm hoặc vượt quá 300 inches!")]
+
+    [Range(0, 300, ErrorMessage = "Size cannot be negative or exceed 300 inches!")]
     public double MaxWidth { get; set; }
 
     private bool? _isVaryingSize;
     public bool IsVaryingSize
     {
-        // Nếu người dùng chưa gạt switch (_isVaryingSize == null), 
-        // ta tính toán dựa trên dữ liệu hiện có (dùng khi Edit).
-        // Nếu đã gạt switch, ta tin tưởng hoàn toàn vào giá trị của switch.
         get => _isVaryingSize ?? (MinWidth <= 0 && MaxWidth <= 0);
         set
         {
@@ -168,50 +153,29 @@ public class BedTypeUpdateVM : BaseCreateOrUpdateAdminVM
     }
 }
 
-public class BedTypeAdditionalData
-{
-    // Kích thước chiều ngang (Inch)
-    public double MinWidth { get; set; }
-    public double MaxWidth { get; set; }
-
-    // Cờ đánh dấu nếu kích thước không cố định
-    public bool IsVaryingSize => MinWidth <= 0 && MaxWidth <= 0;
-}
-
-public class RoomQualityGroupVM : RoomAttributeVM
-{
-    public override RoomAttributeType AttributeType => RoomAttributeType.RoomQuality; // Tự động gán số 4
-    [Range(0, 10, ErrorMessage = "Thứ tự ưu tiên từ 0-10")]
-    public int? SortOrder { get; set; } = 0;
-
-}
-
+// --- 4. ROOM QUALITY ---
 public class RoomQualityVM : RoomAttributeVM
 {
-    public override RoomAttributeType AttributeType => RoomAttributeType.RoomQuality; // Tự động gán số 4
-    [Range(0, 10, ErrorMessage = "Thứ tự ưu tiên từ 0-10")]
+    public override RoomAttributeType AttributeType => RoomAttributeType.RoomQuality;
+
+    [Range(0, 10, ErrorMessage = "Sort order must be between 0 and 10")]
     public int? SortOrder { get; set; } = 0;
 
-    [Required(ErrorMessage = "Loại chất lượng phòng không được để trống!")]
+    [Required(ErrorMessage = "Room Quality Type is required!")]
     public int TypeId { get; set; }
 }
 
-// 2. Create
 public class RoomQualityCreateVM : BaseCreateOrUpdateAdminVM
 {
-    [Required(ErrorMessage = "Vui lòng chọn nhóm hạng phòng!")]
+    [Required(ErrorMessage = "Please select a room category group!")]
     public int TypeId { get; set; }
 
-    [Range(0, 10, ErrorMessage = "Thứ tự ưu tiên từ 0-10")]
+    [Range(0, 10, ErrorMessage = "Sort order must be between 0 and 10")]
     public int SortOrder { get; set; } = 0;
 }
 
-// 3. Update (Không có TypeId)
 public class RoomQualityUpdateVM : BaseCreateOrUpdateAdminVM
 {
-    [Range(0, 10, ErrorMessage = "Thứ tự ưu tiên từ 0-10")]
+    [Range(0, 10, ErrorMessage = "Sort order must be between 0 and 10")]
     public int? SortOrder { get; set; } = 0;
 }
-
-
-

@@ -1,11 +1,12 @@
 -- ============================================================
 -- Migration: Add Additional Column to Policies table
--- Purpose: Chuyển từ generic columns sang JSON như Services
--- Author: Copilot
--- Date: 2026-03-02
+-- Purpose: Transition from generic columns to JSON storage 
+--          consistent with the Services table structure.
+-- Author: Gemini
+-- Date: 2026-03-07
 -- ============================================================
 
--- STEP 1: Add Additional column (giống Services table)
+-- STEP 1: Add the [Additional] column if it doesn't exist
 IF NOT EXISTS (
     SELECT * FROM sys.columns 
     WHERE object_id = OBJECT_ID(N'[dbo].[Policies]') 
@@ -15,15 +16,15 @@ BEGIN
     ALTER TABLE [dbo].[Policies]
     ADD [Additional] NVARCHAR(MAX) NULL;
     
-    PRINT 'Added Additional column to Policies table';
+    PRINT 'SUCCESS: Added [Additional] column to [Policies] table.';
 END
 ELSE
 BEGIN
-    PRINT 'Additional column already exists';
+    PRINT 'INFO: [Additional] column already exists.';
 END
 GO
 
--- STEP 2: Migrate existing data from generic columns to JSON
+-- STEP 2: Migrate existing data from generic columns to JSON format
 -- TypeId 1002: Check-In/Check-Out Policy
 UPDATE [dbo].[Policies]
 SET [Additional] = (
@@ -34,7 +35,7 @@ SET [Additional] = (
     FOR JSON PATH, WITHOUT_ARRAY_WRAPPER
 )
 WHERE TypeId = 1002;
-PRINT 'Migrated TypeId 1002 (Check-In/Out)';
+PRINT 'SUCCESS: Migrated TypeId 1002 (Check-In/Out).';
 GO
 
 -- TypeId 1003: Cancellation Policy
@@ -47,7 +48,7 @@ SET [Additional] = (
     FOR JSON PATH, WITHOUT_ARRAY_WRAPPER
 )
 WHERE TypeId = 1003;
-PRINT 'Migrated TypeId 1003 (Cancellation)';
+PRINT 'SUCCESS: Migrated TypeId 1003 (Cancellation).';
 GO
 
 -- TypeId 1004: Children & Extra Bed Policy
@@ -60,7 +61,7 @@ SET [Additional] = (
     FOR JSON PATH, WITHOUT_ARRAY_WRAPPER
 )
 WHERE TypeId = 1004;
-PRINT 'Migrated TypeId 1004 (Children)';
+PRINT 'SUCCESS: Migrated TypeId 1004 (Children & Extra Beds).';
 GO
 
 -- TypeId 2002: Pet Policy
@@ -72,24 +73,31 @@ SET [Additional] = (
     FOR JSON PATH, WITHOUT_ARRAY_WRAPPER
 )
 WHERE TypeId = 2002;
-PRINT 'Migrated TypeId 2002 (Pets)';
+PRINT 'SUCCESS: Migrated TypeId 2002 (Pets).';
 GO
 
--- STEP 3: Verify migration (optional - comment out in production)
+-- STEP 3: Data Verification (Review before dropping columns)
 SELECT 
     Id, 
     Name, 
     TypeId,
     Additional,
-    -- Old columns for comparison
+    -- Legacy columns for verification
     TimeFrom, TimeTo, IntValue1, IntValue2, Amount, [Percent], BoolValue
 FROM [dbo].[Policies]
 ORDER BY TypeId, Id;
 GO
 
--- STEP 4: (OPTIONAL) Drop old generic columns after verification
--- WARNING: Only run this after confirming migration is successful!
--- Uncomment the lines below when ready:
+-- STEP 4: Post-Migration JSON Cleanup 
+-- Convert string "true"/"false" to native JSON booleans for better compatibility
+UPDATE Policies 
+SET Additional = REPLACE(REPLACE(Additional, '"true"', 'true'), '"false"', 'false')
+WHERE TypeId IN (1003, 2002);
+PRINT 'SUCCESS: Sanitized JSON boolean values.';
+GO
+
+-- STEP 5: (OPTIONAL) Cleanup Legacy Columns
+-- WARNING: Execute only after thorough verification of the JSON data!
 /*
 ALTER TABLE [dbo].[Policies] DROP COLUMN [TimeFrom];
 ALTER TABLE [dbo].[Policies] DROP COLUMN [TimeTo];
@@ -98,16 +106,5 @@ ALTER TABLE [dbo].[Policies] DROP COLUMN [IntValue2];
 ALTER TABLE [dbo].[Policies] DROP COLUMN [Amount];
 ALTER TABLE [dbo].[Policies] DROP COLUMN [Percent];
 ALTER TABLE [dbo].[Policies] DROP COLUMN [BoolValue];
-PRINT 'Dropped old generic columns';
+PRINT 'CLEANUP: Dropped legacy generic columns.';
 */
-
--- STEP 5: Update JSON format if needed (e.g., convert "true"/"false" strings to boolean)
--- Sửa cho Cancellation Policy
-UPDATE Policies 
-SET Additional = REPLACE(REPLACE(Additional, '"true"', 'true'), '"false"', 'false')
-WHERE TypeId = 1003;
-
--- Sửa cho Pet Policy
-UPDATE Policies 
-SET Additional = REPLACE(REPLACE(Additional, '"true"', 'true'), '"false"', 'false')
-WHERE TypeId = 2002;

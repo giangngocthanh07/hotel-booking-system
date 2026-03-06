@@ -8,13 +8,15 @@ using HotelBooking.webapp.Services.Interface;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- 1. CONFIG SERVICES ---
+// ==========================================
+// 1. SERVICE CONFIGURATION (DI Container)
+// ==========================================
 
-// Add services to the container.
+// Add framework services
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
-// MudBlazor
+// MudBlazor Component Library configuration
 builder.Services.AddMudServices(config =>
 {
     config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.TopRight;
@@ -25,22 +27,23 @@ builder.Services.AddMudServices(config =>
     config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
 });
 
-// Authentication & Authorization
-builder.Services.AddAuthentication(); // Cơ chế đăng nhập
-builder.Services.AddAuthorization();  // Cơ chế phân quyền
+// Authentication & Authorization Setup
+builder.Services.AddAuthentication(); // Login mechanics
+builder.Services.AddAuthorization();  // Permission mechanics
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
-builder.Services.AddAuthorizationCore(); // Quan trọng cho Blazor
+builder.Services.AddAuthorizationCore(); // Essential for Blazor authorization components
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddBlazoredLocalStorage();
 
-// 3. Đăng ký HttpClient có gắn Interceptor
+// Register Named HttpClient for API communication
 builder.Services.AddHttpClient("HotelBookingAPI", client =>
 {
+    // Ensure the backend API is running on this port
     client.BaseAddress = new Uri("http://localhost:5083/api/");
 });
 
-// DI Services
+// Custom Application Services (Dependency Injection)
 builder.Services.AddScoped<HotelFormState>();
 builder.Services.AddScoped<IManagementService, ManagementService>();
 builder.Services.AddScoped<IRequestService, RequestService>();
@@ -48,27 +51,28 @@ builder.Services.AddScoped<IRequestService, RequestService>();
 
 var app = builder.Build();
 
-// --- 2. CONFIG MIDDLEWARE (PIPELINE) ---
+// ==========================================
+// 2. MIDDLEWARE CONFIGURATION (Pipeline)
+// ==========================================
 
-// app.UseHttpsRedirection(); // kích hoạt https
-// 2.1. Chuyển hướng HTTPS (Nên để đầu tiên)
+// 2.1. HSTS & HTTPS Redirection (Security)
 if (!app.Environment.IsDevelopment())
 {
     app.UseHsts();
 }
 app.UseHttpsRedirection();
 
-// 2.2. File tĩnh (CSS, JS, Ảnh) - Cho phép truy cập KHÔNG CẦN Auth
+// 2.2. Static Files (CSS, JS, Images) - Accessible without authentication
 app.UseStaticFiles();
 
-// 2.3. Routing (Định tuyến)
+// 2.3. Routing
 app.UseRouting();
 
-// 2.4. Authentication & Authorization (Phải nằm SAU Routing và TRƯỚC Endpoints)
+// 2.4. Auth Middleware (Order is critical: MUST be after Routing and before Endpoints)
 app.UseAuthentication();
 app.UseAuthorization();
 
-// 2.5. Endpoints
+// 2.5. Endpoints Mapping
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 

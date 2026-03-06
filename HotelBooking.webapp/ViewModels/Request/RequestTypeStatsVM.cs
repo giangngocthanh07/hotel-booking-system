@@ -1,7 +1,7 @@
 namespace HotelBooking.webapp.ViewModels.Request
 {
     /// <summary>
-    /// Stats cho từng loại request
+    /// ViewModel for displaying request type statistics in the dashboard.
     /// </summary>
     public class RequestTypeStatsVM
     {

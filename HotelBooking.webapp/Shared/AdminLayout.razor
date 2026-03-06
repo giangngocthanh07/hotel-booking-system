@@ -8,16 +8,19 @@
 
 <div class="app-layout-wrapper">
 
+    @* --- HEADER SECTION --- *@
     <header class="app-header">
         <AdminHeader />
     </header>
 
     <div class="app-body">
 
+        @* --- SIDEBAR SECTION --- *@
         <aside class="app-sidebar">
             <AdminSidebar />
         </aside>
 
+        @* --- MAIN CONTENT AREA --- *@
         <main class="app-main">
             <div class="main-content-inner">
                 @Body
@@ -27,36 +30,35 @@
 </div>
 
 <style>
-    /* Wrapper chính: Flex dọc */
+    /* Main Wrapper: Vertical Flex Layout */
     .app-layout-wrapper {
         display: flex;
         flex-direction: column;
         height: 100vh;
-        /* Cố định bằng chiều cao màn hình */
+        /* Fixed to viewport height */
         width: 100vw;
         overflow: hidden;
-        /* Chặn cuộn thừa */
+        /* Prevents unwanted double scrollbars */
     }
 
-    /* Header: Không co giãn */
+    /* Header: Fixed height, non-scrollable */
     .app-header {
         flex: 0 0 auto;
         z-index: 100;
-        /* Đè lên nội dung nếu cần */
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
-    /* Body (Sidebar + Main): Chiếm hết phần còn lại */
+    /* Body (Sidebar + Main): Occupies remaining space */
     .app-body {
         display: flex;
         flex: 1 1 auto;
-        /* Tự giãn để lấp đầy chiều cao còn lại */
+        /* Expands to fill available height */
         overflow: hidden;
-        /* Quan trọng: Chặn cuộn ở cấp này */
+        /* Crucial: Clipping overflow at this level */
         position: relative;
     }
 
-    /* Sidebar */
+    /* Sidebar Configuration */
     .app-sidebar {
         width: 260px;
         min-width: 260px;
@@ -64,36 +66,33 @@
         flex-direction: column;
         border-right: 1px solid rgba(255, 255, 255, 0.1);
 
-        /* Mặc định trên Mobile thì ẩn đi bằng transform (để làm hiệu ứng trượt) */
-        /* Hoặc dùng display: none nếu không cần hiệu ứng */
+        /* Hidden by default on Mobile for slide-in effect */
         display: none;
     }
 
-    /* Main Content */
+    /* Main Content Area */
     .app-main {
         flex: 1;
-        /* Chiếm hết chiều ngang còn lại */
+        /* Takes up all remaining horizontal space */
         background-color: #f8f9fa;
         overflow-y: auto;
-        /* QUAN TRỌNG: Thanh cuộn sẽ nằm ở đây */
+        /* IMPORTANT: Primary scrollbar location */
         overflow-x: hidden;
-        /* Tránh thanh cuộn ngang không mong muốn */
         position: relative;
     }
 
-    /* Padding nội dung */
+    /* Content Padding Container */
     .main-content-inner {
         min-height: auto;
-        /* Đảm bảo background fill hết */
     }
 
-    /* Giới hạn độ rộng khi ở trang danh sách (HotelId == 0) */
+    /* Max-width constraint for list pages */
     .container-limited {
         max-width: 1400px;
         margin: 0 auto;
     }
 
-    /* Scrollbar đẹp hơn */
+    /* Enhanced Custom Scrollbar */
     .app-main::-webkit-scrollbar {
         width: 8px;
         height: 8px;
@@ -112,6 +111,7 @@
         background: #a8a8a8;
     }
 
+    /* Desktop View: Display sidebar as relative */
     @@media (min-width: 992px) {
         .app-sidebar {
             display: flex !important;
@@ -122,17 +122,16 @@
         }
     }
 
-    /* Trên màn hình nhỏ (Mobile): Cấu hình fixed đè lên */
+    /* Mobile View: Fixed overlay sidebar */
     @@media (max-width: 991.98px) {
         .app-sidebar.mobile-show {
             display: flex;
             position: absolute;
-            /* Trôi nổi đè lên main */
+            /* Floats over the main content */
             top: 0;
             left: 0;
             height: 100%;
             z-index: 1050;
-            /* Cao hơn nội dung */
             box-shadow: 4px 0 10px rgba(0, 0, 0, 0.5);
             animation: slideIn 0.3s forwards;
         }
@@ -148,7 +147,7 @@
         }
     }
 
-    /* Overlay làm tối nền */
+    /* Background Overlay when Sidebar is active */
     .sidebar-overlay {
         position: absolute;
         top: 0;
@@ -157,7 +156,6 @@
         height: 100%;
         background-color: rgba(0, 0, 0, 0.5);
         z-index: 1040;
-        /* Thấp hơn sidebar 1 chút */
         backdrop-filter: blur(2px);
     }
 </style>

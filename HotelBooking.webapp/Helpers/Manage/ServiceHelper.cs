@@ -1,3 +1,5 @@
+using HotelBooking.webapp.ViewModels.Admin;
+
 namespace HotelBooking.webapp.Helpers
 {
     public static class ServiceHelper

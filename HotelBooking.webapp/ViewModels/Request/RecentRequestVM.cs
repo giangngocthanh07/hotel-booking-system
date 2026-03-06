@@ -1,7 +1,7 @@
 namespace HotelBooking.webapp.ViewModels.Request
 {
     /// <summary>
-    /// Request gần đây - mapping với RecentRequestDTO từ BE
+    /// ViewModel for displaying recent requests in the dashboard.
     /// </summary>
     public class RecentRequestVM
     {

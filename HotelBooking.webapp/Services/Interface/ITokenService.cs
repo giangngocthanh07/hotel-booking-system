@@ -1,20 +1,20 @@
 namespace HotelBooking.webapp.Services.Interface;
 
 /// <summary>
-/// Interface chung cho các service cần xác thực token.
-/// Tất cả service cần gọi API có xác thực đều implement interface này.
+/// A shared interface for services requiring token-based authentication.
+/// All services that need to invoke authenticated API endpoints must implement this interface.
 /// 
-/// Mục đích:
-/// - Cho phép AdminPageBase&lt;TService&gt; generic hoạt động với mọi service
-/// - DRY: SetToken được xử lý tự động trong base class
-/// - Dễ mở rộng: Thêm service mới chỉ cần implement interface này
+/// Objectives:
+/// - Compatibility: Allows the generic AdminPageBase<TService> to work seamlessly with any service.
+/// - DRY (Don't Repeat Yourself): Token injection is handled automatically within the base class.
+/// - Scalability: Easily extendable; new services only need to implement this interface to be authentication-ready.
 /// </summary>
 public interface ITokenService
 {
     /// <summary>
-    /// Set JWT token cho Authorization header của HttpClient.
-    /// Được gọi tự động bởi AdminPageBase sau khi lấy token từ LocalStorage.
+    /// Configures the JWT token for the HttpClient's Authorization header.
+    /// This is automatically invoked by the AdminPageBase after retrieving the token from LocalStorage.
     /// </summary>
-    /// <param name="token">JWT access token</param>
+    /// <param name="token">The JWT access token used for authentication.</param>
     void SetToken(string token);
 }

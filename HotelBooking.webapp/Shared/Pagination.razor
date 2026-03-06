@@ -1,5 +1,4 @@
-@* 
-    Reusable Pagination Component
+@* Reusable Pagination Component
     Usage: <Pagination CurrentPage="@currentPage" TotalPages="@totalPages" 
                        TotalCount="@totalCount" OnPageChange="GoToPage" />
 *@
@@ -11,25 +10,25 @@
             <ul class="pagination @PaginationClass">
                 @* Previous Button *@
                 <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
-                    <button class="page-link" @onclick="GoToPrevious" disabled="@IsLoading">
-                        &laquo;
+                    <button class="page-link" @onclick="GoToPrevious" disabled="@IsLoading" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
                     </button>
                 </li>
 
-                @* Page Numbers *@
-                @foreach (var page in GetPageNumbers())
+                @* Dynamic Page Numbers *@
+                @foreach (var pageNumber in GetPageNumbers())
                 {
-                    <li class="page-item @(page == CurrentPage ? "active" : "")">
-                        <button class="page-link" @onclick="() => GoToPage(page)" disabled="@IsLoading">
-                            @(@page)
+                    <li class="page-item @(pageNumber == CurrentPage ? "active" : "")">
+                        <button class="page-link" @onclick="() => GoToPage(pageNumber)" disabled="@IsLoading">
+                            @pageNumber
                         </button>
                     </li>
                 }
 
                 @* Next Button *@
                 <li class="page-item @(CurrentPage == TotalPages ? "disabled" : "")">
-                    <button class="page-link" @onclick="GoToNext" disabled="@IsLoading">
-                        &raquo;
+                    <button class="page-link" @onclick="GoToNext" disabled="@IsLoading" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
                     </button>
                 </li>
             </ul>
@@ -39,60 +38,60 @@
     @if (ShowInfo)
     {
         <div class="text-center text-muted">
-            <small>Trang @CurrentPage / @TotalPages @(TotalCount > 0 ? $"(Tổng: {TotalCount} mục)" : "")</small>
+            <small>Page @CurrentPage of @TotalPages @(TotalCount > 0 ? $"(Total: {TotalCount} items)" : "")</small>
         </div>
     }
 }
 
 @code {
     /// <summary>
-    /// Trang hiện tại (1-indexed)
+    /// Current active page (1-indexed)
     /// </summary>
     [Parameter] public int CurrentPage { get; set; } = 1;
 
     /// <summary>
-    /// Tổng số trang
+    /// Total number of pages
     /// </summary>
     [Parameter] public int TotalPages { get; set; }
 
     /// <summary>
-    /// Tổng số items (optional, dùng để hiển thị info)
+    /// Total number of items (optional, used for informational display)
     /// </summary>
     [Parameter] public int TotalCount { get; set; }
 
     /// <summary>
-    /// Đang loading? (disable buttons)
+    /// Loading state flag to disable interactions
     /// </summary>
     [Parameter] public bool IsLoading { get; set; }
 
     /// <summary>
-    /// Hiển thị info "Trang x/y (Tổng: n)"
+    /// Whether to display the "Page x of y" info text
     /// </summary>
     [Parameter] public bool ShowInfo { get; set; } = true;
 
     /// <summary>
-    /// Số trang hiển thị ở mỗi bên của trang hiện tại
+    /// Number of pages to show on each side of the current page
+    /// E.g., CurrentPage=5, Spread=2 -> shows [3,4,5,6,7]
     /// </summary>
     [Parameter] public int Spread { get; set; } = 2;
 
     /// <summary>
-    /// CSS class cho container div (default: d-flex justify-content-center mt-4)
+    /// CSS class for the container div (Default: d-flex justify-content-center mt-4)
     /// </summary>
     [Parameter] public string ContainerClass { get; set; } = "d-flex justify-content-center mt-4";
 
     /// <summary>
-    /// CSS class bổ sung cho ul.pagination (default: empty)
+    /// Additional CSS classes for the ul.pagination element
     /// </summary>
     [Parameter] public string PaginationClass { get; set; } = "";
 
     /// <summary>
-    /// Callback khi chuyển trang
+    /// Event callback triggered when a user navigates to a different page
     /// </summary>
     [Parameter] public EventCallback<int> OnPageChange { get; set; }
 
     /// <summary>
-    /// Tính toán các số trang cần hiển thị (với spread)
-    /// VD: CurrentPage=5, Spread=2 -> [3,4,5,6,7]
+    /// Calculates the range of page numbers to display based on the spread parameter.
     /// </summary>
     private IEnumerable<int> GetPageNumbers()
     {
@@ -103,6 +102,7 @@
 
     private async Task GoToPage(int page)
     {
+        // Guard clause: Prevent unnecessary or invalid calls
         if (page >= 1 && page <= TotalPages && page != CurrentPage && !IsLoading)
         {
             await OnPageChange.InvokeAsync(page);

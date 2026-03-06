@@ -1,4 +1,5 @@
-using HotelBooking.webapp.ViewModels.Hotel;
+using HotelBooking.webapp.ViewModels.Admin;
+using HotelBooking.webapp.ViewModels.Admin.Base;
 
 public static class RoomAttributeHelper
 {

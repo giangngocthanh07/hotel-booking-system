@@ -4,7 +4,7 @@
 
     <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
+            <div class="modal-content shadow-lg border-0">
 
                 @* HEADER *@
                 <div class="modal-header bg-danger text-white">
@@ -15,18 +15,20 @@
                 </div>
 
                 @* BODY *@
-                <div class="modal-body">
-                    <p class="fw-bold">@Message</p>
-                    <p class="text-danger small mb-0">Hành động này không thể hoàn tác.</p>
+                <div class="modal-body py-4">
+                    <p class="fw-bold fs-5">@Message</p>
+                    <p class="text-danger small mb-0">
+                        <i class="fa-solid fa-circle-info me-1"></i> This action cannot be undone.
+                    </p>
                 </div>
 
                 @* FOOTER *@
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="Hide">
-                        <i class="fa-solid fa-xmark me-1"></i> Bỏ qua
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary px-4" @onclick="Hide">
+                        <i class="fa-solid fa-xmark me-1"></i> Cancel
                     </button>
-                    <button type="button" class="btn btn-danger" @onclick="OnConfirmClicked">
-                        <i class="fa-solid fa-trash me-1"></i> Đồng ý Xóa
+                    <button type="button" class="btn btn-danger px-4 shadow-sm" @onclick="OnConfirmClicked">
+                        <i class="fa-solid fa-trash me-1"></i> Confirm Delete
                     </button>
                 </div>
 
@@ -36,26 +38,30 @@
 }
 
 @code {
-    // --- 1. PARAMETERS (Cấu hình nội dung) ---
-    [Parameter] public string Title { get; set; } = "Xác nhận xóa";
-    [Parameter] public string Message { get; set; } = "Bạn có chắc chắn muốn xóa mục này?";
+    // --- 1. PARAMETERS (Content Configuration) ---
+    [Parameter] public string Title { get; set; } = "Confirm Delete";
+    [Parameter] public string Message { get; set; } = "Are you sure you want to delete this item?";
 
-    // Sự kiện bắn về cha khi bấm "Đồng ý"
+    // Event callback to notify the parent component when "Confirm" is clicked
     [Parameter] public EventCallback OnConfirm { get; set; }
 
     // --- 2. STATE ---
     private bool _isVisible = false;
 
-    // --- 3. PUBLIC METHODS (Để cha gọi) ---
+    // --- 3. PUBLIC METHODS (Invoked by Parent) ---
 
-    // Hàm mở modal
+    /// <summary>
+    /// Opens the confirmation modal.
+    /// </summary>
     public void Show()
     {
         _isVisible = true;
         StateHasChanged();
     }
 
-    // Hàm đóng modal
+    /// <summary>
+    /// Closes the confirmation modal.
+    /// </summary>
     public void Hide()
     {
         _isVisible = false;
@@ -65,9 +71,10 @@
     // --- 4. INTERNAL LOGIC ---
     private async Task OnConfirmClicked()
     {
-        // 1. Gọi sự kiện của cha
+        // 1. Invoke the parent event
         await OnConfirm.InvokeAsync();
-        // 2. Tự đóng modal
+
+        // 2. Automatically close the modal
         Hide();
     }
 }

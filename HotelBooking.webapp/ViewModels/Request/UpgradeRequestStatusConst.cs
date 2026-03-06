@@ -1,14 +1,10 @@
-using HotelBooking.application.DTOs.Request.Base;
+using HotelBooking.webapp.ViewModels.Request.Base;
 
-namespace HotelBooking.application.DTOs.Request;
+namespace HotelBooking.webapp.ViewModels.Request;
 
-/// <summary>
-/// Status constants for Upgrade Request.
-/// [OBSOLETE] Use HotelBooking.webapp.ViewModels.Request.Base.RequestStatusConst instead.
-/// </summary>
-[Obsolete("Use HotelBooking.webapp.ViewModels.Request.Base.RequestStatusConst instead")]
 public static class UpgradeRequestStatusConst
 {
+
     public const string Pending = RequestStatusConst.Pending;
     public const string Approved = RequestStatusConst.Approved;
     public const string Rejected = RequestStatusConst.Rejected;

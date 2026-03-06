@@ -44,14 +44,13 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Status</label>
-                        <input type="text"
-                               class="form-control text-white fw-bold @GetStatusBadgeClass(request.Status)"
+                        <input type="text"                               class="form-control text-white fw-bold @GetStatusBadgeClass(request.Status)"
                                value="@request.Status" readonly />
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Requested At</label>
-                        <input type="text" class="form-control" 
-                               value="@request.RequestedAt.ToString("dd/MM/yyyy HH:mm")" readonly />
+                        <input type="text" class="form-control" value="@request.RequestedAt.ToString("dd/MM/yyyy HH:mm")"
+                               readonly />
                     </div>
                     <div class="col-12">
                         <label class="form-label">Address</label>
@@ -97,10 +96,10 @@
 
 @code {
     [Parameter] public int RequestId { get; set; }
-    
+
     private HttpClient _httpClient = null!;
     private CancellationTokenSource _cts = new();
-    
+
     private UpgradeRequestVM? request;
     private bool isProcessing = false;
 
@@ -128,7 +127,7 @@
         try
         {
             var response = await _httpClient.GetAsync($"v1/admin/upgrade-requests/{RequestId}", _cts.Token);
-            
+
             if (response.IsSuccessStatusCode)
             {
                 var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<UpgradeRequestVM>>();
@@ -138,14 +137,15 @@
                 }
                 else
                 {
-                    SnackbarHelper.Show(Snackbar, StatusCodeResponse.NotFound, "Request not found");
+                    SnackbarHelper.Show(Snackbar, StatusCodeResponse.NotFound, MessageResponse.RequestManagement.Request.NOT_FOUND);
                 }
             }
         }
         catch (OperationCanceledException) { }
         catch (Exception)
         {
-            SnackbarHelper.Show(Snackbar, StatusCodeResponse.Error, "Error loading request details");
+            SnackbarHelper.Show(Snackbar, StatusCodeResponse.Error,
+MessageResponse.RequestManagement.Request.ERROR_LOADING_DETAILS);
         }
     }
 
@@ -156,33 +156,33 @@
 
     private string GetStatusBadgeClass(string status) => status switch
     {
-        "Pending" => "bg-primary",
-        "Approved" => "bg-success",
-        "Rejected" => "bg-danger",
-        "Cancelled" => "bg-secondary",
+        UpgradeRequestStatusConst.Pending => "bg-primary",
+        UpgradeRequestStatusConst.Approved => "bg-success",
+        UpgradeRequestStatusConst.Rejected => "bg-danger",
+        UpgradeRequestStatusConst.Cancelled => "bg-secondary",
         _ => "bg-secondary"
     };
 
     private async Task ApproveRequest()
     {
         if (isProcessing) return;
-        
+
         isProcessing = true;
         StateHasChanged();
-        
+
         try
         {
             var response = await _httpClient.PostAsync($"v1/admin/upgrade-requests/{RequestId}/approve", null, _cts.Token);
             var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<object>>();
-            
+
             if (apiResponse != null && !string.IsNullOrEmpty(apiResponse.StatusCode))
             {
                 SnackbarHelper.Show(Snackbar, apiResponse.StatusCode, apiResponse.Message ?? string.Empty);
             }
-            
+
             if (response.IsSuccessStatusCode)
             {
-                request!.Status = "Approved";
+                request!.Status = UpgradeRequestStatusConst.Approved;
             }
         }
         catch (OperationCanceledException) { }
@@ -196,23 +196,23 @@
     private async Task RejectRequest()
     {
         if (isProcessing) return;
-        
+
         isProcessing = true;
         StateHasChanged();
-        
+
         try
         {
             var response = await _httpClient.PostAsync($"v1/admin/upgrade-requests/{RequestId}/reject", null, _cts.Token);
             var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<object>>();
-            
+
             if (apiResponse != null && !string.IsNullOrEmpty(apiResponse.StatusCode))
             {
                 SnackbarHelper.Show(Snackbar, apiResponse.StatusCode, apiResponse.Message ?? string.Empty);
             }
-            
+
             if (response.IsSuccessStatusCode)
             {
-                request!.Status = "Rejected";
+                request!.Status = UpgradeRequestStatusConst.Rejected;
             }
         }
         catch (OperationCanceledException) { }

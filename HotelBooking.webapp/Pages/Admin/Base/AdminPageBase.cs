@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Blazored.LocalStorage;
 using HotelBooking.webapp.Services.Interface;
+using HotelBooking.webapp.Services;
 
 namespace HotelBooking.webapp.Pages.Admin.Base
 {

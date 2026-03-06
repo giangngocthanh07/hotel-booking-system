@@ -6,27 +6,26 @@ using HotelBooking.webapp.ViewModels.Request.Base;
 namespace HotelBooking.webapp.Services.Interface;
 
 /// <summary>
-/// Facade Pattern: Interface cho Request Service.
-/// Cung cấp một interface thống nhất để quản lý TẤT CẢ loại requests.
+/// Facade Pattern: Unified Interface for the Request Service.
+/// Provides a centralized entry point to manage ALL request types.
 /// 
-/// Generic Methods cho phép:
-/// - Type Safety (không dùng dynamic/object)
-/// - Polymorphism (cùng method, nhiều loại request)
-/// - Dễ mở rộng (thêm loại request mới không cần sửa interface)
+/// Generic Methods enable:
+/// - Type Safety: Eliminates the need for dynamic/object casting.
+/// - Polymorphism: Same method logic applied across multiple request types.
+/// - Scalability: New request types can be added without modifying the interface.
 /// 
-/// Kế thừa ITokenService để hỗ trợ AdminPageBase&lt;TService&gt; generic.
+/// Inherits from ITokenService to support generic AdminPageBase<TService> functionality.
 /// </summary>
 public interface IRequestService : ITokenService
 {
-
     // ==========================================
     // GENERIC METHODS (Polymorphism)
     // ==========================================
 
     /// <summary>
-    /// Lấy danh sách requests có phân trang - Generic cho mọi loại.
+    /// Retrieves a paginated list of requests - Generic for all types.
     /// </summary>
-    /// <typeparam name="T">Loại Request (UpgradeRequestVM, HotelApprovalRequestVM...)</typeparam>
+    /// <typeparam name="T">Request Type (UpgradeRequestVM, HotelApprovalRequestVM, etc.)</typeparam>
     Task<ApiResponse<PagedResult<T>>> GetRequestsAsync<T>(
         RequestType type,
         int pageIndex = 1,
@@ -34,45 +33,45 @@ public interface IRequestService : ITokenService
         string? status = null) where T : BaseRequestVM;
 
     /// <summary>
-    /// Lấy chi tiết request theo ID - Generic.
+    /// Retrieves specific request details by ID - Generic.
     /// </summary>
     Task<ApiResponse<T>> GetRequestByIdAsync<T>(RequestType type, int id) where T : BaseRequestVM;
 
     /// <summary>
-    /// Approve request - Generic.
+    /// Approves a specific request - Generic.
     /// </summary>
     Task<ApiResponse<T>> ApproveRequestAsync<T>(RequestType type, int id) where T : BaseRequestVM;
 
     /// <summary>
-    /// Reject request - Generic.
+    /// Rejects a specific request - Generic.
     /// </summary>
     Task<ApiResponse<T>> RejectRequestAsync<T>(RequestType type, int id) where T : BaseRequestVM;
 
     // ==========================================
-    // OVERVIEW / STATS (Dashboard)
+    // OVERVIEW / STATISTICS (Dashboard)
     // ==========================================
 
     /// <summary>
-    /// Lấy thống kê tổng quan tất cả loại requests
+    /// Fetches overall statistics across all request types.
     /// </summary>
     Task<ApiResponse<RequestStatsVM>> GetStatsAsync();
 
     /// <summary>
-    /// Lấy thống kê theo loại request cụ thể
+    /// Fetches statistics for a specific request type.
     /// </summary>
     Task<ApiResponse<RequestTypeStatsVM>> GetStatsByTypeAsync(RequestType type);
 
     /// <summary>
-    /// Lấy requests gần đây (cho dashboard widget)
+    /// Retrieves recent requests for dashboard widgets.
     /// </summary>
     Task<ApiResponse<List<RecentRequestVM>>> GetRecentRequestsAsync(int count = 10);
 
     // ==========================================
-    // SHORTCUT METHODS (Tiện lợi, không bắt buộc)
+    // SHORTCUT METHODS (Convenience)
     // ==========================================
 
     /// <summary>
-    /// [Shortcut] Lấy danh sách Upgrade Requests
+    /// [Shortcut] Retrieves paginated Upgrade Owner requests.
     /// </summary>
     Task<ApiResponse<PagedResult<UpgradeRequestVM>>> GetUpgradeRequestsAsync(
         int pageIndex = 1,
@@ -80,32 +79,32 @@ public interface IRequestService : ITokenService
         string? status = null);
 
     /// <summary>
-    /// [Shortcut] Lấy chi tiết Upgrade Request
+    /// [Shortcut] Retrieves specific Upgrade Owner request details.
     /// </summary>
     Task<ApiResponse<UpgradeRequestVM>> GetUpgradeRequestByIdAsync(int id);
 
     /// <summary>
-    /// [Shortcut] Approve Upgrade Request
+    /// [Shortcut] Approves an Upgrade Owner request.
     /// </summary>
     Task<ApiResponse<UpgradeRequestVM>> ApproveUpgradeRequestAsync(int id);
 
     /// <summary>
-    /// [Shortcut] Reject Upgrade Request
+    /// [Shortcut] Rejects an Upgrade Owner request.
     /// </summary>
     Task<ApiResponse<UpgradeRequestVM>> RejectUpgradeRequestAsync(int id);
 }
 
 /// <summary>
-/// Facade Pattern: Service thống nhất quản lý TẤT CẢ loại requests.
+/// Facade Implementation: Centralized service to manage ALL request workflows.
 /// 
-/// Design:
-/// - Generic methods cho polymorphism (strong typed)
-/// - Shortcut methods cho convenience
-/// - Sử dụng RequestType enum để map đến API endpoints
+/// Design Principles:
+/// - Generic methods for strong-typed polymorphism.
+/// - Shortcut methods for developer convenience.
+/// - Utilizes RequestType enum mapping to resolve API endpoints.
 /// 
-/// Mở rộng:
-/// - Thêm loại request mới: chỉ cần thêm vào RequestType enum
-/// - API path tự động lấy từ RequestTypeExtensions.GetApiPath()
+/// Extension:
+/// - To add a new request type, simply update the RequestType enum.
+/// - API paths are resolved automatically via RequestTypeExtensions.GetApiPath().
 /// </summary>
 public class RequestService : IRequestService
 {
@@ -159,7 +158,7 @@ public class RequestService : IRequestService
     }
 
     // ==========================================
-    // OVERVIEW / STATS
+    // OVERVIEW / STATISTICS
     // ==========================================
 
     public Task<ApiResponse<RequestStatsVM>> GetStatsAsync()

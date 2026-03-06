@@ -1,5 +1,7 @@
 @using HotelBooking.webapp.Helpers.Common
 @using HotelBooking.webapp.Helpers.Manage.Icon
+@using HotelBooking.webapp.ViewModels.Admin
+@using HotelBooking.webapp.ViewModels.Admin.Base
 @using HotelBooking.webapp.ViewModels.Hotel
 @using HotelBooking.webapp.Pages.Admin.Base
 @using HotelBooking.webapp.Helpers
@@ -7,18 +9,16 @@
 @inherits AdminPageBase
 @attribute [Authorize(Roles = "Admin")]
 
-@* --- 1. ĐỊNH NGHĨA ROUTING --- *@
+@* --- 1. ROUTING DEFINITIONS --- *@
 @page "/admin/manage/service"
 @page "/admin/manage/service/{TypeId:int}"
 
-@* --- 2. SỬ DỤNG LAYOUT ADMIN CHUNG --- *@
+@* --- 2. LAYOUT CONFIGURATION --- *@
 @layout AdminLayout
 @inject ILogger<ServiceManager> Logger
 @inject ISnackbar _snackbar
 
 @* --- 3. MASTER DETAIL LAYOUT (OPTIMIZED VERSION) --- *@
-@* Luôn hiển thị layout, Items truyền vào có thể null *@
-
 @if (!ShouldRenderUI())
 {
     <div class="p-4 text-center">Loading authentication...</div>
@@ -29,19 +29,18 @@ else
         PageIndex="_paging.PageIndex ?? 1" TotalPages="totalPages" TotalCount="totalCount" OnPageChanged="HandlePageChanged"
         OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm" OnNameBlur="SuggestDefaultValues">
 
-        @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
+        @* --- A. SIDEBAR CONFIGURATION (RENDER FRAGMENT) --- *@
         <SidebarTopContent>
-            @* NHÚNG COMPONENT MENU THÔNG MINH VÀO ĐÂY *@
-            @* Nó tự biết đường vẽ ra Dropdown *@
+            @* Global Navigation Component with dynamic dropdown logic *@
             <GlobalNavMenu CurrentModule="Service" CurrentTypeId="TypeId" />
         </SidebarTopContent>
 
-        @* --- B. CẤU HÌNH FORM ( Sidebar hẹp nên ưu tiên col-12 ) --- *@
+        @* --- B. FORM CONFIGURATION --- *@
         <FormContent Context="m">
             
             @* --- 1. LOCAL RENDERING HELPERS --- *@
             @{
-                // Hàm hiển thị lỗi dựa trên Model đang active
+                // Displays validation messages based on the active model state
                 RenderFragment RenderVal(string prop) => __builder => {
                     @if (_isUpdate) {
                         if (prop == "Price") { <ValidationMessage For="() => _updateModel.Price" class="val-msg" /> }
@@ -56,38 +55,35 @@ else
                     }
                 };
 
-                // Lấy giá trị Price hiện tại (cả Create và Update đều có Price ở lớp abstract ServiceCreate/UpdateVM)
                 decimal currentPrice = _isUpdate ? _updateModel.Price : _createModel.Price;
             }
 
             @* --- CASE 1: STANDARD SERVICE --- *@
             @if (TypeId == 1)
             {
-
-                @* --- 1. ĐƠN VỊ TÍNH --- *@
+                @* --- 1. UNIT OF MEASUREMENT --- *@
                 <div class="mb-3">
-                    <label class="small text-muted fw-bold text-uppercase">Đơn vị tính</label>
+                    <label class="small text-muted fw-bold text-uppercase">Unit of Measurement</label>
                     @if (_isUpdate && StdUp != null)
                     {
                         <input type="text" class="form-control shadow-sm" 
                         value="@StdUp.Unit" 
                         @oninput="@(e => HandleUnitInput(e.Value?.ToString()))" 
-                        placeholder="Lượt, Suất, Kg..." />
+                        placeholder="Trip, Person, Kg..." />
                     }
                     else if (!_isUpdate && StdCr != null)
                     {
                         <input type="text" class="form-control shadow-sm" 
                         value="@StdCr.Unit" 
                         @oninput="@(e => HandleUnitInput(e.Value?.ToString()))" 
-                        placeholder="Lượt, Suất, Kg..." />
+                        placeholder="Trip, Person, Kg..." />
                     }
                     @RenderVal("Unit")
-                    
                 </div>
 
-                @* --- 2. GIÁ BÁN (FORMAT CÓ DẤU PHẨY) --- *@
+                @* --- 2. SUGGESTED PRICE --- *@
                 <div class="mb-3">
-                    <label class="small text-muted fw-bold text-uppercase">Giá bán gợi ý</label>
+                    <label class="small text-muted fw-bold text-uppercase">Suggested Price</label>
                     <div class="input-group shadow-sm">
                         <span class="input-group-text bg-white text-success">
                             <i class="fa-solid fa-money-bill-wave"></i>
@@ -96,162 +92,118 @@ else
                         inputmode="numeric"
                         value="@(currentPrice.ToString("N0"))" 
                         @oninput="@(e => HandlePriceInput(e.Value?.ToString(), "Price"))" 
-                        placeholder="Nhập giá tiền..." />
-                        <span class="input-group-text bg-light fw-bold">VNĐ
-                        </span>
+                        placeholder="Enter amount..." />
+                        <span class="input-group-text bg-light fw-bold">VND</span>
                     </div>
                     @RenderVal("Price")
                 </div>
             }
 
-            @* --- CASE 2: AIRPORT TRANSFER (LUỒNG CÂU HỎI ĐỘNG) --- *@
+            @* --- CASE 2: AIRPORT TRANSFER (DYNAMIC FLOW) --- *@
             else if (TypeId == 2)
             {
-                // Helper local function để lấy giá trị (dù là Create hay Update)
-                // Lưu ý: Blazor binding cần property trực tiếp, nên ta phải if/else trong UI
-
-                @* Bước 1: Thông số xe *@
+                @* Vehicle Specs *@
                 <div class="row g-2 mb-4 bg-light p-2 rounded border mx-0">
                     <div class="col-6 text-center border-end">
-                        <label class="extra-small text-muted fw-bold">KHÁCH TỐI ĐA</label>
+                        <label class="extra-small text-muted fw-bold">MAX PASSENGERS</label>
                         <div class="d-flex align-items-center justify-content-center w-100">
                             <i class="fa-solid fa-users text-info flex-shrink-0"></i>
-                            @if(_isUpdate && AirUp != null) { <input type="number" @bind="AirUp.MaxPassengers" class="form-control form-control-sm border-0 bg-transparent fw-bold p-0 text-center flex-grow-0"
-                 style="width: 50px; outline: none; box-shadow: none; text-align: center; letter-spacing: 0.5px;" /> }
-                            else if(AirCr != null) { <input type="number" @bind="AirCr.MaxPassengers" class="form-control form-control-sm border-0 bg-transparent fw-bold p-0 text-center flex-grow-0"
-                 style="width: 50px; outline: none; box-shadow: none; text-align: center; letter-spacing: 0.5px;" /> }
+                            @if(_isUpdate && AirUp != null) { <input type="number" @bind="AirUp.MaxPassengers" class="form-control form-control-sm border-0 bg-transparent fw-bold p-0 text-center flex-grow-0" style="width: 50px;" /> }
+                            else if(AirCr != null) { <input type="number" @bind="AirCr.MaxPassengers" class="form-control form-control-sm border-0 bg-transparent fw-bold p-0 text-center flex-grow-0" style="width: 50px;" /> }
                         </div>
-                        
                     </div>
                     <div class="col-6 text-center">
-                        <label class="extra-small text-muted fw-bold">HÀNH LÝ TỐI ĐA</label>
+                        <label class="extra-small text-muted fw-bold">MAX LUGGAGE</label>
                         <div class="d-flex align-items-center justify-content-center w-100">
                             <i class="fa-solid fa-suitcase text-info flex-shrink-0"></i>
-                             @if(_isUpdate && AirUp != null) { <input type="number" @bind="AirUp.MaxLuggage" class="form-control form-control-sm border-0 bg-transparent fw-bold p-0 text-center flex-grow-0"
-                 style="width: 50px; outline: none; box-shadow: none; text-align: center; letter-spacing: 0.5px;"/> }
-                            else if(AirCr != null) { <input type="number" @bind="AirCr.MaxLuggage" class="form-control form-control-sm border-0 bg-transparent fw-bold p-0 text-center flex-grow-0"
-                 style="width: 50px; outline: none; box-shadow: none; text-align: center; letter-spacing: 0.5px;" /> }
+                             @if(_isUpdate && AirUp != null) { <input type="number" @bind="AirUp.MaxLuggage" class="form-control form-control-sm border-0 bg-transparent fw-bold p-0 text-center flex-grow-0" style="width: 50px;"/> }
+                            else if(AirCr != null) { <input type="number" @bind="AirCr.MaxLuggage" class="form-control form-control-sm border-0 bg-transparent fw-bold p-0 text-center flex-grow-0" style="width: 50px;" /> }
                         </div>
                     </div>
                 </div>
 
-                @* 2. Dịch vụ 1 chiều *@
-                @* 2.1. Cần gạt 1 chiều *@
+                @* One-Way Service *@
                 bool is1W = (_isUpdate && AirUp?.IsOneWayPaid == true) || (!_isUpdate && AirCr?.IsOneWayPaid == true);
-
                 <div class="mb-3">
-                    <label class="form-label fw-bold small d-block mb-2">1. Dịch vụ 1 chiều có tính phí không ?</label>
-                    
+                    <label class="form-label fw-bold small d-block mb-2">1. Is the one-way service chargeable?</label>
                     <div class="form-check form-switch custom-switch p-2 rounded border bg-light d-flex align-items-center justify-content-between mb-2 shadow-sm">
-                        <label class="small fw-bold text-muted mb-0 ms-1 uppercase"><i class="fa-solid fa-hand-holding-dollar me-2 @(is1W ? "text-success" : "text-secondary")"></i>
-                       @(is1W ? "CÓ TÍNH PHÍ DỊCH VỤ" : "MIỄN PHÍ HOÀN TOÀN")</label>
-                        <input class="form-check-input" type="checkbox" role="switch" checked="@is1W" @onchange="@(e => HandleOneWayToggle((bool)e.Value!))"
-                        style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
+                        <label class="small fw-bold text-muted mb-0 ms-1 uppercase">
+                            <i class="fa-solid fa-hand-holding-dollar me-2 @(is1W ? "text-success" : "text-secondary")"></i>
+                            @(is1W ? "CHARGEABLE SERVICE" : "COMPLIMENTARY")
+                        </label>
+                        <input class="form-check-input" type="checkbox" role="switch" checked="@is1W" @onchange="@(e => HandleOneWayToggle((bool)e.Value!))" style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
                     </div>
 
-                    @* Input Giá 1 chiều *@
                     @if (is1W)
                     {
                         <div class="mt-2 ps-3 border-start border-primary border-3 bg-light p-2 rounded shadow-sm">
                             <div class="col-12 mt-1">
-                                <label class="extra-small fw-bold text-muted uppercase mb-1">GIÁ 1 CHIỀU</label>
+                                <label class="extra-small fw-bold text-muted uppercase mb-1">ONE-WAY PRICE</label>
                                 <div class="input-group shadow-sm">
-                                <span class="input-group-text bg-white text-success">
-                                    <i class="fa-solid fa-money-bill-wave"></i>
-                                </span>
-                                <input type="text" class="form-control text-end fw-bold text-primary" inputmode="numeric"
-                                   value="@(currentPrice.ToString("N0"))" @oninput="@(e => HandlePriceInput(e.Value?.ToString(), "Price"))" />
-                                <span class="input-group-text bg-light fw-bold">VNĐ</span>
+                                    <span class="input-group-text bg-white text-success"><i class="fa-solid fa-money-bill-wave"></i></span>
+                                    <input type="text" class="form-control text-end fw-bold text-primary" inputmode="numeric"
+                                       value="@(currentPrice.ToString("N0"))" @oninput="@(e => HandlePriceInput(e.Value?.ToString(), "Price"))" />
+                                    <span class="input-group-text bg-light fw-bold">VND</span>
                                 </div>
                                 @RenderVal("Price")
                             </div>
                         </div>
                     }
-                    else
-                    {
-                        <div class="alert alert-success border-0 py-2 px-3 d-flex align-items-center shadow-sm mb-0 mt-2 animate__animated animate__fadeIn">
-                            <i class="fa-solid fa-circle-check me-2 fs-5"></i>
-                            <div class="extra-small fst-italic">Dịch vụ này mặc định sẽ không thu phí của khách.</div>
-                        </div>
-                    }
                 </div>
 
-                
-                @* 3. Khứ hồi *@
+                @* Round Trip *@
                 bool hasRT = _isUpdate ? AirUp?.HasRoundTrip == true : AirCr?.HasRoundTrip == true;
                 bool rtPaid = _isUpdate ? AirUp?.IsRoundTripPaid == true : AirCr?.IsRoundTripPaid == true;
-
                 decimal rtPriceValue = _isUpdate ? (AirUp?.RoundTripPrice ?? 0) : (AirCr?.RoundTripPrice ?? 0);
                 
                 <div class="mb-3">
-
-                    <label class="form-label fw-bold small d-block mb-2">2. Có dịch vụ khứ hồi không ?</label>
-
-                    @* --- NÚT GẠT BẬT/TẮT --- *@
+                    <label class="form-label fw-bold small d-block mb-2">2. Is round-trip service available?</label>
                     <div class="form-check form-switch custom-switch p-2 rounded border bg-light d-flex align-items-center justify-content-between mb-2 shadow-sm">
-                        <label class="small fw-bold text-muted mb-0 uppercase"><i class="fa-solid fa-arrows-left-right me-2 @(hasRT ? "text-warning" : "text-secondary")"></i>
-                        @(hasRT ? "CÓ HỖ TRỢ KHỨ HỒI" : "CHỈ ĐI 1 CHIỀU")</label>
-                        <input class="form-check-input" type="checkbox" role="switch" checked="@hasRT" @onchange="@(e => HandleRoundTripToggle((bool)e.Value!))"
-                        style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
+                        <label class="small fw-bold text-muted mb-0 uppercase">
+                            <i class="fa-solid fa-arrows-left-right me-2 @(hasRT ? "text-warning" : "text-secondary")"></i>
+                            @(hasRT ? "ROUND-TRIP SUPPORTED" : "ONE-WAY ONLY")
+                        </label>
+                        <input class="form-check-input" type="checkbox" role="switch" checked="@hasRT" @onchange="@(e => HandleRoundTripToggle((bool)e.Value!))" style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
                     </div>
 
                     @if (hasRT)
                     {
                         <div class="mt-2 ps-3 border-start border-warning border-3 bg-light p-2 rounded shadow-sm animate__animated animate__fadeIn">
-                            <label class="extra-small fw-bold text-muted mb-1 d-block">KHỨ HỒI CÓ PHÍ KHÔNG?</label>
-                            
+                            <label class="extra-small fw-bold text-muted mb-1 d-block">IS THE ROUND-TRIP CHARGEABLE?</label>
                             <div class="d-flex gap-3 mb-2 px-1">
-                                @* --- OPTION 1: MIỄN PHÍ --- *@
                                 <div class="form-check custom-radio">
-                                    <input type="radio" class="form-check-input" name="rt_option_@TypeId" 
-                                        checked="@(!rtPaid)" 
-                                        @onclick="() => SetRoundTripPaid(false)" />
-                                    <label class="small fw-bold text-success cursor-pointer">Miễn phí</label>
+                                    <input type="radio" class="form-check-input" name="rt_option_@TypeId" checked="@(!rtPaid)" @onclick="() => SetRoundTripPaid(false)" />
+                                    <label class="small fw-bold text-success cursor-pointer">Free</label>
                                 </div>
-
-                                @* --- OPTION 2: CÓ PHÍ --- *@
                                 <div class="form-check custom-radio">
-                                    <input type="radio" class="form-check-input" name="rt_option_@TypeId" 
-                                        checked="@rtPaid" 
-                                        @onclick="() => SetRoundTripPaid(true)" />
-                                    <label class="small fw-bold text-danger cursor-pointer">Có tính phí</label>
+                                    <input type="radio" class="form-check-input" name="rt_option_@TypeId" checked="@rtPaid" @onclick="() => SetRoundTripPaid(true)" />
+                                    <label class="small fw-bold text-danger cursor-pointer">Chargeable</label>
                                 </div>
                             </div>
 
-                            @* --- Ô NHẬP GIÁ KHỨ HỒI (CHỈ HIỆN KHI CHỌN CÓ PHÍ) --- *@
                             @if (rtPaid)
                             {
                                 <div class="col-12 mt-1 animate__animated animate__fadeInDown animate__faster">
-                                    <label class="extra-small fw-bold text-muted uppercase mb-1">GIÁ KHỨ HỒI</label>
+                                    <label class="extra-small fw-bold text-muted uppercase mb-1">ROUND-TRIP PRICE</label>
                                     <div class="input-group shadow-sm">
-                                        <span class="input-group-text bg-white text-warning">
-                                            <i class="fa-solid fa-money-bill-transfer"></i>
-                                        </span>
-                                        <input type="text" class="form-control text-end fw-bold text-warning" 
-                                            inputmode="numeric"
-                                            value="@(rtPriceValue.ToString("N0"))" 
-                                            @oninput="@(e => HandlePriceInput(e.Value?.ToString(), "RoundTrip"))" />
-                                        <span class="input-group-text bg-light fw-bold">VNĐ</span>
+                                        <span class="input-group-text bg-white text-warning"><i class="fa-solid fa-money-bill-transfer"></i></span>
+                                        <input type="text" class="form-control text-end fw-bold text-warning" inputmode="numeric"
+                                            value="@(rtPriceValue.ToString("N0"))" @oninput="@(e => HandlePriceInput(e.Value?.ToString(), "RoundTrip"))" />
+                                        <span class="input-group-text bg-light fw-bold">VND</span>
                                     </div>
+                                    @RenderVal("RoundTripPrice")
                                 </div>
-                                @RenderVal("RoundTripPrice")
                             }
                         </div>
                     }
                 </div>
 
-                @* Bước 3: Phụ phí đêm *@
+                @* Night Surcharge *@
                 bool hasNight = _isUpdate ? AirUp?.HasNightFee == true : AirCr?.HasNightFee == true;
-
-                decimal nightFeeValue = 0;
-                if (_isUpdate) nightFeeValue = AirUp?.AdditionalFee ?? 0;
-                else nightFeeValue = AirCr?.AdditionalFee ?? 0;
-
-                // Lấy giá trị thời gian để tính toán logic hiển thị
+                decimal nightFeeValue = _isUpdate ? (AirUp?.AdditionalFee ?? 0) : (AirCr?.AdditionalFee ?? 0);
                 var startTime = AirUp?.AdditionalFeeStartTime ?? AirCr?.AdditionalFeeStartTime;
                 var endTime = AirUp?.AdditionalFeeEndTime ?? AirCr?.AdditionalFeeEndTime;
 
-                // Tính toán độ dài khung giờ
                 double totalHours = 0;
                 if (startTime.HasValue && endTime.HasValue)
                 {
@@ -261,78 +213,62 @@ else
                 bool isOvernight = startTime.HasValue && endTime.HasValue && startTime > endTime;
                     
                 <div class="mb-3">
-
-                    <label class="form-label fw-bold small d-block mb-2">3. Có phụ phí khung giờ đêm không ?</label>
-    
-                    @* --- NÚT GẠT BẬT/TẮT --- *@
+                    <label class="form-label fw-bold small d-block mb-2">3. Apply night service surcharge?</label>
                     <div class="form-check form-switch custom-switch p-2 rounded border bg-light d-flex align-items-center justify-content-between mb-2 shadow-sm">
                         <label class="small fw-bold text-muted mb-0 ms-1 uppercase">
                             <i class="fa-solid fa-moon me-2 @(hasNight ? "text-danger" : "text-secondary")"></i>
-                            @(hasNight ? "CÓ ÁP DỤNG PHỤ PHÍ" : "KHÔNG TÍNH PHÍ ĐÊM")
+                            @(hasNight ? "SURCHARGE APPLIED" : "NO NIGHT FEE")
                         </label>
-                        <input class="form-check-input" type="checkbox" role="switch" 
-                            checked="@hasNight" 
-                            @onchange="@(e => HandleNightFeeToggle((bool)e.Value!))"
-                            style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
+                        <input class="form-check-input" type="checkbox" role="switch" checked="@hasNight" @onchange="@(e => HandleNightFeeToggle((bool)e.Value!))" style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
                     </div>
-                    
 
                     @if (hasNight)
                     {
                         <div class="mt-2 ps-3 border-start border-danger border-3 bg-light p-2 rounded shadow-sm">
                             <div class="row g-2">
-                                @* --- Ô NHẬP THỜI GIAN --- *@
                                 <div class="col-6">
-                                    <label class="extra-small fw-bold text-muted mb-1">TỪ</label>
+                                    <label class="extra-small fw-bold text-muted mb-1">FROM</label>
                                     @if (AirUp != null) { <input type="time" @bind="AirUp!.AdditionalFeeStartTime" class="form-control form-control-sm" /> }
                                     else if (AirCr != null) { <input type="time" @bind="AirCr!.AdditionalFeeStartTime" class="form-control form-control-sm" /> }
                                 </div>
                                 <div class="col-6">
-                                    <label class="extra-small fw-bold text-muted mb-1">ĐẾN</label>
+                                    <label class="extra-small fw-bold text-muted mb-1">TO</label>
                                     @if (AirUp != null) { <input type="time" @bind="AirUp!.AdditionalFeeEndTime" class="form-control form-control-sm" /> }
                                     else if (AirCr != null) { <input type="time" @bind="AirCr!.AdditionalFeeEndTime" class="form-control form-control-sm" /> }
                                 </div>
 
-                                 @* --- THÔNG BÁO XUYÊN ĐÊM --- *@
                                 <div class="col-12 mt-2">
                                     @if (isOvernight)
                                     {
                                         <div class="alert alert-warning py-1 px-2 mb-1 border-0 shadow-none d-flex align-items-center" style="font-size: 0.65rem;">
                                             <i class="fa-solid fa-moon me-2"></i>
-                                            <span>Chế độ <strong>xuyên đêm</strong> (sang sáng hôm sau).</span>
+                                            <span><strong>Overnight</strong> mode active (ends next morning).</span>
                                         </div>
                                     }
-
                                     @if (totalHours > 12)
                                     {
                                         <div class="alert alert-danger py-1 px-2 mb-2 border-0 shadow-none d-flex align-items-center" style="font-size: 0.65rem;">
                                             <i class="fa-solid fa-circle-exclamation me-2"></i>
-                                            <span>Lỗi: Khung giờ quá dài (<strong>@Math.Round(totalHours, 1)h</strong>). Tối đa 12h.</span>
+                                            <span>Error: Duration too long (<strong>@Math.Round(totalHours, 1)h</strong>). Max 12h.</span>
                                         </div>
                                     }
                                     else if (totalHours > 0)
                                     {
                                         <div class="text-muted ps-1 mb-2" style="font-size: 0.65rem;">
-                                            <i class="fa-solid fa-hourglass-half me-1"></i> Tổng cộng: <strong>@Math.Round(totalHours, 1) giờ</strong> áp dụng phí.
+                                            <i class="fa-solid fa-hourglass-half me-1"></i> Total: <strong>@Math.Round(totalHours, 1) hours</strong> surcharge duration.
                                         </div>
                                     }
                                 </div>
 
-                                @* --- Ô NHẬP TIỀN --- *@
                                 <div class="col-12 mt-1 animate__animated animate__fadeInDown animate__faster">
-                                    <label class="extra-small fw-bold text-muted uppercase mb-1">PHÍ PHỤ THU</label>
+                                    <label class="extra-small fw-bold text-muted uppercase mb-1">SURCHARGE FEE</label>
                                     <div class="input-group shadow-sm">
-                                    <span class="input-group-text bg-white text-success">
-                                        <i class="fa-solid fa-money-bill-wave"></i>
-                                    </span>
-                                    <input type="text" class="form-control text-end fw-bold text-danger" 
-                                    inputmode="numeric"
-                                    value="@(nightFeeValue.ToString("N0"))" 
-                                    @oninput="@(e => HandlePriceInput(e.Value?.ToString(), "NightFee"))" />
-                                    <span class="input-group-text bg-light fw-bold">VNĐ</span>
+                                        <span class="input-group-text bg-white text-success"><i class="fa-solid fa-money-bill-wave"></i></span>
+                                        <input type="text" class="form-control text-end fw-bold text-danger" inputmode="numeric" value="@(nightFeeValue.ToString("N0"))" @oninput="@(e => HandlePriceInput(e.Value?.ToString(), "NightFee"))" />
+                                        <span class="input-group-text bg-light fw-bold">VND</span>
                                     </div>
+                                    @RenderVal("AdditionalFee")
                                 </div>
-                                @RenderVal("AdditionalFee")
                             </div>
                         </div>
                     }
@@ -340,43 +276,35 @@ else
             }
         </FormContent>
 
-        @* --- C. CẤU HÌNH BẢNG (TABLE) --- *@
+        @* --- C. TABLE CONFIGURATION --- *@
         <TableHeader>
             <th class="text-center" style="width: 50px;">Id</th>
-            <th class="text-center" style="width: 60px;">Icon</th> @* THIẾU: Cột Icon *@
-            <th class="text-center" style="width: 200px;">Dịch vụ mẫu</th>
-            <th class="text-center">Mô tả / Ghi chú</th> @* Cột mô tả sẽ linh hoạt *@
+            <th class="text-center" style="width: 60px;">Icon</th>
+            <th class="text-center" style="width: 200px;">Service Template</th>
+            <th class="text-center">Description / Notes</th>
 
-            @if (TypeId == 1 || TypeId == null) // Standard Service
+            @if (TypeId == 1 || TypeId == null) 
             {
-                <th class="text-center" style="width: 100px;">Đơn vị</th>
-                <th class="text-center" style="width: 150px;">Giá gợi ý</th>
+                <th class="text-center" style="width: 100px;">Unit</th>
+                <th class="text-center" style="width: 150px;">Suggested Price</th>
                 <th style="width: 50px;"></th>
-                @* Cột đệm *@
             }
-            else if (TypeId == 2) // Airport Transfer
+            else if (TypeId == 2) 
             {
-                <th class="text-center" style="width: 150px;">Giá (1W/2W)</th>
-                <th class="text-center" style="width: 120px;">Sức chứa</th>
-                <th class="text-center" style="min-width: 150px;">Phụ phí đêm</th>
+                <th class="text-center" style="width: 150px;">Price (1W/2W)</th>
+                <th class="text-center" style="width: 120px;">Capacity</th>
+                <th class="text-center" style="min-width: 150px;">Night Fee</th>
             }
         </TableHeader>
 
         <RowTemplate Context="row">
             <td class="text-center text-muted small">@row.Id</td>
-
-            @* Icon dịch vụ *@
             <td class="text-center">
-                <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center shadow-sm mx-auto"
-                    style="width: 32px; height: 32px;">
+                <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center shadow-sm mx-auto" style="width: 32px; height: 32px;">
                     <i class="@GetServiceIcon(row.Name) text-primary"></i>
                 </div>
             </td>
-
-            @* Tên dịch vụ mẫu *@
             <td class="text-center align-middle text-dark fw-bold">@row.Name</td>
-
-            @* Mô tả *@
             <td class="text-center align-middle">
                 <div class="text-muted small text-truncate mx-auto" style="max-width: 400px;" title="@row.Description">
                     @(string.IsNullOrWhiteSpace(row.Description) ? "---" : row.Description)
@@ -385,26 +313,21 @@ else
 
             @if (row is ServiceStandardVM standard)
             {
-                @* Cột ĐƠN VỊ *@
                 <td class="text-center align-middle">
                     <span class="badge bg-light text-dark border px-2 shadow-sm">@standard.Unit</span>
                 </td>
-                @* Cột GIÁ GỢI Ý *@
                 <td class="text-center align-middle fw-bold text-success">
                     @standard.Price.ToString("N0")đ
                 </td>
                 <td></td>
-                @* Cột đệm để khớp với Header của Airport Transfer *@
             }
             else if (row is ServiceAirportTransferVM at)
             {
-                @* Cột GIÁ (1W/2W): Căn chỉnh đều bằng Flexbox *@
                 <td class="text-center align-middle">
                     <div class="d-flex flex-column align-items-center justify-content-center">
                         <div class="small w-100 mb-1 d-flex justify-content-center gap-1" style="min-width: 120px;">
                             <span class="text-muted" style="width: 25px; text-align: left;">1W:</span>
-                            <span class="fw-bold @(at.IsOneWayPaid ? "text-primary" : "text-success")"
-                                style="min-width: 70px; text-align: right;">
+                            <span class="fw-bold @(at.IsOneWayPaid ? "text-primary" : "text-success")" style="min-width: 70px; text-align: right;">
                                 @(at.IsOneWayPaid? at.Price.ToString("N0") + "đ" : "Free")
                             </span>
                         </div>
@@ -412,8 +335,7 @@ else
                             <span class="text-muted" style="width: 25px; text-align: left;">2W:</span>
                             @if (at.HasRoundTrip)
                             {
-                                <span class="fw-bold @(at.IsRoundTripPaid ? "text-warning" : "text-success")"
-                                    style="min-width: 70px; text-align: right;">
+                                <span class="fw-bold @(at.IsRoundTripPaid ? "text-warning" : "text-success")" style="min-width: 70px; text-align: right;">
                                     @(at.IsRoundTripPaid? at.RoundTripPrice?.ToString("N0") + "đ" : "Free")
                                 </span>
                             }
@@ -424,8 +346,6 @@ else
                         </div>
                     </div>
                 </td>
-
-                @* Cột SỨC CHỨA *@
                 <td class="text-center align-middle">
                     <div class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill px-3 py-1 shadow-sm">
                         <i class="fa-solid fa-users me-1"></i> @at.MaxPassengers
@@ -433,8 +353,6 @@ else
                         <i class="fa-solid fa-suitcase me-1"></i> @at.MaxLuggage
                     </div>
                 </td>
-
-                @* Cột PHỤ PHÍ ĐÊM: Hiển thị nổi bật bằng Badge đỏ nhẹ *@
                 <td class="text-center align-middle">
                     @if (at.HasNightFee || (at.AdditionalFee.HasValue && at.AdditionalFee > 0))
                     {
@@ -443,85 +361,58 @@ else
                                 <i class="fa-solid fa-moon me-1"></i>+@(at.AdditionalFee?.ToString("N0") ?? "0")đ
                             </div>
                             <div class="extra-small text-muted fw-bold" style="font-size: 0.65rem;">
-                                @(at.AdditionalFeeStartTime?.ToString("HH:mm") ?? "--:--") -
-                                @(at.AdditionalFeeEndTime?.ToString("HH:mm") ?? "--:--")
+                                @(at.AdditionalFeeStartTime?.ToString("HH:mm") ?? "--:--") - @(at.AdditionalFeeEndTime?.ToString("HH:mm") ?? "--:--")
                             </div>
                         </div>
                     }
                     else
                     {
-                        <span class="text-muted small opacity-50 fst-italic">Không mặc định</span>
+                        <span class="text-muted small opacity-50 fst-italic">Not applicable</span>
                     }
                 </td>
             }
         </RowTemplate>
-
     </MasterDetailLayout>
 }
 
 @code {
-    // --- PARAMETERS TỪ URL ---
-    // Tự động nhận giá trị từ URL /admin/manage/service/{TypeId}
     [Parameter] public int? TypeId { get; set; }
 
-    // --- STATE ---
-    private List<ServiceVM>? items; // Nullable để kích hoạt Spinner
-    // MODEL: Dùng Base Abstract nhưng khởi tạo bằng class con
+    private List<ServiceVM>? items; 
     private ServiceCreateVM _createModel = new ServiceStandardCreateVM();
     private ServiceUpdateVM _updateModel = new ServiceStandardUpdateVM();
 
     private int _currentEditingId = 0;
     private bool _isUpdate = false;
 
-    // --- QUẢN LÝ PHÂN TRANG ---
-    // Khởi tạo request: Trang 1, Size 10
     private PagingRequest _paging = new() { PageIndex = 1, PageSize = 10 };
     private int totalPages = 0;
     private int totalCount = 0;
 
-
-    // Biến kiểm soát vòng đời & Re-render
     private int? _previousTypeId = null;
-
     private MasterDetailLayout<ServiceVM, BaseCreateOrUpdateAdminVM>? _layoutRef;
 
-    // --- 2. CASTING PROPERTIES (Thay thế Dynamic) ---
     private ServiceStandardCreateVM? StdCr => _createModel as ServiceStandardCreateVM;
     private ServiceStandardUpdateVM? StdUp => _updateModel as ServiceStandardUpdateVM;
-
     private ServiceAirportCreateVM? AirCr => _createModel as ServiceAirportCreateVM;
     private ServiceAirportUpdateVM? AirUp => _updateModel as ServiceAirportUpdateVM;
 
-
-
-    // --- LOGIC GỢI Ý MẶC ĐỊNH (TRIGGERED FROM LAYOUT) ---
     private void SuggestDefaultValues()
     {
-        // 1. Lấy model hiện tại (Create hoặc Update)
-        var m = GetModel();
-
-        // 2. Gọi Helper để "đoán" ý người dùng
-        // TypeId nhận từ Parameter của trang
         if (_isUpdate) ServiceHelper.ApplyDefaultValues(_updateModel, TypeId ?? 1);
         else ServiceHelper.ApplyDefaultValues(_createModel, TypeId ?? 1);
 
-        // 3. Thông báo giao diện cập nhật
         StateHasChanged();
-
-        // 4. Kích hoạt Validation của Layout để ẩn/hiện lỗi dựa trên dữ liệu vừa điền
         _layoutRef?.TriggerValidate();
     }
 
     private void HandleUnitInput(string? val)
     {
-        // 1. Cập nhật giá trị vào đúng Model con
         if (_isUpdate && StdUp != null) StdUp.Unit = val ?? "";
         else if (StdCr != null) StdCr.Unit = val ?? "";
 
         StateHasChanged();
-        // 2. Kích hoạt Validation Message của MasterDetailLayout ngay lập tức
         _layoutRef?.TriggerValidate();
-
     }
 
     private async Task HandlePriceInput(string? val, string field)
@@ -532,24 +423,20 @@ else
         if (field == "Price") {
             if (_isUpdate) {
                 _updateModel.Price = amount;
-                // REACTIVE: Nếu người dùng xóa về 0, tự động gạt switch sang Miễn phí
                 if (AirUp != null) AirUp.IsOneWayPaid = amount > 0;
             } else {
                 _createModel.Price = amount;
                 if (AirCr != null) AirCr.IsOneWayPaid = amount > 0;
             }
-
         } else if (field == "RoundTrip") {
             if (_isUpdate && AirUp != null) {
                 AirUp.RoundTripPrice = amount;
-                // TỰ ĐỘNG NHẢY: Nếu gõ 0 thì gạt sang Miễn phí, gõ > 0 thì gạt sang Có phí
                 AirUp.IsRoundTripPaid = amount > 0;
             }
             else if (AirCr != null) {
                 AirCr.RoundTripPrice = amount;
                 AirCr.IsRoundTripPaid = amount > 0;
             }
-
         } else if (field == "NightFee") {
             if (_isUpdate && AirUp != null) AirUp.AdditionalFee = amount; 
             else if (AirCr != null) AirCr.AdditionalFee = amount;
@@ -561,9 +448,7 @@ else
 
     private void HandleOneWayToggle(bool isEnabled)
     {
-        // Khi bật: Phải gán giá > 0 (mồi) để UI hiện lên. Khi tắt: Gán về 0.
         decimal val = isEnabled ? 350000 : 0; 
-
         if (_isUpdate && AirUp != null) {
             AirUp.IsOneWayPaid = isEnabled;
             AirUp.Price = val;
@@ -571,7 +456,6 @@ else
             AirCr.IsOneWayPaid = isEnabled;
             AirCr.Price = val;
         }
-
         StateHasChanged();
         _layoutRef?.TriggerValidate();
     }
@@ -581,9 +465,7 @@ else
         if (_isUpdate && AirUp != null)
         {
             AirUp.HasRoundTrip = isEnabled;
-            // Nếu tắt: Ép về Free và 0đ. 
             if (!isEnabled) { AirUp.IsRoundTripPaid = false; AirUp.RoundTripPrice = 0; }
-            // Nếu bật: Mồi sẵn "Có phí" và 650k để xóa lỗi đỏ cũ ngay lập tức
             else { AirUp.IsRoundTripPaid = true; AirUp.RoundTripPrice = 650000; }
         }
         else if (AirCr != null)
@@ -592,22 +474,17 @@ else
             if (!isEnabled) { AirCr.IsRoundTripPaid = false; AirCr.RoundTripPrice = 0; }
             else { AirCr.IsRoundTripPaid = true; AirCr.RoundTripPrice = 650000; }
         }
-
-        // Luồng xử lý để xóa lỗi Validation
-        StateHasChanged();     // Vẽ lại UI với con số mới
-        
-        _layoutRef?.TriggerValidate(); // Quét lại lỗi (xóa chữ đỏ)
+        StateHasChanged(); 
+        _layoutRef?.TriggerValidate();
     }
 
     private void HandleNightFeeToggle(bool isEnabled)
     {
         decimal suggestedFee = isEnabled ? 100000 : 0;
-
         if (_isUpdate && AirUp != null)
         {
             AirUp.HasNightFee = isEnabled;
             AirUp.AdditionalFee = suggestedFee;
-            // Nếu bật thì mồi luôn giờ giấc nếu đang trống
             if (isEnabled && AirUp.AdditionalFeeStartTime == default) {
                 AirUp.AdditionalFeeStartTime = new TimeOnly(22, 0);
                 AirUp.AdditionalFeeEndTime = new TimeOnly(5, 0);
@@ -622,16 +499,13 @@ else
                 AirCr.AdditionalFeeEndTime = new TimeOnly(5, 0);
             }
         }
-
         StateHasChanged();
-
         _layoutRef?.TriggerValidate();
     }
 
     private void SetRoundTripPaid(bool isPaid)
     {
         decimal val = isPaid ? 650000 : 0;
-
         if (_isUpdate && AirUp != null) {
             AirUp.IsRoundTripPaid = isPaid;
             AirUp.RoundTripPrice = val;
@@ -639,67 +513,43 @@ else
             AirCr.IsRoundTripPaid = isPaid;
             AirCr.RoundTripPrice = val;
         }
-
         StateHasChanged();
         _layoutRef?.TriggerValidate();
     }
 
-
-// --- HELPER ---
     private BaseCreateOrUpdateAdminVM GetModel()
     {
-        if (_isUpdate)
-        {
-            // Fallback: Nếu lỡ _updateModel bị null thì new cái mới ngay
-            return _updateModel ?? new ServiceStandardUpdateVM();
-        }
-        
-        // Fallback cho Create
+        if (_isUpdate) return _updateModel ?? new ServiceStandardUpdateVM();
         return _createModel ?? new ServiceStandardCreateVM();
     }
+    
     private string GetServiceIcon(string? name) => ServiceIconHelper.GetIcon(name);
 
-    
-
-
-    // --- LIFECYCLE ---
-    // --- 1. LOGIC LOAD DATA (Override từ Cha) ---
-    // Hàm này CHẮC CHẮN chạy sau khi đã có Token
     protected override async Task LoadDataAsync()
     {
-        // Ngăn chặn gọi API nếu Component đã bị hủy (tránh ObjectDisposedException)
         if (Disposed) return;
-
-        // 1. Reset UI
         items = null;
         StateHasChanged();
 
         try
         {
-            // 2. Gọi API (Lưu ý dùng Property 'Service' từ Cha)
             var res = await Service.GetServicesByType(TypeId, _paging);
-
-            if (!Disposed) // Check cờ Disposed từ Cha
+            if (!Disposed && res.StatusCode == StatusCodeResponse.Success && res.Content != null)
             {
-                if (res.StatusCode == StatusCodeResponse.Success && res.Content != null)
-                {
-                    items = res.Content.Items;
-                    totalPages = res.Content.TotalPages;
-                    totalCount = res.Content.TotalCount;
-                }
-                else
-                {
-                    items = new List<ServiceVM>();
-
-                    if (res.StatusCode != StatusCodeResponse.Success)
-                        SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
-
-                }
+                items = res.Content.Items;
+                totalPages = res.Content.TotalPages;
+                totalCount = res.Content.TotalCount;
+            }
+            else
+            {
+                items = new List<ServiceVM>();
+                if (res.StatusCode != StatusCodeResponse.Success)
+                    SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
             }
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Lỗi load data");
+            Logger.LogError(ex, "Error loading service data");
             items = new List<ServiceVM>();
         }
         finally
@@ -708,109 +558,72 @@ else
         }
     }
 
-    protected override void OnInitialized()
-    {
-        // Ép Model đúng kiểu ngay khi component vừa được tạo ra
-        ResetForm();
-    }
+    protected override void OnInitialized() => ResetForm();
 
-    // --- 2. LOGIC CHUYỂN TAB ---
     protected override async Task OnParametersSetAsync()
     {
         if (TypeId == null) TypeId = 1;
-
         if (TypeId != _previousTypeId)
         {
             _previousTypeId = TypeId;
             ResetForm();
-
             if (IsJsReady) 
             {
                 _paging.PageIndex = 1;
-
                 await LoadDataAsync();
             }
         }
     }
 
-    // --- HÀM XỬ LÝ KHI BẤM CHUYỂN TRANG ---
     private async Task HandlePageChanged(int newPage)
     {
-        // Cập nhật số trang mới vào Request
         _paging.PageIndex = newPage;
-        // Gọi lại API
         await LoadDataAsync();
     }
 
-    // --- CRUD METHODS ---
-    // Logic Reset form dựa trên TypeId hiện tại
     private void ResetForm()
     {
         _isUpdate = false;
         _currentEditingId = 0;
-
         _createModel = ServiceHelper.CreateNewServiceModel(TypeId ?? 1);
-        
-        // Dummy update model để tránh null
         _updateModel = new ServiceStandardUpdateVM();
-
-        // [QUAN TRỌNG] Xóa các thông báo lỗi đỏ từ phiên làm việc trước
         _layoutRef?.TriggerValidate();
-
         StateHasChanged();
-        
     }
 
-    // Logic Edit: Phải cast về đúng kiểu để Clone
     private void OnEditItem(ServiceVM item)
     {
         _isUpdate = true;
         _currentEditingId = item.Id;
-
-        // Helper tự động nhận diện loại Standard hay Airport để map sang UpdateVM tương ứng
         var updateVm = ServiceHelper.MapToUpdateVM(item);
-        
-        if (updateVm != null)
-        {
-            _updateModel = updateVm;
-        }
+        if (updateVm != null) _updateModel = updateVm;
     }
 
     private async Task HandleDelete(ServiceVM item)
     {
         var res = await Service.DeleteService(item.Id);
-
-        // Hiển thị thông báo
         SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
-
         if (res.StatusCode == StatusCodeResponse.Success) await LoadDataAsync();
     }
 
     private async Task SaveData()
     {
-        // Kiểm tra giá dịch vụ tiêu chuẩn
         decimal p = _isUpdate ? _updateModel.Price : _createModel.Price;
-
         if (p <= 0 && TypeId == 1) { _snackbar.Add(MessageResponse.AdminManagement.Service.REQUIRED_PRICE, Severity.Warning); return; }
 
         if (TypeId == 2) 
         {
             TimeOnly? start, end;
             bool hasNightFee;
-
             if (_isUpdate)
             {
                 var m = (ServiceAirportUpdateVM)_updateModel;
-                start = m.AdditionalFeeStartTime;
-                end = m.AdditionalFeeEndTime;
-                hasNightFee = m.HasNightFee;
+                start = m.AdditionalFeeStartTime; end = m.AdditionalFeeEndTime; hasNightFee = m.HasNightFee;
             }
             else
             {
                 var m = (ServiceAirportCreateVM)_createModel;
-                start = m.AdditionalFeeStartTime;
-                end = m.AdditionalFeeEndTime;
-                hasNightFee = m.HasNightFee;
+                start = m.AdditionalFeeStartTime; end = m.AdditionalFeeEndTime; hasNightFee = m.HasNightFee;
             }
 
             if (hasNightFee && start.HasValue && end.HasValue)
@@ -820,31 +633,20 @@ else
 
                 if (hours > 12)
                 {
-                    _snackbar.Add("Khung giờ phụ phí quá dài (>12h). Vui lòng điều chỉnh lại!", Severity.Error);
+                    _snackbar.Add("Surcharge time frame is too long (>12h). Please adjust!", Severity.Error);
                     return;
                 }
-                
                 if (start == end)
                 {
-                    _snackbar.Add("Giờ bắt đầu và kết thúc không được trùng nhau!", Severity.Error);
+                    _snackbar.Add("Start and end times cannot be the same!", Severity.Error);
                     return;
                 }
             }
         }
 
-        // 2. Nếu mọi thứ ổn, gọi API như bình thường
         ApiResponse<ServiceVM> res;
-
-        if (_isUpdate)
-        {
-            // Tự động nhận diện ServiceUpdateVM là Standard hay Airport
-            res = await Service.UpdateService(_currentEditingId, _updateModel);
-        }
-        else
-        {
-            // Tự động nhận diện ServiceCreateVM
-            res = await Service.CreateService(_createModel);
-        }
+        if (_isUpdate) res = await Service.UpdateService(_currentEditingId, _updateModel);
+        else res = await Service.CreateService(_createModel);
 
         if (res.StatusCode == StatusCodeResponse.Success)
         {
@@ -852,11 +654,6 @@ else
             await LoadDataAsync();
             ResetForm();
         }
-        else
-        {
-            // KHÔNG gọi ResetForm() nếu có lỗi từ Server (như trùng tên)
-            // Dữ liệu vẫn nằm nguyên trong _updateModel để Admin sửa tiếp
-            SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
-        }
+        else SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
     }
 }

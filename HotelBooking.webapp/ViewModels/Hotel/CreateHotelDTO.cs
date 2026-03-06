@@ -1,17 +1,28 @@
+using Microsoft.AspNetCore.Http;
+
+namespace HotelBooking.webapp.DTOs.Hotel;
+
+/// <summary>
+/// Data Transfer Object for creating a new hotel listing.
+/// Handles basic information, selected policies, amenities, and media uploads.
+/// </summary>
 public class CreateHotelDTO
 {
-    // Thông tin cơ bản
-    public string Name { get; set; } = "";
-    public string City { get; set; } = "";
-    public string Address { get; set; } = "";
-    public string Description { get; set; } = "";
+    // --- BASIC INFORMATION ---
+    public string Name { get; set; } = string.Empty;
+    public string City { get; set; } = string.Empty;
+    public string Address { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
 
-    // Chính sách: FE gửi 3 Id policy
+    // --- POLICIES ---
+    // Individual IDs sent from the Frontend for specific policy categories
     public int SelectedCheckInId { get; set; }
     public int SelectedCheckOutId { get; set; }
     public int SelectedCancellationId { get; set; }
 
-    // Hoặc gọn hơn: chỉ cần 1 list PolicyIds
+    /// <summary>
+    /// Aggregates all selected policy IDs into a single collection for processing.
+    /// </summary>
     public List<int> PolicyIds
     {
         get
@@ -24,11 +35,12 @@ public class CreateHotelDTO
         }
     }
 
-    // Tiện ích (FE gửi danh sách Id tiện ích được chọn)
+    // --- AMENITIES ---
+    // List of selected Amenity IDs provided by the user
     public List<int> AmenityIds { get; set; } = new();
 
-    // Ảnh
-    public IFormFile? CoverFile { get; set; }        // 1 ảnh bìa
-    public IFormFile? MainFile { get; set; }         // 1 ảnh chính
-    public List<IFormFile>? SubFiles { get; set; }   // 4 ảnh phụ
+    // --- MEDIA ASSETS ---
+    public IFormFile? CoverFile { get; set; }       // Primary banner/thumbnail image
+    public IFormFile? MainFile { get; set; }        // Main hero image for the gallery
+    public List<IFormFile>? SubFiles { get; set; }  // Supporting gallery images (typically 4 files)
 }

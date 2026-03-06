@@ -1,76 +1,75 @@
 namespace HotelBooking.webapp.ViewModels.Request.Base;
 
 /// <summary>
-/// Interface marker cho tất cả Request ViewModels.
-/// Định nghĩa các properties chung mà MỌI loại request đều phải có.
-/// Sử dụng Polymorphism: cho phép xử lý chung các loại request khác nhau.
+/// Marker interface for all Request ViewModels.
+/// Defines shared properties that EVERY request type must implement.
+/// Enables Polymorphism for unified handling of different request types.
 /// </summary>
 public interface IRequestVM
 {
     /// <summary>
-    /// ID của request - Primary Key
+    /// Unique identifier for the request - Primary Key.
     /// </summary>
     int RequestId { get; set; }
 
     /// <summary>
-    /// Loại request (UpgradeOwner, HotelApproval, etc.)
+    /// The type of request (UpgradeOwner, HotelApproval, etc.).
     /// </summary>
     RequestType Type { get; }
 
     /// <summary>
-    /// Tên hiển thị của loại request (tiếng Việt)
+    /// Friendly display name for the request type.
     /// </summary>
     string TypeDisplay { get; }
 
     /// <summary>
-    /// Trạng thái hiện tại của request
+    /// Current processing status of the request.
     /// </summary>
     string Status { get; set; }
 
     /// <summary>
-    /// Thời gian tạo request
+    /// Timestamp when the request was created.
     /// </summary>
     DateTime RequestedAt { get; set; }
 
     /// <summary>
-    /// ID người xử lý (Admin)
+    /// ID of the administrator who processed the request.
     /// </summary>
     int? ProcessedBy { get; set; }
 
     /// <summary>
-    /// Thời gian xử lý
+    /// Timestamp when the request was processed.
     /// </summary>
     DateTime? ProcessedAt { get; set; }
 
     /// <summary>
-    /// Tên người yêu cầu (để hiển thị nhanh)
+    /// Name of the user making the request.
     /// </summary>
     string RequesterName { get; }
 
     /// <summary>
-    /// Kiểm tra có thể Approve không
+    /// Logic to determine if the request can be approved.
     /// </summary>
     bool CanApprove => Status == RequestStatusConst.Pending;
 
     /// <summary>
-    /// Kiểm tra có thể Reject không
+    /// Logic to determine if the request can be rejected.
     /// </summary>
     bool CanReject => Status == RequestStatusConst.Pending;
 }
 
 /// <summary>
-/// Enum định nghĩa các loại Request trong hệ thống.
-/// Dễ dàng mở rộng khi có loại mới.
+/// Defines the available types of Requests in the system.
 /// </summary>
 public enum RequestType
 {
     UpgradeOwner = 1,
     HotelApproval = 2
-    // Thêm loại mới ở đây khi cần
+    // Add new types here as the system scales
 }
 
 /// <summary>
-/// Các trạng thái chung của Request
+/// Global constants for Request statuses.
 /// </summary>
 public static class RequestStatusConst
 {
@@ -89,22 +88,22 @@ public static class RequestStatusConst
 }
 
 /// <summary>
-/// Extension methods cho RequestType enum
+/// Extension methods for the RequestType enum to resolve display and API metadata.
 /// </summary>
 public static class RequestTypeExtensions
 {
     /// <summary>
-    /// Lấy tên hiển thị tiếng Việt
+    /// Resolves the user-friendly display name.
     /// </summary>
     public static string GetDisplayName(this RequestType type) => type switch
     {
-        RequestType.UpgradeOwner => "Nâng cấp Owner",
-        RequestType.HotelApproval => "Duyệt khách sạn",
+        RequestType.UpgradeOwner => "Owner Upgrade",
+        RequestType.HotelApproval => "Hotel Approval",
         _ => type.ToString()
     };
 
     /// <summary>
-    /// Lấy API endpoint base path
+    /// Resolves the base path for API endpoints.
     /// </summary>
     public static string GetApiPath(this RequestType type) => type switch
     {
@@ -114,7 +113,7 @@ public static class RequestTypeExtensions
     };
 
     /// <summary>
-    /// Lấy icon CSS class
+    /// Resolves the CSS icon class for UI components.
     /// </summary>
     public static string GetIcon(this RequestType type) => type switch
     {
@@ -124,7 +123,7 @@ public static class RequestTypeExtensions
     };
 
     /// <summary>
-    /// Lấy màu badge
+    /// Resolves the Bootstrap badge color class.
     /// </summary>
     public static string GetBadgeColor(this RequestType type) => type switch
     {
@@ -134,35 +133,21 @@ public static class RequestTypeExtensions
     };
 }
 
-
 /// <summary>
-/// Abstract base class cho tất cả Request ViewModels.
-/// Implement các properties chung, để các concrete class chỉ cần định nghĩa properties riêng.
-/// 
-/// Design Pattern: Template Method + Polymorphism
-/// - Common properties được implement ở đây
-/// - Abstract properties bắt buộc concrete class phải override
-/// - Virtual properties cho phép customize nếu cần
+/// Abstract base class for all Request ViewModels.
+/// Implements common properties using the Template Method pattern.
 /// </summary>
 public abstract class BaseRequestVM : IRequestVM
 {
     // ==========================================
-    // ABSTRACT PROPERTIES (Mỗi loại request khác nhau)
+    // ABSTRACT PROPERTIES (Type-Specific)
     // ==========================================
 
-    /// <summary>
-    /// Loại request - MỖI concrete class PHẢI định nghĩa
-    /// </summary>
     public abstract RequestType Type { get; }
-
-    /// <summary>
-    /// Tên người yêu cầu - MỖI concrete class PHẢI định nghĩa
-    /// (vì field name có thể khác: UserName, OwnerName, HotelName...)
-    /// </summary>
     public abstract string RequesterName { get; }
 
     // ==========================================
-    // COMMON PROPERTIES (Dùng chung cho mọi loại)
+    // COMMON PROPERTIES
     // ==========================================
 
     public int RequestId { get; set; }
@@ -173,27 +158,13 @@ public abstract class BaseRequestVM : IRequestVM
     public string? ProcessedByName { get; set; }
 
     // ==========================================
-    // COMPUTED PROPERTIES (Tự động tính toán)
+    // COMPUTED PROPERTIES (UI Logic)
     // ==========================================
 
-    /// <summary>
-    /// Tên hiển thị của loại request (tiếng Việt)
-    /// </summary>
     public string TypeDisplay => Type.GetDisplayName();
-
-    /// <summary>
-    /// Kiểm tra có thể Approve không
-    /// </summary>
     public bool CanApprove => Status == RequestStatusConst.Pending;
-
-    /// <summary>
-    /// Kiểm tra có thể Reject không
-    /// </summary>
     public bool CanReject => Status == RequestStatusConst.Pending;
 
-    /// <summary>
-    /// CSS class cho badge status
-    /// </summary>
     public string StatusBadgeClass => Status switch
     {
         RequestStatusConst.Pending => "bg-warning text-dark",
@@ -203,9 +174,6 @@ public abstract class BaseRequestVM : IRequestVM
         _ => "bg-light text-dark"
     };
 
-    /// <summary>
-    /// Icon cho status
-    /// </summary>
     public string StatusIcon => Status switch
     {
         RequestStatusConst.Pending => "fas fa-clock",
@@ -216,18 +184,18 @@ public abstract class BaseRequestVM : IRequestVM
     };
 
     /// <summary>
-    /// Thời gian từ khi tạo request (human-readable)
+    /// Returns a human-readable relative time string.
     /// </summary>
     public string TimeAgo
     {
         get
         {
             var span = DateTime.Now - RequestedAt;
-            if (span.TotalMinutes < 1) return "Vừa xong";
-            if (span.TotalMinutes < 60) return $"{(int)span.TotalMinutes} phút trước";
-            if (span.TotalHours < 24) return $"{(int)span.TotalHours} giờ trước";
-            if (span.TotalDays < 7) return $"{(int)span.TotalDays} ngày trước";
-            return RequestedAt.ToString("dd/MM/yyyy");
+            if (span.TotalMinutes < 1) return "Just now";
+            if (span.TotalMinutes < 60) return $"{(int)span.TotalMinutes}m ago";
+            if (span.TotalHours < 24) return $"{(int)span.TotalHours}h ago";
+            if (span.TotalDays < 7) return $"{(int)span.TotalDays}d ago";
+            return RequestedAt.ToString("MMM dd, yyyy");
         }
     }
 }

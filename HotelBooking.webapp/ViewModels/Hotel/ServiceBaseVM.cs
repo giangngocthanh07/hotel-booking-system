@@ -1,9 +1,14 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using HotelBooking.webapp.ViewModels.Admin.Base;
 
-public class ServiceTypeVM : BaseAdminVM
-{
-}
+namespace HotelBooking.webapp.ViewModels.Admin;
+
+// ===========================================================================
+// TYPE DEFINITIONS & ENUMS
+// ===========================================================================
+
+public class ServiceTypeVM : BaseAdminVM { }
 
 public enum ServiceTypeEnum
 {
@@ -11,170 +16,177 @@ public enum ServiceTypeEnum
     AirportTransfer = 2,
 }
 
-// Báo hiệu đây là lớp đa hình
+// ===========================================================================
+// POLYMORPHIC VIEW MODELS (Output - Display)
+// ===========================================================================
+
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "discriminator")]
-// Khai báo các con và đặt tên định danh (discriminator) cho chúng
 [JsonDerivedType(typeof(ServiceStandardVM), typeDiscriminator: "standard")]
 [JsonDerivedType(typeof(ServiceAirportTransferVM), typeDiscriminator: "airportTransfer")]
 public abstract class ServiceVM : BaseAdminVM
 {
-    [Range(1000, double.MaxValue, ErrorMessage = "Vui lòng nhập giá tiền (tối thiểu 1,000đ)")]
+    [Range(1000, double.MaxValue, ErrorMessage = "Price must be at least 1,000!")]
     public decimal Price { get; set; }
 
-    [Required(ErrorMessage = "Loại dịch vụ không được để trống!")]
+    [Required(ErrorMessage = "Service Type is required!")]
     public int TypeId { get; set; }
 }
 
+/// <summary>
+/// Represents standard hotel services like Breakfast, Laundry, etc.
+/// </summary>
 public class ServiceStandardVM : ServiceVM
 {
-    [Required(ErrorMessage = "Đơn vị tính không được để trống!")]
-    [MaxLength(20, ErrorMessage = "Đơn vị tính quá dài (tối đa 20 ký tự)!")]
+    [Required(ErrorMessage = "Unit is required!")]
+    [MaxLength(20, ErrorMessage = "Unit name is too long (maximum 20 characters)!")]
     public string Unit { get; set; } = string.Empty;
 }
 
+/// <summary>
+/// Represents specialized Airport Transfer services with complex pricing.
+/// </summary>
 public class ServiceAirportTransferVM : ServiceVM
 {
-    // Câu hỏi: Có tính phí 1 chiều không?
+    // One-way pricing logic
     public bool IsOneWayPaid { get; set; }
 
-    // Câu hỏi: Có hỗ trợ 2 chiều không?
+    // Round-trip logic
     public bool HasRoundTrip { get; set; }
     public bool IsRoundTripPaid { get; set; }
-    [Range(1000, double.MaxValue, ErrorMessage = "Vui lòng nhập giá khứ hồi (tối thiểu 1,000đ)")]
+
+    [Range(1000, double.MaxValue, ErrorMessage = "Round-trip price must be at least 1,000!")]
     public decimal? RoundTripPrice { get; set; }
 
-    // Câu hỏi: Có phụ phí đêm không?
+    // Surcharge/Night fee logic
     public bool HasNightFee { get; set; }
-    [Range(1000, double.MaxValue, ErrorMessage = "Vui lòng nhập phụ phí đêm (tối thiểu 1,000đ)")]
+
+    [Range(1000, double.MaxValue, ErrorMessage = "Night fee must be at least 1,000!")]
     public decimal? AdditionalFee { get; set; }
     public TimeOnly? AdditionalFeeStartTime { get; set; }
     public TimeOnly? AdditionalFeeEndTime { get; set; }
 
-    // Thông số cơ bản
-    [Range(1, 45, ErrorMessage = "Số hành khách phải từ 1 đến 45!")]
+    // Vehicle Specifications
+    [Range(1, 45, ErrorMessage = "Passenger capacity must be between 1 and 45!")]
     public int? MaxPassengers { get; set; }
-    [Range(1, 45, ErrorMessage = "Số hành lý phải từ 1 đến 45!")]
+
+    [Range(1, 45, ErrorMessage = "Luggage capacity must be between 1 and 45!")]
     public int? MaxLuggage { get; set; }
 }
+
+// ===========================================================================
+// POLYMORPHIC CREATE MODELS (Input - POST)
+// ===========================================================================
 
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "discriminator")]
 [JsonDerivedType(typeof(ServiceStandardCreateVM), typeDiscriminator: "standard")]
 [JsonDerivedType(typeof(ServiceAirportCreateVM), typeDiscriminator: "airport")]
-// DTO Thêm/Sửa dịch vụ
 public abstract class ServiceCreateVM : BaseCreateOrUpdateAdminVM
 {
-    [Range(1000, double.MaxValue, ErrorMessage = "Vui lòng nhập giá tiền (tối thiểu 1,000đ)")]
+    [Range(1000, double.MaxValue, ErrorMessage = "Price must be at least 1,000!")]
     public decimal Price { get; set; } = 0;
 
-    // Property trừu tượng để UI binding (VD: Standard = 1, Airport = 2)
     [JsonIgnore]
     public abstract int TargetTypeId { get; }
 }
 
-// 3.1. Create Standard
 public class ServiceStandardCreateVM : ServiceCreateVM
 {
     public override int TargetTypeId => (int)ServiceTypeEnum.Standard;
 
-    [Required(ErrorMessage = "Vui lòng nhập đơn vị tính")]
-    [MaxLength(20, ErrorMessage = "Đơn vị tính tối đa 20 ký tự")]
+    [Required(ErrorMessage = "Please enter a unit (e.g., Person, Time, Room)")]
+    [MaxLength(20, ErrorMessage = "Unit name cannot exceed 20 characters")]
     public string Unit { get; set; } = string.Empty;
 }
 
-// 3.2. Create Airport
 public class ServiceAirportCreateVM : ServiceCreateVM
 {
     public override int TargetTypeId => (int)ServiceTypeEnum.AirportTransfer;
 
-    // Logic vé
     public bool IsOneWayPaid { get; set; }
-
-    // Logic khứ hồi
     public bool HasRoundTrip { get; set; }
     public bool IsRoundTripPaid { get; set; }
 
-    [Range(1000, double.MaxValue, ErrorMessage = "Vui lòng nhập giá khứ hồi (tối thiểu 1,000đ)")]
+    [Range(1000, double.MaxValue, ErrorMessage = "Round-trip price must be at least 1,000!")]
     public decimal? RoundTripPrice { get; set; }
 
-    // Logic phụ phí đêm
     public bool HasNightFee { get; set; }
 
-    [Range(1000, double.MaxValue, ErrorMessage = "Vui lòng nhập phụ phí đêm (tối thiểu 1,000đ)")]
+    [Range(1000, double.MaxValue, ErrorMessage = "Night fee must be at least 1,000!")]
     public decimal? AdditionalFee { get; set; }
     public TimeOnly? AdditionalFeeStartTime { get; set; }
     public TimeOnly? AdditionalFeeEndTime { get; set; }
 
-    // Thông số
-    [Range(1, 45, ErrorMessage = "Số khách phải từ 1-45")]
+    [Range(1, 45, ErrorMessage = "Passengers must be between 1-45")]
     public int? MaxPassengers { get; set; }
 
-    [Range(1, 45, ErrorMessage = "Số hành lý phải từ 1-45")]
+    [Range(1, 45, ErrorMessage = "Luggage count must be between 1-45")]
     public int? MaxLuggage { get; set; }
 }
+
+// ===========================================================================
+// POLYMORPHIC UPDATE MODELS (Input - PUT)
+// ===========================================================================
 
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "discriminator")]
 [JsonDerivedType(typeof(ServiceStandardUpdateVM), typeDiscriminator: "standard")]
 [JsonDerivedType(typeof(ServiceAirportUpdateVM), typeDiscriminator: "airport")]
 public abstract class ServiceUpdateVM : BaseCreateOrUpdateAdminVM
 {
-    [Range(1000, double.MaxValue, ErrorMessage = "Dịch vụ phải có giá từ 1,000đ trở lên!")]
+    [Range(1000, double.MaxValue, ErrorMessage = "Price must be at least 1,000!")]
     public decimal Price { get; set; } = 0;
 }
 
-// 4.1. Update Standard
 public class ServiceStandardUpdateVM : ServiceUpdateVM
 {
-    [Required(ErrorMessage = "Vui lòng nhập đơn vị tính")]
+    [Required(ErrorMessage = "Please enter the unit")]
     [MaxLength(20)]
     public string Unit { get; set; } = string.Empty;
 }
 
-// 4.2. Update Airport
 public class ServiceAirportUpdateVM : ServiceUpdateVM
 {
     public bool IsOneWayPaid { get; set; }
-
     public bool HasRoundTrip { get; set; }
     public bool IsRoundTripPaid { get; set; }
 
-    [Range(1000, double.MaxValue, ErrorMessage = "Vui lòng nhập giá khứ hồi (tối thiểu 1,000đ)")]
+    [Range(1000, double.MaxValue, ErrorMessage = "Round-trip price must be at least 1,000!")]
     public decimal? RoundTripPrice { get; set; }
 
     public bool HasNightFee { get; set; }
 
-    [Range(1000, double.MaxValue, ErrorMessage = "Vui lòng nhập phụ phí đêm (tối thiểu 1,000đ)")]
+    [Range(1000, double.MaxValue, ErrorMessage = "Night fee must be at least 1,000!")]
     public decimal? AdditionalFee { get; set; }
 
-    [Required(ErrorMessage = "Vui lòng nhập giờ bắt đầu")]
+    [Required(ErrorMessage = "Start time is required")]
     public TimeOnly? AdditionalFeeStartTime { get; set; }
-    [Required(ErrorMessage = "Vui lòng nhập giờ kết thúc")]
+
+    [Required(ErrorMessage = "End time is required")]
     public TimeOnly? AdditionalFeeEndTime { get; set; }
 
-    [Range(1, 45, ErrorMessage = "Số khách phải từ 1-45")]
+    [Range(1, 45, ErrorMessage = "Capacity must be between 1-45")]
     public int? MaxPassengers { get; set; }
 
-    [Range(1, 45, ErrorMessage = "Số hành lý phải từ 1-45")]
+    [Range(1, 45, ErrorMessage = "Luggage must be between 1-45")]
     public int? MaxLuggage { get; set; }
 }
 
-// DTO hiển thị dịch vụ đưa đón sân bay với các trường cụ thể
+// ===========================================================================
+// HELPER MODELS
+// ===========================================================================
+
+/// <summary>
+/// Data structure for detailed Airport Transfer information.
+/// </summary>
 public class ServiceAirportAdditionalData
 {
-    // Câu hỏi: Có tính phí 1 chiều không?
     public bool IsOneWayPaid { get; set; }
-
-    // Câu hỏi: Có hỗ trợ 2 chiều không?
     public bool HasRoundTrip { get; set; }
     public bool IsRoundTripPaid { get; set; }
     public decimal? RoundTripPrice { get; set; }
-
-    // Câu hỏi: Có phụ phí đêm không?
     public bool HasNightFee { get; set; }
     public decimal? AdditionalFee { get; set; }
     public TimeOnly? AdditionalFeeStartTime { get; set; }
     public TimeOnly? AdditionalFeeEndTime { get; set; }
-
-    // Thông số cơ bản
     public int? MaxPassengers { get; set; }
     public int? MaxLuggage { get; set; }
 }

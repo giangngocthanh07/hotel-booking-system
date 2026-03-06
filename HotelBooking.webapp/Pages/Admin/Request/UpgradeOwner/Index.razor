@@ -4,6 +4,7 @@
 @using HotelBooking.webapp.Helpers.Common
 @using HotelBooking.webapp.Pages.Admin.Base
 @using HotelBooking.webapp.Services.Interface
+@using Microsoft.Extensions.Logging
 @inherits AdminPageBase<IRequestService>
 
 @attribute [Authorize(Roles = "Admin")]
@@ -17,24 +18,24 @@
 
     <h2 class="text-center mb-4">Upgrade Owner Requests</h2>
 
-    @* Stats Cards *@
+    @* Summary Statistics Cards *@
     <UpgradeStatsCard Stats="@stats" OnStatusClick="FilterByStatus" />
 
-    @* Filters *@
+    @* Advanced Filtering Section *@
     <UpgradeFilters SearchTerm="@searchTerm" SelectedStatus="@selectedStatus" PageSize="@pageSize"
                     StatusList="@statusList" SearchTermChanged="OnSearchTermChanged" SelectedStatusChanged="OnSelectedStatusChanged"
                     PageSizeChanged="OnPageSizeChanged" OnApply="ApplyFilters" OnReset="ResetFilters" />
 
-    @* Data Table *@
-    <UpgradeTable Requests="@FilteredRequests" IsLoading="@isLoading" OnView="ViewDetails"                  OnApprove="ShowApproveModal"
+    @* Data Management Table *@
+    <UpgradeTable Requests="@FilteredRequests" IsLoading="@isLoading" OnView="ViewDetails" OnApprove="ShowApproveModal"
                   OnReject="ShowRejectModal" />
 
-    @* Pagination *@
+    @* Standard Pagination *@
     <Pagination CurrentPage="@currentPage" TotalPages="@totalPages" TotalCount="@totalCount" IsLoading="@isLoading"
                 OnPageChange="GoToPage" />
 </div>
 
-@* Confirm Modal *@
+@* Action Confirmation Modal *@
 <div class="modal fade" id="confirmModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -48,7 +49,7 @@
                 <p>@modalMessage</p>
                 @if (selectedRequest != null)
                 {
-                    <div class="alert alert-light">
+                    <div class="alert alert-light border">
                         <strong>Request ID:</strong> @selectedRequest.RequestId<br />
                         <strong>User:</strong> @selectedRequest.FullName (@selectedRequest.UserName)
                     </div>
@@ -71,12 +72,12 @@
 @code {
     private CancellationTokenSource _cts = new();
 
-    // Data
+    // Data Collections
     private List<UpgradeRequestVM> requests = new();
     private List<string> statusList = new() { "Pending", "Approved", "Rejected", "Cancelled" };
     private RequestTypeStatsVM stats = new();
 
-    // Paging & Filters
+    // Pagination & Filter State
     private int currentPage = 1;
     private int pageSize = 10;
     private int totalPages = 0;
@@ -84,11 +85,11 @@
     private string searchTerm = "";
     private string? selectedStatus = null;
 
-    // State
+    // Loading States
     private bool isLoading = false;
     private bool isProcessing = false;
 
-    // Modal
+    // Modal Configuration
     private UpgradeRequestVM? selectedRequest;
     private string modalTitle = "";
     private string modalMessage = "";
@@ -97,7 +98,7 @@
     private string modalIcon = "fas fa-question-circle";
     private string actionType = "";
 
-    // Client-side filter
+    // Reactive Client-side search logic
     private IEnumerable<UpgradeRequestVM> FilteredRequests => string.IsNullOrWhiteSpace(searchTerm)
         ? requests
         : requests.Where(r =>
@@ -110,11 +111,12 @@
         );
 
     // ==========================================
-    // LIFECYCLE (Override base class)
+    // LIFECYCLE OVERRIDES
     // ==========================================
 
     /// <summary>
-    /// Override LoadDataAsync từ AdminPageBase - được gọi tự động sau khi token được set.
+    /// Overrides LoadDataAsync from AdminPageBase.
+    /// Automatically invoked once the authentication token is validated.
     /// </summary>
     protected override async Task LoadDataAsync()
     {
@@ -130,7 +132,7 @@
     }
 
     // ==========================================
-    // DATA LOADING
+    // DATA ACQUISITION
     // ==========================================
 
     private async Task LoadStatsAsync()
@@ -144,9 +146,9 @@
             }
         }
         catch (OperationCanceledException) { }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Console.WriteLine($"Error loading stats: {ex.Message}");
+            SnackbarHelper.Show(Snackbar, StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
         }
     }
 
@@ -168,14 +170,14 @@
             else
             {
                 requests = new();
-                SnackbarHelper.Show(Snackbar, response.StatusCode ?? StatusCodeResponse.Error, response.Message ??
-MessageResponse.Common.ERROR_IN_SERVER);
+                SnackbarHelper.Show(Snackbar, response.StatusCode ?? StatusCodeResponse.Error,
+                    response.Message ?? MessageResponse.Common.ERROR_IN_SERVER);
             }
         }
         catch (OperationCanceledException) { }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Console.WriteLine($"Error loading requests: {ex.Message}");
+            SnackbarHelper.Show(Snackbar, StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
             requests = new();
         }
         finally
@@ -186,7 +188,7 @@ MessageResponse.Common.ERROR_IN_SERVER);
     }
 
     // ==========================================
-    // EVENT HANDLERS (From Components)
+    // UI EVENT HANDLERS
     // ==========================================
 
     private void OnSearchTermChanged(string value) => searchTerm = value;
@@ -237,7 +239,7 @@ MessageResponse.Common.ERROR_IN_SERVER);
     }
 
     // ==========================================
-    // ACTIONS
+    // ACTION WORKFLOWS
     // ==========================================
 
     private void ViewDetails(UpgradeRequestVM request)
@@ -249,7 +251,7 @@ MessageResponse.Common.ERROR_IN_SERVER);
     {
         selectedRequest = request;
         modalTitle = "Confirm Approval";
-        modalMessage = "Are you sure you want to APPROVE this request? The user will be upgraded to Owner.";
+        modalMessage = "Are you sure you want to APPROVE this request? The user will be upgraded to Owner role.";
         modalHeaderClass = "bg-success";
         modalBtnClass = "btn-success";
         modalIcon = "fas fa-check-circle";
@@ -282,8 +284,8 @@ MessageResponse.Common.ERROR_IN_SERVER);
                 ? await Service.ApproveUpgradeRequestAsync(selectedRequest.RequestId)
                 : await Service.RejectUpgradeRequestAsync(selectedRequest.RequestId);
 
-            SnackbarHelper.Show(Snackbar, response.StatusCode ?? StatusCodeResponse.Error, response.Message ??
-MessageResponse.Common.ERROR_IN_SERVER);
+            SnackbarHelper.Show(Snackbar, response.StatusCode ?? StatusCodeResponse.Error,
+                response.Message ?? MessageResponse.Common.ERROR_IN_SERVER);
 
             if (response.StatusCode == StatusCodeResponse.Success)
             {
