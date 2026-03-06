@@ -1,22 +1,24 @@
+@using HotelBooking.webapp.Helpers.Common
+@using HotelBooking.webapp.Helpers.Manage.Icon
 @using HotelBooking.webapp.Pages.Admin.Base
 @using HotelBooking.webapp.Helpers
 @inherits AdminPageBase
 @attribute [Authorize(Roles = "Admin")]
 
-@* --- 1. ĐỊNH NGHĨA ROUTING --- *@
+@* --- 1. ROUTING DEFINITION --- *@
 @page "/admin/manage/roomview"
 
-@* --- 2. SỬ DỤNG LAYOUT ADMIN CHUNG --- *@
+@* --- 2. LAYOUT CONFIGURATION --- *@
 @layout AdminLayout
 @inject ILogger<RoomViewManager> Logger
 @inject ISnackbar _snackbar
 
-@* --- 3. UI LOADING (Kiểm soát bởi Class Cha) --- *@
+@* --- 3. UI LOADING STATE (Controlled by Base Class) --- *@
 @if (!ShouldRenderUI())
 {
     <div class="d-flex justify-content-center align-items-center p-5">
         <div class="spinner-border text-primary me-2"></div>
-        <span>Đang tải dữ liệu...</span>
+        <span>Loading data...</span>
     </div>
 }
 else
@@ -24,62 +26,63 @@ else
     <MasterDetailLayout @ref="_layoutRef" TItem="RoomViewVM" TModel="BaseCreateOrUpdateAdminVM" Items="_items"
                         Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
                         OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
-                        OnDelete="HandleDelete"               OnCancel="ResetForm">
+                        OnDelete="HandleDelete" OnCancel="ResetForm">
 
-        @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
+        @* --- A. SIDEBAR CONFIGURATION --- *@
         <SidebarTopContent>
-            @* NHÚNG COMPONENT MENU THÔNG MINH VÀO ĐÂY *@
-            @* Nó tự biết đường vẽ ra Dropdown *@
+            @* Global Navigation Component with dynamic dropdown logic *@
             <GlobalNavMenu CurrentModule="RoomView" CurrentTypeId="TypeId" />
         </SidebarTopContent>
 
-        @* --- B. CẤU HÌNH FORM (Đã tút tát lại) --- *@
+        @* --- B. FORM CONFIGURATION (UI Enhancements) --- *@
         <FormContent Context="m">
 
-            @* 3. PREVIEW ICON *@
-            @* Lấy tên hiện tại để preview *@
+            @* 1. ICON PREVIEW *@
+            @* Resolves and displays a real-time icon preview based on the room view name *@
             @{
                 string currentName = _isUpdate ? _updateModel.Name : _createModel.Name;
             }
             @if (!string.IsNullOrEmpty(currentName))
             {
-                <div class="alert alert-light border d-flex align-items-center">
+                <div class="alert alert-light border d-flex align-items-center shadow-sm animate__animated animate__fadeIn">
                     <div class="me-3">
-                        @* Gọi hàm Helper bên dưới để lấy icon *@
                         <div class="rounded-circle bg-white border d-flex align-items-center justify-content-center shadow-sm"
                              style="width: 40px; height: 40px;">
-                            <i class="@GetViewIcon(currentName) text-primary"></i>
+                            <i class="@GetViewIcon(currentName) text-primary fs-5"></i>
                         </div>
                     </div>
                     <div>
-                        <small class="text-muted d-block">Minh họa hiển thị:</small>
+                        <small class="text-muted d-block text-uppercase extra-small fw-bold">Display Preview:</small>
                         <strong class="text-dark">@currentName</strong>
                     </div>
                 </div>
             }
         </FormContent>
 
-        @* --- C. CẤU HÌNH BẢNG (Thêm cột Icon & Trạng thái) --- *@
+        @* --- C. TABLE CONFIGURATION --- *@
         <TableHeader>
             <th class="text-center" style="width: 50px;">Id</th>
-            <th class="text-center" style="width: 80px;">Icon</th> @* Cột mới *@
-            <th class="text-center" style="width: 320px;">Tên hướng nhìn</th>
-            <th class="text-center">Mô tả</th>
-            <th class="text-center" style="width: 150px;">Trạng thái</th> @* Cột lấp chỗ trống *@
+            <th class="text-center" style="width: 80px;">Icon</th>
+            <th class="text-center" style="width: 320px;">View Name</th>
+            <th class="text-center">Description</th>
+            <th class="text-center" style="width: 150px;">Status</th>
         </TableHeader>
 
         <RowTemplate Context="row">
+            @* 1. ID *@
             <td class="text-center text-muted small">@row.Id</td>
 
-            @* Cột Icon tự động *@
+            @* 2. Automatic Icon Column *@
             <td class="text-center">
                 <i class="@GetViewIcon(row.Name) fs-5 text-secondary opacity-75"></i>
             </td>
 
-            <td class="text-center align-middle text-primary">
+            @* 3. View Name *@
+            <td class="text-center align-middle text-primary fw-bold">
                 @row.Name
             </td>
 
+            @* 4. Description - Truncated for layout consistency *@
             <td class="text-center align-middle text-muted small text-truncate" style="max-width: 500px;"
                 title="@row.Description">
                 @if (string.IsNullOrWhiteSpace(row.Description))
@@ -88,17 +91,16 @@ else
                 }
                 else
                 {
-                    @* Giới hạn width để không đẩy bảng *@
                     <div class="text-muted small text-truncate mx-auto" style="max-width: 500px;" title="@row.Description">
                         @row.Description
                     </div>
                 }
             </td>
 
-            @* Cột trạng thái giả lập (cho đỡ trống) *@
+            @* 5. Status Badge *@
             <td class="text-center">
-                <span class="badge bg-success bg-opacity-10 text-success border border-success px-2 rounded-pill">
-                    Hoạt động
+                <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-1 rounded-pill">
+                    Active
                 </span>
             </td>
         </RowTemplate>
@@ -106,23 +108,19 @@ else
     </MasterDetailLayout>
 }
 
-
 @code {
-    // --- PARAMETERS TỪ URL ---
-    // Tự động nhận giá trị từ URL /admin/manage/roomview
+    // --- URL PARAMETERS ---
     [Parameter] public int? TypeId { get; set; }
 
-    // --- STATE ---
+    // --- STATE MANAGEMENT ---
     private List<RoomViewVM>? _items;
-
-    // Tách Model
     private RoomViewCreateVM _createModel = new RoomViewCreateVM();
     private RoomViewUpdateVM _updateModel = new RoomViewUpdateVM();
 
     private int _currentEditingId = 0;
     private bool _isUpdate = false;
 
-    // --- PHÂN TRANG ---
+    // --- PAGINATION ---
     private PagingRequest _paging = new() { PageIndex = 1, PageSize = 10 };
     private int _totalPages = 0;
     private int _totalCount = 0;
@@ -132,22 +130,20 @@ else
 
     private MasterDetailLayout<RoomViewVM, BaseCreateOrUpdateAdminVM>? _layoutRef;
 
-    // --- HELPER: Tự động chọn Icon dựa trên tên (delegate to helper) ---
+    // --- HELPER: Resolve icon based on name ---
     private string GetViewIcon(string? name) => RoomViewIconHelper.GetIcon(name);
 
-    // --- 1. LOAD DATA (Override từ Cha) ---
+    // --- LIFECYCLE ---
     protected override async Task LoadDataAsync()
     {
-        // Reset UI Loading
         _items = null;
         StateHasChanged();
 
         try
         {
-            // Gọi API Lấy tất cả (Non-Type) - Dùng 'Service' của Cha
             var res = await Service.GetRoomViews(_paging);
 
-            if (!Disposed) // Check cờ Disposed từ Cha
+            if (!Disposed)
             {
                 if (res.StatusCode == StatusCodeResponse.Success && res.Content != null)
                 {
@@ -158,7 +154,6 @@ else
                 else
                 {
                     _items = new List<RoomViewVM>();
-
                     if (res.StatusCode != StatusCodeResponse.Success)
                     {
                         SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
@@ -168,41 +163,39 @@ else
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Lỗi load data roomview");
+            Logger.LogError(ex, "Error loading room view data");
             _items = new List<RoomViewVM>();
         }
     }
 
     protected override void OnInitialized()
     {
-        // Ép Model đúng kiểu ngay khi component vừa được tạo ra
         ResetForm();
     }
 
-    // --- 2. XỬ LÝ PARAMETERS ---
+    // --- PARAMETERS HANDLING ---
     protected override async Task OnParametersSetAsync()
     {
         ResetForm();
-
         if (IsJsReady)
         {
             await LoadDataAsync();
         }
     }
-    // --- XỬ LÝ CHUYỂN TRANG ---
+
+    // --- PAGINATION HANDLING ---
     private async Task HandlePageChanged(int newPage)
     {
         _paging.PageIndex = newPage;
         await LoadDataAsync();
     }
 
-    // --- CRUD METHODS ---
+    // --- CRUD OPERATIONS ---
     private void OnEditItem(RoomViewVM item)
     {
         _isUpdate = true;
         _currentEditingId = item.Id;
 
-        // Map sang UpdateVM
         _updateModel = new RoomViewUpdateVM
         {
             Name = item.Name,
@@ -210,22 +203,16 @@ else
         };
 
         StateHasChanged();
-
-        // Đảm bảo khi mở form Edit, các lỗi cũ không bị "nhảy" ra
         _layoutRef?.TriggerValidate();
     }
 
     private async Task HandleDelete(RoomViewVM item)
     {
-        // Gọi API xóa thực tế
         var res = await Service.DeleteRoomView(item.Id);
-
-        // Hiển thị thông báo
         SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
 
         if (res.StatusCode == StatusCodeResponse.Success)
         {
-            // Xóa thành công thì load lại bảng
             await LoadDataAsync();
         }
     }
@@ -235,35 +222,31 @@ else
         _isUpdate = false;
         _currentEditingId = 0;
 
-        // Reset CreateVM
         _createModel = new RoomViewCreateVM();
         _updateModel = new RoomViewUpdateVM();
 
         StateHasChanged();
-
-        // Đảm bảo khi mở form Edit, các lỗi cũ không bị "nhảy" ra
         _layoutRef?.TriggerValidate();
     }
 
     private async Task SaveData()
     {
         ApiResponse<RoomViewVM> res;
-        if (_isUpdate) res = await Service.UpdateRoomView(_currentEditingId, _updateModel);
-        else res = await Service.CreateRoomView(_createModel);
+        if (_isUpdate)
+            res = await Service.UpdateRoomView(_currentEditingId, _updateModel);
+        else
+            res = await Service.CreateRoomView(_createModel);
 
         if (res.StatusCode == StatusCodeResponse.Success)
         {
-            // Hiển thị thông báo
             SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
             await LoadDataAsync();
             ResetForm();
         }
         else
         {
-            // KHÔNG gọi ResetForm() nếu có lỗi từ Server (như trùng tên)
-            // Dữ liệu vẫn nằm nguyên trong _updateModel để Admin sửa tiếp
+            // Do NOT reset form on server-side error to allow correction
             SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
         }
     }
-
 }

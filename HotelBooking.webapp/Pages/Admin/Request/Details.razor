@@ -3,6 +3,7 @@
 @page "/admin/upgrade-requests/{RequestId:int}"
 @implements IDisposable
 @using System.Net.Http.Headers
+@using HotelBooking.webapp.Helpers.Common
 @using HotelBooking.webapp.ViewModels.Request
 
 @attribute [Authorize(Roles = "Admin")]

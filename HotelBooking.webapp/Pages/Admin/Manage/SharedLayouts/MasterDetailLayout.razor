@@ -2,26 +2,26 @@
 @typeparam TModel where TModel : BaseCreateOrUpdateAdminVM
 @using System.ComponentModel.DataAnnotations
 
-@* --- CONTAINER BAO NGOÀI: Full chiều cao (vh-100 trừ đi header nếu có) --- *@
+@* --- OUTER CONTAINER: Full height (vh-100 minus header if applicable) --- *@
 <div class="container-fluid p-0 overflow-hidden-lg" style="min-height: 100vh; height: auto;">
     <div class="row g-3" style="height: auto; min-height: calc(100vh - 80px);">
 
-        @* --- CỘT TRÁI: SIDEBAR (col-lg-3) --- *@
+        @* --- LEFT COLUMN: SIDEBAR (col-lg-3) --- *@
         <div class="col-12 col-lg-3 order-2 order-lg-1">
             <div class="card shadow-sm border-0 mb-3 mb-lg-0 h-100-lg d-flex flex-column">
                 <div class="card-body bg-white rounded d-flex flex-column overflow-auto custom-scroll">
-                    @* Header & Menu Sidebar... *@
+                    @* Sidebar Header & Menu Configuration *@
                     <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
                         <h6 class="fw-bold text-uppercase text-secondary mb-0">
-                            <i class="bi bi-gear-fill me-2"></i>Cấu hình
+                            <i class="bi bi-gear-fill me-2"></i>Configuration
                         </h6>
                         @if (IsEditMode)
                         {
-                            <span class="badge bg-warning text-dark">Đang sửa</span>
+                            <span class="badge bg-warning text-dark">Editing</span>
                         }
                     </div>
 
-                    @* MENU MODULE *@
+                    @* MODULE NAVIGATION MENU *@
                     <div class="mb-3">
                         @if (SidebarTopContent != null)
                         {
@@ -29,242 +29,241 @@
                         }
                     </div>
 
-                    @* Form Nhập liệu nằm gọn trong Sidebar *@
+                    @* Sidebar-integrated Data Entry Form *@
                     <div class="mt-auto pt-3 border-top">
                         <h6 class="@(IsEditMode ? "text-warning" : "text-primary") fw-bold mb-3">
-                            @(IsEditMode ? "CẬP NHẬT DỮ LIỆU" : "THÊM MỚI")
+                            @(IsEditMode ? "UPDATE DATA" : "ADD NEW")
                         </h6>
                         <EditForm Model="@Model" OnValidSubmit="HandleSubmit" @ref="_internalForm">
                             <DataAnnotationsValidator />
 
-                            @* --- PHẦN DÙNG CHUNG CỐ ĐỊNH TẠI LAYOUT --- *@
+                            @* --- COMMON SHARED FIELDS --- *@
                             <div class="mb-4">
-                                <label class="form-label fw-bold small text-muted text-uppercase">Tên gọi</label>
+                                <label class="form-label fw-bold small text-muted text-uppercase">Display Name</label>
                                 <input type="text" class="form-control border-primary shadow-sm" value="@Model.Name"
                                        @oninput="@(e => HandleCommonChange(e.Value?.ToString(), "Name"))"
-                                       @onblur="HandleNameBlur" placeholder="Nhập tên..." />
+                                       @onblur="HandleNameBlur" placeholder="Enter name..." />
                                 <ValidationMessage For="() => Model.Name" class="val-msg" />
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label fw-bold small text-muted text-uppercase">Mô tả chi tiết</label>
-                                <textarea class="form-control shadow-sm" rows="3" value="@Model.Description"
-                                          @oninput="@(e => HandleCommonChange(e.Value?.ToString(), "Description"))"
-                                          placeholder="Nhập mô tả..."></textarea>
-                                <ValidationMessage For="() => Model.Description" class="val-msg" />
-                            </div>
-                            <div class="form-text small mt-1">Dùng để giải thích quy trình hoặc lưu ý đặc biệt.</div>
+                                <label class="form-label fw-bold small text-muted text-uppercase">Detailed
+                                    Description</label>
+                                    <textarea class="form-control shadow-sm" rows="3" value="@Model.Description"
+                                              @oninput="@(e => HandleCommonChange(e.Value?.ToString(), "Description"))"
+                                              placeholder="Enter description..."></textarea>
+                                    <ValidationMessage For="() => Model.Description" class="val-msg" />
+                                </div>
+                                <div class="form-text small mt-1">Used to explain processes or special notes.</div>
 
-                            <hr class="my-4 opacity-50" />
+                                <hr class="my-4 opacity-50" />
 
-                            @* FormContent trả về Context là TModel *@
-                            @if (FormContent != null)
-                            {
-                                @FormContent(Model)
-                            }
-
-                            <div class="d-grid gap-2 mt-4">
-                                <button type="submit"
-                                        class="btn @(IsEditMode ? "btn-warning" : "btn-primary") fw-bold shadow-sm">Lưu</button>
-                                @if (IsEditMode)
+                                @* Custom FormContent rendering (Context is TModel) *@
+                                @if (FormContent != null)
                                 {
-                                    <button type="button" class="btn btn-light border" @onclick="CancelEdit">Hủy</button>
+                                    @FormContent(Model)
                                 }
+
+                                <div class="d-grid gap-2 mt-4">
+                                    <button type="submit"
+                                            class="btn @(IsEditMode ? "btn-warning" : "btn-primary") fw-bold shadow-sm">Save
+                                        Changes</button>
+                                        @if (IsEditMode)
+                                        {
+                                            <button type="button" class="btn btn-light border" @onclick="CancelEdit">Cancel</button>
+                                        }
+                                    </div>
+                                </EditForm>
                             </div>
-                        </EditForm>
-                    </div>
-                </div>
-            </div>
-        </div> @* Đóng cột lg-3 *@
-
-        @* --- CỘT PHẢI: DANH SÁCH (col-lg-9) - NẰM NGOÀI CỘT TRÁI --- *@
-        <div class="col-12 col-lg-9 order-1 order-lg-2 h-100-lg">
-            <div class="card shadow-sm border-0 h-100 d-flex flex-column">
-                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold text-dark">Danh sách dữ liệu</h5>
-                    <div class="text-muted small">Hiển thị <strong>@Items?.Count</strong> / <strong>@TotalCount</strong>
-                    </div>
-                </div>
-
-                <div class="card-body p-0 d-flex flex-column flex-grow-1 overflow-hidden position-relative">
-                    @if (Items == null) { /* Spinner... */ }
-                    else if (!Items.Any()) { /* Empty State... */ }
-                    else
-                    {
-                        <div class="table-responsive flex-grow-1 custom-scroll" style="overflow-y: auto;">
-                            <table class="table table-hover table-striped table-sm-mobile align-middle mb-0">
-                                <thead class="bg-light text-secondary text-uppercase small fw-bold sticky-top"
-                                       style="z-index: 5;">
-                                    <tr>
-                                        @TableHeader
-                                        <th class="text-center bg-light shadow-sm"
-                                            style="width: 120px; position: sticky; right: 0;">Thao tác</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var item in Items)
-                                    {
-                                        <tr>
-                                            @RowTemplate(item)
-                                            <td class="text-center bg-white border-start" style="position: sticky; right: 0;">
-                                                <button class="btn btn-sm btn-outline-primary border-0 me-1"
-                                                        @onclick="() => EditItem(item)"><i class="bi bi-pencil-square"></i></button>
-                                                <button class="btn btn-sm btn-outline-danger border-0"
-                                                        @onclick="() => RequestDelete(item)"><i class="bi bi-trash"></i></button>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
                         </div>
-                    }
+                    </div>
                 </div>
 
-                @* FOOTER: PHÂN TRANG (Dùng shared Pagination component) *@
-                @if (TotalPages > 1)
-                {
-                    <div class="card-footer bg-white py-2 border-top">
-                        <Pagination CurrentPage="PageIndex" TotalPages="TotalPages" TotalCount="TotalCount"
-                                    OnPageChange="HandlePageChange" ShowInfo="false"
-                                    ContainerClass="d-flex justify-content-center mb-0"
-                                    PaginationClass="pagination-sm mb-0" />
+                @* --- RIGHT COLUMN: DATA LIST (col-lg-9) --- *@
+                <div class="col-12 col-lg-9 order-1 order-lg-2 h-100-lg">
+                    <div class="card shadow-sm border-0 h-100 d-flex flex-column">
+                        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 fw-bold text-dark">Data List</h5>
+                            <div class="text-muted small">Showing <strong>@Items?.Count</strong> / <strong>@TotalCount</strong>
+                            </div>
+                        </div>
+
+                        <div class="card-body p-0 d-flex flex-column flex-grow-1 overflow-hidden position-relative">
+                            @if (Items == null)
+                            {
+                                <div class="p-4 text-center">Loading list...</div>
+                            }
+                            else if (!Items.Any())
+                            {
+                                <div class="p-4 text-center text-muted">No data available.</div>
+                            }
+                            else
+                            {
+                                <div class="table-responsive flex-grow-1 custom-scroll" style="overflow-y: auto;">
+                                    <table class="table table-hover table-striped table-sm-mobile align-middle mb-0">
+                                        <thead class="bg-light text-secondary text-uppercase small fw-bold sticky-top"
+                                               style="z-index: 5;">
+                                            <tr>
+                                                @TableHeader
+                                                <th class="text-center bg-light shadow-sm"
+                                                    style="width: 120px; position: sticky; right: 0;">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in Items)
+                                            {
+                                                <tr>
+                                                    @RowTemplate(item)
+                                                    <td class="text-center bg-white border-start" style="position: sticky; right: 0;">
+                                                        <button class="btn btn-sm btn-outline-primary border-0 me-1"
+                                                                @onclick="() => EditItem(item)"><i class="bi bi-pencil-square"></i></button>
+                                                        <button class="btn btn-sm btn-outline-danger border-0"
+                                                                @onclick="() => RequestDelete(item)"><i class="bi bi-trash"></i></button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        </div>
+
+                        @* FOOTER: PAGINATION (Using shared component) *@
+                        @if (TotalPages > 1)
+                        {
+                            <div class="card-footer bg-white py-2 border-top">
+                                <Pagination CurrentPage="PageIndex" TotalPages="TotalPages" TotalCount="TotalCount"
+                                            OnPageChange="HandlePageChange" ShowInfo="false"
+                                            ContainerClass="d-flex justify-content-center mb-0"                                PaginationClass="pagination-sm mb-0" />
+                            </div>
+                        }
                     </div>
-                }
+                </div>
             </div>
         </div>
-    </div>
-</div>
 
+        @* --- CUSTOM SCROLLBAR & VALIDATION STYLING --- *@
+        <style>
+            /* Desktop: Screens 992px and above */
+            @@media (min-width: 992px) {
+                .h-100-lg {
+                    height: 100% !important;
+                }
 
-@* --- CSS TÙY CHỈNH THANH CUỘN --- *@
-<style>
-    /* Desktop: Màn hình từ 992px trở lên */
-    @@media (min-width: 992px) {
-        .h-100-lg {
-            height: 100% !important;
-        }
+                .overflow-hidden-lg {
+                    overflow: hidden !important;
+                }
 
-        .overflow-hidden-lg {
-            overflow: hidden !important;
-        }
+                /* Fixed table height for independent scrolling */
+                .table-responsive {
+                    max-height: calc(100vh - 250px);
+                }
+            }
 
-        /* Cố định chiều cao vùng bảng để cuộn riêng biệt */
-        .table-responsive {
-            max-height: calc(100vh - 250px);
-        }
-    }
+            /* Mobile: Screens below 992px */
+            @@media (max-width: 991.98px) {
+                .table-responsive {
+                    overflow-x: auto;
+                    -webkit-overflow-scrolling: touch;
+                }
 
-    /* Mobile: Màn hình dưới 992px */
-    @@media (max-width: 991.98px) {
+                .btn-sm {
+                    padding: 0.25rem 0.4rem;
+                }
+            }
 
-        /* Cho phép bảng giãn theo nội dung để cuộn toàn trang */
-        .table-responsive {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
+            /* Custom Scrollbar Styles */
+            .custom-scroll::-webkit-scrollbar {
+                width: 6px;
+                height: 6px;
+            }
 
-        /* Tối ưu kích thước nút cho màn hình nhỏ */
-        .btn-sm {
-            padding: 0.25rem 0.4rem;
-        }
-    }
+            .custom-scroll::-webkit-scrollbar-track {
+                background: #f1f1f1;
+            }
 
-    /* Định dạng thanh cuộn (Dùng chung) */
-    .custom-scroll::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-    }
+            .custom-scroll::-webkit-scrollbar-thumb {
+                background: #ced4da;
+                border-radius: 3px;
+            }
 
-    .custom-scroll::-webkit-scrollbar-track {
-        background: #f1f1f1;
-    }
+            .custom-scroll::-webkit-scrollbar-thumb:hover {
+                background: #adb5bd;
+            }
 
-    .custom-scroll::-webkit-scrollbar-thumb {
-        background: #ced4da;
-        border-radius: 3px;
-    }
+            /* Ensure Table Header sticks to the top during scroll */
+            thead.sticky-top th {
+                position: sticky;
+                top: 0;
+                background-color: #f8f9fa;
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+                z-index: 5;
+            }
 
-    .custom-scroll::-webkit-scrollbar-thumb:hover {
-        background: #adb5bd;
-    }
+            /* Styling for Validation Messages */
+            .val-msg {
+                display: inline-block;
+                margin-top: 0.4rem;
+                padding: 0.2rem 0.6rem;
+                font-size: 0.75rem;
+                font-weight: bold;
+                color: #dc3545;
+                background-color: rgba(220, 53, 69, 0.08);
+                border-left: 3px solid darkred;
+                border-radius: 4px;
+            }
+        </style>
 
-    /* Giữ header bảng luôn dính trên cùng khi cuộn */
-    thead.sticky-top th {
-        position: sticky;
-        top: 0;
-        background-color: #f8f9fa;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-        z-index: 5;
-    }
-
-    @* ----- CSS cho Validation Message -----*@
-    .val-msg {
-        display: inline-block;
-        margin-top: 0.4rem;
-        padding: 0.2rem 0.6rem;
-        font-size: 0.75rem;
-        font-weight: bold;
-        color: #dc3545;
-        background-color: rgba(220, 53, 69, 0.08);
-        border-left: 3px solid darkred;
-        border-radius: 4px;
-    }
-</style>
-
-<ConfirmModal @ref="_confirmModal" Title="Xóa dữ liệu?" Message="Bạn có thực sự muốn xóa dòng dữ liệu này không?"
-              OnConfirm="ConfirmDelete" />
+<ConfirmModal @ref="_confirmModal" Title="Delete Record?"
+              Message="Are you sure you want to permanently delete this entry?"           OnConfirm="ConfirmDelete" />
 
 @code {
-    // --- DATA ---
+    // --- DATA PROPERTIES ---
     [Parameter] public List<TItem> Items { get; set; }
     [Parameter] public TModel Model { get; set; }
 
-    // --- UI FRAGMENTS ---
-    [Parameter] public RenderFragment SidebarTopContent { get; set; } // Chứa Dropdown Module/Type
+    // --- UI RENDER FRAGMENTS ---
+    [Parameter] public RenderFragment SidebarTopContent { get; set; }
     [Parameter] public RenderFragment<TModel> FormContent { get; set; }
     [Parameter] public RenderFragment TableHeader { get; set; }
     [Parameter] public RenderFragment<TItem> RowTemplate { get; set; }
 
-    // --- PAGINATION PARAMETERS ---
-    // Nhận trạng thái từ Component Cha (Manager)
+    // --- PAGINATION PROPERTIES ---
     [Parameter] public int PageIndex { get; set; } = 1;
     [Parameter] public int TotalPages { get; set; } = 0;
     [Parameter] public int TotalCount { get; set; } = 0;
 
-    // Sự kiện bắn ra ngoài khi user bấm chuyển trang
     [Parameter] public EventCallback<int> OnPageChanged { get; set; }
 
-    // --- EVENTS ---
+    // --- EVENT CALLBACKS ---
     [Parameter] public EventCallback OnSubmit { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
     [Parameter] public EventCallback<TItem> OnEdit { get; set; }
     [Parameter] public EventCallback<TItem> OnDelete { get; set; }
     [Parameter] public EventCallback OnNameBlur { get; set; }
 
-    // --- LOGIC ---
+    // --- LOGIC PROPERTIES ---
     [Parameter] public bool IsEditMode { get; set; }
 
-    // Logic cho Modal Xóa
-    // 1. Biến tham chiếu đến Component con (để gọi hàm Show)
+    // Delete Confirmation Logic
     private ConfirmModal _confirmModal;
-    // 2. Biến lưu tạm item đang muốn xóa
     private TItem _itemToDelete;
 
     private EditForm? _internalForm;
-    // Hàm này sẽ kiểm tra toàn bộ lỗi dựa trên DataAnnotations của Model hiện tại
+
+    // Triggers full model validation based on DataAnnotations
     public void TriggerValidate()
     {
-        // EditContext.Validate() trả về true nếu không có lỗi, false nếu có lỗi
         _internalForm?.EditContext?.Validate();
     }
 
-    // Hàm xử lý chung ngay tại Layout để giữ State
+    // Centralized state handling for common form fields
     private void HandleCommonChange(string? val, string prop)
     {
         if (prop == "Name") Model.Name = val ?? "";
         else if (prop == "Description") Model.Description = val;
 
-        // Trigger validate để hiện/ẩn lỗi real-time
+        // Trigger real-time validation feedback
         _internalForm?.EditContext?.Validate();
     }
 
@@ -273,13 +272,11 @@
         await OnNameBlur.InvokeAsync();
     }
 
-    // Xử lý chuyển trang
     private async Task HandlePageChange(int newPage)
     {
-        // Guard clause: Chặn click bậy
+        // Guard clause: prevent invalid page navigation
         if (newPage < 1 || newPage > TotalPages || newPage == PageIndex) return;
 
-        // Bắn sự kiện ra ngoài cho Manager gọi API
         await OnPageChanged.InvokeAsync(newPage);
     }
 
@@ -287,25 +284,21 @@
     {
         await OnEdit.InvokeAsync(item);
     }
+
     private async Task CancelEdit()
     {
         await OnCancel.InvokeAsync();
     }
 
-    // 1. Khi bấm nút thùng rác -> Hiện Modal
     private void RequestDelete(TItem item)
     {
         _itemToDelete = item;
         _confirmModal.Show();
     }
 
-    // 2. Khi bấm nút "Yes, Delete" trong Modal
     private async Task ConfirmDelete()
     {
-        // Gọi Event Delete ra ngoài cho Manager xử lý (API)
-        await OnDelete.InvokeAsync(_itemToDelete); // Gọi sự kiện xóa
-
-        // Không cần gọi _confirmModal.Hide() vì nó tự đóng rồi
+        await OnDelete.InvokeAsync(_itemToDelete);
         _itemToDelete = default!;
     }
 

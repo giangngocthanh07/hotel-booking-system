@@ -1,22 +1,23 @@
+@using HotelBooking.webapp.Helpers.Common
 @using HotelBooking.webapp.Pages.Admin.Base
 @inherits AdminPageBase
 @attribute [Authorize(Roles = "Admin")]
 
-@* --- 1. ĐỊNH NGHĨA ROUTING --- *@
+@* --- 1. ROUTING DEFINITIONS --- *@
 @page "/admin/manage/roomquality"
 @page "/admin/manage/roomquality/{TypeId:int}"
 
-@* --- 2. SỬ DỤNG LAYOUT ADMIN CHUNG --- *@
+@* --- 2. LAYOUT CONFIGURATION --- *@
 @layout AdminLayout
 @inject ILogger<RoomQualityManager> Logger
 @inject ISnackbar _snackbar
 
-@* --- 3. UI LOADING (Kiểm soát bởi Class Cha) --- *@
+@* --- 3. UI LOADING STATE (Controlled by Base Class) --- *@
 @if (!ShouldRenderUI())
 {
     <div class="d-flex justify-content-center align-items-center p-5">
         <div class="spinner-border text-primary me-2"></div>
-        <span>Đang tải dữ liệu...</span>
+        <span>Loading data...</span>
     </div>
 }
 else
@@ -26,18 +27,17 @@ else
                         OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
                         OnDelete="HandleDelete" OnCancel="ResetForm">
 
-        @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
+        @* --- A. SIDEBAR CONFIGURATION (RENDER FRAGMENT) --- *@
         <SidebarTopContent>
-            @* NHÚNG COMPONENT MENU THÔNG MINH VÀO ĐÂY *@
-            @* Nó tự biết đường vẽ ra Dropdown *@
+            @* Global Navigation Component for dynamic module selection *@
             <GlobalNavMenu CurrentModule="RoomQuality" CurrentTypeId="TypeId" />
         </SidebarTopContent>
 
-        @* --- B. CẤU HÌNH FORM (Nâng cấp trực quan) --- *@
+        @* --- B. FORM CONFIGURATION (UI Enhancements) --- *@
         <FormContent Context="m">
 
             @{
-                // Hàm hiển thị lỗi cho trường SortOrder
+                // Validation error display fragment for SortOrder field
                 RenderFragment RenderVal(string prop) => __builder =>
                 {
                     if (_isUpdate && prop == "SortOrder")
@@ -50,13 +50,13 @@ else
                     }
                 };
 
-                // Lấy giá trị SortOrder hiện tại
+                // Get current SortOrder value for preview logic
                 int? currentSort = _isUpdate ? _updateModel.SortOrder : _createModel.SortOrder;
             }
 
-            @* 1. THỨ TỰ ƯU TIÊN (SORT ORDER) *@
+            @* 1. SORT ORDER SETTING *@
             <div class="mb-3">
-                <label class="form-label fw-bold small text-muted text-uppercase">Thứ tự ưu tiên</label>
+                <label class="form-label fw-bold small text-muted text-uppercase">Priority Sort Order</label>
                 <div class="input-group" style="max-width: 150px;">
                     <span class="input-group-text bg-white"><i class="fa-solid fa-sort-numeric-down text-muted"></i></span>
                     <input type="number" class="form-control text-center fw-bold" value="@currentSort"
@@ -65,43 +65,42 @@ else
                 @RenderVal("SortOrder")
                 <div class="form-text extra-small mt-2 animate__animated animate__fadeIn">
                     <i class="fa-solid fa-circle-info me-1 text-info"></i>
-                    Số càng lớn, mức chất lượng này càng được ưu tiên hiển thị trước.
+                    Higher numbers prioritize this quality level in display results.
                 </div>
             </div>
 
-            @* Badge Preview khi số lớn *@
+            @* Priority Badge Preview *@
             @if (currentSort >= 5)
             {
-                <div    class="alert alert-info border-0 py-2 px-3 d-flex align-items-center shadow-sm animate__animated animate__bounceIn">
+                <div
+                    class="alert alert-info border-0 py-2 px-3 d-flex align-items-center shadow-sm animate__animated animate__bounceIn">
                     <i class="fa-solid fa-star me-2 fs-5"></i>
-                    <div class="small fw-bold">Đây là mức chất lượng ĐƯỢC ƯU TIÊN.</div>
+                    <div class="small fw-bold">This is a HIGH PRIORITY quality level.</div>
                 </div>
             }
         </FormContent>
 
-        @* --- C. CẤU HÌNH BẢNG (TABLE) --- *@
+        @* --- C. TABLE CONFIGURATION --- *@
         <TableHeader>
             <th class="text-center" style="width: 50px;">Id</th>
-            <th class="text-center" style="width: 400px;">Tên mức chất lượng</th>
-            <th class="text-center" style="width: 100px;"></th> @* Cột Badge không tiêu đề *@
-            <th class="text-center">Mô tả / Ghi chú</th> @* Cột mô tả sẽ linh hoạt *@
-            <th class="text-center" style="width: 150px;">Thứ tự sắp xếp</th>
+            <th class="text-center" style="width: 400px;">Quality Level Name</th>
+            <th class="text-center" style="width: 100px;"></th> @* Badge Column *@
+            <th class="text-center">Description / Notes</th> @* Flexible description column *@
+            <th class="text-center" style="width: 150px;">Sort Order</th>
         </TableHeader>
 
         <RowTemplate Context="row">
             @* 1. ID *@
             <td class="text-center text-muted small">@row.Id</td>
 
-            @* 2. Tên mức chất lượng - Căn trái vùng giữa *@
+            @* 2. Quality Level Name *@
             <td class="text-center align-middle">
-
-                <span class="@(row.SortOrder >= 5 ? "text-primary" : "text-dark")">
+                <span class="@(row.SortOrder >= 5 ? "text-primary fw-bold" : "text-dark")">
                     @row.Name
                 </span>
-
             </td>
 
-            @* 3. Badge Ưu tiên (Cột mới) *@
+            @* 3. Priority Badge *@
             <td class="text-center align-middle">
                 @if (row.SortOrder >= 5)
                 {
@@ -113,7 +112,7 @@ else
                 }
             </td>
 
-            @* 4. Mô tả *@
+            @* 4. Description *@
             <td class="text-center align-middle">
                 @if (string.IsNullOrWhiteSpace(row.Description))
                 {
@@ -127,7 +126,7 @@ else
                 }
             </td>
 
-            @* 5. Thứ tự sắp xếp *@
+            @* 5. Sort Order Preview *@
             <td class="text-center">
                 <div class="d-inline-flex align-items-center justify-content-center bg-light border rounded-circle fw-bold text-secondary shadow-sm"
                      style="width: 32px; height: 32px; font-size: 0.85rem;">
@@ -140,29 +139,22 @@ else
 }
 
 @code {
-    // --- PARAMETERS TỪ URL ---
-    // Tự động nhận giá trị từ URL /admin/manage/roomquality/{TypeId}
+    // --- URL PARAMETERS ---
     [Parameter] public int? TypeId { get; set; }
 
-    // --- STATE ---
+    // --- STATE MANAGEMENT ---
     private List<RoomQualityVM>? _items;
-
-    // Tách 2 Model riêng biệt
     private RoomQualityCreateVM _createModel = new RoomQualityCreateVM();
     private RoomQualityUpdateVM _updateModel = new RoomQualityUpdateVM();
 
     private int _currentEditingId = 0;
     private bool _isUpdate = false;
 
-
-    // --- QUẢN LÝ PHÂN TRANG ---
-    // Khởi tạo request: Trang 1, Size 10
+    // --- PAGINATION MANAGEMENT ---
     private PagingRequest _paging = new() { PageIndex = 1, PageSize = 10 };
     private int _totalPages = 0;
     private int _totalCount = 0;
 
-
-    // Biến kiểm soát vòng đời & Re-render
     private int? _previousTypeId = null;
 
     private BaseCreateOrUpdateAdminVM GetModel() => _isUpdate ? (BaseCreateOrUpdateAdminVM)_updateModel :
@@ -170,7 +162,7 @@ else
 
     private MasterDetailLayout<RoomQualityVM, BaseCreateOrUpdateAdminVM>? _layoutRef;
 
-    // --- HÀM XỬ LÝ INPUT THUẦN (REACTIVE & XÓA LỖI) ---
+    // --- REACTIVE INPUT HANDLING ---
     private async Task HandleSortInput(string? val)
     {
         int.TryParse(val, out var sort);
@@ -178,27 +170,21 @@ else
         if (_isUpdate) _updateModel.SortOrder = sort;
         else _createModel.SortOrder = sort;
 
-        // Ép UI vẽ lại con số mới
         StateHasChanged();
-
-        // Ra lệnh cho Layout quét sạch tin nhắn lỗi đỏ
-        _layoutRef?.TriggerValidate();
+        _layoutRef?.TriggerValidate(); // Immediate error clearing
     }
 
     // --- LIFECYCLE ---
-    // --- 1. LOAD DATA (Override từ Cha) ---
     protected override async Task LoadDataAsync()
     {
-        // Reset UI Loading
         _items = null!;
         StateHasChanged();
 
         try
         {
-            // Gọi API (Dùng 'Service' của Cha)
             var res = await Service.GetRoomQualitiesByType(TypeId, _paging);
 
-            if (!Disposed) // Check cờ Disposed từ Cha
+            if (!Disposed)
             {
                 if (res.StatusCode == StatusCodeResponse.Success && res.Content != null)
                 {
@@ -218,21 +204,19 @@ else
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Lỗi load data roomquality");
+            Logger.LogError(ex, "Error loading room quality data");
             _items = new List<RoomQualityVM>();
         }
     }
 
     protected override void OnInitialized()
     {
-        // Ép Model đúng kiểu ngay khi component vừa được tạo ra
         ResetForm();
     }
 
-    // --- 2. XỬ LÝ CHUYỂN TAB ---
+    // --- TAB SWITCHING LOGIC ---
     protected override async Task OnParametersSetAsync()
     {
-
         if (TypeId == null) TypeId = 1;
 
         if (TypeId != _previousTypeId)
@@ -248,22 +232,19 @@ else
         }
     }
 
-    // --- HÀM XỬ LÝ KHI BẤM CHUYỂN TRANG ---
+    // --- PAGINATION HANDLING ---
     private async Task HandlePageChanged(int newPage)
     {
-        // Cập nhật số trang mới vào Request
         _paging.PageIndex = newPage;
-        // Gọi lại API
         await LoadDataAsync();
     }
 
-    // --- CRUD METHODS ---
+    // --- CRUD OPERATIONS ---
     private void OnEditItem(RoomQualityVM item)
     {
         _isUpdate = true;
         _currentEditingId = item.Id;
 
-        // Map sang UpdateVM (Không cần TypeId)
         _updateModel = new RoomQualityUpdateVM
         {
             Name = item.Name,
@@ -272,22 +253,16 @@ else
         };
 
         StateHasChanged();
-
-        // Đảm bảo khi mở form Edit, các lỗi cũ không bị "nhảy" ra
         _layoutRef?.TriggerValidate();
     }
 
     private async Task HandleDelete(RoomQualityVM item)
     {
-        // Gọi API xóa thực tế
         var res = await Service.DeleteRoomQuality(item.Id);
-
-        // Hiển thị thông báo
         SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
 
         if (res.StatusCode == StatusCodeResponse.Success)
         {
-            // Xóa thành công thì load lại bảng
             await LoadDataAsync();
         }
     }
@@ -297,7 +272,6 @@ else
         _isUpdate = false;
         _currentEditingId = 0;
 
-        // Reset CreateVM với TypeId hiện tại
         _createModel = new RoomQualityCreateVM
         {
             TypeId = TypeId ?? 0,
@@ -306,39 +280,32 @@ else
         _updateModel = new RoomQualityUpdateVM();
 
         StateHasChanged();
-
-        // Xóa sạch dấu vết lỗi của lần nhập trước
         _layoutRef?.TriggerValidate();
     }
 
     private async Task SaveData()
     {
-
         ApiResponse<RoomQualityVM> res;
 
         if (_isUpdate)
         {
-            // Update: Gửi UpdateVM + ID
             res = await Service.UpdateRoomQuality(_currentEditingId, _updateModel);
         }
         else
         {
-            // Create: Gửi CreateVM (Đã có TypeId)
             _createModel.TypeId = TypeId ?? 0;
             res = await Service.CreateRoomQuality(_createModel);
         }
 
         if (res.StatusCode == StatusCodeResponse.Success)
         {
-            // Hiển thị thông báo
             SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
             await LoadDataAsync();
             ResetForm();
         }
         else
         {
-            // KHÔNG gọi ResetForm() nếu có lỗi từ Server (như trùng tên)
-            // Dữ liệu vẫn nằm nguyên trong _updateModel để Admin sửa tiếp
+            // Do NOT reset form on server-side validation error
             SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
         }
     }

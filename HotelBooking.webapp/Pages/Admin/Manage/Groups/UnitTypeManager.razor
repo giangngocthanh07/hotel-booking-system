@@ -1,21 +1,22 @@
+@using HotelBooking.webapp.Helpers.Common
 @using HotelBooking.webapp.Pages.Admin.Base
 @inherits AdminPageBase
 @attribute [Authorize(Roles = "Admin")]
 
-@* --- 1. ĐỊNH NGHĨA ROUTING --- *@
+@* --- 1. ROUTING DEFINITION --- *@
 @page "/admin/manage/unittype"
 
-@* --- 2. SỬ DỤNG LAYOUT ADMIN CHUNG --- *@
+@* --- 2. SHARED ADMIN LAYOUT --- *@
 @layout AdminLayout
 @inject ILogger<UnitTypeManager> Logger
 @inject ISnackbar _snackbar
 
-@* --- 3. UI LOADING --- *@
+@* --- 3. UI LOADING STATE --- *@
 @if (!ShouldRenderUI())
 {
     <div class="d-flex justify-content-center align-items-center p-5">
         <div class="spinner-border text-primary me-2"></div>
-        <span>Đang tải dữ liệu...</span>
+        <span>Loading data...</span>
     </div>
 }
 else
@@ -25,18 +26,16 @@ else
                         OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
                         OnDelete="HandleDelete" OnCancel="ResetForm">
 
-        @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
+        @* --- A. SIDEBAR CONFIGURATION (RENDER FRAGMENT) --- *@
         <SidebarTopContent>
-            @* NHÚNG COMPONENT MENU THÔNG MINH VÀO ĐÂY *@
-            @* Nó tự biết đường vẽ ra Dropdown *@
+            @* Integrated dynamic navigation menu *@
             <GlobalNavMenu CurrentModule="UnitType" CurrentTypeId="TypeId" />
         </SidebarTopContent>
 
-        @* --- B. CẤU HÌNH FORM (CHUẨN BOOKING.COM) --- *@
+        @* --- B. FORM CONFIGURATION (Booking.com Standards) --- *@
         <FormContent Context="m">
 
-            @* 1. CẤU HÌNH LOẠI HÌNH (IS ENTIRE PLACE) *@
-            @* Lấy giá trị hiện tại để hiển thị UI Visual *@
+            @* 1. PROPERTY TYPE CONFIGURATION (IS ENTIRE PLACE) *@
             @{
                 bool isEntire = _isUpdate
                 ? (_updateModel.IsEntirePlace ?? false)
@@ -45,12 +44,12 @@ else
 
             <div class="card bg-white border mb-3 shadow-sm animate__animated animate__fadeIn">
                 <div class="card-header bg-light py-2 border-bottom">
-                    <h6 class="mb-0 fw-bold small text-uppercase text-muted">Cấu hình loại hình</h6>
+                    <h6 class="mb-0 fw-bold small text-uppercase text-muted">Property Configuration</h6>
                 </div>
                 <div class="card-body">
-                    @* --- NÚT GẠT SWITCH --- *@
+                    @* --- TOGGLE SWITCH --- *@
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <label class="form-label fw-bold text-dark mb-0">Đây là cho thuê nguyên căn?</label>
+                        <label class="form-label fw-bold text-dark mb-0">Is this an entire place rental?</label>
                         <div class="form-check form-switch custom-switch">
                             <input class="form-check-input" type="checkbox" role="switch" checked="@isEntire"
                                    @onchange="@(e => HandleToggleEntire((bool)(e.Value ?? false)))"
@@ -58,7 +57,7 @@ else
                             </div>
                         </div>
 
-                        @* --- MÔ TẢ TRỰC QUAN (BOOKING.COM STYLE) --- *@
+                        @* --- VISUAL DESCRIPTION (BOOKING.COM STYLE) --- *@
                         <div
                             class="p-3 rounded border @(isEntire ? "bg-success bg-opacity-10 border-success" : "bg-light border-secondary")">
                             <div class="d-flex align-items-start animate__animated animate__fadeIn">
@@ -70,17 +69,18 @@ else
                                 </div>
                                 <div>
                                     <strong class="@(isEntire ? "text-success" : "text-dark")">
-                                        @(isEntire ? "Nguyên căn (Entire Place)" : "Phòng riêng / Phòng khách sạn")
+                                        @(isEntire ? "Entire Place" : "Private Room / Hotel Room")
                                     </strong>
                                     <p class="mb-0 small text-muted mt-1 fst-italic">
                                         @if (isEntire)
                                         {
-                                            <span>Khách có không gian riêng tư hoàn toàn (bếp, lối đi riêng...).<br />Phù hợp: Căn
-                                                hộ, Biệt thự, Studio.</span>
-                                            } else
+                                            <span>Guests have the whole place to themselves (kitchen, private
+                                                entrance...).<br />Ideal for: Apartments, Villas, Studios.</span>
+                                            }
+                                    else
                                             {
-                                                <span>Khách thuê phòng ngủ riêng biệt (phòng tắm khép kín).<br />Phù hợp: Khách sạn,
-                                                    Resort, Nhà nghỉ.</span>
+                                                <span>Guests rent a specific bedroom (typically with an ensuite bathroom).<br />Ideal
+                                                    for: Hotels, Resorts, Guesthouses.</span>
                                                 }
                                             </p>
                                         </div>
@@ -90,18 +90,17 @@ else
                         </div>
                     </FormContent>
 
-                    @* --- C. CẤU HÌNH BẢNG (TABLE) --- *@
+                    @* --- C. TABLE CONFIGURATION --- *@
                     <TableHeader>
                         <th class="text-center" style="width: 50px;">Id</th>
-                        <th class=" text-center" style="width: 250px;">Tên loại hình cư trú</th>
-                        <th class="text-center">Mô tả</th>
-                        @* 1. Đổi tên cột và căn giữa tiêu đề *@
-                        <th class="text-center" style="width: 250px;">Loại hình cho thuê</th>
+                        <th class="text-center" style="width: 250px;">Accommodation Type</th>
+                        <th class="text-center">Description</th>
+                        <th class="text-center" style="width: 250px;">Rental Type</th>
                     </TableHeader>
 
                     <RowTemplate Context="row">
                         <td class="text-center text-muted small">@row.Id</td>
-                        <td class="text-center align-middle text-primary">@row.Name</td>
+                        <td class="text-center align-middle text-primary fw-bold">@row.Name</td>
 
                         <td class="text-center align-middle text-muted small text-truncate" style="max-width: 250px;"
                             title="@row.Description">
@@ -111,7 +110,6 @@ else
                             }
                             else
                             {
-                                @* Giới hạn width để không đẩy bảng *@
                                 <div class="text-muted small text-truncate mx-auto" style="max-width: 500px;" title="@row.Description">
                                     @row.Description
                                 </div>
@@ -121,14 +119,14 @@ else
                         <td class="text-center">
                             @if (row.IsEntirePlace == true)
                             {
-                                <span class="badge rounded-pill bg-success px-3">
-                                    <i class="fa-solid fa-key me-1"></i>Nguyên căn
+                                <span class="badge rounded-pill bg-success px-3 py-2 shadow-sm">
+                                    <i class="fa-solid fa-key me-1"></i>Entire Place
                                 </span>
                             }
                             else
                             {
-                                <span class="badge rounded-pill bg-light text-dark border px-3">
-                                    <i class="fa-solid fa-bed me-1"></i>Phòng riêng
+                                <span class="badge rounded-pill bg-light text-dark border px-3 py-2 shadow-sm">
+                                    <i class="fa-solid fa-bed me-1"></i>Private Room
                                 </span>
                             }
                         </td>
@@ -137,27 +135,23 @@ else
                 </MasterDetailLayout>
             }
 
-
 @code {
-    // --- PARAMETERS TỪ URL ---
-    // Tự động nhận giá trị từ URL /admin/manage/unittype
+    // --- URL PARAMETERS ---
     [Parameter] public int? TypeId { get; set; }
 
-    // --- STATE ---
+    // --- STATE MANAGEMENT ---
     private List<UnitTypeVM>? _items;
-    // Tách Model
     private UnitTypeCreateVM _createModel = new UnitTypeCreateVM();
     private UnitTypeUpdateVM _updateModel = new UnitTypeUpdateVM();
 
     private int _currentEditingId = 0;
     private bool _isUpdate = false;
 
-    // --- PHÂN TRANG ---
+    // --- PAGINATION ---
     private PagingRequest _paging = new() { PageIndex = 1, PageSize = 10 };
     private int _totalPages = 0;
     private int _totalCount = 0;
 
-    // Biến kiểm tra lần đầu tiên load
     private bool _isFirstLoad = true;
 
     private BaseCreateOrUpdateAdminVM GetModel() => _isUpdate ? (BaseCreateOrUpdateAdminVM)_updateModel :
@@ -165,7 +159,7 @@ else
 
     private MasterDetailLayout<UnitTypeVM, BaseCreateOrUpdateAdminVM>? _layoutRef;
 
-    // --- HÀM XỬ LÝ GẠT SWITCH (REACTIVE) ---
+    // --- REACTIVE SWITCH HANDLER ---
     private void HandleToggleEntire(bool val)
     {
         if (_isUpdate) _updateModel.IsEntirePlace = val;
@@ -175,16 +169,14 @@ else
         _layoutRef?.TriggerValidate();
     }
 
-    // --- 1. LOAD DATA (Override từ Cha) ---
+    // --- 1. LOAD DATA ---
     protected override async Task LoadDataAsync()
     {
-        // Reset UI Loading
         _items = null;
         StateHasChanged();
 
         try
         {
-            // Gọi API Lấy tất cả (Non-Type)
             var res = await Service.GetUnitTypes(_paging);
 
             if (!Disposed)
@@ -198,32 +190,28 @@ else
                 else
                 {
                     _items = new List<UnitTypeVM>();
-
                     if (res.StatusCode != StatusCodeResponse.Success)
                     {
                         SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
                     }
-
                 }
             }
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Lỗi load data unittype");
+            Logger.LogError(ex, "Error loading unit type data");
             _items = new List<UnitTypeVM>();
         }
     }
 
     protected override void OnInitialized()
     {
-        // Ép Model đúng kiểu ngay khi component vừa được tạo ra
         ResetForm();
     }
 
-    // --- 2. XỬ LÝ PARAMETERS ---
+    // --- 2. PARAMETERS HANDLING ---
     protected override async Task OnParametersSetAsync()
     {
-        // Chỉ load lần đầu tiên khi JS đã sẵn sàng
         if (_isFirstLoad && IsJsReady)
         {
             _isFirstLoad = false;
@@ -231,13 +219,13 @@ else
             await LoadDataAsync();
         }
     }
-    // --- XỬ LÝ CHUYỂN TRANG ---
+
+    // --- PAGINATION HANDLING ---
     private async Task HandlePageChanged(int newPage)
     {
         _paging.PageIndex = newPage;
         await LoadDataAsync();
     }
-
 
     // --- CRUD METHODS ---
     private void OnEditItem(UnitTypeVM item)
@@ -245,7 +233,6 @@ else
         _isUpdate = true;
         _currentEditingId = item.Id;
 
-        // Map sang UpdateVM
         _updateModel = new UnitTypeUpdateVM
         {
             Name = item.Name,
@@ -254,22 +241,16 @@ else
         };
 
         StateHasChanged();
-
-        // Đảm bảo khi mở form Edit, các lỗi cũ không bị "nhảy" ra
         _layoutRef?.TriggerValidate();
     }
 
     private async Task HandleDelete(UnitTypeVM item)
     {
-        // Gọi API xóa thực tế
         var res = await Service.DeleteUnitType(item.Id);
-
-        // Hiển thị thông báo
         SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
 
         if (res.StatusCode == StatusCodeResponse.Success)
         {
-            // Xóa thành công thì load lại bảng
             await LoadDataAsync();
         }
     }
@@ -279,13 +260,10 @@ else
         _isUpdate = false;
         _currentEditingId = 0;
 
-        // Reset CreateVM
         _createModel = new UnitTypeCreateVM { IsEntirePlace = false };
         _updateModel = new UnitTypeUpdateVM();
 
         StateHasChanged();
-
-        // Xóa sạch dấu vết lỗi của lần nhập trước
         _layoutRef?.TriggerValidate();
     }
 
@@ -304,15 +282,12 @@ else
 
         if (res.StatusCode == StatusCodeResponse.Success)
         {
-            // Hiển thị thông báo
             SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
             await LoadDataAsync();
             ResetForm();
         }
         else
         {
-            // KHÔNG gọi ResetForm() nếu có lỗi từ Server (như trùng tên)
-            // Dữ liệu vẫn nằm nguyên trong _updateModel để Admin sửa tiếp
             SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
         }
     }

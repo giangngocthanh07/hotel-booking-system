@@ -5,9 +5,9 @@
 @inject ILogger<GlobalNavMenu> Logger
 
 
-@* 1. Dropdown chọn Module (Chuyển trang) - Dùng ManageModuleConstants *@
+@* 1. Module Selection Dropdown (Navigation) - Uses ManageModuleConstants *@
 <div class="mb-3">
-    <label class="form-label small fw-bold text-muted">Nhóm dữ liệu</label>
+    <label class="form-label small fw-bold text-muted">Data Group</label>
     <select class="form-select" value="@CurrentModule" @onchange="OnModuleChanged">
         @foreach (var module in ManageModuleConstants.GetAll())
         {
@@ -16,11 +16,11 @@
     </select>
 </div>
 
-@* 2. Dropdown chọn Type (Load từ API) *@
+@* 2. Type Selection Dropdown (Loaded via API) *@
 @if (_types != null && _types.Any())
 {
     <div class="mb-3">
-        <label class="form-label small fw-bold text-muted">Phân loại</label>
+        <label class="form-label small fw-bold text-muted">Category</label>
         <select class="form-select" value="@CurrentTypeId" @onchange="OnTypeChanged">
             @foreach (var t in _types)
             {
@@ -31,52 +31,51 @@
 }
 else if (_isLoading)
 {
-    <div class="text-center small text-muted"><span class="spinner-border spinner-border-sm me-1"></span>Loading menu...
+    <div class="text-center small text-muted">
+        <span class="spinner-border spinner-border-sm me-1"></span>Loading menu...
     </div>
 }
 
 
 @code {
     // --- PARAMETERS ---
-    // Nhận vào để biết đang đứng ở đâu (để highlight đúng option)
+    // Identifies the current location to highlight the correct options
     [Parameter] public string CurrentModule { get; set; } = "Service";
     [Parameter] public int? CurrentTypeId { get; set; }
 
     // --- STATE ---
     private List<ManageTypeVM>? _types;
 
-    // Thêm biến để lưu Module cũ
+    // Track previous module to prevent redundant API calls
     private string _prevModule = "";
 
-
-    // Thêm biến cờ
+    // State flags for lifecycle coordination
     private bool _isJsReady = false;
     private bool _isLoading = false;
 
     // --- LIFECYCLE ---
     protected override async Task OnInitializedAsync()
     {
-
     }
 
-    // 3. OnAfterRenderAsync: Nơi gọi API an toàn
+    // Safely trigger API calls once the rendering environment is ready
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            _isJsReady = true; // Đánh dấu JS đã sẵn sàng
-            await LoadMenuData(); // Load lần đầu
+            _isJsReady = true; // Mark JS runtime as ready
+            await LoadMenuData(); // Initial load
             StateHasChanged();
         }
     }
 
-    // Khi tham số từ cha đổi (VD: User bấm link khác), menu cũng phải update theo
+    // Synchronize menu when parent parameters change (e.g., user clicks a different link)
     protected override async Task OnParametersSetAsync()
     {
-        // 1. Chặn nếu JS chưa sẵn sàng
+        // Block execution if JS interop is not yet available
         if (!_isJsReady) return;
 
-        // Nếu module thay đổi thì mới load lại
+        // Only reload data if the module has actually changed
         if (CurrentModule != _prevModule)
         {
             _types = null;
@@ -86,10 +85,9 @@ else if (_isLoading)
 
     private async Task LoadMenuData()
     {
-        // Nếu JS chưa sẵn sàng thì chặn ngay
         if (!_isJsReady) return;
 
-        // Lưu lại vết lần đầu chạy (để tránh load 2 lần)
+        // Update tracking variable to prevent double loading
         _prevModule = CurrentModule;
 
         _isLoading = true;
@@ -112,7 +110,7 @@ else if (_isLoading)
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Lỗi load menu");
+            Logger.LogError(ex, "Error loading navigation menu data");
         }
         finally
         {
@@ -121,11 +119,13 @@ else if (_isLoading)
         }
     }
 
-    // --- EVENTS ---
+    // --- EVENT HANDLERS ---
     private void OnModuleChanged(ChangeEventArgs e)
     {
         var selectedModule = e.Value?.ToString();
-        // Chuyển trang sang module khác (Reset TypeId)
+        if (string.IsNullOrEmpty(selectedModule)) return;
+
+        // Redirect to a different module (resets TypeId)
         // URL Pattern: /admin/manage/{Module}
         Nav.NavigateTo($"/admin/manage/{selectedModule.ToLower()}");
     }
@@ -134,7 +134,7 @@ else if (_isLoading)
     {
         if (int.TryParse(e.Value?.ToString(), out int newTypeId))
         {
-            // Chuyển trang nhưng giữ nguyên module, chỉ đổi ID
+            // Redirect while keeping the same module, updating only the TypeId
             // URL Pattern: /admin/manage/{Module}/{TypeId}
             Nav.NavigateTo($"/admin/manage/{CurrentModule.ToLower()}/{newTypeId}");
         }

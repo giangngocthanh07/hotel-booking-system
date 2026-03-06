@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using HotelBooking.webapp.Helpers.Common;
 using HotelBooking.webapp.ViewModels.Request;
 using HotelBooking.webapp.ViewModels.Request.Base;
 

@@ -7,14 +7,21 @@ public static class RepositoryServiceExtension
         services.AddAdminRepositories();
 
         services.AddScoped<ICountryRepository, CountryRepository>();
+        services.AddScoped<IAmenityTypeRepository, AmenityTypeRepository>();
         services.AddScoped<IServiceTypeRepository, ServiceTypeRepository>();
         services.AddScoped<IPolicyTypeRepository, PolicyTypeRepository>();
         services.AddScoped<IRoomQualityGroupRepository, RoomQualityGroupRepository>();
 
         // Ensure related repos are present
         services.AddScoped<ICityRepository, CityRepository>();
+        services.AddScoped<IAmenityRepository, AmenityRepository>();
         services.AddScoped<IPolicyRepository, PolicyRepository>();
         services.AddScoped<IServiceRepository, ServiceRepository>();
+        services.AddScoped<IRoomQualityRepository, RoomQualityRepository>();
+        services.AddScoped<IBedTypeRepository, BedTypeRepository>();
+        services.AddScoped<IUnitTypeRepository, UnitTypeRepository>();
+        services.AddScoped<IRoomViewRepository, RoomViewRepository>();
+
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         return services;
@@ -37,6 +44,8 @@ public static class RepositoryServiceExtension
         services.AddScoped<IHotelPolicyRepository, HotelPolicyRepository>();
         services.AddScoped<IHotelAmenityRepository, HotelAmenityRepository>();
         services.AddScoped<IHotelImageRepository, HotelImageRepository>();
+        services.AddScoped<IHotelPolicyRepository, HotelPolicyRepository>();
+        services.AddScoped<IReviewRepository, ReviewRepository>();
         // ... Add related hotel repos here
         return services;
     }

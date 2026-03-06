@@ -13,7 +13,7 @@ public static class ApplicationServiceExtension
         services.AddScoped<JwtAuthService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IRoleService, RoleService>();
-        
+
         // Hotel & Business Services
         services.AddScoped<IHotelService, HotelService>();
         services.AddScoped<IUpgradeRequestService, UpgradeRequestService>();
@@ -24,7 +24,16 @@ public static class ApplicationServiceExtension
         services.AddScoped<IAmenityService, AmenityService>();
         services.AddScoped<IPolicyService, PolicyService>();
         services.AddScoped<IServiceService, ServiceService>();
-        
+        services.AddScoped<IRoomAttributeFacade, RoomAttributeFacade>();
+        services.AddScoped<IRoomQualityService, RoomQualityService>();
+        services.AddScoped<IBedTypeService, BedTypeService>();
+        services.AddScoped<IUnitTypeService, UnitTypeService>();
+        services.AddScoped<IRoomViewService, RoomViewService>();
+
+        // Request Management
+        services.AddScoped<IRequestOverviewService, RequestOverviewService>();
+
+
         // Helpers
         services.AddSingleton<IImageHelper, ImageHelper>();
         services.AddScoped<IFileHelper, FileHelper>();

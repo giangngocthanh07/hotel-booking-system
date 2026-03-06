@@ -1,46 +1,45 @@
+@using HotelBooking.webapp.Helpers.Common
 @using HotelBooking.webapp.Pages.Admin.Base
 @inherits AdminPageBase
 @attribute [Authorize(Roles = "Admin")]
 
-@* --- 1. ĐỊNH NGHĨA ROUTING --- *@
+@* --- 1. ROUTING DEFINITION --- *@
 @page "/admin/manage/bedtype"
 
-@* --- 2. SỬ DỤNG LAYOUT ADMIN CHUNG --- *@
+@* --- 2. LAYOUT CONFIGURATION --- *@
 @layout AdminLayout
 @inject ILogger<BedTypeManager> Logger
 @inject ISnackbar _snackbar
 
-@* --- 3. UI LOADING --- *@
+@* --- 3. UI LOADING STATE --- *@
 @if (!ShouldRenderUI())
 {
     <div class="d-flex justify-content-center align-items-center p-5">
         <div class="spinner-border text-primary me-2"></div>
-        <span>Đang tải dữ liệu...</span>
+        <span>Loading data...</span>
     </div>
 }
 else
 {
     <MasterDetailLayout TItem="BedTypeVM" TModel="BaseCreateOrUpdateAdminVM" Items="_items" Model="@GetModel()"
-                        PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount" OnPageChanged="HandlePageChanged"
-                        OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem" OnDelete="HandleDelete" OnCancel="ResetForm">
+                        PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
+                        OnPageChanged="HandlePageChanged"                        OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
+                        OnDelete="HandleDelete" OnCancel="ResetForm">
 
-        @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
+        @* --- A. SIDEBAR CONFIGURATION (RENDER FRAGMENT) --- *@
         <SidebarTopContent>
-            @* NHÚNG COMPONENT MENU THÔNG MINH VÀO ĐÂY *@
-            @* Nó tự biết đường vẽ ra Dropdown *@
+            @* Global Navigation Component with dynamic dropdown logic *@
             <GlobalNavMenu CurrentModule="BedType" CurrentTypeId="TypeId" />
         </SidebarTopContent>
 
-        @* --- B. CẤU HÌNH FORM (Đã Việt hóa & Thêm chú thích) --- *@
+        @* --- B. FORM CONFIGURATION --- *@
         <FormContent Context="m">
-            @* --- 1. LOGIC TÍNH TOÁN ĐẦU KHỐI --- *@
+            @* --- 1. PRE-RENDERING LOGIC --- *@
             @{
-                // Lấy model đang active để dùng chung cho ngắn
                 var activeModel = GetModel();
-
                 double? currentCapacity = _isUpdate ? _updateModel.DefaultCapacity : _createModel.DefaultCapacity;
 
-                // Render lỗi cho các trường riêng của BedType
+                // Validation render fragment for BedType specific fields
                 RenderFragment RenderVal(string prop) => __builder =>
                 {
                     if (prop == "Capacity")
@@ -68,20 +67,19 @@ else
                 };
             }
 
-            @* --- 1. SỨC CHỨA --- *@
+            @* --- 1. CAPACITY SETTINGS --- *@
             <div class="mb-3">
-                <label class="form-label fw-bold small text-muted text-uppercase">Sức chứa (Người)</label>
+                <label class="form-label fw-bold small text-muted text-uppercase">Capacity (Persons)</label>
                 <div class="input-group shadow-sm">
                     <span class="input-group-text bg-white"><i class="fa-solid fa-user-group text-muted"></i></span>
                     <input type="number" class="form-control fw-bold" min="1" value="@currentCapacity"
                            @oninput="@(e => HandleNumericInput(e.Value?.ToString(), "Capacity"))" />
                 </div>
                 @RenderVal("Capacity")
-                <div class="form-text extra-small mt-1">Số người tối đa mặc định cho loại giường này.</div>
+                <div class="form-text extra-small mt-1">Default maximum occupancy for this bed type.</div>
             </div>
 
-            @* 2. THIẾT LẬP KÍCH THƯỚC *@
-            @* Lấy giá trị hiện tại để Binding UI *@
+            @* --- 2. DIMENSION SETTINGS --- *@
             @{
                 bool isVarying = _isUpdate ? _updateModel.IsVaryingSize : _createModel.IsVaryingSize;
                 double currentMinWidth = _isUpdate ? _updateModel.MinWidth : _createModel.MinWidth;
@@ -89,7 +87,7 @@ else
             }
 
             <div class="mb-4 p-3 bg-light rounded border shadow-sm">
-                <label class="form-label fw-bold small d-block mb-2 text-primary">THIẾT LẬP KÍCH THƯỚC</label>
+                <label class="form-label fw-bold small d-block mb-2 text-primary">DIMENSION SETTINGS</label>
 
                 <div class="form-check form-switch custom-switch mb-3">
                     <input type="checkbox" class="form-check-input" role="switch" id="swVarying" checked="@isVarying"
@@ -97,7 +95,7 @@ else
                            style="cursor: pointer; width: 2.5rem; height: 1.25rem;" />
 
                     <label class="form-check-label ms-2 small fw-bold" for="swVarying">
-                        @(isVarying ? "Kích thước đa dạng" : "Kích thước cố định")
+                        @(isVarying ? "Varying Dimensions" : "Fixed Dimensions")
                     </label>
                 </div>
 
@@ -106,7 +104,7 @@ else
                     <div class="p-1 rounded bg-primary bg-opacity-10 border border-primary border-opacity-25 shadow-sm">
                         <label class="fw-bold text-muted text-uppercase mb-1"
                                style="font-size: 0.62rem; letter-spacing: 0.5px;">
-                            CHIỀU RỘNG (INCHES)
+                            WIDTH (INCHES)
                         </label>
                         <div class="d-flex align-items-center gap-2">
                             @if (_isUpdate)
@@ -134,20 +132,20 @@ else
             </div>
         </FormContent>
 
-        @* --- C. CẤU HÌNH BẢNG (TABLE) --- *@
+        @* --- C. TABLE CONFIGURATION --- *@
         <TableHeader>
             <th class="text-center" style="width: 50px;">ID</th>
-            <th class="text-center" style="width: 150px;">Tên loại giường</th>
-            <th class="text-center" style="width: 120px;">Sức chứa</th>
-            <th class="text-center" style="width: 180px;">Kích thước (Inch)</th>
-            <th class="text-center">Mô tả</th>
+            <th class="text-center" style="width: 150px;">Bed Type Name</th>
+            <th class="text-center" style="width: 120px;">Capacity</th>
+            <th class="text-center" style="width: 180px;">Dimensions (Inches)</th>
+            <th class="text-center">Description</th>
         </TableHeader>
 
         <RowTemplate Context="row">
             <td class="text-center text-muted small">@row.Id</td>
             <td class="text-center align-middle text-primary">@row.Name</td>
 
-            @* Căn giữa nội dung & Dùng Badge hiển thị số lượng *@
+            @* Content Centering & Capacity Badges *@
             <td class="text-center">
                 <span class="badge bg-primary bg-opacity-10 text-primary border border-primary px-3 py-2">
                     <span class="fs-6 fw-bold me-1">@row.DefaultCapacity</span>
@@ -158,7 +156,7 @@ else
             <td class="text-center align-middle">
                 @if (row.IsVaryingSize)
                 {
-                    <span class="text-muted small fst-italic">Đa dạng (Varying)</span>
+                    <span class="text-muted small fst-italic">Varying</span>
                 }
                 else
                 {
@@ -168,7 +166,7 @@ else
                 }
             </td>
 
-            @* Cắt gọn mô tả nếu quá dài *@
+            @* Truncate description if too long *@
             <td class="text-center align-middle text-muted small text-truncate" style="max-width: 250px;"
                 title="@row.Description">
                 @if (string.IsNullOrWhiteSpace(row.Description))
@@ -177,7 +175,6 @@ else
                 }
                 else
                 {
-                    @* Giới hạn width để không đẩy bảng *@
                     <div class="text-muted small text-truncate mx-auto" style="max-width: 250px;" title="@row.Description">
                         @row.Description
                     </div>
@@ -189,33 +186,29 @@ else
 }
 
 @code {
-    // --- PARAMETERS TỪ URL ---
-    // Tự động nhận giá trị từ URL /admin/manage/bedtype
+    // --- URL PARAMETERS ---
     [Parameter] public int? TypeId { get; set; }
 
-    // --- STATE ---
+    // --- STATE MANAGEMENT ---
     private List<BedTypeVM>? _items;
-
-    // Tách Model
     private BedTypeCreateVM _createModel = new BedTypeCreateVM();
     private BedTypeUpdateVM _updateModel = new BedTypeUpdateVM();
 
     private int _currentEditingId = 0;
     private bool _isUpdate = false;
 
-    // --- PHÂN TRANG ---
+    // --- PAGINATION ---
     private PagingRequest _paging = new() { PageIndex = 1, PageSize = 10 };
     private int _totalPages = 0;
     private int _totalCount = 0;
 
-    // Biến kiểm tra lần đầu tiên load
     private bool _isFirstLoad = true;
 
     private BaseCreateOrUpdateAdminVM GetModel() => _isUpdate ? _updateModel : _createModel;
 
     private MasterDetailLayout<BedTypeVM, BaseCreateOrUpdateAdminVM>? _layoutRef;
 
-    // --- HÀM XỬ LÝ NHẬP SỐ (REACTIVE & TRỰC QUAN) ---
+    // --- NUMERIC INPUT HANDLING (REACTIVE) ---
     private async Task HandleNumericInput(string? val, string field)
     {
         double.TryParse(val, out var num);
@@ -234,16 +227,15 @@ else
         }
 
         StateHasChanged();
-        _layoutRef?.TriggerValidate(); // Xóa lỗi đỏ ngay khi gõ đúng
+        _layoutRef?.TriggerValidate();
     }
 
     private async Task HandleToggleVarying(bool val)
     {
-        // Khi set val = true, ViewModel của bạn tự động đưa Width về 0
         if (_isUpdate)
         {
             _updateModel.IsVaryingSize = val;
-            // Mồi kích thước chuẩn (Twin bed) nếu vừa tắt "Đa dạng" và đang bằng 0
+            // Inject standard size (Twin bed) if toggled off and currently zero
             if (!val && _updateModel.MinWidth <= 0) { _updateModel.MinWidth = 38; _updateModel.MaxWidth = 75; }
         }
         else
@@ -256,19 +248,17 @@ else
         _layoutRef?.TriggerValidate();
     }
 
-    // --- 1. LOAD DATA (Override từ Cha) ---
+    // --- 1. LOAD DATA ---
     protected override async Task LoadDataAsync()
     {
-        // Reset UI Loading
         _items = null!;
         StateHasChanged();
 
         try
         {
-            // Gọi API Lấy tất cả (Non-Type)
             var res = await Service.GetBedTypes(_paging);
 
-            if (!Disposed) // Check cờ Disposed từ Cha
+            if (!Disposed)
             {
                 if (res.StatusCode == StatusCodeResponse.Success && res.Content != null)
                 {
@@ -279,7 +269,6 @@ else
                 else
                 {
                     _items = new List<BedTypeVM>();
-
                     if (res.StatusCode != StatusCodeResponse.Success)
                     {
                         SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
@@ -289,22 +278,19 @@ else
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Lỗi load data bedtype");
+            Logger.LogError(ex, "Error loading bed type data");
             _items = new List<BedTypeVM>();
         }
     }
 
     protected override void OnInitialized()
     {
-        // Ép Model đúng kiểu ngay khi component vừa được tạo ra
         ResetForm();
     }
 
-    // --- 2. XỬ LÝ PARAMETERS ---
-    // Với trang Non-Type, chỉ load data lần đầu khi IsJsReady
+    // --- 2. PARAMETERS HANDLING ---
     protected override async Task OnParametersSetAsync()
     {
-        // Chỉ load lần đầu tiên khi JS đã sẵn sàng
         if (_isFirstLoad && IsJsReady)
         {
             _isFirstLoad = false;
@@ -313,7 +299,7 @@ else
         }
     }
 
-    // --- XỬ LÝ CHUYỂN TRANG ---
+    // --- PAGINATION HANDLING ---
     private async Task HandlePageChanged(int newPage)
     {
         _paging.PageIndex = newPage;
@@ -326,10 +312,8 @@ else
         _isUpdate = true;
         _currentEditingId = item.Id;
 
-        // Dùng Helper để map sang UpdateVM
         var updateModel = RoomAttributeHelper.MapToUpdateVM(item);
 
-        // Ép kiểu về đúng loại để gán vào _updateModel
         if (updateModel is BedTypeUpdateVM mapped)
         {
             _updateModel = mapped;
@@ -341,15 +325,11 @@ else
 
     private async Task HandleDelete(BedTypeVM item)
     {
-        // Gọi API xóa thực tế
         var res = await Service.DeleteBedType(item.Id);
-
-        // Hiển thị thông báo
         SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
 
         if (res.StatusCode == StatusCodeResponse.Success)
         {
-            // Xóa thành công thì load lại bảng
             await LoadDataAsync();
         }
     }
@@ -359,7 +339,6 @@ else
         _isUpdate = false;
         _currentEditingId = 0;
 
-        // Reset CreateVM
         if (RoomAttributeHelper.CreateNewCreateModel(RoomAttributeType.BedType) is BedTypeCreateVM newModel)
         {
             _createModel = newModel;
@@ -384,18 +363,14 @@ else
             res = await Service.CreateBedType(_createModel);
         }
 
-
         if (res.StatusCode == StatusCodeResponse.Success)
         {
-            // Hiển thị thông báo
             SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
             await LoadDataAsync();
             ResetForm();
         }
         else
         {
-            // KHÔNG gọi ResetForm() nếu có lỗi từ Server (như trùng tên)
-            // Dữ liệu vẫn nằm nguyên trong _updateModel để Admin sửa tiếp
             SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
         }
     }

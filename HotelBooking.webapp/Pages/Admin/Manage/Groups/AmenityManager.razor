@@ -1,23 +1,25 @@
+@using HotelBooking.webapp.Helpers.Common
+@using HotelBooking.webapp.Helpers.Manage.Icon
 @using HotelBooking.webapp.Pages.Admin.Base
 @using HotelBooking.webapp.Helpers
 @inherits AdminPageBase
 @attribute [Authorize(Roles = "Admin")]
 
-@* --- 1. ĐỊNH NGHĨA ROUTING --- *@
+@* --- 1. ROUTING DEFINITION --- *@
 @page "/admin/manage/amenity"
 @page "/admin/manage/amenity/{TypeId:int}"
 
-@* --- 2. SỬ DỤNG LAYOUT ADMIN CHUNG --- *@
+@* --- 2. LAYOUT CONFIGURATION --- *@
 @layout AdminLayout
 @inject ILogger<AmenityManager> Logger
 @inject ISnackbar _snackbar
 
-@* --- 3. UI LOADING (Check cờ từ Cha) --- *@
+@* --- 3. UI LOADING STATE (Check flag from Base Class) --- *@
 @if (!ShouldRenderUI())
 {
     <div class="d-flex justify-content-center align-items-center p-5">
         <div class="spinner-border text-primary me-2"></div>
-        <span>Đang tải dữ liệu...</span>
+        <span>Loading data...</span>
     </div>
 }
 else
@@ -27,18 +29,17 @@ else
                         OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
                         OnDelete="HandleDelete" OnCancel="ResetForm">
 
-        @* --- A. CẤU HÌNH MENU BÊN TRÁI (THÔNG QUA RENDER FRAGMENT) --- *@
+        @* --- A. SIDEBAR CONFIGURATION (RENDER FRAGMENT) --- *@
         <SidebarTopContent>
-            @* NHÚNG COMPONENT MENU THÔNG MINH VÀO ĐÂY *@
-            @* Nó tự biết đường vẽ ra Dropdown *@
+            @* Global Navigation Component with dynamic dropdown logic *@
             <GlobalNavMenu CurrentModule="Amenity" CurrentTypeId="TypeId" />
         </SidebarTopContent>
 
-        @* --- B. CẤU HÌNH FORM (Tiện nghi mặc định MIỄN PHÍ) --- *@
+        @* --- B. FORM CONTENT (Amenities are FREE by default) --- *@
         <FormContent Context="m">
 
             @* --- 1. ICON PREVIEW --- *@
-            @* Vì Layout không có chỗ hiện Icon cạnh ô Name, ta hiện 1 bản preview nhỏ ở đây *@
+            @* Displays a real-time icon preview based on the amenity name *@
             <div
                 class="d-flex align-items-center mb-3 p-2 border rounded bg-light shadow-sm animate__animated animate__fadeIn">
                 <div class="rounded-circle bg-white d-flex align-items-center justify-content-center shadow-sm me-3"
@@ -46,34 +47,34 @@ else
                     <i class="@GetAmenityIcon(m.Name) fs-4 text-success"></i>
                 </div>
                 <div>
-                    <div class="extra-small text-muted fw-bold text-uppercase">Icon nhận diện</div>
-                    <div class="small fw-bold text-dark">@(string.IsNullOrEmpty(m.Name) ? "Đang chờ tên..." : m.Name)</div>
+                    <div class="extra-small text-muted fw-bold text-uppercase">Detected Icon</div>
+                    <div class="small fw-bold text-dark">@(string.IsNullOrEmpty(m.Name) ? "Awaiting name..." : m.Name)</div>
                 </div>
             </div>
 
             <div class="card border-success bg-success bg-opacity-10 mb-3">
                 <div class="card-body py-2 d-flex align-items-center">
                     <i class="fa-solid fa-circle-check text-success me-2"></i>
-                    <span class="small fw-bold text-success">Tiện nghi phòng luôn được mặc định MIỄN PHÍ.</span>
+                    <span class="small fw-bold text-success">Room amenities are always FREE by default.</span>
                 </div>
             </div>
         </FormContent>
 
-        @* --- C. CẤU HÌNH BẢNG (Giao diện chuẩn hóa) --- *@
+        @* --- C. TABLE CONFIGURATION (Standardized UI) --- *@
         <TableHeader>
             <th class="text-center" style="width: 50px;">Id</th>
             <th class="text-center" style="width: 80px;">Icon</th>
-            <th class="text-center" style="width: 300px;">Tên tiện nghi</th>
-            <th class="text-center">Mô tả / Ghi chú</th> @* Cột này sẽ tự co giãn (Flexible) *@
-            <th class="text-center" style="width: 120px;">Phân loại</th>
-            <th class="text-center" style="width: 100px;">Trạng thái</th>
+            <th class="text-center" style="width: 300px;">Amenity Name</th>
+            <th class="text-center">Description / Notes</th> @* Flexible column *@
+            <th class="text-center" style="width: 120px;">Category</th>
+            <th class="text-center" style="width: 100px;">Status</th>
         </TableHeader>
 
         <RowTemplate Context="row">
-            @* 1. ID - Căn giữa *@
+            @* 1. ID - Centered *@
             <td class="text-center text-muted small">@row.Id</td>
 
-            @* 2. Icon - Căn giữa *@
+            @* 2. Icon - Centered preview *@
             <td class="text-center">
                 <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center shadow-sm mx-auto"
                      style="width: 32px; height: 32px;">
@@ -81,12 +82,12 @@ else
                 </div>
             </td>
 
-            @* 3. Tên  *@
+            @* 3. Name *@
             <td class="text-center align-middle text-dark">
                 @row.Name
             </td>
 
-            @* 4. MÔ TẢ - Căn giữa dấu --- *@
+            @* 4. DESCRIPTION - Truncated for UI consistency *@
             <td class="text-center align-middle text-truncate">
                 @if (string.IsNullOrWhiteSpace(row.Description))
                 {
@@ -94,21 +95,20 @@ else
                 }
                 else
                 {
-                    @* Giới hạn width để không đẩy bảng *@
                     <div class="text-muted small text-truncate mx-auto" style="max-width: 280px;" title="@row.Description">
                         @row.Description
                     </div>
                 }
             </td>
 
-            @* 5. Loại - Căn giữa *@
+            @* 5. Category *@
             <td class="text-center">
                 <span class="badge bg-light text-secondary border px-2 py-1" style="font-size: 0.75rem;">
                     <i class="fa-solid fa-tag me-1"></i>Group #@row.TypeId
                 </span>
             </td>
 
-            @* 6. Trạng thái - Căn giữa *@
+            @* 6. Status *@
             <td class="text-center">
                 <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-1">
                     Free
@@ -119,31 +119,25 @@ else
     </MasterDetailLayout>
 }
 
-
 @code {
-    // --- PARAMETERS TỪ URL ---
-    // Tự động nhận giá trị từ URL /admin/manage/amenity/{TypeId}
+    // --- URL PARAMETERS ---
     [Parameter] public int? TypeId { get; set; }
 
-    // --- STATE ---
+    // --- STATE MANAGEMENT ---
     private List<AmenityVM>? _items;
     private AmenityCreateVM _createModel = new AmenityCreateVM();
     private AmenityUpdateVM _updateModel = new AmenityUpdateVM();
-    private int _currentEditingId = 0; // Lưu ID khi edit
+    private int _currentEditingId = 0;
     private bool _isUpdate = false;
 
-
-    // --- QUẢN LÝ PHÂN TRANG ---
-    // Khởi tạo request: Trang 1, Size 10
+    // --- PAGINATION MANAGEMENT ---
     private PagingRequest _paging = new() { PageIndex = 1, PageSize = 10 };
     private int _totalPages = 0;
     private int _totalCount = 0;
 
-
-    // Biến kiểm soát vòng đời & Re-render
     private int? _previousTypeId = null;
 
-    // --- HELPER: Tự động chọn Icon dựa trên tên tiện nghi ---
+    // --- HELPER: Resolve icon based on name ---
     private string GetAmenityIcon(string? name) => AmenityIconHelper.GetIcon(name);
 
     private BaseCreateOrUpdateAdminVM GetModel() => _isUpdate ? (BaseCreateOrUpdateAdminVM)_updateModel :
@@ -152,19 +146,17 @@ else
     private MasterDetailLayout<AmenityVM, BaseCreateOrUpdateAdminVM>? _layoutRef;
 
     // --- LIFECYCLE ---
-    // --- 1. LOAD DATA (Override từ Cha) ---
+    // Override LoadDataAsync from AdminPageBase
     protected override async Task LoadDataAsync()
     {
-        // Reset UI loading
         _items = null;
         StateHasChanged();
 
         try
         {
-            // Gọi API (Dùng 'Service' của Cha)
             var res = await Service.GetAmenitiesByType(TypeId, _paging);
 
-            if (!Disposed) // Check cờ 'Disposed' của Cha
+            if (!Disposed) // Check base disposal flag
             {
                 if (res.StatusCode == StatusCodeResponse.Success && res.Content != null)
                 {
@@ -182,24 +174,21 @@ else
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Lỗi load data amenity");
+            Logger.LogError(ex, "Error loading amenity data");
             _items = new List<AmenityVM>();
         }
     }
 
     protected override void OnInitialized()
     {
-        // Ép Model đúng kiểu ngay khi component vừa được tạo ra
         ResetForm();
     }
 
-    // 2. OnAfterRenderAsync: Nơi DUY NHẤT an toàn để gọi LocalStorage lần đầu
-    // --- 2. XỬ LÝ CHUYỂN TAB ---
+    // --- TAB SWITCHING LOGIC ---
     protected override async Task OnParametersSetAsync()
     {
         if (TypeId == null) TypeId = 1;
 
-        // Nếu TypeId thay đổi thì mới load lại
         if (TypeId != _previousTypeId)
         {
             _previousTypeId = TypeId;
@@ -213,45 +202,36 @@ else
         }
     }
 
-    // --- HÀM XỬ LÝ KHI BẤM CHUYỂN TRANG ---
+    // --- PAGINATION HANDLING ---
     private async Task HandlePageChanged(int newPage)
     {
-        // Cập nhật số trang mới vào Request
         _paging.PageIndex = newPage;
-        // Gọi lại API
         await LoadDataAsync();
     }
 
-    // --- CRUD METHODS ---
+    // --- CRUD OPERATIONS ---
     private void OnEditItem(AmenityVM item)
     {
         _isUpdate = true;
-        _currentEditingId = item.Id; // Lưu ID lại
+        _currentEditingId = item.Id;
 
         _updateModel = new AmenityUpdateVM
         {
             Name = item.Name,
             Description = item.Description
-            // Không map TypeId vì UpdateVM không có chứa nó
         };
 
         StateHasChanged();
-
-        // Đảm bảo khi mở form Edit, các lỗi cũ không bị "nhảy" ra
         _layoutRef?.TriggerValidate();
     }
 
     private async Task HandleDelete(AmenityVM item)
     {
-        // Gọi API xóa thực tế
         var res = await Service.DeleteAmenity(item.Id);
-
-        // Hiển thị thông báo
         SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
 
         if (res.StatusCode == StatusCodeResponse.Success)
         {
-            // Xóa thành công thì load lại bảng
             await LoadDataAsync();
         }
     }
@@ -261,7 +241,6 @@ else
         _isUpdate = false;
         _currentEditingId = 0;
 
-        // Reset CreateVM (Nhớ gán TypeId hiện tại)
         _createModel = new AmenityCreateVM
         {
             TypeId = TypeId ?? 0
@@ -269,8 +248,6 @@ else
         _updateModel = new AmenityUpdateVM();
 
         StateHasChanged();
-
-        // Xóa sạch dấu vết lỗi của lần nhập trước
         _layoutRef?.TriggerValidate();
     }
 
@@ -278,27 +255,23 @@ else
     {
         ApiResponse<AmenityVM> res;
 
-        if (_isUpdate) res = await Service.UpdateAmenity(_currentEditingId, _updateModel);
+        if (_isUpdate)
+            res = await Service.UpdateAmenity(_currentEditingId, _updateModel);
         else
         {
-            // [THAY ĐỔI 4] Gọi Create API (Gửi CreateVM có TypeId)
-            // Đảm bảo TypeId luôn đúng
             _createModel.TypeId = TypeId ?? 0;
             res = await Service.CreateAmenity(_createModel);
         }
 
-
         if (res.StatusCode == StatusCodeResponse.Success)
         {
-            // Hiển thị thông báo
             SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
             await LoadDataAsync();
             ResetForm();
         }
         else
         {
-            // KHÔNG gọi ResetForm() nếu có lỗi từ Server (như trùng tên)
-            // Dữ liệu vẫn nằm nguyên trong _updateModel để Admin sửa tiếp
+            // Do NOT reset form on server-side validation error (e.g., duplicate name)
             SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
         }
     }
