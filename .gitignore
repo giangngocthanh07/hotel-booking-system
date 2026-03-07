@@ -54,3 +54,12 @@ project.assets.json
 ## ===== Others =====
 *.DS_Store
 Thumbs.db
+
+## ===== Test & Coverage =====
+TestResults/
+*.coverage
+*.coveragexml
+
+## ===== Publish Outputs =====
+[Pp]ublish/
+*.Publish.xml
