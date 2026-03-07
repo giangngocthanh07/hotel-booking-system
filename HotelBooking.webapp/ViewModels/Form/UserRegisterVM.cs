@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace HotelBooking.webapp.ViewModels
+namespace HotelBooking.webapp.ViewModels.Form
 {
     public class UserRegisterVM
     {

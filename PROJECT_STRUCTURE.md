@@ -1,202 +1,182 @@
-# HotelBooking Project - Cấu Trúc Tổ Chức Mới
+# HotelBooking Project - Structure Organization
 
-## 📁 Cấu Trúc Application Layer
+## 📁 Application Layer Structure
 
 ```
 HotelBooking.application/
 ├── DTOs/                          # Data Transfer Objects
-│   ├── Common/                    # DTO dùng chung (ApiResponse, Pagination...)
+│   ├── Base/                      # Shared DTOs (ApiResponse, Pagination...)
 │   ├── Hotel/                     # Hotel-related DTOs
-│   ├── Admin/                     # Admin-specific DTOs
+│   ├── Request/                   # Request-related DTOs
+│   ├── Role/                      # Role-related DTOs
 │   └── User/                      # User-related DTOs
 │
 ├── Services/
-│   ├── Base/                      # BaseManage, BaseService (abstract)
-│   ├── Common/                    # Common services (Auth, Photo, Email...)
-│   │   ├── JwtAuthService.cs
-│   │   ├── PhotoService.cs
-│   │   └── ...
+│   ├── Base/                      # BaseManage.cs (abstract)
 │   │
-│   ├── Domains/                   # ⭐ Business logic tổ chức theo domain
+│   ├── Domains/                   # ⭐ Business logic organized by domain
 │   │   ├── AdminManagement/
-│   │   │   ├── ManagementAdminService.cs (+ IManagementAdminService interface)
 │   │   │   ├── AmenityService.cs (+ IAmenityService interface)
+│   │   │   ├── ManagementAdminService.cs (+ IManagementAdminService interface)
 │   │   │   ├── PolicyService.cs (+ IPolicyService interface)
+│   │   │   ├── RoleService.cs (+ IRoleService interface)
+│   │   │   ├── RoomAttributes/
+│   │   │   │   ├── BedTypeService.cs
+│   │   │   │   ├── RoomAttributeFacade.cs
+│   │   │   │   ├── RoomQualityService.cs
+│   │   │   │   ├── RoomViewService.cs
+│   │   │   │   └── UnitTypeService.cs
 │   │   │   └── ServiceService.cs (+ IServiceService interface)
 │   │   │
+│   │   ├── Auth/
+│   │   │   └── JwtAuthService.cs (+ IJwtAuthService interface)
+│   │   │
+│   │   ├── BookingManagement/     # TODO - booking, payment, review processes
+│   │   │
 │   │   ├── HotelManagement/
-│   │   │   ├── IHotelService.cs (interface)
-│   │   │   └── HotelService.cs (implementation tại Services/HotelService.cs)
+│   │   │   └── HotelService.cs (+ IHotelService interface)
 │   │   │
-│   │   ├── UserManagement/
-│   │   │   ├── IUserService.cs (interface)
-│   │   │   └── UserService.cs (implementation tại Services/UserService.cs)
+│   │   ├── Media/
+│   │   │   └── PhotoService.cs (+ IPhotoService interface)
 │   │   │
-│   │   ├── RequestManagement/    # chứa logic xử lý đơn nâng cấp
-│   │   │   ├── IUpgradeRequestService.cs
+│   │   ├── RequestManagement/     # Upgrade and approval request management
+│   │   │   ├── Base/
+│   │   │   ├── RequestOverviewService.cs
 │   │   │   └── UpgradeRequestService.cs
 │   │   │
-│   │   └── BookingManagement/    # TODO - đặt chỗ cho sau này (booking, payment, review)
-│   │       └── ...
+│   │   └── UserManagement/
+│   │       └── UserService.cs (+ IUserService interface)
 │   │
-│   ├── Features/                  # Quản lý các tính năng phụ
-│   │   ├── AmenityManage.cs       # Sẽ di chuyển sang AdminManagement
-│   │   ├── PolicyManage.cs        # Sẽ di chuyển sang AdminManagement
-│   │   ├── ServiceManage.cs       # Sẽ di chuyển sang AdminManagement
-│   │   ├── RoomAttributes/
-│   │   └── ...
-│   │
-│   ├── Helpers/                   # Validation, Response, FileHelper...
+│   ├── Helpers/                   # Navigation, Validation, Response, FileHelper...
 │   │   ├── ApiResponseHandlerHelper.cs
+│   │   ├── BedTypeHelper.cs
 │   │   ├── FileHelper.cs
-│   │   ├── Validation.cs
-│   │   └── ...
-│   │
-│   ├── HotelService.cs            # (Sẽ di chuyển sang HotelManagement)
-│   ├── UserService.cs             # (Sẽ di chuyển sang UserManagement)
-│   └── ...
+│   │   ├── Hotel/
+│   │   ├── IImageHelper.cs
+│   │   ├── ManagementAdminHelper.cs
+│   │   ├── Messages/
+│   │   │   ├── AdminManagement/
+│   │   │   ├── Common/
+│   │   │   ├── UserManagement/
+│   │   │   ├── MessageRegister.cs
+│   │   │   ├── MessageResponse.cs
+│   │   │   └── README.md
+│   │   ├── PasswordHelper.cs
+│   │   ├── PolicyHelper.cs
+│   │   ├── Role/
+│   │   ├── ServiceHelper.cs
+│   │   ├── User/
+│   │   └── Validation.cs
 │
-├── Interfaces/                    # ⭐ Interface KHÔNG có implementation logic
-│   ├── ICrudManage.cs
-│   ├── IPhotoService.cs
-│   └── ITypedManage.cs
+├── Interfaces/                    # ⭐ Interfaces WITHOUT implementation logic
+│   └── ICrudManage.cs
 │
-└── Mappings/                      # AutoMapper profiles (future)
-    ├── HotelProfiles.cs
-    └── ...
+└── Validators/                    # FluentValidation rules
+    ├── AdminManagement/
+    │   ├── Amenities/
+    │   ├── Policies/
+    │   ├── RoomAttributes/
+    │   └── Services/
+    ├── Common/
+    │   ├── GetRoomAttributeRequestValidator.cs
+    │   ├── ManageMenuRequestValidator.cs
+    │   └── PagingRequestValidator.cs
+    ├── UserManagement/
+    │   ├── CreateUpgradeRequestValidator.cs
+    │   ├── Login/
+    │   └── Register/
+    └── README.md
 ```
 
-### **Quy tắc Interfaces:**
-- ✅ Interface của nghiệp vụ → **Đặt trong cùng file** với implementation
-- ✅ Interface không có logic → Bỏ vào `Interfaces/` folder (ICrudManage, IPhotoService...)
+### **Interface Rules:**
 
-**Ví dụ:**
+- ✅ Business logic interfaces → **Placed in the same file** as the implementation (e.g., `IHotelService` inside `HotelService.cs`)
+- ✅ Interfaces purely with no logic / shared → Placed in the `Interfaces/` folder or `Helpers/`
+
+**Example:**
+
 ```csharp
 // File: Services/Domains/AdminManagement/AmenityService.cs
-public interface IAmenityService : ITypedManage<...> { }
+public interface IAmenityService : ICrudManage<...> { }
 
 public class AmenityService : BaseManage<...>, IAmenityService { }
 ```
 
 ---
 
-## 📁 Cấu Trúc API Layer
+## 📁 API Layer Structure
 
 ```
 HotelBooking.api/
 ├── Controllers/
-│   ├── V1/                        # API Version 1
-│   │   ├── Admin/                 # Admin endpoints
-│   │   │   ├── AdminManagementController.cs  (Amenity, Policy, Service management)
-│   │   │   ├── AdminRequestsController.cs    (Manage upgrade requests)
-│   │   │   └── RolesController.cs            (Role management)
-│   │   │
-│   │   ├── Customer/              # Customer endpoints
-│   │   │   └── RequestsController.cs         (Create/track upgrade requests)
-│   │   │
-│   │   └── Public/                # Public endpoints (no auth required)
-│   │       ├── HotelsController.cs           (Search, view hotel info)
-│   │       └── AuthenticationController.cs   (Login, register)
-│   │
-│   ├── Middlewares/               # Custom middlewares
-│   │   └── PerformanceMiddleware.cs
-│   │
-│   ├── Filters/                   # Swagger/API filters
-│   │   └── SwaggerFilters/
-│   │       └── EnumSchemaFilter.cs
-│   │
-│   └── Extensions/                # (Future) Extension methods
+│   └── V1/                        # API Version 1
+│       ├── Admin/                 # Admin endpoints (Require Admin role)
+│       │   ├── AccountController.cs          (User/Owner accounts management)
+│       │   ├── ManagementController.cs       (Amenities, Policies, Services management)
+│       │   ├── RequestOverviewController.cs  (Requests statistics)
+│       │   ├── RoleController.cs             (Role management)
+│       │   └── UpgradeRequestController.cs   (Owner upgrade requests handling)
+│       │
+│       ├── Customer/              # Customer endpoints
+│       │   └── (Empty - will contain APIs for specific Customer functionalities)
+│       │
+│       └── Public/                # Public endpoints (no auth/basic auth)
+│           ├── AuthenticationController.cs   (Login, Register transactions)
+│           ├── HotelController.cs            (Search, View hotel info)
+│           └── UpgradeRequestController.cs   (Create upgrade request from User)
 │
+├── Middlewares/               # Custom middlewares (e.g., GlobalExceptionMiddleware)
+├── Filters/                   # Swagger/API filters
+├── Extensions/                # Extension methods for DI, Setup
 ├── Properties/
 │   └── launchSettings.json
-│
 ├── appsettings.json               # Configuration
 └── Program.cs                     # Startup config, DI registration
 ```
 
 ### **Routing Convention:**
-- Admin endpoints: `api/v1/admin/*`
-- Customer endpoints: `api/v1/customer/*`
-- Public endpoints: `api/v1/hotels`, `api/v1/auth/*`
+
+- Admin endpoints: `api/v1/admin/[controller]`
+- Customer endpoints: `api/v1/customer/[controller]`
+- Public endpoints: `api/v1/[controller]` (or public)
 
 ---
 
 ## 🔄 Dependency Injection (Program.cs)
 
-```csharp
-// Admin Management Services
-builder.Services.AddScoped<IManagementAdminService, ManagementAdminService>();
-builder.Services.AddScoped<IAmenityService, AmenityService>();
-builder.Services.AddScoped<IPolicyService, PolicyService>();
-builder.Services.AddScoped<IServiceService, ServiceService>();
-
-// Hotel Management
-builder.Services.AddScoped<IHotelService, HotelService>();
-
-// User Management
-builder.Services.AddScoped<IUserService, UserService>();
-```
+All Controllers and Services have been divided according to Domain-Driven principles, making it easier to map 1-1 interface and implementation when registering in `Program.cs`. Extension methods in the `Extensions/` folder (within the `api` project) will usually be responsible for setting up DI to keep `Program.cs` clean.
 
 ---
 
-## 🎯 Lợi Ích Của Cấu Trúc Mới
+## 🎯 Benefits of the New Structure
 
-| Lợi ích | Chi tiết |
-|---------|---------|
-| **Dễ mở rộng** | Thêm feature mới = tạo folder domain mới |
-| **Dễ tìm kiếm** | Code liên quan nằm cùng thư mục |
-| **Rõ ràng trách nhiệm** | Mỗi domain có trách nhiệm riêng |
-| **Dễ test** | Mỗi service độc lập, dễ mock |
-| **API clarity** | V1/Admin, V1/Customer, V1/Public rõ ràng |
-| **Không lẫn lộn** | Interface có logic nằm cùng service |
-
----
-
-## 📝 Next Steps
-
-### Để hoàn thành refactor:
-1. ✅ Tạo cấu trúc Domains (AdminManagement, HotelManagement, RequestManagement...)
-2. ✅ Tạo Controllers V1 (Admin, Customer, Public)
-3. ✅ Cập nhật Program.cs DI
-4. ✅ Di chuyển file HotelService.cs → Services/Domains/HotelManagement/ (đã hoàn thành hoặc đang chuyển)
-5. ✅ Di chuyển file UserService.cs → Services/Domains/UserManagement/
-6. ⏳ Xóa/cập nhật các file Features cũ (AmenityManage, PolicyManage...)
-7. ⏳ Cập nhật tất cả import statements
-
-### Domains cần implement tiếp:
-- **RequestManagement** - Quản lý đơn yêu cầu nâng cấp khách hàng → owner
-- **BookingManagement** - Quản lý booking, payment, review
-- **OwnerManagement** - Dashboard owner, quản lý khách sạn
+| Benefit                    | Details                                                                        |
+| -------------------------- | ------------------------------------------------------------------------------ |
+| **Scalable**               | Add new feature = create a new domain folder                                   |
+| **Searchability**          | Related code is in the same directory (DTOs, Services, Helpers)                |
+| **Clear Responsibilities** | Each domain has its own responsibility, reducing bloat in `Services/`          |
+| **Testable**               | Each service is independent, easier to mock                                    |
+| **API Clarity**            | Clear distinction between V1/Admin, V1/Customer, and V1/Public                 |
+| **No Confusion**           | Interfaces containing logic are placed with their services for easier tracking |
 
 ---
 
-## 📚 File Mapping (Cũ → Mới)
+## 📝 Next Steps (Planning)
 
-| Cũ | Mới | Status |
-|-----|-----|--------|
-| Services/HotelService.cs | Services/Domains/HotelManagement/HotelService.cs | ⏳ Sẽ di chuyển |
-| Services/UserService.cs | Services/Domains/UserManagement/UserService.cs | ⏳ Sẽ di chuyển |
-| Services/Features/ManagementAdmin.cs | Services/Domains/AdminManagement/ManagementAdminService.cs | ✅ Done |
-| Services/Features/AmenityManage.cs | Services/Domains/AdminManagement/AmenityService.cs | ✅ Done |
-| Services/Features/PolicyManage.cs | Services/Domains/AdminManagement/PolicyService.cs | ✅ Done |
-| Services/Features/ServiceManage.cs | Services/Domains/AdminManagement/ServiceService.cs | ✅ Done |
-| Controllers/AccountController.cs | Controllers/V1/Public/AuthenticationController.cs | ✅ Done |
-| Controllers/RequestController.cs | Controllers/V1/Customer/RequestsController.cs | ✅ Done |
-| Controllers/V1/Public/RequestController (previous) | Controllers/V1/Customer/RequestsController.cs + AdminRequestsController.cs | ✅ Refactored |
-| Controllers/RoleController.cs | Controllers/V1/Admin/RolesController.cs | ✅ Done |
-| Controllers/HotelController.cs | Controllers/V1/Admin/AdminManagementController.cs (partial) | ⏳ Refactor needed |
+### Domains to implement next:
+
+- **BookingManagement** - Booking process management, payment processing, review system (Pending implementation).
+- **Customer/Owner Management** - Specific functionalities for each user type (might be distributed into controllers within `V1/Customer` or `V1/Owner`).
 
 ---
 
-## 🧹 Cleanup
+## 🧹 Refactoring Status
 
-Sau khi refactor hoàn tất:
-- Xóa các file Features cũ (AmenityManage.cs, PolicyManage.cs, ServiceManage.cs)
-- Xóa Controllers cũ (AccountController.cs, RequestController.cs, RoleController.cs, HotelController.cs)
-- Xóa Interfaces folder nếu thích
-- Giữ lại các file Services cũ chỉ làm import lại từ Domains
+The structural transition has been completed for mostly all core modules:
+
+- Entirely reorganized `Controllers` to `V1/Admin`, `V1/Customer`, `V1/Public`.
+- Deleted and restructured all `Features` classes in the Application layer into the `Domains/` directory (e.g., `AdminManagement/AmenityService.cs`).
+- Moved supporting logic into `Helpers/` and `Base/` folders.
+- DI now closely follows the architecture.
 
 ---
-
-Created: 26-Jan-2026
-Version: 1.0

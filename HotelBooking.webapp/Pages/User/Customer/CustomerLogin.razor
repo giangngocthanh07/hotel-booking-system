@@ -1,7 +1,10 @@
 @page "/customer-login"
 
 @using HotelBooking.Client
-@using System.ComponentModel.DataAnnotations
+
+@using HotelBooking.webapp.ViewModels.Form
+@using HotelBooking.webapp.ViewModels.Response
+
 @inject NavigationManager _nav
 @inject AuthenticationStateProvider AuthStateProvider
 
@@ -23,8 +26,8 @@
                             <div class="custom-alert-error" role="alert">
                                 <div class="alert-icon">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                         stroke-linejoin="round">
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
                                         <circle cx="12" cy="12" r="10"></circle>
                                         <line x1="12" y1="8" x2="12" y2="12"></line>
                                         <line x1="12" y1="16" x2="12.01" y2="16"></line>
@@ -36,8 +39,8 @@
                                 </div>
                                 <button type="button" class="alert-close" @onclick="() => errorMessage = null">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                         stroke-linejoin="round">
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
                                         <line x1="18" y1="6" x2="6" y2="18"></line>
                                         <line x1="6" y1="6" x2="18" y2="18"></line>
                                     </svg>
@@ -51,21 +54,21 @@
                             <div class="mb-3">
                                 <label for="inputUsernameEmail" class="form-label">Username or Email:</label>
                                 <InputText @bind-Value="userLogin.UsernameOrEmail" class="form-control"
-                                           id="inputUsernameEmail" placeholder="name@example.com" />
+                                    id="inputUsernameEmail" placeholder="name@example.com" />
                                 <ValidationMessage For="@(() => userLogin.UsernameOrEmail)" class="text-danger" />
                             </div>
 
                             <div class="mb-3">
                                 <label for="inputPassword" class="form-label">Password</label>
                                 <InputText type="password" @bind-Value="userLogin.Password" class="form-control"
-                                           id="inputPassword" placeholder="••••••••" />
+                                    id="inputPassword" placeholder="••••••••" />
                                 <ValidationMessage For="@(() => userLogin.Password)" class="text-danger" />
                             </div>
 
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <div class="form-check">
                                     <InputCheckbox class="form-check-input" @bind-Value="rememberMe"
-                                                   id="rememberCheck" />
+                                        id="rememberCheck" />
                                     <label class="form-check-label" for="rememberCheck">
                                         Remember me
                                     </label>
@@ -79,146 +82,146 @@
 
                             <div class="text-center">
                                 <small class="text-muted">Don't have an account? <a href="/customer-register"
-                                                                                        class="register-link">Create an account</a></small>
-                                </div>
-                            </EditForm>
-                        </div>
+                                        class="register-link">Create an account</a></small>
+                            </div>
+                        </EditForm>
                     </div>
                 </div>
+            </div>
 
-                <div class="text-center mt-3 small text-muted">
-                    © @DateTime.Now.Year Your Company
-                </div>
+            <div class="text-center mt-3 small text-muted">
+                © @DateTime.Now.Year Your Company
             </div>
         </div>
     </div>
+</div>
 
-    <style>
-        /* CSS maintained as provided but ensured consistent styling */
-        .register-link {
-            color: #0d6efd;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
+<style>
+    /* CSS maintained as provided but ensured consistent styling */
+    .register-link {
+        color: #0d6efd;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .register-link:hover {
+        color: #0a58ca;
+        text-decoration: underline;
+        transform: translateX(2px);
+    }
+
+    .forget-password-link {
+        color: #6c757d;
+        text-decoration: none;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+
+    .forget-password-link:hover {
+        color: #495057;
+        text-decoration: underline;
+        transform: translateX(2px);
+    }
+
+    .custom-alert-error {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 16px;
+        margin-bottom: 20px;
+        background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
+        border: 1px solid #ffcdd2;
+        border-left: 4px solid #dc3545;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.15);
+        animation: slideDown 0.4s ease-out, shake 0.5s ease-in-out;
+    }
+
+    .alert-icon {
+        flex-shrink: 0;
+        width: 24px;
+        height: 24px;
+        color: #dc3545;
+        margin-top: 2px;
+    }
+
+    .alert-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .alert-title {
+        font-weight: 600;
+        font-size: 15px;
+        color: #c62828;
+        margin-bottom: 4px;
+    }
+
+    .alert-message {
+        font-size: 14px;
+        color: #d32f2f;
+        line-height: 1.5;
+        word-break: break-word;
+    }
+
+    .alert-close {
+        flex-shrink: 0;
+        width: 28px;
+        height: 28px;
+        padding: 4px;
+        background: transparent;
+        border: none;
+        border-radius: 6px;
+        color: #d32f2f;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .alert-close:hover {
+        background: rgba(220, 53, 69, 0.1);
+        transform: rotate(90deg);
+    }
+
+    /* Keyframes unchanged */
+    @@keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
         }
 
-        .register-link:hover {
-            color: #0a58ca;
-            text-decoration: underline;
-            transform: translateX(2px);
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes shake {
+
+        0%,
+        100% {
+            transform: translateX(0);
         }
 
-        .forget-password-link {
-            color: #6c757d;
-            text-decoration: none;
-            font-size: 14px;
-            transition: all 0.3s ease;
+        10%,
+        30%,
+        50%,
+        70%,
+        90% {
+            transform: translateX(-5px);
         }
 
-        .forget-password-link:hover {
-            color: #495057;
-            text-decoration: underline;
-            transform: translateX(2px);
+        20%,
+        40%,
+        60%,
+        80% {
+            transform: translateX(5px);
         }
-
-        .custom-alert-error {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            padding: 16px;
-            margin-bottom: 20px;
-            background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
-            border: 1px solid #ffcdd2;
-            border-left: 4px solid #dc3545;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.15);
-            animation: slideDown 0.4s ease-out, shake 0.5s ease-in-out;
-        }
-
-        .alert-icon {
-            flex-shrink: 0;
-            width: 24px;
-            height: 24px;
-            color: #dc3545;
-            margin-top: 2px;
-        }
-
-        .alert-content {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .alert-title {
-            font-weight: 600;
-            font-size: 15px;
-            color: #c62828;
-            margin-bottom: 4px;
-        }
-
-        .alert-message {
-            font-size: 14px;
-            color: #d32f2f;
-            line-height: 1.5;
-            word-break: break-word;
-        }
-
-        .alert-close {
-            flex-shrink: 0;
-            width: 28px;
-            height: 28px;
-            padding: 4px;
-            background: transparent;
-            border: none;
-            border-radius: 6px;
-            color: #d32f2f;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .alert-close:hover {
-            background: rgba(220, 53, 69, 0.1);
-            transform: rotate(90deg);
-        }
-
-        /* Keyframes unchanged */
-        @@keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @@keyframes shake {
-
-            0%,
-            100% {
-                transform: translateX(0);
-            }
-
-            10%,
-            30%,
-            50%,
-            70%,
-            90% {
-                transform: translateX(-5px);
-            }
-
-            20%,
-            40%,
-            60%,
-            80% {
-                transform: translateX(5px);
-            }
-        }
-    </style>
+    }
+</style>
 
 @code {
     private UserLoginVM userLogin = new UserLoginVM();
@@ -253,7 +256,7 @@
             }
 
             var response = await _httpClient.PostAsJsonAsync("v1/authentication/login", userLogin);
-            var loginResponse = await response.Content.ReadFromJsonAsync<ApiResponse<LoginResponseDTO>>();
+            var loginResponse = await response.Content.ReadFromJsonAsync<ApiResponse<LoginResponseVM>>();
 
             if (response.IsSuccessStatusCode)
             {
@@ -295,23 +298,5 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    private class UserLoginVM
-    {
-        [Required(ErrorMessage = "Please enter your username or email")]
-        [MinLength(3, ErrorMessage = "Username/Email must be at least 3 characters")]
-        public string UsernameOrEmail { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Please enter your password")]
-        [MinLength(6, ErrorMessage = "Password must be at least 6 characters")]
-        public string Password { get; set; } = string.Empty;
-    }
-
-    private class LoginResponseDTO
-    {
-        public string AccessToken { get; set; } = string.Empty;
-        public string FullName { get; set; } = string.Empty;
-        public string? AvatarUrl { get; set; }
-        public string Message { get; set; } = string.Empty;
-        public List<string> Roles { get; set; } = new();
-    }
 }
