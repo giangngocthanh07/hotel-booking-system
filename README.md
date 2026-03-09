@@ -9,25 +9,6 @@
 ## 🏨 SmartHotel – Online Travel Agency (OTA) Platform
 A comprehensive Online Travel Agency (OTA) ecosystem built with .NET 9 and Blazor Server. This project serves as a centralized marketplace connecting Hotel Owners with Travelers, featuring a robust management system and modern software architecture.
 
-## 🏗 Architecture & Design Principles
-The project is built following Clean Architecture patterns to ensure scalability, maintainability, and testability:
-
-Domain: Enterprise logic, entities, and specifications.
-
-Application: Use cases, DTOs, and business logic.
-
-Infrastructure: Data persistence (EF Core), external services, and identity management.
-
-Web API / Blazor UI: Presentation layers for seamless user interaction.
-
-Core Principles applied:
-
-SOLID Principles: High cohesion and loose coupling.
-
-Design Patterns: Factory Pattern, Facade Pattern, and Template Method.
-
-Repository & Unit of Work: For optimized and consistent data access.
-
 ## ✨ Features
 
 ### 👤 Customer Features
