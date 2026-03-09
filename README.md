@@ -6,10 +6,10 @@
 [![Swagger](https://img.shields.io/badge/Swagger-API_Docs-85EA2D?style=flat&logo=swagger&logoColor=black)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-🏨 SmartHotel – Online Travel Agency (OTA) Platform
+## 🏨 SmartHotel – Online Travel Agency (OTA) Platform
 A comprehensive Online Travel Agency (OTA) ecosystem built with .NET 9 and Blazor Server. This project serves as a centralized marketplace connecting Hotel Owners with Travelers, featuring a robust management system and modern software architecture.
 
-🏗 Architecture & Design Principles
+## 🏗 Architecture & Design Principles
 The project is built following Clean Architecture patterns to ensure scalability, maintainability, and testability:
 
 Domain: Enterprise logic, entities, and specifications.
