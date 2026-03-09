@@ -23,10 +23,10 @@
 }
 else
 {
-    <MasterDetailLayout TItem="BedTypeVM" TModel="BaseCreateOrUpdateAdminVM" Items="_items" Model="@GetModel()"
-                        PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
-                        OnPageChanged="HandlePageChanged"                        OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
-                        OnDelete="HandleDelete" OnCancel="ResetForm">
+    <MasterDetailLayout @ref="_layoutRef" TItem="BedTypeVM" TModel="BaseCreateOrUpdateAdminVM" Items="_items"
+    Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
+    OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
+    OnDelete="HandleDelete" OnCancel="ResetForm">
 
         @* --- A. SIDEBAR CONFIGURATION (RENDER FRAGMENT) --- *@
         <SidebarTopContent>
@@ -48,22 +48,22 @@ else
                     {
                         if (_isUpdate)
                         {
-                            <ValidationMessage For="() => _updateModel.DefaultCapacity" class="val-msg" />
+                        <ValidationMessage For="() => _updateModel.DefaultCapacity" class="val-msg" />
                         }
                         else
                         {
-                            <ValidationMessage For="() => _createModel.DefaultCapacity" class="val-msg" />
+                        <ValidationMessage For="() => _createModel.DefaultCapacity" class="val-msg" />
                         }
                     }
                     else if (prop == "Width")
                     {
                         if (_isUpdate)
                         {
-                            <ValidationMessage For="() => _updateModel.MinWidth" class="val-msg" />
+                        <ValidationMessage For="() => _updateModel.MinWidth" class="val-msg" />
                         }
                         else
                         {
-                            <ValidationMessage For="() => _createModel.MinWidth" class="val-msg" />
+                        <ValidationMessage For="() => _createModel.MinWidth" class="val-msg" />
                         }
                     }
                 };
@@ -75,7 +75,7 @@ else
                 <div class="input-group shadow-sm">
                     <span class="input-group-text bg-white"><i class="fa-solid fa-user-group text-muted"></i></span>
                     <input type="number" class="form-control fw-bold" min="1" value="@currentCapacity"
-                           @oninput="@(e => HandleNumericInput(e.Value?.ToString(), "Capacity"))" />
+                    @oninput="@(e => HandleNumericInput(e.Value?.ToString(), "Capacity"))" />
                 </div>
                 @RenderVal("Capacity")
                 <div class="form-text extra-small mt-1">Default maximum occupancy for this bed type.</div>
@@ -93,8 +93,8 @@ else
 
                 <div class="form-check form-switch custom-switch mb-3">
                     <input type="checkbox" class="form-check-input" role="switch" id="swVarying" checked="@isVarying"
-                           @onchange="@(e => HandleToggleVarying((bool)(e.Value ?? false)))"
-                           style="cursor: pointer; width: 2.5rem; height: 1.25rem;" />
+                    @onchange="@(e => HandleToggleVarying((bool)(e.Value ?? false)))"
+                    style="cursor: pointer; width: 2.5rem; height: 1.25rem;" />
 
                     <label class="form-check-label ms-2 small fw-bold" for="swVarying">
                         @(isVarying ? "Varying Dimensions" : "Fixed Dimensions")
@@ -105,27 +105,27 @@ else
                 {
                     <div class="p-1 rounded bg-primary bg-opacity-10 border border-primary border-opacity-25 shadow-sm">
                         <label class="fw-bold text-muted text-uppercase mb-1"
-                               style="font-size: 0.62rem; letter-spacing: 0.5px;">
+                    style="font-size: 0.62rem; letter-spacing: 0.5px;">
                             WIDTH (INCHES)
                         </label>
                         <div class="d-flex align-items-center gap-2">
                             @if (_isUpdate)
                             {
                                 <InputNumber class="form-control form-control-sm fw-bold text-primary shadow-sm"
-                                             style="width: 85px;" @bind-Value="_updateModel.MinWidth" />
+                        style="width: 85px;" @bind-Value="_updateModel.MinWidth" />
                                 <span class="text-muted small">-</span>
                                 <InputNumber class="form-control form-control-sm fw-bold text-primary shadow-sm"
-                                             style="width: 85px;" @bind-Value="_updateModel.MaxWidth" />
+                        style="width: 85px;" @bind-Value="_updateModel.MaxWidth" />
                             }
                             else
                             {
                                 <input type="number" class="form-control form-control-sm fw-bold text-primary text-center"
-                                       style="width: 85px;" value="@currentMinWidth"
-                                       @oninput="@(e => HandleNumericInput(e.Value?.ToString(), "Min"))" />
+                        style="width: 85px;" value="@currentMinWidth"
+                        @oninput="@(e => HandleNumericInput(e.Value?.ToString(), "Min"))" />
                                 <span class="text-muted small">-</span>
                                 <input type="number" class="form-control form-control-sm fw-bold text-primary text-center"
-                                       style="width: 85px;" value="@currentMaxWidth"
-                                       @oninput="@(e => HandleNumericInput(e.Value?.ToString(), "Max"))" />
+                        style="width: 85px;" value="@currentMaxWidth"
+                        @oninput="@(e => HandleNumericInput(e.Value?.ToString(), "Max"))" />
                             }
                         </div>
                         @RenderVal("Width")
@@ -170,7 +170,7 @@ else
 
             @* Truncate description if too long *@
             <td class="text-center align-middle text-muted small text-truncate" style="max-width: 250px;"
-                title="@row.Description">
+            title="@row.Description">
                 @if (string.IsNullOrWhiteSpace(row.Description))
                 {
                     <span class="text-muted opacity-50">---</span>
@@ -253,7 +253,7 @@ else
     // --- 1. LOAD DATA ---
     protected override async Task LoadDataAsync()
     {
-        _items = null!;
+        _items = null;
         StateHasChanged();
 
         try

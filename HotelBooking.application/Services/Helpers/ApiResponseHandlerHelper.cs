@@ -45,10 +45,9 @@ namespace HotelBooking.application.Helpers
         // ==========================================
         // 3. SERVER ERROR GROUP (System errors - 5xx)
         // ==========================================
-        [Obsolete]
         public static ApiResponse<T> ServerError<T>()
         {
-            return CreateResponse<T>(StatusCodeResponse.Error, MessageResponse.ERROR_IN_SERVER, default!);
+            return CreateResponse<T>(StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER, default!);
         }
 
         // ==========================================

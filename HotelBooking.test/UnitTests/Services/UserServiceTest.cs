@@ -91,7 +91,7 @@ namespace HotelBooking.Tests.Services
 
             // 3. ASSERT (Using Fluent Assertions)
             result.StatusCode.Should().Be(StatusCodeResponse.Success);
-            result.Message.Should().Be(MessageRegister.REGISTER_SUCCESS);
+            result.Message.Should().Be(MessageResponse.UserManagement.Register.SUCCESS);
             result.Content.Should().NotBeNull();
             result.Content!.IsSuccess.Should().BeTrue();
 
@@ -126,7 +126,7 @@ namespace HotelBooking.Tests.Services
 
             // 3. ASSERT
             result.Content.Should().BeNull();
-            result.Message.Should().Be(MessageRegister.USERNAME_EXIST);
+            result.Message.Should().Be(MessageResponse.UserManagement.Register.USERNAME_EXIST);
             result.StatusCode.Should().Be(StatusCodeResponse.Conflict);
 
             // Ensure AddAsync is NEVER called
@@ -157,7 +157,7 @@ namespace HotelBooking.Tests.Services
 
             // 3. ASSERT
             result.Content.Should().BeNull();
-            result.Message.Should().Be(MessageRegister.EMAIL_EXIST);
+            result.Message.Should().Be(MessageResponse.UserManagement.Register.EMAIL_EXIST);
             result.StatusCode.Should().Be(StatusCodeResponse.Conflict);
 
             // Ensure AddAsync is NEVER called
@@ -189,7 +189,7 @@ namespace HotelBooking.Tests.Services
 
             // 3. ASSERT
             result.Content.Should().BeNull();
-            result.Message.Should().Be(MessageResponse.ERROR_IN_SERVER);
+            result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
             result.StatusCode.Should().Be(StatusCodeResponse.Error);
         }
 
@@ -213,7 +213,7 @@ namespace HotelBooking.Tests.Services
 
             // 3. ASSERT
             result.Content.Should().BeNull();
-            result.Message.Should().Be(MessageRegister.INVALID_EMAIL);
+            result.Message.Should().Be(MessageResponse.UserManagement.Register.INVALID_EMAIL);
             result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
 
             // Ensure NO database calls were made due to early validation failure
