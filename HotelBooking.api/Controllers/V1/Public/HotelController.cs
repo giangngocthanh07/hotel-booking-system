@@ -68,16 +68,22 @@ namespace HotelBooking.api.Controllers.V1.Public
                 Address = newHotelRequest.Address,
                 Description = newHotelRequest.Description,
                 CityId = newHotelRequest.CityId,
-                AmenityIds = newHotelRequest.AmenityIds,
-                PolicyIds = newHotelRequest.PolicyIds,
-                CoverFile = await _fileHelper.ConvertToUploadFileVM(newHotelRequest.CoverFile),
-                MainFile = await _fileHelper.ConvertToUploadFileVM(newHotelRequest.MainFile),
+                AmenityIds = newHotelRequest.AmenityIds ?? new List<int>(),
+                PolicyIds = newHotelRequest.PolicyIds ?? new List<int>(),
+                CoverFile = newHotelRequest.CoverFile != null ? await _fileHelper.ConvertToUploadFileVM(newHotelRequest.CoverFile) : null,
+                MainFile = newHotelRequest.MainFile != null ? await _fileHelper.ConvertToUploadFileVM(newHotelRequest.MainFile) : null,
                 SubFiles = new List<UploadFileDTO>()
             };
 
-            foreach (var subFile in newHotelRequest.SubFiles)
+            if (newHotelRequest.SubFiles != null)
             {
-                newHotelDTO.SubFiles!.Add(await _fileHelper.ConvertToUploadFileVM(subFile));
+                foreach (var subFile in newHotelRequest.SubFiles)
+                {
+                    if (subFile != null)
+                    {
+                        newHotelDTO.SubFiles.Add(await _fileHelper.ConvertToUploadFileVM(subFile));
+                    }
+                }
             }
 
             var result = await _hotelService.PostHotelAsync(newHotelDTO, ownerId);

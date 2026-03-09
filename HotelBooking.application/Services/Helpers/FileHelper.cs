@@ -9,7 +9,7 @@ public class FileHelper : IFileHelper
     public async Task<UploadFileDTO> ConvertToUploadFileVM(IFormFile file)
     {
         if (file == null || file.Length == 0)
-            return null;
+            return new UploadFileDTO();
 
         var ms = new MemoryStream();
         try

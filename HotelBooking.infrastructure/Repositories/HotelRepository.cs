@@ -8,10 +8,8 @@ public interface IHotelRepository : IRepository<Hotel>
 }
 public class HotelRepository : Repository<Hotel>, IHotelRepository
 {
-    private readonly HotelBookingDBContext _context;
     public HotelRepository(HotelBookingDBContext context) : base(context)
     {
-        _context = context;
     }
 
     public async Task<List<SearchHotelResult>> GetSearchHotelsAsync(string cityName, DateTime? checkIn, DateTime? checkOut, int? adults, int? children, int? rooms)

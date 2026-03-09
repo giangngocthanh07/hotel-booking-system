@@ -76,7 +76,7 @@
 
     private HttpClient? _httpClient;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         _httpClient = _httpClientFactory.CreateClient("HotelBookingAPI");
     }

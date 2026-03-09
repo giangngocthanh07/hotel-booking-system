@@ -1,49 +1,52 @@
 @using HotelBooking.webapp.ViewModels.Hotel
 @using MudBlazor
 
-<MudPaper Class="d-flex p-3 mb-3 rounded shadow-sm" Style="align-items: stretch;">
+@if (Hotel != null)
+{
+    <MudPaper Class="d-flex p-3 mb-3 rounded shadow-sm" Style="align-items: stretch;">
 
-    <MudImage Src="@Hotel.CoverImageUrl" Alt="@Hotel.Name" Width="200" Height="150" Class="rounded me-3" />
+        <MudImage Src="@Hotel.CoverImageUrl" Alt="@Hotel.Name" Width="200" Height="150" Class="rounded me-3" />
 
-    <div class="flex-grow-1 d-flex flex-column justify-content-between">
-        <div>
-            <MudText Typo="Typo.h6" Class="fw-bold">@Hotel.Name</MudText>
-            <MudText Typo="Typo.body2" Color="Color.Secondary">@Hotel.Address</MudText>
-            <MudText Typo="Typo.body2">@Hotel.CityName, @Hotel.CountryName</MudText>
+        <div class="flex-grow-1 d-flex flex-column justify-content-between">
+            <div>
+                <MudText Typo="Typo.h6" Class="fw-bold">@Hotel.Name</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">@Hotel.Address</MudText>
+                <MudText Typo="Typo.body2">@Hotel.CityName, @Hotel.CountryName</MudText>
+            </div>
+
+            <div class="mt-2">
+                <MudText Typo="Typo.body2">
+                    <b>Max Capacity:</b> @Hotel.MaxAdultCapacity Adults · @Hotel.MaxChildCapacity Children
+                </MudText>
+                <MudText Typo="Typo.body2">
+                    <b>Available Rooms:</b> @Hotel.AvailableRooms
+                </MudText>
+            </div>
         </div>
 
-        <div class="mt-2">
-            <MudText Typo="Typo.body2">
-                <b>Max Capacity:</b> @Hotel.MaxAdultCapacity Adults · @Hotel.MaxChildCapacity Children
-            </MudText>
-            <MudText Typo="Typo.body2">
-                <b>Available Rooms:</b> @Hotel.AvailableRooms
-            </MudText>
-        </div>
-    </div>
+        <div class="d-flex flex-column align-items-end justify-content-between ms-3">
+            <div class="d-flex align-items-center">
+                <MudText Typo="Typo.subtitle1" Color="Color.Success" Class="fw-bold me-2">
+                    @(Hotel.AvgRating >= 8 ? "Excellent" : Hotel.AvgRating >= 6 ? "Good" : "Average")
+                </MudText>
+                <MudPaper Class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center"
+                          Width="40px" Height="40px">
+                    <span>@Hotel.AvgRating.ToString("0.0")</span>
+                </MudPaper>
+            </div>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">@Hotel.ReviewCount reviews</MudText>
 
-    <div class="d-flex flex-column align-items-end justify-content-between ms-3">
-        <div class="d-flex align-items-center">
-            <MudText Typo="Typo.subtitle1" Color="Color.Success" Class="fw-bold me-2">
-                @(Hotel.AvgRating >= 8 ? "Excellent" : Hotel.AvgRating >= 6 ? "Good" : "Average")
-            </MudText>
-            <MudPaper Class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center"
-                      Width="40px" Height="40px">
-                <span>@Hotel.AvgRating.ToString("0.0")</span>
-            </MudPaper>
+            <div class="text-end mt-2">
+                <MudText Typo="Typo.h6" Class="fw-bold text-dark">
+                    @Hotel.PriceFrom.ToString("C0")
+                </MudText>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-2">
+                    View Details
+                </MudButton>
+            </div>
         </div>
-        <MudText Typo="Typo.body2" Color="Color.Secondary">@Hotel.ReviewCount reviews</MudText>
-
-        <div class="text-end mt-2">
-            <MudText Typo="Typo.h6" Class="fw-bold text-dark">
-                @Hotel.PriceFrom.ToString("C0")
-            </MudText>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-2">
-                View Details
-            </MudButton>
-        </div>
-    </div>
-</MudPaper>
+    </MudPaper>
+}
 
 @code {
     [Parameter] public SearchHotelResultDTO? Hotel { get; set; }

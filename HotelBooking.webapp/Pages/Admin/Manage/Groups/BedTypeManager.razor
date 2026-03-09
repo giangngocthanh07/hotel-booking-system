@@ -211,7 +211,7 @@ else
     private MasterDetailLayout<BedTypeVM, BaseCreateOrUpdateAdminVM>? _layoutRef;
 
     // --- NUMERIC INPUT HANDLING (REACTIVE) ---
-    private async Task HandleNumericInput(string? val, string field)
+    private void HandleNumericInput(string? val, string field)
     {
         double.TryParse(val, out var num);
 
@@ -232,7 +232,7 @@ else
         _layoutRef?.TriggerValidate();
     }
 
-    private async Task HandleToggleVarying(bool val)
+    private void HandleToggleVarying(bool val)
     {
         if (_isUpdate)
         {

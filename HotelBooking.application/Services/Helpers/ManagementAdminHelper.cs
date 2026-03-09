@@ -124,21 +124,21 @@ public static class ManagementAdminHelper
                 {
                     // Case C: No types exist in DB -> return empty list (valid state)
                     return ResponseFactory.Success(
-                        new PagedManageResult<TDto>(new List<TDto>(), 0, paging.PageIndex.Value, paging.PageSize.Value, null),
+                        new PagedManageResult<TDto>(new List<TDto>(), 0, paging.PageIndex ?? 1, paging.PageSize ?? 10, null),
                         MessageResponse.Common.EMPTY_LIST
                     );
                 }
             }
 
             // 3. FETCH PAGED DATA (call repository)
-            var (entities, totalCount) = await getPagedItemsFunc(currentTypeId, paging.PageIndex.Value, paging.PageSize.Value);
+            var (entities, totalCount) = await getPagedItemsFunc(currentTypeId, paging.PageIndex ?? 1, paging.PageSize ?? 10);
 
             // 4. MAP TO DTO
             var dtos = entities.Select(e => mapToDtoFunc(e)).ToList();
 
             // 5. WRAP RESULT (using PagedManageResult)
             // Pass currentTypeId so FE knows which menu item to highlight
-            var result = new PagedManageResult<TDto>(dtos, totalCount, paging.PageIndex.Value, paging.PageSize.Value, currentTypeId);
+            var result = new PagedManageResult<TDto>(dtos, totalCount, paging.PageIndex ?? 1, paging.PageSize ?? 10, currentTypeId);
 
             return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
         }

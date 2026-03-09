@@ -16,7 +16,7 @@ namespace HotelBooking.webapp.Services
         private readonly ILocalStorageService _localStorage;
         private HttpClient _httpClient;
 
-        public event Action OnChange;
+        public event Action? OnChange;
 
         public HotelFormState(IHttpClientFactory httpClientFactory, ILocalStorageService localStorage)
         {

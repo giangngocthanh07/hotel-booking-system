@@ -49,7 +49,7 @@ public class PhotoService : IPhotoService
 
         if (uploadResult.Error != null)
         {
-            return null;
+            return string.Empty;
         }
 
         return file.FileName;
@@ -76,7 +76,7 @@ public class PhotoService : IPhotoService
 
         if (uploadResult.Error != null)
         {
-            return null;
+            return string.Empty;
         }
 
         return uploadResult.SecureUrl.ToString();
@@ -103,7 +103,7 @@ public class PhotoService : IPhotoService
 
         if (uploadResult.Error != null)
         {
-            return null;
+            return string.Empty;
         }
 
         return uploadResult.SecureUrl.ToString();
@@ -130,7 +130,7 @@ public class PhotoService : IPhotoService
 
         if (uploadResult.Error != null)
         {
-            return null;
+            return string.Empty;
         }
 
         return uploadResult.SecureUrl.ToString();

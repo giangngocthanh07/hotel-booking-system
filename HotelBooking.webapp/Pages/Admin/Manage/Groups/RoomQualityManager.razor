@@ -165,7 +165,7 @@ else
     private MasterDetailLayout<RoomQualityVM, BaseCreateOrUpdateAdminVM>? _layoutRef;
 
     // --- REACTIVE INPUT HANDLING ---
-    private async Task HandleSortInput(string? val)
+    private void HandleSortInput(string? val)
     {
         int.TryParse(val, out var sort);
 

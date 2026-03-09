@@ -50,9 +50,10 @@ public class Repository<T> : IRepository<T> where T : class     // Dependency In
         await _dbSet.AddAsync(entity);
     }
 
-    public async Task UpdateAsync(T entity)
+    public Task UpdateAsync(T entity)
     {
         _dbSet.Update(entity);
+        return Task.CompletedTask;
     }
 
     public async Task DeleteAsync(int id)

@@ -19,7 +19,8 @@ public class EnumSchemaFilter : ISchemaFilter
             for (int i = 0; i < names.Length; i++)
             {
                 // Get integer value
-                var intValue = (int)values.GetValue(i);
+                var rawValue = values.GetValue(i);
+                var intValue = rawValue != null ? (int)rawValue : 0;
                 var name = names[i];
 
                 fullDescription.Add($"{intValue} = {name}");

@@ -65,7 +65,7 @@
 @code {
     public MudForm? _form;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         FormState.OnChange += StateHasChanged;
     }
@@ -146,8 +146,8 @@
         else
         {
             // If no Sub photos remain, just clear Main
-            FormState.HotelImages.MainFile = null;
-            FormState.HotelImages.MainImagePreviewUrl = null;
+            FormState.HotelImages.MainFile = new();
+            FormState.HotelImages.MainImagePreviewUrl = string.Empty;
         }
 
         StateHasChanged();
@@ -169,9 +169,9 @@
 
     public class HotelImagesVM
     {
-        public UploadFileVM MainFile { get; set; }
+        public UploadFileVM MainFile { get; set; } = new();
         public List<UploadFileVM> SubFiles { get; set; } = new();
-        public string MainImagePreviewUrl { get; set; }
+        public string MainImagePreviewUrl { get; set; } = string.Empty;
         public List<string> SubImagesPreviewUrl { get; set; } = new();
     }
 }

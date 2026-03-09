@@ -288,11 +288,11 @@
   private class Hotel
   {
     public int Id { get; set; }
-    public string Name { get; set; }
-    public string Location { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Location { get; set; } = string.Empty;
     public double Score { get; set; }
-    public string ReviewText { get; set; }
-    public string Price { get; set; }
+    public string ReviewText { get; set; } = string.Empty;
+    public string Price { get; set; } = string.Empty;
     public List<string> Images { get; set; } = new();
     public bool IsWishlist { get; set; }
   }

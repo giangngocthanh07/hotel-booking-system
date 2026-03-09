@@ -415,7 +415,7 @@ else
         _layoutRef?.TriggerValidate();
     }
 
-    private async Task HandlePriceInput(string? val, string field)
+    private void HandlePriceInput(string? val, string field)
     {
         var clean = new string((val ?? "").Where(char.IsDigit).ToArray());
         decimal.TryParse(clean, out var amount);

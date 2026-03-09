@@ -68,6 +68,11 @@ namespace HotelBooking.application.Services.Domains.UserManagement
 
                 var userWithRoles = await _userRepository.GetUserWithRoles(u => u.UserName == user.UserName || u.Email == user.Email);
 
+                if (userWithRoles == null)
+                {
+                    return ResponseFactory.Failure<UserDetailDTO>(StatusCodeResponse.NotFound, MessageResponse.UserManagement.User.NOT_FOUND);
+                }
+
                 var userDetailDTO = new UserDetailDTO
                 {
                     Id = userWithRoles.Id,

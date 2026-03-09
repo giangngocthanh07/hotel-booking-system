@@ -4,18 +4,18 @@ using Microsoft.EntityFrameworkCore;
 
 public interface IUserRepository : IRepository<User>
 {
-    Task<User> GetUserWithRoles(Expression<Func<User, bool>> predicate);
+    Task<User?> GetUserWithRoles(Expression<Func<User, bool>> predicate);
 
     // DEMONSTRATES 3 DIFFERENT DATA FILTERING APPROACHES
-    Task<User> GetUserWithRoles_SQL_Filter(Expression<Func<User, bool>> predicate);
-    Task<User> GetUserWithRoles_RAM_Explicit(Expression<Func<User, bool>> predicate);
-    User GetUserWithRoles_RAM_Trap(Func<User, bool> predicateFunc);
+    Task<User?> GetUserWithRoles_SQL_Filter(Expression<Func<User, bool>> predicate);
+    Task<User?> GetUserWithRoles_RAM_Explicit(Expression<Func<User, bool>> predicate);
+    User? GetUserWithRoles_RAM_Trap(Func<User, bool> predicateFunc);
 }
 public class UserRepository : Repository<User>, IUserRepository
 {
     public UserRepository(HotelBookingDBContext context) : base(context) { }
 
-    public async Task<User> GetUserWithRoles(Expression<Func<User, bool>> predicate)
+    public async Task<User?> GetUserWithRoles(Expression<Func<User, bool>> predicate)
     {
         return await _dbSet
             .Include(u => u.UserRoles)
@@ -31,7 +31,7 @@ public class UserRepository : Repository<User>, IUserRepository
     /// </summary>
     /// <param name="predicate"></param>
     /// <returns></returns>
-    public async Task<User> GetUserWithRoles_SQL_Filter(Expression<Func<User, bool>> predicate)
+    public async Task<User?> GetUserWithRoles_SQL_Filter(Expression<Func<User, bool>> predicate)
     {
         // --- EXECUTION FLOW ---
         // 1. _dbSet: Starts an IQueryable (not yet executed)
@@ -58,7 +58,7 @@ public class UserRepository : Repository<User>, IUserRepository
     /// <param name="predicate"></param>
     /// <returns></returns>
 
-    public async Task<User> GetUserWithRoles_RAM_Explicit(Expression<Func<User, bool>> predicate)
+    public async Task<User?> GetUserWithRoles_RAM_Explicit(Expression<Func<User, bool>> predicate)
     {
         // --- EXECUTION FLOW ---
         // 1. .ToListAsync(): FIRES THE QUERY HERE!
@@ -86,7 +86,7 @@ public class UserRepository : Repository<User>, IUserRepository
     /// </summary>
     /// <param name="predicateFunc"></param>
     /// <returns></returns>
-    public User GetUserWithRoles_RAM_Trap(Func<User, bool> predicateFunc) // Note: Parameter is Func, not Expression
+    public User? GetUserWithRoles_RAM_Trap(Func<User, bool> predicateFunc) // Note: Parameter is Func, not Expression
     {
         // --- EXECUTION FLOW ---
         // 1. .AsEnumerable(): Switches the role from "Director" (IQueryable) to "Warehouse worker" (IEnumerable)

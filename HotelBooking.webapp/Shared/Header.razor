@@ -111,14 +111,14 @@
         AuthStateProvider.AuthenticationStateChanged += async (task) =>
         {
             var authState = await task;
-            await UpdateUserInfo(authState);
+            UpdateUserInfo(authState);
             StateHasChanged();
         };
 
-        await UpdateUserInfo(await AuthStateProvider.GetAuthenticationStateAsync());
+        UpdateUserInfo(await AuthStateProvider.GetAuthenticationStateAsync());
     }
 
-    private async Task UpdateUserInfo(AuthenticationState authState)
+    private void UpdateUserInfo(AuthenticationState authState)
     {
         var user = authState.User;
         isAuthenticated = user.Identity?.IsAuthenticated ?? false;

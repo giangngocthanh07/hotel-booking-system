@@ -24,14 +24,14 @@ public class JwtAuthService
     public string GenerateToken(User userAfterVerifyPass)
     {
         // Secret key used to sign the token
-        var key = Encoding.ASCII.GetBytes(_key);
+        var key = Encoding.ASCII.GetBytes(_key ?? string.Empty);
         // Build the list of claims for the token
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, userAfterVerifyPass.Id.ToString()), // Default claim for userId
             new Claim(ClaimTypes.Name, userAfterVerifyPass.UserName),               // Default claim for username
             new Claim("Email", userAfterVerifyPass.Email),                           // Custom claim for email
-            new Claim("FullName", userAfterVerifyPass.FullName),                     // Custom claim for fullName
+            new Claim("FullName", userAfterVerifyPass.FullName ?? string.Empty),                     // Custom claim for fullName
             new Claim("Avatar", userAfterVerifyPass.AvatarUrl ?? string.Empty),      // Custom claim for avatar
             // new Claim(ClaimTypes.Role, userLogin.Role),                            // Default claim for Role
             new Claim(JwtRegisteredClaimNames.Sub, userAfterVerifyPass.UserName),   // Token subject

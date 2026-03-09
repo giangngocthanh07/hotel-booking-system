@@ -27,7 +27,7 @@
 @code {
     public MudForm? _form;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         FormState.OnChange += StateHasChanged;
     }
