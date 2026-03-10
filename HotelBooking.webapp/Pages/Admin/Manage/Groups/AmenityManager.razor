@@ -21,15 +21,15 @@
 {
     <div class="d-flex justify-content-center align-items-center p-5">
         <div class="spinner-border text-primary me-2"></div>
-        <span>Loading data...</span>
+        <span>@MessageResponse.Common.LOADING_DATA</span>
     </div>
 }
 else
 {
     <MasterDetailLayout @ref="_layoutRef" TItem="AmenityVM" TModel="BaseCreateOrUpdateAdminVM" Items="_items"
-                        Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
-                        OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
-                        OnDelete="HandleDelete" OnCancel="ResetForm">
+    Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
+    OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
+    OnDelete="HandleDelete" OnCancel="ResetForm">
 
         @* --- A. SIDEBAR CONFIGURATION (RENDER FRAGMENT) --- *@
         <SidebarTopContent>
@@ -43,9 +43,9 @@ else
             @* --- 1. ICON PREVIEW --- *@
             @* Displays a real-time icon preview based on the amenity name *@
             <div
-                class="d-flex align-items-center mb-3 p-2 border rounded bg-light shadow-sm animate__animated animate__fadeIn">
+            class="d-flex align-items-center mb-3 p-2 border rounded bg-light shadow-sm animate__animated animate__fadeIn">
                 <div class="rounded-circle bg-white d-flex align-items-center justify-content-center shadow-sm me-3"
-                     style="width: 45px; height: 45px;">
+                style="width: 45px; height: 45px;">
                     <i class="@GetAmenityIcon(m.Name) fs-4 text-success"></i>
                 </div>
                 <div>
@@ -79,7 +79,7 @@ else
             @* 2. Icon - Centered preview *@
             <td class="text-center">
                 <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center shadow-sm mx-auto"
-                     style="width: 32px; height: 32px;">
+                style="width: 32px; height: 32px;">
                     <i class="@GetAmenityIcon(row.Name) text-success"></i>
                 </div>
             </td>

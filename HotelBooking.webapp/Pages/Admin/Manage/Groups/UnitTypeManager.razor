@@ -18,15 +18,15 @@
 {
     <div class="d-flex justify-content-center align-items-center p-5">
         <div class="spinner-border text-primary me-2"></div>
-        <span>Loading data...</span>
+        <span>@MessageResponse.Common.LOADING_DATA</span>
     </div>
 }
 else
 {
     <MasterDetailLayout @ref="_layoutRef" TItem="UnitTypeVM" TModel="BaseCreateOrUpdateAdminVM" Items="_items"
-                        Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
-                        OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
-                        OnDelete="HandleDelete" OnCancel="ResetForm">
+    Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
+    OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
+    OnDelete="HandleDelete" OnCancel="ResetForm">
 
         @* --- A. SIDEBAR CONFIGURATION (RENDER FRAGMENT) --- *@
         <SidebarTopContent>
@@ -40,8 +40,8 @@ else
             @* 1. PROPERTY TYPE CONFIGURATION (IS ENTIRE PLACE) *@
             @{
                 bool isEntire = _isUpdate
-                ? (_updateModel.IsEntirePlace ?? false)
-                : (_createModel.IsEntirePlace ?? false);
+                    ? (_updateModel.IsEntirePlace ?? false)
+                    : (_createModel.IsEntirePlace ?? false);
             }
 
             <div class="card bg-white border mb-3 shadow-sm animate__animated animate__fadeIn">
@@ -54,88 +54,88 @@ else
                         <label class="form-label fw-bold text-dark mb-0">Is this an entire place rental?</label>
                         <div class="form-check form-switch custom-switch">
                             <input class="form-check-input" type="checkbox" role="switch" checked="@isEntire"
-                                   @onchange="@(e => HandleToggleEntire((bool)(e.Value ?? false)))"
-                                   style="cursor: pointer; width: 3rem; height: 1.5rem;">
-                            </div>
+                            @onchange="@(e => HandleToggleEntire((bool)(e.Value ?? false)))"
+                            style="cursor: pointer; width: 3rem; height: 1.5rem;">
                         </div>
+                    </div>
 
-                        @* --- VISUAL DESCRIPTION (BOOKING.COM STYLE) --- *@
-                        <div
-                            class="p-3 rounded border @(isEntire ? "bg-success bg-opacity-10 border-success" : "bg-light border-secondary")">
-                            <div class="d-flex align-items-start animate__animated animate__fadeIn">
-                                <div class="me-3">
-                                    <span
-                                        class="badge @(isEntire ? "bg-success" : "bg-secondary") rounded-circle p-2 shadow-sm">
-                                        <i class="fa-solid @(isEntire ? "fa-key" : "fa-bed") fs-5 text-white"></i>
-                                    </span>
-                                </div>
-                                <div>
-                                    <strong class="@(isEntire ? "text-success" : "text-dark")">
-                                        @(isEntire ? "Entire Place" : "Private Room / Hotel Room")
-                                    </strong>
-                                    <p class="mb-0 small text-muted mt-1 fst-italic">
-                                        @if (isEntire)
-                                        {
-                                            <span>Guests have the whole place to themselves (kitchen, private
-                                                entrance...).<br />Ideal for: Apartments, Villas, Studios.</span>
-                                            }
+                    @* --- VISUAL DESCRIPTION (BOOKING.COM STYLE) --- *@
+                    <div
+                    class="p-3 rounded border @(isEntire ? "bg-success bg-opacity-10 border-success" : "bg-light border-secondary")">
+                        <div class="d-flex align-items-start animate__animated animate__fadeIn">
+                            <div class="me-3">
+                                <span
+                                class="badge @(isEntire ? "bg-success" : "bg-secondary") rounded-circle p-2 shadow-sm">
+                                    <i class="fa-solid @(isEntire ? "fa-key" : "fa-bed") fs-5 text-white"></i>
+                                </span>
+                            </div>
+                            <div>
+                                <strong class="@(isEntire ? "text-success" : "text-dark")">
+                                    @(isEntire ? "Entire Place" : "Private Room / Hotel Room")
+                                </strong>
+                                <p class="mb-0 small text-muted mt-1 fst-italic">
+                                    @if (isEntire)
+                                    {
+                                        <span>Guests have the whole place to themselves (kitchen, private
+                                            entrance...).<br />Ideal for: Apartments, Villas, Studios.</span>
+                                    }
                                     else
-                                            {
-                                                <span>Guests rent a specific bedroom (typically with an ensuite bathroom).<br />Ideal
-                                                    for: Hotels, Resorts, Guesthouses.</span>
-                                                }
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
+                                    {
+                                        <span>Guests rent a specific bedroom (typically with an ensuite bathroom).<br />Ideal
+                                            for: Hotels, Resorts, Guesthouses.</span>
+                                    }
+                                </p>
                             </div>
                         </div>
-                    </FormContent>
+                    </div>
+                </div>
+            </div>
+        </FormContent>
 
-                    @* --- C. TABLE CONFIGURATION --- *@
-                    <TableHeader>
-                        <th class="text-center" style="width: 50px;">Id</th>
-                        <th class="text-center" style="width: 250px;">Accommodation Type</th>
-                        <th class="text-center">Description</th>
-                        <th class="text-center" style="width: 250px;">Rental Type</th>
-                    </TableHeader>
+        @* --- C. TABLE CONFIGURATION --- *@
+        <TableHeader>
+            <th class="text-center" style="width: 50px;">Id</th>
+            <th class="text-center" style="width: 250px;">Accommodation Type</th>
+            <th class="text-center">Description</th>
+            <th class="text-center" style="width: 250px;">Rental Type</th>
+        </TableHeader>
 
-                    <RowTemplate Context="row">
-                        <td class="text-center text-muted small">@row.Id</td>
-                        <td class="text-center align-middle text-primary fw-bold">@row.Name</td>
+        <RowTemplate Context="row">
+            <td class="text-center text-muted small">@row.Id</td>
+            <td class="text-center align-middle text-primary fw-bold">@row.Name</td>
 
-                        <td class="text-center align-middle text-muted small text-truncate" style="max-width: 250px;"
-                            title="@row.Description">
-                            @if (string.IsNullOrWhiteSpace(row.Description))
-                            {
-                                <span class="text-muted opacity-50">---</span>
-                            }
-                            else
-                            {
-                                <div class="text-muted small text-truncate mx-auto" style="max-width: 500px;" title="@row.Description">
-                                    @row.Description
-                                </div>
-                            }
-                        </td>
+            <td class="text-center align-middle text-muted small text-truncate" style="max-width: 250px;"
+            title="@row.Description">
+                @if (string.IsNullOrWhiteSpace(row.Description))
+                {
+                    <span class="text-muted opacity-50">---</span>
+                }
+                else
+                {
+                    <div class="text-muted small text-truncate mx-auto" style="max-width: 500px;" title="@row.Description">
+                        @row.Description
+                    </div>
+                }
+            </td>
 
-                        <td class="text-center">
-                            @if (row.IsEntirePlace == true)
-                            {
-                                <span class="badge rounded-pill bg-success px-3 py-2 shadow-sm">
-                                    <i class="fa-solid fa-key me-1"></i>Entire Place
-                                </span>
-                            }
-                            else
-                            {
-                                <span class="badge rounded-pill bg-light text-dark border px-3 py-2 shadow-sm">
-                                    <i class="fa-solid fa-bed me-1"></i>Private Room
-                                </span>
-                            }
-                        </td>
-                    </RowTemplate>
+            <td class="text-center">
+                @if (row.IsEntirePlace == true)
+                {
+                    <span class="badge rounded-pill bg-success px-3 py-2 shadow-sm">
+                        <i class="fa-solid fa-key me-1"></i>Entire Place
+                    </span>
+                }
+                else
+                {
+                    <span class="badge rounded-pill bg-light text-dark border px-3 py-2 shadow-sm">
+                        <i class="fa-solid fa-bed me-1"></i>Private Room
+                    </span>
+                }
+            </td>
+        </RowTemplate>
 
-                </MasterDetailLayout>
-            }
+    </MasterDetailLayout>
+}
 
 @code {
     // --- URL PARAMETERS ---

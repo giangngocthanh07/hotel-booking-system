@@ -119,6 +119,7 @@ public static class MessageResponse
             public const string MAX_PASSENGERS = "Maximum number of passengers must not exceed 45!";
             public const string MIN_LUGGAGE = "Minimum luggage count must be at least 1!";
             public const string MAX_LUGGAGE = "Maximum luggage count must not exceed 45!";
+            public const string INVALID_ONE_WAY_PRICE = "One-way price must be at least 0 (Free)";
             public const string INVALID_ROUND_TRIP_PRICE = "Round-trip price must be at least 0 (Free)";
             public const string DEFAULT_ADDITIONAL_FEE = "Night surcharge must be greater than";
             public const string MISSING_ADDITIONAL_FEE_START_TIME = "Please enter the night surcharge start time!";

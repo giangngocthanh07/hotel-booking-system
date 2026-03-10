@@ -25,7 +25,7 @@ public enum ServiceTypeEnum
 [JsonDerivedType(typeof(ServiceAirportTransferVM), typeDiscriminator: "airportTransfer")]
 public abstract class ServiceVM : BaseAdminVM
 {
-    [Range(1000, double.MaxValue, ErrorMessage = "Price must be at least 1,000!")]
+    [Range(0, double.MaxValue, ErrorMessage = "Price must not be negative!")]
     public decimal Price { get; set; }
 
     [Required(ErrorMessage = "Service Type is required!")]
@@ -54,13 +54,13 @@ public class ServiceAirportTransferVM : ServiceVM
     public bool HasRoundTrip { get; set; }
     public bool IsRoundTripPaid { get; set; }
 
-    [Range(1000, double.MaxValue, ErrorMessage = "Round-trip price must be at least 1,000!")]
+    [Range(0, double.MaxValue, ErrorMessage = "Round-trip price must not be negative!")]
     public decimal? RoundTripPrice { get; set; }
 
     // Surcharge/Night fee logic
     public bool HasNightFee { get; set; }
 
-    [Range(1000, double.MaxValue, ErrorMessage = "Night fee must be at least 1,000!")]
+    [Range(0, double.MaxValue, ErrorMessage = "Night fee must not be negative!")]
     public decimal? AdditionalFee { get; set; }
     public TimeOnly? AdditionalFeeStartTime { get; set; }
     public TimeOnly? AdditionalFeeEndTime { get; set; }
@@ -82,7 +82,7 @@ public class ServiceAirportTransferVM : ServiceVM
 [JsonDerivedType(typeof(ServiceAirportCreateVM), typeDiscriminator: "airport")]
 public abstract class ServiceCreateVM : BaseCreateOrUpdateAdminVM
 {
-    [Range(1000, double.MaxValue, ErrorMessage = "Price must be at least 1,000!")]
+    [Range(0, double.MaxValue, ErrorMessage = "Price must not be negative!")]
     public decimal Price { get; set; } = 0;
 
     [JsonIgnore]
@@ -106,12 +106,12 @@ public class ServiceAirportCreateVM : ServiceCreateVM
     public bool HasRoundTrip { get; set; }
     public bool IsRoundTripPaid { get; set; }
 
-    [Range(1000, double.MaxValue, ErrorMessage = "Round-trip price must be at least 1,000!")]
+    [Range(0, double.MaxValue, ErrorMessage = "Round-trip price must not be negative!")]
     public decimal? RoundTripPrice { get; set; }
 
     public bool HasNightFee { get; set; }
 
-    [Range(1000, double.MaxValue, ErrorMessage = "Night fee must be at least 1,000!")]
+    [Range(0, double.MaxValue, ErrorMessage = "Night fee must not be negative!")]
     public decimal? AdditionalFee { get; set; }
     public TimeOnly? AdditionalFeeStartTime { get; set; }
     public TimeOnly? AdditionalFeeEndTime { get; set; }
@@ -132,7 +132,7 @@ public class ServiceAirportCreateVM : ServiceCreateVM
 [JsonDerivedType(typeof(ServiceAirportUpdateVM), typeDiscriminator: "airport")]
 public abstract class ServiceUpdateVM : BaseCreateOrUpdateAdminVM
 {
-    [Range(1000, double.MaxValue, ErrorMessage = "Price must be at least 1,000!")]
+    [Range(0, double.MaxValue, ErrorMessage = "Price must not be negative!")]
     public decimal Price { get; set; } = 0;
 }
 
@@ -149,18 +149,18 @@ public class ServiceAirportUpdateVM : ServiceUpdateVM
     public bool HasRoundTrip { get; set; }
     public bool IsRoundTripPaid { get; set; }
 
-    [Range(1000, double.MaxValue, ErrorMessage = "Round-trip price must be at least 1,000!")]
+    [Range(0, double.MaxValue, ErrorMessage = "Round-trip price must not be negative!")]
     public decimal? RoundTripPrice { get; set; }
 
     public bool HasNightFee { get; set; }
 
-    [Range(1000, double.MaxValue, ErrorMessage = "Night fee must be at least 1,000!")]
+    [Range(0, double.MaxValue, ErrorMessage = "Night fee must not be negative!")]
     public decimal? AdditionalFee { get; set; }
 
-    [Required(ErrorMessage = "Start time is required")]
+    // No [Required] here – validation is handled manually in SaveData() when HasNightFee=true
     public TimeOnly? AdditionalFeeStartTime { get; set; }
 
-    [Required(ErrorMessage = "End time is required")]
+    // No [Required] here – validation is handled manually in SaveData() when HasNightFee=true
     public TimeOnly? AdditionalFeeEndTime { get; set; }
 
     [Range(1, 45, ErrorMessage = "Capacity must be between 1-45")]

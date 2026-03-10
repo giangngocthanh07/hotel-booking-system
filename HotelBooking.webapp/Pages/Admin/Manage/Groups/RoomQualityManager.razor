@@ -19,15 +19,15 @@
 {
     <div class="d-flex justify-content-center align-items-center p-5">
         <div class="spinner-border text-primary me-2"></div>
-        <span>Loading data...</span>
+        <span>@MessageResponse.Common.LOADING_DATA</span>
     </div>
 }
 else
 {
     <MasterDetailLayout @ref="_layoutRef" TItem="RoomQualityVM" TModel="BaseCreateOrUpdateAdminVM" Items="_items"
-                        Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
-                        OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
-                        OnDelete="HandleDelete" OnCancel="ResetForm">
+    Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
+    OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
+    OnDelete="HandleDelete" OnCancel="ResetForm">
 
         @* --- A. SIDEBAR CONFIGURATION (RENDER FRAGMENT) --- *@
         <SidebarTopContent>
@@ -44,11 +44,11 @@ else
                 {
                     if (_isUpdate && prop == "SortOrder")
                     {
-                        <ValidationMessage For="() => _updateModel.SortOrder" class="val-msg" />
+                    <ValidationMessage For="() => _updateModel.SortOrder" class="val-msg" />
                     }
                     else if (!_isUpdate && prop == "SortOrder")
                     {
-                        <ValidationMessage For="() => _createModel.SortOrder" class="val-msg" />
+                    <ValidationMessage For="() => _createModel.SortOrder" class="val-msg" />
                     }
                 };
 
@@ -62,7 +62,7 @@ else
                 <div class="input-group" style="max-width: 150px;">
                     <span class="input-group-text bg-white"><i class="fa-solid fa-sort-numeric-down text-muted"></i></span>
                     <input type="number" class="form-control text-center fw-bold" value="@currentSort"
-                           @oninput="@(e => HandleSortInput(e.Value?.ToString()))" />
+                    @oninput="@(e => HandleSortInput(e.Value?.ToString()))" />
                 </div>
                 @RenderVal("SortOrder")
                 <div class="form-text extra-small mt-2 animate__animated animate__fadeIn">
@@ -75,7 +75,7 @@ else
             @if (currentSort >= 5)
             {
                 <div
-                    class="alert alert-info border-0 py-2 px-3 d-flex align-items-center shadow-sm animate__animated animate__bounceIn">
+            class="alert alert-info border-0 py-2 px-3 d-flex align-items-center shadow-sm animate__animated animate__bounceIn">
                     <i class="fa-solid fa-star me-2 fs-5"></i>
                     <div class="small fw-bold">This is a HIGH PRIORITY quality level.</div>
                 </div>
@@ -107,8 +107,8 @@ else
                 @if (row.SortOrder >= 5)
                 {
                     <span
-                        class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill px-3 py-2 animate__animated animate__fadeIn"
-                        style="font-size: 0.65rem; letter-spacing: 0.5px; text-transform: uppercase;">
+                class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill px-3 py-2 animate__animated animate__fadeIn"
+                style="font-size: 0.65rem; letter-spacing: 0.5px; text-transform: uppercase;">
                         <i class="fa-solid fa-star me-1"></i>High Priority
                     </span>
                 }
@@ -131,7 +131,7 @@ else
             @* 5. Sort Order Preview *@
             <td class="text-center">
                 <div class="d-inline-flex align-items-center justify-content-center bg-light border rounded-circle fw-bold text-secondary shadow-sm"
-                     style="width: 32px; height: 32px; font-size: 0.85rem;">
+                style="width: 32px; height: 32px; font-size: 0.85rem;">
                     @row.SortOrder
                 </div>
             </td>

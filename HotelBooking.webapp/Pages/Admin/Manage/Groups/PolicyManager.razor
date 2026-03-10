@@ -20,15 +20,15 @@
 {
     <div class="d-flex justify-content-center align-items-center p-5">
         <div class="spinner-border text-primary me-2"></div>
-        <span>Loading data...</span>
+        <span>@MessageResponse.Common.LOADING_DATA</span>
     </div>
 }
 else
 {
     <MasterDetailLayout @ref="_layoutRef" TItem="PolicyVM" TModel="BaseCreateOrUpdateAdminVM" Items="_items"
-                        Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
-                        OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
-                        OnDelete="HandleDelete" OnCancel="ResetForm" OnNameBlur="SuggestDefaultValues">
+    Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
+    OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
+    OnDelete="HandleDelete" OnCancel="ResetForm" OnNameBlur="SuggestDefaultValues">
 
         @* --- A. SIDEBAR CONFIGURATION --- *@
         <SidebarTopContent>
@@ -94,6 +94,32 @@ else
 
     private BaseCreateOrUpdateAdminVM GetModel() => _isUpdate ? _updateModel : _createModel;
 
+    private RenderFragment RenderVal(string prop) => __builder =>
+    {
+        if (_isUpdate)
+        {
+            if (prop == "EarlyCheckInFee") { <ValidationMessage For="() => ((CheckInOutPolicyUpdateVM)_updateModel).EarlyCheckInFee" class="val-msg" /> }
+            else if (prop == "LateCheckOutFee") { <ValidationMessage For="() => ((CheckInOutPolicyUpdateVM)_updateModel).LateCheckOutFee" class="val-msg" /> }
+            else if (prop == "DaysBeforeCheckIn") { <ValidationMessage For="() => ((CancellationPolicyUpdateVM)_updateModel).DaysBeforeCheckIn" class="val-msg" /> }
+            else if (prop == "RefundPercent") { <ValidationMessage For="() => ((CancellationPolicyUpdateVM)_updateModel).RefundPercent" class="val-msg" /> }
+            else if (prop == "MinAge") { <ValidationMessage For="() => ((ChildrenPolicyUpdateVM)_updateModel).MinAge" class="val-msg" /> }
+            else if (prop == "MaxAge") { <ValidationMessage For="() => ((ChildrenPolicyUpdateVM)_updateModel).MaxAge" class="val-msg" /> }
+            else if (prop == "ExtraBedFee") { <ValidationMessage For="() => ((ChildrenPolicyUpdateVM)_updateModel).ExtraBedFee" class="val-msg" /> }
+            else if (prop == "PetFee") { <ValidationMessage For="() => ((PetPolicyUpdateVM)_updateModel).PetFee" class="val-msg" /> }
+        }
+        else
+        {
+            if (prop == "EarlyCheckInFee") { <ValidationMessage For="() => ((CheckInOutPolicyCreateVM)_createModel).EarlyCheckInFee" class="val-msg" /> }
+            else if (prop == "LateCheckOutFee") { <ValidationMessage For="() => ((CheckInOutPolicyCreateVM)_createModel).LateCheckOutFee" class="val-msg" /> }
+            else if (prop == "DaysBeforeCheckIn") { <ValidationMessage For="() => ((CancellationPolicyCreateVM)_createModel).DaysBeforeCheckIn" class="val-msg" /> }
+            else if (prop == "RefundPercent") { <ValidationMessage For="() => ((CancellationPolicyCreateVM)_createModel).RefundPercent" class="val-msg" /> }
+            else if (prop == "MinAge") { <ValidationMessage For="() => ((ChildrenPolicyCreateVM)_createModel).MinAge" class="val-msg" /> }
+            else if (prop == "MaxAge") { <ValidationMessage For="() => ((ChildrenPolicyCreateVM)_createModel).MaxAge" class="val-msg" /> }
+            else if (prop == "ExtraBedFee") { <ValidationMessage For="() => ((ChildrenPolicyCreateVM)_createModel).ExtraBedFee" class="val-msg" /> }
+            else if (prop == "PetFee") { <ValidationMessage For="() => ((PetPolicyCreateVM)_createModel).PetFee" class="val-msg" /> }
+        }
+    };
+
     // ======================== RENDER FRAGMENTS ========================
     private RenderFragment RenderPolicyForm() => __builder =>
     {
@@ -134,61 +160,63 @@ else
         <h6 class="text-primary fw-bold mb-3"><i class="fa-regular fa-clock me-2"></i>Time Slots & Surcharges</h6>
 
         <div
-            class="form-check form-switch custom-switch p-2 rounded border bg-light d-flex align-items-center justify-content-between mb-3 shadow-sm">
+        class="form-check form-switch custom-switch p-2 rounded border bg-light d-flex align-items-center justify-content-between mb-3 shadow-sm">
             <label class="small fw-bold text-muted text-uppercase mb-0 ms-1">
                 <i class="fa-solid fa-hand-holding-dollar me-2 @(hasFee ? "text-success" : "text-secondary")"></i>
                 @(hasFee ? "Chargeable Surcharge" : "Complimentary")
             </label>
             <input class="form-check-input" type="checkbox" role="switch" checked="@hasFee"
-                   @onchange="@(e => ToggleCheckInOutFee((bool)e.Value!))"
-                   style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
-            </div>
+            @onchange="@(e => ToggleCheckInOutFee((bool)e.Value!))"
+        style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
+        </div>
 
-            @if (hasFee)
-            {
-                <div class="row g-3 mb-3 animate__animated animate__fadeInDown animate__faster">
-                    <div class="col-6">
-                        <label class="form-label fw-bold extra-small text-muted">Early Check-in Fee</label>
-                        <div class="input-group shadow-sm">
-                            <span class="input-group-text bg-white text-success"><i class="fa-solid fa-sun"></i></span>
-                            <input type="text" class="form-control text-end fw-bold text-success" inputmode="numeric"
-                                   value="@earlyFee.ToString("N0")" @oninput="@(e => SetCheckInOutFee("early", e.Value?.ToString()))" />
-                            <span class="input-group-text bg-light fw-bold">VND</span>
-                        </div>
+        @if (hasFee)
+        {
+            <div class="d-flex flex-column gap-2 mb-3 animate__animated animate__fadeInDown animate__faster">
+                <div>
+                    <label class="form-label fw-bold extra-small text-muted">Early Check-in Fee</label>
+                    <div class="input-group shadow-sm">
+                        <span class="input-group-text bg-white text-success"><i class="fa-solid fa-sun"></i></span>
+                        <input type="text" class="form-control text-end fw-bold text-success" inputmode="numeric"
+                value="@earlyFee.ToString("N0")" @oninput="@(e => SetCheckInOutFee("early", e.Value?.ToString()))" />
+                        <span class="input-group-text bg-light fw-bold">VND</span>
                     </div>
-                    <div class="col-6">
-                        <label class="form-label fw-bold extra-small text-muted">Late Check-out Fee</label>
-                        <div class="input-group shadow-sm">
-                            <span class="input-group-text bg-white text-warning"><i class="fa-solid fa-moon"></i></span>
-                            <input type="text" class="form-control text-end fw-bold text-warning" inputmode="numeric"
-                                   value="@lateFee.ToString("N0")" @oninput="@(e => SetCheckInOutFee("late", e.Value?.ToString()))" />
-                            <span class="input-group-text bg-light fw-bold">VND</span>
-                        </div>
+                    @RenderVal("EarlyCheckInFee")
+                </div>
+                <div>
+                    <label class="form-label fw-bold extra-small text-muted">Late Check-out Fee</label>
+                    <div class="input-group shadow-sm">
+                        <span class="input-group-text bg-white text-warning"><i class="fa-solid fa-moon"></i></span>
+                        <input type="text" class="form-control text-end fw-bold text-warning" inputmode="numeric"
+                value="@lateFee.ToString("N0")" @oninput="@(e => SetCheckInOutFee("late", e.Value?.ToString()))" />
+                        <span class="input-group-text bg-light fw-bold">VND</span>
                     </div>
-                </div>
-            }
-            else
-            {
-                <div class="alert alert-success border-0 py-2 px-3 d-flex align-items-center shadow-sm mb-3">
-                    <i class="fa-solid fa-circle-check me-2 fs-5"></i>
-                    <div class="extra-small fst-italic"><b>Free:</b> No additional fees applied.</div>
-                </div>
-            }
-
-            <h6 class="text-primary fw-bold mb-3"><i class="fa-regular fa-clock me-2"></i>Standard Hours</h6>
-            <div class="row g-3">
-                <div class="col-6">
-                    <label class="small text-muted fw-bold">Check-in</label>
-                    <input type="time" class="form-control shadow-sm" value="@checkInTime?.ToString("HH:mm")"
-                           @onchange="@(e => SetCheckInOutTime("in", e.Value?.ToString()))" />
-                </div>
-                <div class="col-6">
-                    <label class="small text-muted fw-bold">Check-out</label>
-                    <input type="time" class="form-control shadow-sm" value="@checkOutTime?.ToString("HH:mm")"
-                           @onchange="@(e => SetCheckInOutTime("out", e.Value?.ToString()))" />
+                    @RenderVal("LateCheckOutFee")
                 </div>
             </div>
         }
+        else
+        {
+            <div class="alert alert-success border-0 py-2 px-3 d-flex align-items-center shadow-sm mb-3">
+                <i class="fa-solid fa-circle-check me-2 fs-5"></i>
+                <div class="extra-small fst-italic"><b>Free:</b> No additional fees applied.</div>
+            </div>
+        }
+
+        <h6 class="text-primary fw-bold mb-3"><i class="fa-regular fa-clock me-2"></i>Standard Hours</h6>
+        <div class="row g-3">
+            <div class="col-6">
+                <label class="small text-muted fw-bold">Check-in</label>
+                <input type="time" class="form-control shadow-sm" value="@checkInTime?.ToString("HH:mm")"
+                @onchange="@(e => SetCheckInOutTime("in", e.Value?.ToString()))" />
+            </div>
+            <div class="col-6">
+                <label class="small text-muted fw-bold">Check-out</label>
+                <input type="time" class="form-control shadow-sm" value="@checkOutTime?.ToString("HH:mm")"
+                @onchange="@(e => SetCheckInOutTime("out", e.Value?.ToString()))" />
+            </div>
+        </div>
+    }
 
     private void RenderCancellationForm(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder)
     {
@@ -212,50 +240,51 @@ else
         <h6 class="text-danger fw-bold mb-3"><i class="fa-solid fa-ban me-2"></i>Cancellation Policy</h6>
 
         <div
-            class="form-check form-switch custom-switch p-2 rounded border bg-light d-flex align-items-center justify-content-between mb-3 shadow-sm">
+        class="form-check form-switch custom-switch p-2 rounded border bg-light d-flex align-items-center justify-content-between mb-3 shadow-sm">
             <label class="small fw-bold text-muted text-uppercase mb-0 ms-1">
                 <i class="fa-solid fa-hand-holding-dollar me-2 @(isRefundable ? "text-success" : "text-danger")"></i>
                 @(isRefundable ? "Refundable" : "Non-Refundable")
             </label>
             <input class="form-check-input" type="checkbox" role="switch" checked="@isRefundable"
-                   @onchange="@(e => SetCancellationRefundable((bool)e.Value!))"
-                   style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
-            </div>
+            @onchange="@(e => SetCancellationRefundable((bool)e.Value!))"
+        style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
+        </div>
 
-            @if (isRefundable)
-            {
-                <div class="row g-3 animate__animated animate__fadeIn">
-                    <div class="col-6">
-                        <label class="small text-muted fw-bold">Cancel before (days)</label>
-                        <div class="input-group shadow-sm">
-                            <input type="number" class="form-control text-center fw-bold" value="@days"
-                                   @oninput="@(e => SetCancellationDays(e.Value?.ToString()))" />
-                            <span class="input-group-text bg-primary text-white fw-bold">days</span>
-                        </div>
+        @if (isRefundable)
+        {
+            <div class="row g-3 animate__animated animate__fadeIn">
+                <div class="col-6">
+                    <label class="extra-small text-muted fw-bold text-nowrap">Cancel Before</label>
+                    <div class="input-group shadow-sm">
+                        <input type="number" class="form-control text-center fw-bold" value="@days"
+                               @oninput="@(e => SetCancellationDays(e.Value?.ToString()))" />
+                        <span class="input-group-text bg-primary text-white fw-bold">days</span>
                     </div>
-                    <div class="col-6">
-                        <label class="small text-muted fw-bold">Refund Amount (%)</label>
-                        <div class="input-group shadow-sm">
-                            <input type="number" class="form-control text-center fw-bold text-success" value="@refundPct"
-                                   @oninput="@(e => SetCancellationPercent(e.Value?.ToString()))" />
-                            <span class="input-group-text bg-success text-white fw-bold">%</span>
-                        </div>
-                    </div>
+                    @RenderVal("DaysBeforeCheckIn")
                 </div>
-                <div class="p-3 rounded bg-light border-start border-4 border-success shadow-sm mt-3">
-                    <div class="small fw-bold text-uppercase mb-1 text-muted">Summary:</div>
-                    <div class="small fst-italic">Cancellations made <b>@days days</b> prior: <b class="text-success">@refundPct%
-                        refund</b>.</div>
+                <div class="col-6">
+                    <label class="extra-small text-muted fw-bold text-nowrap">Refund Amount</label>
+                    <div class="input-group shadow-sm">
+                        <input type="number" class="form-control text-center fw-bold text-success" value="@refundPct"
+                               @oninput="@(e => SetCancellationPercent(e.Value?.ToString()))" />
+                        <span class="input-group-text bg-success text-white fw-bold">%</span>
                     </div>
-                }
+                    @RenderVal("RefundPercent")
+                </div>
+            </div>
+            <div class="p-3 rounded bg-light border-start border-4 border-success shadow-sm mt-3">
+                <div class="small fw-bold text-uppercase mb-1 text-muted">Summary:</div>
+                <div class="small fst-italic">Cancellations made <b>@days days</b> prior: <b class="text-success">@refundPct% refund</b>.</div>
+            </div>
+        }
         else
-                {
-                    <div class="alert alert-danger border-0 py-2 px-3 d-flex align-items-center shadow-sm">
-                        <i class="fa-solid fa-ban me-2 fs-5"></i>
-                        <div class="extra-small fst-italic"><b>Non-Refundable:</b> No refund issued upon cancellation.</div>
-                    </div>
-                }
-            }
+        {
+            <div class="alert alert-danger border-0 py-2 px-3 d-flex align-items-center shadow-sm">
+                <i class="fa-solid fa-ban me-2 fs-5"></i>
+                <div class="extra-small fst-italic"><b>Non-Refundable:</b> No refund issued upon cancellation.</div>
+            </div>
+        }
+    }
 
     private void RenderChildrenForm(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder)
     {
@@ -284,58 +313,62 @@ else
             <div class="col-6">
                 <label class="small text-muted fw-bold">Min Age</label>
                 <input type="number" class="form-control fw-bold shadow-sm @(isInvalidRange ? "border-danger" : "")"
-                       value="@minAge" @oninput="@(e => SetChildrenAge("min", e.Value?.ToString()))" />
+            value="@minAge" @oninput="@(e => SetChildrenAge("min", e.Value?.ToString()))" />
+                @RenderVal("MinAge")
             </div>
             <div class="col-6">
                 <label class="small text-muted fw-bold">Max Age</label>
                 <input type="number" class="form-control fw-bold shadow-sm @(isInvalidRange ? "border-danger" : "")"
-                       value="@maxAge" @oninput="@(e => SetChildrenAge("max", e.Value?.ToString()))" />
+            value="@maxAge" @oninput="@(e => SetChildrenAge("max", e.Value?.ToString()))" />
+                @RenderVal("MaxAge")
             </div>
 
             @if (isInvalidRange)
             {
                 <div class="col-12 animate__animated animate__shakeX">
                     <div class="alert alert-danger py-2 px-3 small fw-bold mb-0 shadow-sm"
-                         style="border:none; border-left: 4px solid darkred;">
+                style="border:none; border-left: 4px solid darkred;">
                         <i class="fa-solid fa-circle-exclamation me-2"></i>Min age must be less than max age.
                     </div>
                 </div>
             }
 
             <div class="col-12 mt-3">
-                <div class="form-check form-switch custom-switch p-2 rounded border bg-light d-flex align-items-center justify-content-between shadow-sm">
+                <div
+                class="form-check form-switch custom-switch p-2 rounded border bg-light d-flex align-items-center justify-content-between shadow-sm">
                     <label class="small fw-bold text-muted text-uppercase mb-0 ms-1">
                         <i class="fa-solid fa-bed me-2 @(hasFee ? "text-success" : "text-secondary")"></i>Apply Extra Bed Fee?
                     </label>
                     <input class="form-check-input" type="checkbox" role="switch" checked="@hasFee"
-                           @onchange="@(e => ToggleChildrenFee((bool)e.Value!))"
-                           style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
+                    @onchange="@(e => ToggleChildrenFee((bool)e.Value!))"
+                style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
+                </div>
+            </div>
+
+            @if (hasFee)
+            {
+                <div class="col-12 animate__animated animate__fadeInDown animate__faster">
+                    <label class="form-label fw-bold small text-muted text-uppercase">Extra Bed Surcharge</label>
+                    <div class="input-group shadow-sm">
+                        <span class="input-group-text bg-white text-success"><i class="fa-solid fa-money-bill-wave"></i></span>
+                        <input type="text" class="form-control text-end fw-bold text-success" inputmode="numeric"
+                value="@extraBedFee.ToString("N0")" @oninput="@(e => SetChildrenFee(e.Value?.ToString()))" />
+                        <span class="input-group-text bg-light fw-bold">VND</span>
+                    </div>
+                    @RenderVal("ExtraBedFee")
+                </div>
+            }
+            else
+            {
+                <div class="col-12 animate__animated animate__fadeIn">
+                    <div class="alert alert-success border-0 py-2 px-3 d-flex align-items-center shadow-sm mb-0">
+                        <i class="fa-solid fa-face-laugh-beam me-2 fs-5"></i>
+                        <div class="extra-small"><b>Free:</b> No extra charge for beds.</div>
                     </div>
                 </div>
-
-                @if (hasFee)
-                {
-                    <div class="col-12 animate__animated animate__fadeInDown animate__faster">
-                        <label class="form-label fw-bold small text-muted text-uppercase">Extra Bed Surcharge</label>
-                        <div class="input-group shadow-sm">
-                            <span class="input-group-text bg-white text-success"><i class="fa-solid fa-money-bill-wave"></i></span>
-                            <input type="text" class="form-control text-end fw-bold text-success" inputmode="numeric"
-                                   value="@extraBedFee.ToString("N0")" @oninput="@(e => SetChildrenFee(e.Value?.ToString()))" />
-                            <span class="input-group-text bg-light fw-bold">VND</span>
-                        </div>
-                    </div>
-                }
-                else
-                {
-                    <div class="col-12 animate__animated animate__fadeIn">
-                        <div class="alert alert-success border-0 py-2 px-3 d-flex align-items-center shadow-sm mb-0">
-                            <i class="fa-solid fa-face-laugh-beam me-2 fs-5"></i>
-                            <div class="extra-small"><b>Free:</b> No extra charge for beds.</div>
-                        </div>
-                    </div>
-                }
-            </div>
-        }
+            }
+        </div>
+    }
 
     private void RenderPetForm(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder)
     {
@@ -358,139 +391,140 @@ else
         <h6 class="text-warning fw-bold mb-3"><i class="fa-solid fa-paw me-2"></i>Pet Policy</h6>
 
         <div
-            class="form-check form-switch custom-switch p-2 rounded border bg-light d-flex align-items-center justify-content-between mb-3 shadow-sm">
+        class="form-check form-switch custom-switch p-2 rounded border bg-light d-flex align-items-center justify-content-between mb-3 shadow-sm">
             <label class="small fw-bold text-muted text-uppercase mb-0 ms-1">
                 <i class="fa-solid fa-dog me-2 @(isAllowed ? "text-warning" : "text-secondary")"></i>
                 @(isAllowed ? "PETS ALLOWED" : "NO PETS")
             </label>
             <input class="form-check-input" type="checkbox" role="switch" checked="@isAllowed"
-                   @onchange="@(e => SetPetAllowed((bool)e.Value!))" style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
-            </div>
+            @onchange="@(e => SetPetAllowed((bool)e.Value!))" style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
+        </div>
 
-            @if (isAllowed)
-            {
-                <div class="animate__animated animate__fadeIn">
-                    <div class="form-check form-switch custom-switch p-2 rounded border bg-white d-flex align-items-center justify-content-between mb-3 shadow-sm"
-                         style="border-style: dashed !important;">
-                        <label class="small fw-bold text-muted text-uppercase mb-0 ms-1">
-                            <i class="fa-solid fa-hand-holding-dollar me-2 @(hasFee ? "text-success" : "text-secondary")"></i>
-                            @(hasFee ? "CHARGEABLE" : "COMPLIMENTARY")
-                        </label>
-                        <input class="form-check-input" type="checkbox" role="switch" checked="@hasFee"
-                               @onchange="@(e => TogglePetFee((bool)e.Value!))" style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
-                        </div>
+        @if (isAllowed)
+        {
+            <div class="animate__animated animate__fadeIn">
+                <div class="form-check form-switch custom-switch p-2 rounded border bg-white d-flex align-items-center justify-content-between mb-3 shadow-sm"
+            style="border-style: dashed !important;">
+                    <label class="small fw-bold text-muted text-uppercase mb-0 ms-1">
+                        <i class="fa-solid fa-hand-holding-dollar me-2 @(hasFee ? "text-success" : "text-secondary")"></i>
+                        @(hasFee ? "CHARGEABLE" : "COMPLIMENTARY")
+                    </label>
+                    <input class="form-check-input" type="checkbox" role="switch" checked="@hasFee"
+                @onchange="@(e => TogglePetFee((bool)e.Value!))" style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
+                </div>
 
-                        @if (hasFee)
-                        {
-                            <div class="mb-3 animate__animated animate__fadeInDown animate__faster">
-                                <label class="form-label fw-bold extra-small text-muted text-uppercase">Cleaning / Pet Fee</label>
-                                <div class="input-group shadow-sm">
-                                    <span class="input-group-text bg-white text-success"><i class="fa-solid fa-money-bill-wave"></i></span>
-                                    <input type="text" class="form-control text-end fw-bold text-success" inputmode="numeric"
-                                           value="@petFee.ToString("N0")" @oninput="@(e => SetPetFee(e.Value?.ToString()))" />
-                                    <span class="input-group-text bg-light fw-bold">VND</span>
-                                </div>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="alert alert-success border-0 py-2 px-3 d-flex align-items-center shadow-sm mb-0">
-                                <i class="fa-solid fa-face-smile-beam me-2 fs-5"></i>
-                                <div class="extra-small fst-italic"><b>Free:</b> Pets stay for free.</div>
-                            </div>
-                        }
-                    </div>
-                }
-        else
+                @if (hasFee)
                 {
-                    <div class="alert alert-secondary border-0 py-2 px-3 d-flex align-items-center shadow-sm mb-0">
-                        <i class="fa-solid fa-ban me-2 fs-5"></i>
-                        <div class="extra-small fst-italic">Pets are not accommodated.</div>
+                    <div class="mb-3 animate__animated animate__fadeInDown animate__faster">
+                        <label class="form-label fw-bold extra-small text-muted text-uppercase">Cleaning / Pet Fee</label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-white text-success"><i class="fa-solid fa-money-bill-wave"></i></span>
+                            <input type="text" class="form-control text-end fw-bold text-success" inputmode="numeric"
+                value="@petFee.ToString("N0")" @oninput="@(e => SetPetFee(e.Value?.ToString()))" />
+                            <span class="input-group-text bg-light fw-bold">VND</span>
+                        </div>
+                        @RenderVal("PetFee")
                     </div>
                 }
-            }
+                else
+                {
+                    <div class="alert alert-success border-0 py-2 px-3 d-flex align-items-center shadow-sm mb-0">
+                        <i class="fa-solid fa-face-smile-beam me-2 fs-5"></i>
+                        <div class="extra-small fst-italic"><b>Free:</b> Pets stay for free.</div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-secondary border-0 py-2 px-3 d-flex align-items-center shadow-sm mb-0">
+                <i class="fa-solid fa-ban me-2 fs-5"></i>
+                <div class="extra-small fst-italic">Pets are not accommodated.</div>
+            </div>
+        }
+    }
 
     private RenderFragment RenderRowBadge(PolicyVM row) => __builder =>
     {
-    switch (row)
-    {
-        case CheckInOutPolicyVM cio:
-            var totalFee = (cio.EarlyCheckInFee ?? 0) + (cio.LateCheckOutFee ?? 0);
-            <div class="badge bg-primary bg-opacity-10 text-primary border border-primary d-flex flex-column justify-content-center py-1"
-                 style="min-width: 160px; height: 42px;">
-                <div class="small" style="font-size: 0.75rem;">
-                    <span class="badge rounded-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2"
-                          style="font-size: 0.65rem;">
-                        <i class="fa-regular fa-clock me-1"></i>@cio.CheckInTime?.ToString("HH:mm") -
-                        @cio.CheckOutTime?.ToString("HH:mm")
-                    </span>
-                </div>
-                <div class="fw-bold" style="font-size: 0.8rem;">
-                    @(totalFee > 0 ? "+" + totalFee.ToString("N0") + "đ" : "Free")
-                </div>
-            </div>
-            break;
-
-        case CancellationPolicyVM cancel:
-            <div class="badge bg-danger bg-opacity-10 text-danger border border-danger d-flex flex-column justify-content-center py-1"
-                 style="min-width: 160px; height: 42px;">
-                <div class="mb-1">
-                    @if (!cancel.IsRefundable)
-                    {
-                        <span class="badge rounded-pill bg-danger bg-opacity-10 text-danger px-2" style="font-size: 0.65rem;">
-                            <i class="fa-solid fa-ban me-1"></i>Non-Refundable
+        switch (row)
+        {
+            case CheckInOutPolicyVM cio:
+                var totalFee = (cio.EarlyCheckInFee ?? 0) + (cio.LateCheckOutFee ?? 0);
+                <div class="badge bg-primary bg-opacity-10 text-primary border border-primary d-flex flex-column justify-content-center py-1"
+        style="min-width: 160px; height: 42px;">
+                    <div class="small" style="font-size: 0.75rem;">
+                        <span class="badge rounded-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2"
+                style="font-size: 0.65rem;">
+                            <i class="fa-regular fa-clock me-1"></i>@cio.CheckInTime?.ToString("HH:mm") -
+                            @cio.CheckOutTime?.ToString("HH:mm")
                         </span>
-                    }
-                    else
-                    {
-                        <span class="badge rounded-pill bg-info bg-opacity-10 text-info px-2" style="font-size: 0.65rem;">
-                            <i class="fa-solid fa-clock-rotate-left me-1"></i>Before @cancel.DaysBeforeCheckIn days
-                        </span>
-                    }
+                    </div>
+                    <div class="fw-bold" style="font-size: 0.8rem;">
+                        @(totalFee > 0 ? "+" + totalFee.ToString("N0") + "đ" : "Free")
+                    </div>
                 </div>
-                <div class="fw-bold text-uppercase" style="font-size: 0.8rem;">
-                    @(cancel.IsRefundable ? $"{cancel.RefundPercent}% Refund" : "No Refund")
-                </div>
-            </div>
-            break;
+                break;
 
-        case ChildrenPolicyVM child:
-            <div class="badge bg-success bg-opacity-10 text-success border border-success d-flex flex-column justify-content-center py-1"
-                 style="min-width: 160px; height: 42px;">
-                <div class="small" style="font-size: 0.75rem;">
-                    <span class="badge rounded-pill bg-info bg-opacity-10 text-info border-opacity-25 px-2"
-                          style="font-size: 0.7rem;">
-                        <i class="fa-solid fa-child-reaching me-1"></i>@(child.MaxAge >= 99 ? $"{child.MinAge} yrs +" :
-                                    $"{child.MinAge} - {child.MaxAge} yrs")
-                    </span>
+            case CancellationPolicyVM cancel:
+                <div class="badge bg-danger bg-opacity-10 text-danger border border-danger d-flex flex-column justify-content-center py-1"
+        style="min-width: 160px; height: 42px;">
+                    <div class="mb-1">
+                        @if (!cancel.IsRefundable)
+                        {
+                            <span class="badge rounded-pill bg-danger bg-opacity-10 text-danger px-2" style="font-size: 0.65rem;">
+                                <i class="fa-solid fa-ban me-1"></i>Non-Refundable
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge rounded-pill bg-info bg-opacity-10 text-info px-2" style="font-size: 0.65rem;">
+                                <i class="fa-solid fa-clock-rotate-left me-1"></i>Before @cancel.DaysBeforeCheckIn days
+                            </span>
+                        }
+                    </div>
+                    <div class="fw-bold text-uppercase" style="font-size: 0.8rem;">
+                        @(cancel.IsRefundable ? $"{cancel.RefundPercent}% Refund" : "No Refund")
+                    </div>
                 </div>
-                <div class="fw-bold" style="font-size: 0.8rem;">@(child.ExtraBedFee > 0 ? "+" + child.ExtraBedFee?.ToString("N0") +
-                            "đ" : "Free")</div>
+                break;
+
+            case ChildrenPolicyVM child:
+                <div class="badge bg-success bg-opacity-10 text-success border border-success d-flex flex-column justify-content-center py-1"
+        style="min-width: 160px; height: 42px;">
+                    <div class="small" style="font-size: 0.75rem;">
+                        <span class="badge rounded-pill bg-info bg-opacity-10 text-info border-opacity-25 px-2"
+                style="font-size: 0.7rem;">
+                            <i class="fa-solid fa-child-reaching me-1"></i>@(child.MaxAge >= 99 ? $"{child.MinAge} yrs +" :
+            $"{child.MinAge} - {child.MaxAge} yrs")
+                        </span>
+                    </div>
+                    <div class="fw-bold" style="font-size: 0.8rem;">@(child.ExtraBedFee > 0 ? "+" + child.ExtraBedFee?.ToString("N0") +
+        "đ" : "Free")</div>
                 </div>
                 break;
 
             case PetPolicyVM pet:
-                    <div class="badge @(pet.IsPetAllowed ? "bg-warning text-warning border-warning" : "bg-secondary text-secondary border-secondary") bg-opacity-10 border d-flex flex-column justify-content-center py-1"
-                         style="min-width: 160px; height: 42px;">
-                        <div class="small" style="font-size: 0.7rem;">
-                            <span class="badge rounded-pill bg-info bg-opacity-10 text-info px-2" style="font-size: 0.65rem;">
-                                <i class="fa-solid fa-paw me-1"></i>@(pet.IsPetAllowed ? "Allowed" : "Not Allowed")
-                            </span>
-                        </div>
-                        @if (pet.IsPetAllowed)
-                        {
-                            <div class="fw-bold mt-1" style="font-size: 0.85rem;">@(pet.PetFee > 0 ? "+" + pet.PetFee?.ToString("N0") + "đ" :
-                                        "Free")</div>
-                            }
-                        </div>
-                        break;
-
-                        default:
-<span class="text-muted opacity-50 fw-bold">---</span>
-                break;
+                <div class="badge @(pet.IsPetAllowed ? "bg-warning text-warning border-warning" : "bg-secondary text-secondary border-secondary") bg-opacity-10 border d-flex flex-column justify-content-center py-1"
+        style="min-width: 160px; height: 42px;">
+                    <div class="small" style="font-size: 0.7rem;">
+                        <span class="badge rounded-pill bg-info bg-opacity-10 text-info px-2" style="font-size: 0.65rem;">
+                            <i class="fa-solid fa-paw me-1"></i>@(pet.IsPetAllowed ? "Allowed" : "Not Allowed")
+                        </span>
+                    </div>
+                    @if (pet.IsPetAllowed)
+                    {
+                        <div class="fw-bold mt-1" style="font-size: 0.85rem;">@(pet.PetFee > 0 ? "+" + pet.PetFee?.ToString("N0") + "đ" :
+        "Free")</div>
                     }
-                }
-                ;
+                </div>
+                break;
+
+            default:
+                <span class="text-muted opacity-50 fw-bold">---</span>
+                break;
+        }
+    }
+;
 
     // ======================== FORM HANDLERS ========================
     private void ToggleCheckInOutFee(bool hasFee)
@@ -619,7 +653,7 @@ else
             else
             {
                 _items = new List<PolicyVM>();
-                if (res.StatusCode != StatusCodeResponse.Success) SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
+                if (res.StatusCode != StatusCodeResponse.Success) SnackbarHelper.Show(_snackbar, res.StatusCode ?? StatusCodeResponse.Error, res.Message!);
             }
         }
         catch (Exception ex)
@@ -660,7 +694,7 @@ else
     private async Task HandleDelete(PolicyVM item)
     {
         var res = await Service.DeletePolicy(item.Id);
-        SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
+        SnackbarHelper.Show(_snackbar, res.StatusCode ?? StatusCodeResponse.Error, res.Message!);
         if (res.StatusCode == StatusCodeResponse.Success) await LoadDataAsync();
     }
 
@@ -699,14 +733,32 @@ else
 
     private async Task SaveData()
     {
+        // 1. Children Age Range Validation
         if (TypeId == 1004)
         {
-            if (_createModel is ChildrenPolicyCreateVM cc && cc.MinAge > cc.MaxAge)
+            if (_createModel is ChildrenPolicyCreateVM childrenPolicyCreate && childrenPolicyCreate.MinAge > childrenPolicyCreate.MaxAge)
             { _snackbar.Add(MessageResponse.AdminManagement.Policy.INVALID_AGE_RANGE, Severity.Error); return; }
-            if (_updateModel is ChildrenPolicyUpdateVM cu && cu.MinAge > cu.MaxAge)
+            if (_updateModel is ChildrenPolicyUpdateVM childrenPolicyUpdate && childrenPolicyUpdate.MinAge > childrenPolicyUpdate.MaxAge)
             { _snackbar.Add(MessageResponse.AdminManagement.Policy.INVALID_AGE_RANGE, Severity.Error); return; }
         }
 
+        // 2. Conditional Fee Validation: If charging, fee must be at least 10,000 VND.
+        var feeErrorMsg = PolicyHelper.ValidatePolicyFees(GetModel());
+        if (!string.IsNullOrEmpty(feeErrorMsg))
+        {
+            _snackbar.Add(feeErrorMsg, Severity.Error);
+            return;
+        }
+
+        // 3. Time Slots Validation for CheckInOutPolicy
+        var timeErrorMsg = PolicyHelper.ValidateCheckInOutTime(GetModel());
+        if (!string.IsNullOrEmpty(timeErrorMsg))
+        {
+            _snackbar.Add(timeErrorMsg, Severity.Error);
+            return;
+        }
+
+        // 3. API Call
         ApiResponse<PolicyVM> res;
         if (_isUpdate) { res = await Service.UpdatePolicy(_currentEditingId, _updateModel); }
         else { _createModel.TypeId = TypeId ?? 1002; res = await Service.CreatePolicy(_createModel); }

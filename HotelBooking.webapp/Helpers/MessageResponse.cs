@@ -27,6 +27,10 @@ public static class MessageResponse
         public const string BAD_REQUEST = "Invalid request!";
         public const string EMPTY_LIST = "The list is empty!";
         public const string ERROR_IN_SERVER = "Internal server error!";
+
+        // Loading state messages
+        public const string LOADING_DATA = "Loading data...";
+        public const string LOADING_AUTH = "Loading authentication...";
     }
 
     // =====================================================
@@ -74,6 +78,10 @@ public static class MessageResponse
             public const string INVALID_FEE = "Fee must be greater than or equal to 0!";
             public const string INVALID_PERCENT = "Refund percent must be between 0 and 100!";
             public const string AGE_RANGE_INVALID = "Max age must be greater than or equal to min age!";
+            public const string EARLY_CHECKIN_FEE_MIN = "Early check-in fee must be at least 10,000 VND!";
+            public const string LATE_CHECKOUT_FEE_MIN = "Late check-out fee must be at least 10,000 VND!";
+            public const string EXTRA_BED_FEE_MIN = "Extra bed fee must be at least 10,000 VND!";
+            public const string PET_FEE_MIN = "Pet fee must be at least 10,000 VND!";
         }
 
         // Service Messages
@@ -83,14 +91,15 @@ public static class MessageResponse
             public const string INVALID_TYPE = "Invalid service type!";
             public const string EMPTY_UNIT_NAME = "Unit of measurement is required!";
             public const string LONG_UNIT = "Unit name is too long (max 20 characters)!";
-            public const string REQUIRED_PRICE = "Service price must be greater than 1,000!";
+            public const string REQUIRED_PRICE = "Service price must be greater than 10,000!";
             public const string STANDARD_SERVICE_PRICE_GREATER_THAN_ZERO = "Standard service price must be >= 10,000!";
             public const string MIN_PASSENGERS = "Passengers must be at least 1!";
             public const string MAX_PASSENGERS = "Maximum capacity is 45 passengers!";
             public const string MIN_LUGGAGE = "Luggage count cannot be negative!";
             public const string MAX_LUGGAGE = "Maximum capacity is 45 luggage items!";
-            public const string INVALID_ROUND_TRIP_PRICE = "Invalid round-trip price!";
-            public const string DEFAULT_ADDITIONAL_FEE = "Additional fee must be at least";
+            public const string INVALID_ONE_WAY_PRICE = "One-way price must be at least 10,000 VND!";
+            public const string INVALID_ROUND_TRIP_PRICE = "Round-trip price must be at least 10,000 VND!";
+            public const string DEFAULT_ADDITIONAL_FEE = "Night fee must be at least 10,000 VND!";
             public const string MISSING_ADDITIONAL_FEE_START_TIME = "Night fee start time is required!";
             public const string MISSING_ADDITIONAL_FEE_END_TIME = "Night fee end time is required!";
             public const string ADDITIONAL_FEE_TIME_EXCEEDS_LIMIT = "Night fee duration cannot exceed 12 hours!";

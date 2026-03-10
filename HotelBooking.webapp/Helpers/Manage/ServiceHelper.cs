@@ -167,17 +167,20 @@ namespace HotelBooking.webapp.Helpers
             ApplyLogic(typeId, model.Name ?? "",
                  v => { if (model.Price == 0) model.Price = v; },
                  v => { if (model is ServiceStandardUpdateVM std && string.IsNullOrEmpty(std.Unit)) std.Unit = v; },
-                 (pax, lug) => { if (model is ServiceAirportUpdateVM air) { air.MaxPassengers = pax; air.MaxLuggage = lug; } },
+                 (pax, lug) =>
+                 {
+                     if (model is ServiceAirportUpdateVM air)
+                     {
+                         // Guard: only override if currently null or the default placeholder values
+                         if (air.MaxPassengers == null || air.MaxPassengers == 4) air.MaxPassengers = pax;
+                         if (air.MaxLuggage == null || air.MaxLuggage == 2) air.MaxLuggage = lug;
+                     }
+                 },
 
                 (hasRT, isPaid, rtPrice) =>
                 {
                     if (model is ServiceAirportUpdateVM air)
                     {
-                        if (!air.HasRoundTrip)
-                        {
-                            air.HasRoundTrip = hasRT;
-                            air.IsRoundTripPaid = isPaid;
-                        }
                         if (air.RoundTripPrice == 0 || air.RoundTripPrice == null) air.RoundTripPrice = rtPrice;
                     }
                 },
@@ -186,7 +189,10 @@ namespace HotelBooking.webapp.Helpers
                 {
                     if (model is ServiceAirportUpdateVM air)
                     {
+                        // CRITICAL: Only set defaults if the values are currently NULL/Default
                         if (air.AdditionalFee == 0 || air.AdditionalFee == null) air.AdditionalFee = fee;
+                        if (air.AdditionalFeeStartTime == null) air.AdditionalFeeStartTime = start;
+                        if (air.AdditionalFeeEndTime == null) air.AdditionalFeeEndTime = end;
                     }
                 }
              );
@@ -212,9 +218,6 @@ namespace HotelBooking.webapp.Helpers
                     else if (name.Contains("16 chỗ") || name.Contains("16-seater")) { setPrice(850000); setCapacity(16, 10); setRoundTripFee(true, true, 1600000); }
                     else { setPrice(350000); setCapacity(4, 2); setRoundTripFee(true, true, 650000); }
 
-                    // General defaults for Airport Transfer
-                    setRoundTripFee(true, true, 500000);
-                    setNightFee(true, 200000, new TimeOnly(22, 0), new TimeOnly(5, 0));
                     break;
             }
         }

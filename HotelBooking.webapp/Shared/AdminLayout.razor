@@ -2,15 +2,18 @@
 @using MudBlazor
 
 <MudThemeProvider />
+<MudPopoverProvider />
+
+@* Snackbar và Dialog phải nằm NGOÀI app-layout-wrapper *@
+@* để tránh bị clip bởi overflow:hidden + position:relative (stacking context) *@
 <MudDialogProvider />
 <MudSnackbarProvider />
-<MudPopoverProvider />
 
 <div class="app-layout-wrapper">
 
     @* --- HEADER SECTION --- *@
     <header class="app-header">
-        <AdminSidebar />
+
     </header>
 
     <div class="app-body">
@@ -52,10 +55,9 @@
     .app-body {
         display: flex;
         flex: 1 1 auto;
-        /* Expands to fill available height */
-        overflow: hidden;
         /* Crucial: Clipping overflow at this level */
-        position: relative;
+        overflow: hidden;
+        /* REMOVED: position: relative — was creating a stacking context that clipped MudSnackbarProvider */
     }
 
     /* Sidebar Configuration */

@@ -49,7 +49,7 @@ builder.Services.AddScoped<IManagementService, ManagementService>();
 builder.Services.AddScoped<IRequestService, RequestService>();
 
 // Thêm dòng này trước khi builder.Build()
-builder.WebHost.UseUrls("http://0.0.0.0:5001");
+// builder.WebHost.UseUrls("http://0.0.0.0:5001");
 
 var app = builder.Build();
 

@@ -20,15 +20,15 @@
 {
     <div class="d-flex justify-content-center align-items-center p-5">
         <div class="spinner-border text-primary me-2"></div>
-        <span>Loading data...</span>
+        <span>@MessageResponse.Common.LOADING_DATA</span>
     </div>
 }
 else
 {
     <MasterDetailLayout @ref="_layoutRef" TItem="RoomViewVM" TModel="BaseCreateOrUpdateAdminVM" Items="_items"
-                        Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
-                        OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
-                        OnDelete="HandleDelete" OnCancel="ResetForm">
+    Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
+    OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
+    OnDelete="HandleDelete" OnCancel="ResetForm">
 
         @* --- A. SIDEBAR CONFIGURATION --- *@
         <SidebarTopContent>
@@ -49,7 +49,7 @@ else
                 <div class="alert alert-light border d-flex align-items-center shadow-sm animate__animated animate__fadeIn">
                     <div class="me-3">
                         <div class="rounded-circle bg-white border d-flex align-items-center justify-content-center shadow-sm"
-                             style="width: 40px; height: 40px;">
+                    style="width: 40px; height: 40px;">
                             <i class="@GetViewIcon(currentName) text-primary fs-5"></i>
                         </div>
                     </div>
@@ -86,7 +86,7 @@ else
 
             @* 4. Description - Truncated for layout consistency *@
             <td class="text-center align-middle text-muted small text-truncate" style="max-width: 500px;"
-                title="@row.Description">
+            title="@row.Description">
                 @if (string.IsNullOrWhiteSpace(row.Description))
                 {
                     <span class="text-muted opacity-50">---</span>

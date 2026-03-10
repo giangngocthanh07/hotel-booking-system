@@ -1,4 +1,5 @@
 using HotelBooking.webapp.ViewModels.Admin;
+using HotelBooking.webapp.ViewModels.Admin.Base;
 
 namespace HotelBooking.webapp.Helpers
 {
@@ -270,6 +271,74 @@ namespace HotelBooking.webapp.Helpers
             model.PetFee ??= 200000;
             if (!model.IsPetAllowed && model.PetFee > 0)
                 model.IsPetAllowed = true;
+        }
+
+        // ===========================================================================
+        // 5. VALIDATION HELPER
+        // ===========================================================================
+        public static string? ValidateCheckInOutTime(BaseCreateOrUpdateAdminVM model)
+        {
+            TimeOnly? checkIn = null;
+            TimeOnly? checkOut = null;
+
+            if (model is CheckInOutPolicyUpdateVM cioUpdate)
+            {
+                checkIn = cioUpdate.CheckInTime;
+                checkOut = cioUpdate.CheckOutTime;
+            }
+            else if (model is CheckInOutPolicyCreateVM cioCreate)
+            {
+                checkIn = cioCreate.CheckInTime;
+                checkOut = cioCreate.CheckOutTime;
+            }
+
+            if (checkIn.HasValue && checkOut.HasValue)
+            {
+                var diff = checkOut.Value.ToTimeSpan() - checkIn.Value.ToTimeSpan();
+
+                // If diff is negative, it means checkout is on the next day (e.g. CheckIn 14:00, CheckOut 12:00 -> -2 hours -> 22 hours)
+                if (diff.TotalHours <= 0)
+                {
+                    diff = diff.Add(TimeSpan.FromHours(24));
+                }
+
+                if (diff.TotalHours < 1) return MessageResponse.AdminManagement.Policy.INVALID_DIFF_TIME;
+                if (diff.TotalHours > 23) return MessageResponse.AdminManagement.Policy.MAX_DIFF_TIME;
+            }
+
+            return null;
+        }
+
+        public static string? ValidatePolicyFees(BaseCreateOrUpdateAdminVM model)
+        {
+            if (model is CheckInOutPolicyUpdateVM cioUpdate)
+            {
+                if (cioUpdate.EarlyCheckInFee > 0 && cioUpdate.EarlyCheckInFee < 10000) return MessageResponse.AdminManagement.Policy.EARLY_CHECKIN_FEE_MIN;
+                if (cioUpdate.LateCheckOutFee > 0 && cioUpdate.LateCheckOutFee < 10000) return MessageResponse.AdminManagement.Policy.LATE_CHECKOUT_FEE_MIN;
+            }
+            else if (model is ChildrenPolicyUpdateVM childUpdate)
+            {
+                if (childUpdate.ExtraBedFee > 0 && childUpdate.ExtraBedFee < 10000) return MessageResponse.AdminManagement.Policy.EXTRA_BED_FEE_MIN;
+            }
+            else if (model is PetPolicyUpdateVM petUpdate)
+            {
+                if (petUpdate.PetFee > 0 && petUpdate.PetFee < 10000) return MessageResponse.AdminManagement.Policy.PET_FEE_MIN;
+            }
+            else if (model is CheckInOutPolicyCreateVM cioCreate)
+            {
+                if (cioCreate.EarlyCheckInFee > 0 && cioCreate.EarlyCheckInFee < 10000) return MessageResponse.AdminManagement.Policy.EARLY_CHECKIN_FEE_MIN;
+                if (cioCreate.LateCheckOutFee > 0 && cioCreate.LateCheckOutFee < 10000) return MessageResponse.AdminManagement.Policy.LATE_CHECKOUT_FEE_MIN;
+            }
+            else if (model is ChildrenPolicyCreateVM childCreate)
+            {
+                if (childCreate.ExtraBedFee > 0 && childCreate.ExtraBedFee < 10000) return MessageResponse.AdminManagement.Policy.EXTRA_BED_FEE_MIN;
+            }
+            else if (model is PetPolicyCreateVM petCreate)
+            {
+                if (petCreate.PetFee > 0 && petCreate.PetFee < 10000) return MessageResponse.AdminManagement.Policy.PET_FEE_MIN;
+            }
+
+            return null;
         }
     }
 }

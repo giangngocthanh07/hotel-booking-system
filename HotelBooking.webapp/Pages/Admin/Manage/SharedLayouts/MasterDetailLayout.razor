@@ -34,7 +34,7 @@
                         <h6 class="@(IsEditMode ? "text-warning" : "text-primary") fw-bold mb-3">
                             @(IsEditMode ? "UPDATE DATA" : "ADD NEW")
                         </h6>
-                        <EditForm Model="@Model" OnValidSubmit="HandleSubmit" @ref="_internalForm">
+                        <EditForm Model="@Model" OnSubmit="HandleSubmit" @ref="_internalForm">
                             <DataAnnotationsValidator />
 
                             @* --- COMMON SHARED FIELDS --- *@
@@ -66,8 +66,7 @@
 
                             <div class="d-grid gap-2 mt-4">
                                 <button type="submit"
-                                    class="btn @(IsEditMode ? "btn-warning" : "btn-primary") fw-bold shadow-sm">Save
-                                    Changes</button>
+                                    class="btn @(IsEditMode ? "btn-warning" : "btn-primary") fw-bold shadow-sm">Save Changes</button>
                                 @if (IsEditMode)
                                 {
                                     <button type="button" class="btn btn-light border" @onclick="CancelEdit">Cancel</button>

@@ -127,7 +127,7 @@ public class ManagementService : IManagementService
         => PostGenericWithSlug<ServiceVM, ServiceCreateVM>(vm, isService: true);
 
     public Task<ApiResponse<PolicyVM>> CreatePolicy(PolicyCreateVM vm)
-        => PostGeneric<PolicyVM, PolicyCreateVM>("create-policy", vm);
+        => PostGenericWithSlug<PolicyVM, PolicyCreateVM>(vm, isService: false, isPolicy: true);
 
     public Task<ApiResponse<AmenityVM>> CreateAmenity(AmenityCreateVM vm)
         => PostGeneric<AmenityVM, AmenityCreateVM>("create-amenity", vm);
@@ -151,7 +151,7 @@ public class ManagementService : IManagementService
         => PutGenericWithSlug<ServiceVM, ServiceUpdateVM>(id, vm, isService: true);
 
     public Task<ApiResponse<PolicyVM>> UpdatePolicy(int id, PolicyUpdateVM vm)
-        => PutGeneric<PolicyVM, PolicyUpdateVM>("update-policy", id, vm);
+        => PutGenericWithSlug<PolicyVM, PolicyUpdateVM>(id, vm, isService: false, isPolicy: true);
 
     public Task<ApiResponse<AmenityVM>> UpdateAmenity(int id, AmenityUpdateVM vm)
         => PutGeneric<AmenityVM, AmenityUpdateVM>("update-amenity", id, vm);
@@ -210,18 +210,30 @@ public class ManagementService : IManagementService
         };
     }
 
-    // Helper: Polymorphic POST with slug support
-    private Task<ApiResponse<TResponse>> PostGenericWithSlug<TResponse, TRequest>(TRequest vm, bool isService)
+    private string GetPolicySlug<T>(T vm)
     {
-        var slug = isService ? GetServiceSlug(vm) : "";
+        return vm switch
+        {
+            CheckInOutPolicyCreateVM _ or CheckInOutPolicyUpdateVM _ => "check-in-out-policy",
+            CancellationPolicyCreateVM _ or CancellationPolicyUpdateVM _ => "cancellation-policy",
+            ChildrenPolicyCreateVM _ or ChildrenPolicyUpdateVM _ => "children-policy",
+            PetPolicyCreateVM _ or PetPolicyUpdateVM _ => "pet-policy",
+            _ => throw new NotSupportedException($"Policy type not supported: {vm?.GetType().Name}")
+        };
+    }
+
+    // Helper: Polymorphic POST with slug support
+    private Task<ApiResponse<TResponse>> PostGenericWithSlug<TResponse, TRequest>(TRequest vm, bool isService = false, bool isPolicy = false)
+    {
+        var slug = isService ? GetServiceSlug(vm) : isPolicy ? GetPolicySlug(vm) : "";
         var url = string.IsNullOrEmpty(slug) ? $"{BaseUrl}/create" : $"{BaseUrl}/create-{slug}";
         return _http.PostApiAsync<TResponse, TRequest>(url, vm);
     }
 
     // Helper: Polymorphic PUT with slug support
-    private Task<ApiResponse<TResponse>> PutGenericWithSlug<TResponse, TRequest>(int id, TRequest vm, bool isService)
+    private Task<ApiResponse<TResponse>> PutGenericWithSlug<TResponse, TRequest>(int id, TRequest vm, bool isService = false, bool isPolicy = false)
     {
-        var slug = isService ? GetServiceSlug(vm) : "";
+        var slug = isService ? GetServiceSlug(vm) : isPolicy ? GetPolicySlug(vm) : "";
         var url = string.IsNullOrEmpty(slug) ? $"{BaseUrl}/update/{id}" : $"{BaseUrl}/update-{slug}/{id}";
         return _http.PutApiAsync<TResponse, TRequest>(url, vm);
     }
