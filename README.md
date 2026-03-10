@@ -1,51 +1,74 @@
 # HotelBooking System
 
 [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?style=flat&logo=dotnet&logoColor=white)](#)
-[![Blazor](https://img.shields.io/badge/Blazor-WebAssembly_/_Server-512BD4?style=flat&logo=blazor&logoColor=white)](#)
-[![EF Core](https://img.shields.io/badge/Entity_Framework-Core-512BD4?style=flat)](#)
-[![Swagger](https://img.shields.io/badge/Swagger-API_Docs-85EA2D?style=flat&logo=swagger&logoColor=black)](#)
+[![Blazor Server](https://img.shields.io/badge/Blazor-Server-512BD4?style=flat&logo=blazor&logoColor=white)](#)
+[![EF Core](https://img.shields.io/badge/Entity_Framework-Core_8-512BD4?style=flat)](#)
+[![SQL Server](https://img.shields.io/badge/Database-SQL_Server-CC2927?style=flat&logo=microsoftsqlserver&logoColor=white)](#)
+[![Cloudinary](https://img.shields.io/badge/Media-Cloudinary-3448C5?style=flat&logo=cloudinary&logoColor=white)](#)
+[![Swagger](https://img.shields.io/badge/API_Docs-Swagger-85EA2D?style=flat&logo=swagger&logoColor=black)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 🏨 SmartHotel – Online Travel Agency (OTA) Platform
-A comprehensive Online Travel Agency (OTA) ecosystem built with .NET 9 and Blazor Server. This project serves as a centralized marketplace connecting Hotel Owners with Travelers, featuring a robust management system and modern software architecture.
+A comprehensive, scalable **Hotel Booking Platform** built with **.NET 8, Blazor Server, and Domain-Driven Design (DDD) principles**.
 
-## ✨ Features
+The platform is designed for three distinct user roles:
 
-### 👤 Customer Features
+| Role               | Who They Are                        | What They Can Do                                          |
+| ------------------ | ----------------------------------- | --------------------------------------------------------- |
+| 👤 **Customer**    | General visitors / registered users | Search hotels, submit upgrade requests                    |
+| 🏨 **Hotel Owner** | Verified property managers          | Manage hotels, room types, and configurations             |
+| 🛠️ **Admin**       | Platform administrators             | Manage global settings, users, roles, and handle requests |
 
-- **Search & Browse:** Find hotels with rich filtering options (by location, price, rating, and amenities).
-- **Booking & Reservations:** (Coming Soon) Book rooms, manage upcoming reservations, and history.
-- **Account Upgrades:** Submit requests with required documents for approval to become a Hotel Owner.
+---
 
-### 🏨 Hotel Owner Features
+## ✨ Features Overview
 
-- **Property Management:** Add and define hotel details, manage room types, units, and views.
-- **Booking Dashboard:** (Coming Soon) Track incoming reservations, update statuses, and generate revenue reports.
-- **Configuration:** Attach specific amenities and policies to hotel properties.
+### 👤 Customer
 
-### 🛠️ Admin Features
+- **Search & Browse Hotels** — Filter by location, price range, star rating, and amenities.
+- **Account Management** — Register, log in, and manage your profile.
+- **Upgrade Requests** — Submit a formal request (with supporting documents) to become a verified Hotel Owner.
 
-- **Global Settings:** Perform full CRUD operations on Amenities, Global Policies, Service types, and Bed Types.
-- **Request Management:** Review, approve, or reject "Upgrade to Owner" requests from customers.
-- **User & Role Management:** Manage user profiles and their authorization roles.
+### 🏨 Hotel Owner
+
+- **Property Management** — Add hotels, define room types, room units, bed configurations, and views.
+- **Media Uploads** — Upload hotel and room photos via Cloudinary integration.
+- **Configuration** — Attach amenities, services, and policies to your properties.
+- **Booking Dashboard** _(In Progress)_ — Track reservations and manage availability.
+
+### 🛠️ Administrator
+
+- **Global Settings** — Full CRUD on Amenities, Policies, Services, Bed Types, Room Qualities, and Unit Types.
+- **Upgrade Request Management** — Review, approve, or reject Owner upgrade requests with audit trail.
+- **User & Role Management** — Manage user accounts and assign authorization roles.
 
 ---
 
 ## 🏗️ System Architecture
 
-The project employs a structured `N-Tier` / modified `Onion Architecture`, separating concerns distinctly.
+The project uses a layered **N-Tier / Onion Architecture** that cleanly separates concerns across five projects:
 
-| Project Layer                    | Description                                                                                                                                                                                              |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 🌐 `HotelBooking.api`            | The entry point. Exposes RESTful API endpoints. Secured via JWT authentication, heavily reliant on Swagger documentation. Routed as `v1/admin/`, `v1/customer/`, and `v1/public/`.                       |
-| ⚙️ `HotelBooking.application`    | The core layer containing the business logic organized into domains (`AdminManagement`, `HotelManagement`, `RequestManagement`, `Auth`, etc.). Also holds FluentValidation constraints and DTO mappings. |
-| 🗄️ `HotelBooking.infrastructure` | Connects the application to external services - usually contains the DbContext, Repository implementations, caching, and 3rd party API integrations.                                                     |
-| 💻 `HotelBooking.webapp`         | The frontend interface built with **Blazor**. Divided into distinct components and pages enforcing Role-based layouts (`AdminLayout`, `OwnerLayout`, `MainLayout`).                                      |
-| 🧪 `HotelBooking.test`           | Houses Unit tests (using xUnit/NUnit, Moq) and Integration tests ensuring regression-free changes.                                                                                                       |
+```
+HotelBooking.sln
+├── HotelBooking.api/           ← REST API (entry point, JWT auth, Swagger)
+├── HotelBooking.application/   ← Business logic, Services, DTOs, Validators
+├── HotelBooking.infrastructure/← Data access (EF Core DbContext, Repositories, UnitOfWork)
+├── HotelBooking.webapp/        ← Frontend UI (Blazor Server)
+└── HotelBooking.test/          ← Unit & Integration tests
+```
 
-> 📖 **Dive deeper into the architecture:**
+### Layer Responsibilities
+
+| Layer                                | Description                                                                                                                                                                                                            |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🌐 **`HotelBooking.api`**            | Exposes RESTful API endpoints under versioned routes (`v1/admin/`, `v1/customer/`, `v1/[public]`). Secured via JWT Bearer authentication. DI is configured via dedicated Extension classes to keep `Program.cs` clean. |
+| ⚙️ **`HotelBooking.application`**    | Core business logic organized by domain (`AdminManagement`, `HotelManagement`, `RequestManagement`, `Auth`, `UserManagement`, `Media`). Also contains FluentValidation rules, DTOs, and shared Helpers.                |
+| 🗄️ **`HotelBooking.infrastructure`** | Connects the app to external data sources. Contains the EF Core `HotelBookingDBContext`, all Repository implementations, and a `UnitOfWork` pattern. Also integrates with **Cloudinary** for media storage.            |
+| 💻 **`HotelBooking.webapp`**         | Blazor Server frontend divided into role-based layouts (`AdminLayout`, `OwnerLayout`, `MainLayout`). Communicates with the backend API via scoped HttpClient services.                                                 |
+| 🧪 **`HotelBooking.test`**           | xUnit-based Unit Tests and Integration Tests. Integration tests use a dedicated `appsettings.test.json` and connect to a real test database.                                                                           |
+
+> 📖 **Detailed structure documentation:**
 >
-> - [Backend Folder Structure](PROJECT_STRUCTURE.md)
+> - [Backend & API Folder Structure](PROJECT_STRUCTURE.md)
 > - [Frontend (Blazor) Folder Structure](PROJECT_STRUCTURE_WEBAPP.md)
 > - [Test Layer Architecture](PROJECT_STRUCTURE_TEST.md)
 
@@ -53,99 +76,187 @@ The project employs a structured `N-Tier` / modified `Onion Architecture`, separ
 
 ## 🚀 Getting Started
 
-Follow these steps to replicate and run the project locally.
+> **For non-developers:** This project runs locally on your machine. Follow each step in order. If you get stuck, the most common issues are covered in the [Troubleshooting](#-troubleshooting) section below.
 
 ### Prerequisites
 
-- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) or later.
-- **IDE:** Visual Studio 2022, JetBrains Rider, or VS Code.
-- A compatible database engine (e.g., SQL Server or PostgreSQL).
+Before you begin, make sure you have the following installed:
 
-### 1. Clone the repository
+| Tool       | Version                              | Download                                                                                    |
+| ---------- | ------------------------------------ | ------------------------------------------------------------------------------------------- |
+| .NET SDK   | 8.0 or later                         | [dotnet.microsoft.com](https://dotnet.microsoft.com/download/dotnet/8.0)                    |
+| SQL Server | 2019 or later                        | [microsoft.com/sql-server](https://www.microsoft.com/en-us/sql-server/sql-server-downloads) |
+| IDE        | Visual Studio 2022 / VS Code / Rider | —                                                                                           |
+| Git        | Any recent version                   | [git-scm.com](https://git-scm.com/)                                                         |
+
+---
+
+### Step 1 — Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/HotelBooking.git
-cd HotelBooking
+git clone https://github.com/pinnguyen25/Hotel_Blazor.git
+cd Hotel_Blazor
 ```
 
-### 2. Configure Database
+---
 
-Updating connection string inside `HotelBooking.api/appsettings.json` (and optionally `appsettings.Development.json`):
+### Step 2 — Configure the Database Connection
+
+Open `HotelBooking.api/appsettings.json` and update the connection string to point to your local SQL Server instance:
 
 ```json
 "ConnectionStrings": {
-  "DefaultConnection": "Server=YOUR_SERVER;Database=HotelBookingDB;Trusted_Connection=True;MultipleActiveResultSets=true"
+  "connectionStringHotelBooking": "Server=YOUR_SERVER,PORT; Database=HotelBooking; User Id=YOUR_USER; Password=YOUR_PASSWORD; TrustServerCertificate=True"
 }
 ```
 
-### 3. Apply Migrations (If Using Code-First)
+> **Common values for local development:**
+>
+> - `Server=127.0.0.1,1433` — default SQL Server local instance
+> - `Server=.` or `Server=(localdb)\\mssqllocaldb` — for LocalDB
+
+---
+
+### Step 3 — Apply Database Migrations
+
+This project uses **EF Core Code-First migrations**. Run the following command from the solution root to create and update your database schema:
 
 ```bash
-cd HotelBooking.infrastructure
-dotnet ef database update --startup-project ../HotelBooking.api
+dotnet ef database update --project HotelBooking.infrastructure --startup-project HotelBooking.api
 ```
 
-_(Skip this step if using a Database-First approach with an existing schema)._
+> **Have an existing database?** If you are restoring from a `.bak` file or a pre-existing schema, skip this step. You can also apply individual SQL scripts from the [`Scripts/`](Scripts/) folder as needed.
 
-### 4. Run the Application
+---
 
-You can run the application either directly from your IDE by setting both `HotelBooking.api` and `HotelBooking.webapp` as Startup Projects, or via CLI:
+### Step 4 — (Optional) Configure Cloudinary
 
-**Terminal 1 (Backend - API):**
+The application uses [Cloudinary](https://cloudinary.com/) for image storage. Update the credentials in `HotelBooking.api/appsettings.json`:
+
+```json
+"Cloudinary": {
+  "CloudName": "your-cloud-name",
+  "ApiKey": "your-api-key",
+  "ApiSecret": "your-api-secret"
+}
+```
+
+> Sign up for a free Cloudinary account at [cloudinary.com](https://cloudinary.com/). Without valid credentials, photo upload features will not work.
+
+---
+
+### Step 5 — Run the Application
+
+You need to run **two projects simultaneously**: the API backend and the Blazor frontend.
+
+**Option A: Visual Studio 2022 (Recommended)**
+
+Set both `HotelBooking.api` and `HotelBooking.webapp` as Startup Projects via right-click → _Set as Startup Projects_, then press **F5**.
+
+**Option B: CLI (Two Terminals)**
 
 ```bash
+# Terminal 1 — Start the API backend
 cd HotelBooking.api
 dotnet run
 ```
 
-_API Swagger Documentation will be accessible at: `https://localhost:<port>/swagger`_
-
-**Terminal 2 (Frontend - Blazor WebApp):**
-
 ```bash
+# Terminal 2 — Start the Blazor frontend
 cd HotelBooking.webapp
 dotnet run
 ```
 
-_The App will be accessible at: `https://localhost:<port>`_
+Once running:
+
+| Service                 | URL                                    |
+| ----------------------- | -------------------------------------- |
+| 🌐 **Blazor Web App**   | `https://localhost:<port>`             |
+| 📄 **Swagger API Docs** | `https://localhost:<api-port>/swagger` |
+
+> The exact ports are shown in the terminal output after `dotnet run`. They are also configurable in `HotelBooking.api/Properties/launchSettings.json` and `HotelBooking.webapp/Properties/launchSettings.json`.
 
 ---
 
 ## 🧪 Testing
 
-The solution incorporates tests mapped within the `HotelBooking.test` project.
+Tests are located in the `HotelBooking.test` project and are split into:
 
-To run all unit and integration tests:
+- **Unit Tests** — Test individual service methods in isolation (using Moq for mocking).
+- **Integration Tests** — Connect to a real database using settings from `appsettings.test.json`.
+
+Before running integration tests, make sure `appsettings.test.json` has a valid connection string pointing to a test database.
 
 ```bash
+# Run all tests from the solution root
 dotnet test
+```
+
+```bash
+# Run only unit tests
+dotnet test --filter "FullyQualifiedName~UnitTests"
+
+# Run only integration tests
+dotnet test --filter "FullyQualifiedName~IntegrationTests"
 ```
 
 ---
 
 ## 🤝 Contribution Guidelines
 
-We welcome contributions! Please adhere to the following workflow:
+Contributions are welcome! Please follow the workflow below to keep the codebase consistent.
 
-1. **Fork the repository**.
-2. **Create a Feature Branch** (`git checkout -b feature/AmazingFeature`).
-3. **Commit your changes** (`git commit -m 'Add some AmazingFeature'`).
-4. **Push to the Branch** (`git push origin feature/AmazingFeature`).
-5. **Open a Pull Request**.
+### Workflow
 
-### Code Style Requirements:
+1. **Fork** the repository.
+2. **Create a branch** for your feature or fix:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+3. **Commit** with a clear, descriptive message:
+   ```bash
+   git commit -m "feat: add booking cancellation flow"
+   ```
+4. **Push** your branch and **open a Pull Request**.
 
-- Write semantic, domain-driven code.
-- Prefix interfaces with `I` (e.g., `IHotelService`).
-- Place feature-specific business interfaces directly in the same file as the class implementation to promote locality of behavior, unless it's a globally shared interface.
-- Add meaningful English summaries and comments.
+### Code Style
+
+- Follow **Domain-Driven Design** principles — organize code by business domain, not by technical type.
+- Prefix all interfaces with `I` (e.g., `IHotelService`, `IAmenityService`).
+- **Co-locate interfaces with implementations**: feature-specific service interfaces live in the same `.cs` file as the class (e.g., `IAmenityService` is in `AmenityService.cs`). Only truly shared or utility interfaces go in the `Interfaces/` folder.
+- Write XML doc comments (`/// <summary>`) on public methods.
+- Keep methods small and focused — delegate to helpers when logic grows complex.
+
+---
+
+## 🔮 Roadmap
+
+Features currently planned or in progress:
+
+- [ ] **BookingManagement** — End-to-end booking flow: room selection, reservation, payment processing.
+- [ ] **Review System** — Customers can leave ratings and reviews after their stay.
+- [ ] **Owner Dashboard** — Revenue reports, occupancy statistics, and booking management.
+- [ ] **Customer Portal** — Booking history, saved hotels, and personal settings.
+- [ ] **Notification System** — In-app and email notifications for booking updates.
+
+---
+
+## ❓ Troubleshooting
+
+| Problem                    | Likely Cause                 | Solution                                                                                         |
+| -------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------ |
+| Cannot connect to database | Wrong connection string      | Double-check server name, port, credentials in `appsettings.json`                                |
+| Migration fails            | Project not found            | Run the `dotnet ef` command from the **solution root** folder                                    |
+| Image upload not working   | Missing Cloudinary config    | Set valid Cloudinary credentials in `appsettings.json`                                           |
+| Port conflicts             | Another app on the same port | Change the port in `launchSettings.json` or stop the conflicting process                         |
+| `dotnet` command not found | SDK not installed            | Install [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) and restart your terminal |
 
 ---
 
 ## 📜 License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for details.
 
 ---
 
-_If you find this project helpful for learning Blazor and Clean Architecture, give it a ⭐️!_
+_Built as a final project at CyberSoft Academy. If you find this project helpful for learning Blazor and Clean Architecture, give it a ⭐️!_
