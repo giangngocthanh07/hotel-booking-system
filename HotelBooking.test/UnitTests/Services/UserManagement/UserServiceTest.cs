@@ -15,7 +15,7 @@ using HotelBooking.application.Services.Domains.UserManagement;
 // 2. Using Entities and Repo Interfaces from Infrastructure layer
 using HotelBooking.infrastructure.Models;
 
-namespace HotelBooking.Tests.Services
+namespace HotelBooking.Tests.Services.UserManagement
 {
     public class UserServiceTest : BaseServiceTest
     {
@@ -79,7 +79,8 @@ namespace HotelBooking.Tests.Services
                 Username = "new_user",
                 Email = "new@gmail.com",
                 Password = "TestPassword@123",
-                FullName = "New User"
+                FullName = "New User",
+                PhoneNumber = "0912345678"
             };
 
             // Using Generic Helper from Base class
