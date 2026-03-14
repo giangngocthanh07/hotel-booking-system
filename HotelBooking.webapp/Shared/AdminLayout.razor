@@ -11,11 +11,6 @@
 
 <div class="app-layout-wrapper">
 
-    @* --- HEADER SECTION --- *@
-    <header class="app-header">
-
-    </header>
-
     <div class="app-body">
 
         @* --- SIDEBAR SECTION --- *@
@@ -33,109 +28,138 @@
 </div>
 
 <style>
+    :root {
+        --sidebar-bg: #1e293b;
+        /* Xanh than đậm cho chuyên nghiệp */
+        --primary-blue: #0060e6;
+        --app-bg-light: #f0f9ff;
+    }
+
     /* Main Wrapper: Vertical Flex Layout */
     .app-layout-wrapper {
         display: flex;
         flex-direction: column;
         height: 100vh;
-        /* Fixed to viewport height */
         width: 100vw;
         overflow: hidden;
-        /* Prevents unwanted double scrollbars */
+        background-color: var(--app-bg-light);
     }
 
-    /* Header: Fixed height, non-scrollable */
+    /* Header: Đồng bộ với tone trắng xanh */
     .app-header {
         flex: 0 0 auto;
+        height: 64px;
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(10px);
         z-index: 100;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        border-bottom: 1px solid rgba(0, 96, 230, 0.1);
     }
 
-    /* Body (Sidebar + Main): Occupies remaining space */
+    /* Body (Sidebar + Main) */
     .app-body {
         display: flex;
         flex: 1 1 auto;
-        /* Crucial: Clipping overflow at this level */
         overflow: hidden;
-        /* REMOVED: position: relative — was creating a stacking context that clipped MudSnackbarProvider */
     }
 
-    /* Sidebar Configuration */
+    /* Sidebar: Đậm màu để tách biệt với vùng nội dung sáng */
     .app-sidebar {
         width: 260px;
         min-width: 260px;
-        background-color: #1e2125;
+        background-color: var(--sidebar-bg);
         flex-direction: column;
-        border-right: 1px solid rgba(255, 255, 255, 0.1);
-
-        /* Hidden by default on Mobile for slide-in effect */
+        border-right: 1px solid rgba(255, 255, 255, 0.05);
         display: none;
+        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
     }
 
-    /* Main Content Area */
+    /* Main Content Area: Nền loang nhẹ sáng sủa */
     .app-main {
         flex: 1;
-        /* Takes up all remaining horizontal space */
-        background-color: #f8f9fa;
+        background-color: #f0f9ff;
+        background-image:
+            radial-gradient(at 0% 0%, hsla(190, 100%, 92%, 1) 0px, transparent 50%),
+            radial-gradient(at 100% 0%, hsla(205, 100%, 88%, 1) 0px, transparent 50%),
+            radial-gradient(at 100% 100%, hsla(195, 100%, 93%, 1) 0px, transparent 50%),
+            radial-gradient(at 0% 100%, hsla(188, 100%, 95%, 1) 0px, transparent 50%);
+        background-size: 150% 150%;
+        animation: adminGradientShift 15s ease infinite;
         overflow-y: auto;
-        /* IMPORTANT: Primary scrollbar location */
         overflow-x: hidden;
         position: relative;
     }
 
-    /* Content Padding Container */
+    /* Content Inner: Các trang con khi render vào đây nên dùng class .mud-paper hoặc .card */
     .main-content-inner {
-        min-height: auto;
+        padding: 1.5rem;
+        min-height: 100%;
     }
 
-    /* Max-width constraint for list pages */
+    /* Container cho các bảng danh sách */
     .container-limited {
-        max-width: 1400px;
+        max-width: 1440px;
         margin: 0 auto;
+        /* Nếu bạn muốn nội dung bên trong có hiệu ứng kính */
+        background: rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        padding: 20px;
     }
 
-    /* Enhanced Custom Scrollbar */
+    /* Custom Scrollbar cho mượt */
     .app-main::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
+        width: 6px;
     }
 
     .app-main::-webkit-scrollbar-track {
-        background: #f1f1f1;
+        background: transparent;
     }
 
     .app-main::-webkit-scrollbar-thumb {
-        background: #c1c1c1;
-        border-radius: 4px;
+        background: rgba(0, 96, 230, 0.2);
+        border-radius: 10px;
     }
 
     .app-main::-webkit-scrollbar-thumb:hover {
-        background: #a8a8a8;
+        background: rgba(0, 96, 230, 0.4);
     }
 
-    /* Desktop View: Display sidebar as relative */
+    /* Desktop View */
     @@media (min-width: 992px) {
         .app-sidebar {
             display: flex !important;
             position: relative;
-            transform: none;
-            height: auto;
             z-index: 1;
         }
     }
 
-    /* Mobile View: Fixed overlay sidebar */
+    /* Mobile View */
     @@media (max-width: 991.98px) {
         .app-sidebar.mobile-show {
             display: flex;
             position: absolute;
-            /* Floats over the main content */
             top: 0;
             left: 0;
             height: 100%;
             z-index: 1050;
-            box-shadow: 4px 0 10px rgba(0, 0, 0, 0.5);
+            box-shadow: 10px 0 25px rgba(0, 0, 0, 0.1);
             animation: slideIn 0.3s forwards;
+        }
+    }
+
+    @@keyframes adminGradientShift {
+        0% {
+            background-position: 0% 0%;
+        }
+
+        50% {
+            background-position: 100% 100%;
+        }
+
+        100% {
+            background-position: 0% 0%;
         }
     }
 
@@ -149,15 +173,14 @@
         }
     }
 
-    /* Background Overlay when Sidebar is active */
     .sidebar-overlay {
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
+        background-color: rgba(0, 96, 230, 0.1);
         z-index: 1040;
-        backdrop-filter: blur(2px);
+        backdrop-filter: blur(4px);
     }
 </style>

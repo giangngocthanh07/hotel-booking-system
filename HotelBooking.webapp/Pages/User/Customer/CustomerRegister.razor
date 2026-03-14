@@ -31,7 +31,7 @@
                 @if (!string.IsNullOrEmpty(messageAlert))
                 {
                     <div class="alert @(isError ? "alert-danger" : "alert-success") custom-alert animate__animated animate__fadeIn"
-                         role="alert">
+                    role="alert">
                         <div class="alert-content">
                             @messageAlert
                         </div>
@@ -42,7 +42,7 @@
                     <div class="col-md-6">
                         <div class="form-floating">
                             <InputText @bind-Value="userRegister.Username" class="form-control auth-input" id="username"
-                                       placeholder="Enter username" />
+                                placeholder="Enter username" />
                             <label for="username">Username</label>
                             <ValidationMessage For="@(() => userRegister.Username)" class="text-danger small mt-1" />
                         </div>
@@ -50,8 +50,8 @@
 
                     <div class="col-md-6">
                         <div class="form-floating">
-                            <InputText @bind-Value="userRegister.Email" type="email" class="form-control auth-input" id="email"
-                                       placeholder="name@domain.com" />
+                            <InputText @bind-Value="userRegister.Email" type="email" class="form-control auth-input"
+                                id="email" placeholder="name@domain.com" />
                             <label for="email">Email address</label>
                             <ValidationMessage For="@(() => userRegister.Email)" class="text-danger small mt-1" />
                         </div>
@@ -60,7 +60,7 @@
                     <div class="col-md-6">
                         <div class="form-floating">
                             <InputText @bind-Value="userRegister.FullName" class="form-control auth-input" id="fullname"
-                                       placeholder="John Doe" />
+                                placeholder="John Doe" />
                             <label for="fullname">Full Name</label>
                             <ValidationMessage For="@(() => userRegister.FullName)" class="text-danger small mt-1" />
                         </div>
@@ -69,7 +69,7 @@
                     <div class="col-md-6">
                         <div class="form-floating">
                             <InputText @bind-Value="userRegister.PhoneNumber" class="form-control auth-input" id="phone"
-                                       placeholder="e.g., +84..." />
+                                placeholder="e.g., +84..." />
                             <label for="phone">Phone Number</label>
                             <ValidationMessage For="@(() => userRegister.PhoneNumber)" class="text-danger small mt-1" />
                         </div>
@@ -77,8 +77,8 @@
 
                     <div class="col-md-6">
                         <div class="form-floating">
-                            <InputText @bind-Value="userRegister.Password" type="password" class="form-control auth-input"
-                                       id="password" placeholder="••••••••" />
+                            <InputText @bind-Value="userRegister.Password" type="password"
+                                class="form-control auth-input" id="password" placeholder="••••••••" />
                             <label for="password">Password</label>
                             <ValidationMessage For="@(() => userRegister.Password)" class="text-danger small mt-1" />
                         </div>
@@ -87,17 +87,18 @@
                     <div class="col-md-6">
                         <div class="form-floating">
                             <InputText @bind-Value="userRegister.ConfirmPassword" type="password"
-                                       class="form-control auth-input" id="confirmPassword" placeholder="••••••••" />
+                                class="form-control auth-input" id="confirmPassword" placeholder="••••••••" />
                             <label for="confirmPassword">Confirm Password</label>
                             <ValidationMessage For="@(() => userRegister.ConfirmPassword)"
-                                               class="text-danger small mt-1" />
+                                class="text-danger small mt-1" />
                         </div>
                     </div>
                 </div>
 
                 <div class="auth-options mt-4">
                     <div class="form-check custom-checkbox mb-2">
-                        <InputCheckbox class="form-check-input" id="receiveEmail" @bind-Value="userRegister.ReceiveEmail" />
+                        <InputCheckbox class="form-check-input" id="receiveEmail"
+                            @bind-Value="userRegister.ReceiveEmail" />
                         <label class="form-check-label small text-muted" for="receiveEmail">
                             Yes, I want to receive exclusive offers and news
                         </label>
@@ -107,9 +108,10 @@
                         <InputCheckbox @bind-Value="userRegister.AgreeTerm" class="form-check-input" id="agreeTerm" />
                         <label class="form-check-label small text-muted" for="agreeTerm">
                             I agree to the <a href="/terms" class="auth-link">Terms & Conditions</a> and <a
-                            href="/privacy" class="auth-link">Privacy Policy</a>.
+                                href="/privacy" class="auth-link">Privacy Policy</a>.
                         </label>
-                        <ValidationMessage For="@(() => userRegister.AgreeTerm)" class="text-danger small d-block mt-1" />
+                        <ValidationMessage For="@(() => userRegister.AgreeTerm)"
+                            class="text-danger small d-block mt-1" />
                     </div>
                 </div>
 
@@ -119,7 +121,7 @@
 
                 <div class="text-center">
                     <p class="mb-0 text-muted small">
-                        Already have an account? 
+                        Already have an account?
                         <a href="/customer-login" class="auth-link fw-bold">Sign In</a>
                     </p>
                 </div>
@@ -134,13 +136,14 @@
 
 <style>
     :root {
-        --primary-color: #4facfe;
-        --secondary-color: #00f2fe;
-        --card-bg: rgba(255, 255, 255, 0.12);
-        --text-main: #ffffff;
-        --text-muted: #cbd5e1;
-        --input-border: rgba(255, 255, 255, 0.25);
-        --input-focus: #4facfe;
+        --primary-color: #0060e6;
+        --secondary-color: #00b4d8;
+        --card-bg: rgba(255, 255, 255, 0.65);
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+        --input-bg: #ffffff;
+        --input-border: #cbd5e1;
+        --input-focus: #0060e6;
     }
 
     .auth-wrapper {
@@ -149,19 +152,26 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364, #4facfe);
-        background-size: 400% 400%;
-        animation: gradientShift 15s ease infinite;
+        background-color: #f0f9ff;
+        background-image:
+            radial-gradient(at 0% 0%, hsla(190, 100%, 90%, 1) 0px, transparent 50%),
+            radial-gradient(at 50% 0%, hsla(205, 100%, 85%, 1) 0px, transparent 50%),
+            radial-gradient(at 100% 0%, hsla(188, 100%, 92%, 1) 0px, transparent 50%),
+            radial-gradient(at 100% 100%, hsla(215, 100%, 88%, 1) 0px, transparent 50%),
+            radial-gradient(at 0% 100%, hsla(195, 100%, 95%, 1) 0px, transparent 50%);
+        background-size: 150% 150%;
+        animation: gradientShift 20s ease infinite;
         padding: 3rem 1rem;
         position: relative;
+        overflow: hidden;
     }
 
     .auth-wrapper::before {
         content: '';
         position: absolute;
         inset: 0;
-        background: radial-gradient(circle at 20% 50%, rgba(79, 172, 254, 0.15) 0%, transparent 50%),
-                    radial-gradient(circle at 80% 20%, rgba(0, 242, 254, 0.1) 0%, transparent 50%);
+        background: radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.5) 0%, transparent 40%),
+            radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.4) 0%, transparent 40%);
         pointer-events: none;
     }
 
@@ -179,22 +189,21 @@
 
     .auth-card {
         background: var(--card-bg);
-        backdrop-filter: blur(24px);
-        -webkit-backdrop-filter: blur(24px);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
         padding: 3rem 2.5rem;
-        border-radius: 24px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 28px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.5);
     }
 
     .auth-logo {
         display: inline-flex;
         align-items: center;
         text-decoration: none;
-        color: var(--text-main);
+        color: var(--primary-color);
         font-weight: 800;
         font-size: 1.25rem;
-        letter-spacing: -0.02em;
         font-family: 'DM Serif Display', serif;
     }
 
@@ -205,68 +214,69 @@
 
     .auth-header h2 {
         color: var(--text-main);
-        font-size: 1.75rem;
-        letter-spacing: -0.02em;
+        font-size: 2.2rem;
         font-family: 'DM Serif Display', serif;
+        margin-bottom: 0.5rem;
     }
 
     .auth-header .text-muted {
         color: var(--text-muted) !important;
+        font-size: 0.95rem;
     }
 
     .auth-input {
-        border: 1.5px solid var(--input-border);
-        border-radius: 12px;
+        background: var(--input-bg) !important;
+        border: 1.5px solid var(--input-border) !important;
+        border-radius: 14px;
         height: 58px;
+        color: var(--text-main) !important;
         font-size: 0.95rem;
-        transition: all 0.2s ease;
-        background: rgba(255, 255, 255, 0.08);
-        color: #fff;
+        transition: all 0.3s ease;
     }
 
     .auth-input:focus {
-        border-color: var(--input-focus);
-        box-shadow: 0 0 0 4px rgba(79, 172, 254, 0.2);
-        background: rgba(255, 255, 255, 0.12);
-        color: #fff;
+        border-color: var(--input-focus) !important;
+        box-shadow: 0 0 0 4px rgba(0, 96, 230, 0.1);
+        outline: none;
     }
 
     .form-floating label {
-        color: var(--text-muted);
+        color: #94a3b8;
     }
 
     .auth-btn {
-        background: linear-gradient(135deg, var(--primary-color) 0%, #00c6ff 100%);
+        background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
         border: none;
-        border-radius: 12px;
-        font-weight: 600;
-        font-size: 1.1rem;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        color: #fff;
+        border-radius: 14px;
+        font-weight: 700;
+        font-size: 1.15rem;
+        color: #ffffff;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
     .auth-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(79, 172, 254, 0.4);
-        background: linear-gradient(135deg, #3fa1f7 0%, #00b8ef 100%);
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(58, 123, 213, 0.3);
+        filter: brightness(1.05);
+        color: #ffffff;
     }
 
     .auth-link {
         color: var(--primary-color);
         text-decoration: none;
-        transition: color 0.2s ease;
+        font-weight: 600;
+        transition: all 0.2s;
     }
 
     .auth-link:hover {
-        color: #7dc4ff;
+        color: #3a7bd5;
         text-decoration: underline;
     }
 
     .custom-checkbox .form-check-input {
-        border-radius: 4px;
         border: 1.5px solid var(--input-border);
         cursor: pointer;
-        background-color: rgba(255, 255, 255, 0.08);
+        background-color: #fff;
     }
 
     .custom-checkbox .form-check-input:checked {
@@ -274,53 +284,64 @@
         border-color: var(--primary-color);
     }
 
-    .form-check-label,
-    .text-muted {
-        color: var(--text-muted) !important;
-    }
-
     .custom-alert {
-        border-radius: 12px;
-        padding: 12px 16px;
+        border-radius: 14px;
+        padding: 14px 18px;
         margin-bottom: 1.5rem;
         font-weight: 500;
-        font-size: 0.9rem;
+        font-size: 0.95rem;
         border: none;
     }
 
     .custom-alert.alert-danger {
-        background: rgba(190, 18, 60, 0.2);
-        border: 1px solid rgba(254, 205, 211, 0.3);
-        color: #fca5a5;
+        background: #fef2f2;
+        border: 1px solid #fee2e2;
+        color: #991b1b;
     }
 
     .custom-alert.alert-success {
-        background: rgba(22, 163, 74, 0.2);
-        border: 1px solid rgba(134, 239, 172, 0.3);
-        color: #86efac;
+        background: #dcfce7;
+        border: 1px solid #bbf7d0;
+        color: #15803d;
     }
 
     .auth-footer .text-muted {
-        color: rgba(255, 255, 255, 0.4) !important;
+        color: #94a3b8 !important;
     }
 
-    @@keyframes gradientShift {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-    }
-
-    @@keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    @@media (max-width: 768px) {
-        .auth-card {
-            padding: 2rem 1.5rem;
+    @@keyframesgradientShift {
+        0% {
+            background-position: 0% 0%;
         }
-        .auth-container.wide {
-            max-width: 100%;
+
+        50% {
+            background-position: 100% 100%;
+        }
+
+        100% {
+            background-position: 0% 0%;
+        }
+    }
+
+    @@keyframesfadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@media(max-width: 768px) {
+        .auth-card {
+            padding: 2.5rem 1.5rem;
+        }
+
+        .auth-header h2 {
+            font-size: 1.8rem;
         }
     }
 </style>

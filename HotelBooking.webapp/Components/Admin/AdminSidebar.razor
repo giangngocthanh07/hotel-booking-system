@@ -1,6 +1,16 @@
 @inject NavigationManager _nav
 
 <div class="d-flex flex-column h-100 w-100 sidebar-theme">
+    @* --- Brand Header --- *@
+    <div class="sidebar-brand-wrapper">
+        <div class="brand-content">
+            <img src="favicon.ico" alt="Logo" class="brand-img" />
+            <div class="brand-info">
+                <span class="brand-title">Hotel Booking</span>
+                <span class="brand-status">Administrator</span>
+            </div>
+        </div>
+    </div>
 
     <div class="flex-grow-1 overflow-auto custom-scrollbar p-3 pt-2">
         <ul class="nav flex-column gap-1">
@@ -8,20 +18,20 @@
             <li class="nav-label mt-2 mb-2">ADMIN MANAGEMENT</li>
 
             <li class="nav-item">
-                <NavLink class="nav-link" href="/admin/dashboard" Match="NavLinkMatch.All">
+                <NavLink class="nav-link-item" href="/admin/dashboard" Match="NavLinkMatch.All">
                     <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
                 </NavLink>
             </li>
 
             <li class="nav-item">
-                <NavLink class="nav-link" href="/admin/users">
+                <NavLink class="nav-link-item" href="/admin/users">
                     <i class="bi bi-people-fill"></i> <span>Users</span>
                 </NavLink>
             </li>
 
             <li class="nav-item">
-                <div class="nav-link collapsed d-flex justify-content-between cursor-pointer" data-bs-toggle="collapse"
-                     data-bs-target="#requests-collapse" aria-expanded="false">
+                <div class="nav-link-item collapsed d-flex justify-content-between cursor-pointer"
+                    data-bs-toggle="collapse" data-bs-target="#requests-collapse" aria-expanded="false">
                     <div class="d-flex align-items-center">
                         <i class="bi bi-envelope-paper"></i> <span>Approve Requests</span>
                     </div>
@@ -29,75 +39,65 @@
                 </div>
 
                 <div class="collapse mt-1" id="requests-collapse">
-                    <ul class="nav flex-column gap-1 ps-3 border-start border-secondary border-opacity-25 ms-3">
+                    <ul class="nav flex-column gap-1 ps-3 border-start border-white border-opacity-10 ms-3">
                         <li class="nav-item">
-                            <NavLink class="nav-link sub-link" href="/admin/requests/requests-overview">
+                            <NavLink class="nav-link-item sub-link" href="/admin/requests/requests-overview">
                                 <i class="bi bi-bar-chart-steps"></i><span>Overview</span>
                             </NavLink>
                         </li>
                         <li class="nav-item">
-                            <NavLink class="nav-link sub-link" href="/admin/requests/upgrade-owner">
+                            <NavLink class="nav-link-item sub-link" href="/admin/requests/upgrade-owner">
                                 <i class="bi bi-person-up"></i><span>Upgrade Owner</span>
                             </NavLink>
                         </li>
                     </ul>
                 </div>
             </li>
+
             <li class="nav-label mt-4 mb-2">System</li>
 
             <li class="nav-item">
-                <div class="nav-link collapsed d-flex justify-content-between cursor-pointer" data-bs-toggle="collapse"
-                     data-bs-target="#management-collapse" aria-expanded="false">
+                <div class="nav-link-item collapsed d-flex justify-content-between cursor-pointer"
+                    data-bs-toggle="collapse" data-bs-target="#management-collapse" aria-expanded="false">
                     <div class="d-flex align-items-center">
-                        <i class="bi bi-gear-wide-connected"></i> <span>General Configuration</span>
+                        <i class="bi bi-gear-wide-connected"></i> <span>General Config</span>
                     </div>
                     <i class="bi bi-chevron-down small transition-icon"></i>
                 </div>
 
                 <div class="collapse mt-1" id="management-collapse">
-                    <ul class="nav flex-column gap-1 ps-3 border-start border-secondary border-opacity-25 ms-3">
+                    <ul class="nav flex-column gap-1 ps-3 border-start border-white border-opacity-10 ms-3">
                         <li class="nav-item">
-                            <NavLink class="nav-link sub-link" href="/admin/manage/service">
-                                <i class="bi bi-house-door"></i><span>Service</span>
-                            </NavLink>
-                        </li>
-
-                        <li class="nav-item">
-                            <NavLink class="nav-link sub-link" href="/admin/manage/policy">
-                                <i class="bi bi-file-earmark-text"></i><span>Policy</span>
-                            </NavLink>
-                        </li>
-
-                        <li class="nav-item">
-                            <NavLink class="nav-link sub-link" href="/admin/manage/amenity">
-                                <i class="bi bi-droplet"></i><span>Amenity</span>
-                            </NavLink>
-                        </li>
-
-                        <li class="nav-item">
-                            <NavLink class="nav-link sub-link" href="/admin/manage/roomquality">
-                                <i class="bi bi-stars"></i><span>Room Quality</span>
-                            </NavLink>
+                            <NavLink class="nav-link-item sub-link" href="/admin/manage/service"><i
+                                    class="bi bi-house-door"></i><span>Service</span></NavLink>
                         </li>
                         <li class="nav-item">
-                            <NavLink class="nav-link sub-link" href="/admin/manage/unittype">
-                                <i class="bi bi-house-door"></i><span>Unit Type</span>
-                            </NavLink>
+                            <NavLink class="nav-link-item sub-link" href="/admin/manage/policy"><i
+                                    class="bi bi-file-earmark-text"></i><span>Policy</span></NavLink>
                         </li>
                         <li class="nav-item">
-                            <NavLink class="nav-link sub-link" href="/admin/manage/bedtype">
-                                <i class="fas fa-bed"></i><span>Bed Type</span>
-                            </NavLink>
+                            <NavLink class="nav-link-item sub-link" href="/admin/manage/amenity"><i
+                                    class="bi bi-droplet"></i><span>Amenity</span></NavLink>
                         </li>
                         <li class="nav-item">
-                            <NavLink class="nav-link sub-link" href="/admin/manage/roomview">
-                                <i class="bi bi-image"></i><span>Room View</span>
-                            </NavLink>
+                            <NavLink class="nav-link-item sub-link" href="/admin/manage/roomquality"><i
+                                    class="bi bi-stars"></i><span>Room Quality</span></NavLink>
                         </li>
                         <li class="nav-item">
-                            <NavLink class="nav-link sub-link" href="/admin/system-config">
-                                <i class="bi bi-gear"></i> <span>System Config</span>
-                            </NavLink>
+                            <NavLink class="nav-link-item sub-link" href="/admin/manage/unittype"><i
+                                    class="bi bi-house-door"></i><span>Unit Type</span></NavLink>
+                        </li>
+                        <li class="nav-item">
+                            <NavLink class="nav-link-item sub-link" href="/admin/manage/bedtype"><i
+                                    class="fas fa-bed"></i><span>Bed Type</span></NavLink>
+                        </li>
+                        <li class="nav-item">
+                            <NavLink class="nav-link-item sub-link" href="/admin/manage/roomview"><i
+                                    class="bi bi-image"></i><span>Room View</span></NavLink>
+                        </li>
+                        <li class="nav-item">
+                            <NavLink class="nav-link-item sub-link" href="/admin/system-config"><i
+                                    class="bi bi-gear"></i><span>System Config</span></NavLink>
                         </li>
                     </ul>
                 </div>
@@ -106,103 +106,144 @@
             <li class="nav-label mt-4 mb-2">MARKETING</li>
 
             <li class="nav-item">
-                <NavLink class="nav-link" href="/admin/manages/manage-banners">
+                <NavLink class="nav-link-item" href="/admin/manages/manage-banners">
                     <i class="bi bi-card-image"></i> <span>Banners</span>
                 </NavLink>
             </li>
             <li class="nav-item">
-                <NavLink class="nav-link" href="/admin/manages/manage-promotions">
+                <NavLink class="nav-link-item" href="/admin/manages/manage-promotions">
                     <i class="bi bi-tags"></i> <span>Promotions</span>
                 </NavLink>
             </li>
             <li class="nav-item">
-                <NavLink class="nav-link" href="/admin/finances">
+                <NavLink class="nav-link-item" href="/admin/finances">
                     <i class="bi bi-coin"></i> <span>Finances</span>
                 </NavLink>
             </li>
+            <div class="sidebar-footer mt-auto p-3 d-flex justify-content-center align-items-center">
+                <NavLink class="nav-link-item back-home-btn w-100" href="/" Match="NavLinkMatch.All">
+                    <i class="bi bi-house-door-fill"></i>
+                    <span>Homepage</span>
+                </NavLink>
+            </div>
         </ul>
     </div>
-
 </div>
 
 <style>
-    /* Sidebar */
+    /* Sidebar Base */
     .sidebar-theme {
-        background-color: #1e2125;
-        color: #adb5bd;
+        background-color: #1e293b;
+        color: rgba(255, 255, 255, 0.7);
     }
 
-    .nav-label {
-        font-size: 0.7rem;
-        font-weight: 700;
-        color: #6c757d;
+    /* Brand Header */
+    .sidebar-brand-wrapper {
+        padding: 1.5rem 1.25rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .brand-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .brand-img {
+        width: 32px;
+        height: 32px;
+        filter: drop-shadow(0 0 5px rgba(0, 210, 255, 0.3));
+    }
+
+    .brand-title {
+        display: block;
+        font-family: 'DM Serif Display', serif;
+        font-size: 1.15rem;
+        color: #fff;
+        line-height: 1.2;
+    }
+
+    .brand-status {
+        display: block;
+        font-size: 0.65rem;
+        color: #00d2ff;
+        text-transform: uppercase;
+        font-weight: 800;
         letter-spacing: 0.5px;
     }
 
-    .nav-link {
-        color: #adb5bd !important;
-        padding: 10px 12px;
+    /* Labels */
+    .nav-label {
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: rgba(255, 255, 255, 0.25);
+        letter-spacing: 1.2px;
+        padding-left: 12px;
+    }
+
+    /* Nav Items & Links */
+    .nav-link-item {
+        color: rgba(255, 255, 255, 0.65) !important;
+        padding: 12px 14px;
         display: flex;
         align-items: center;
         font-weight: 500;
-        font-size: 0.9rem;
+        font-size: 0.95rem;
+        text-decoration: none;
+        border-radius: 12px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         cursor: pointer;
     }
 
-    .nav-link i {
-        font-size: 1.1rem;
+    .nav-link-item i {
+        font-size: 1.15rem;
         margin-right: 12px;
-        width: 20px;
+        width: 24px;
         text-align: center;
         transition: transform 0.2s;
     }
 
-    .nav-link:not(.active):hover {
-        background-color: rgba(255, 255, 255, 0.08);
+    /* Hover State */
+    .nav-link-item:not(.active):hover {
+        background-color: rgba(255, 255, 255, 0.05);
         color: #fff !important;
-        padding-left: 16px;
+        transform: translateX(4px);
     }
 
-    .nav-link:hover i {
-        transform: scale(1.1);
-        color: #fff;
-    }
-
-    /* Active State NavLink */
-    .nav-link.active {
-        color: #fff !important;
-        background-color: rgba(255, 255, 255, 0.1);
-    }
-
-    /* Sub-link Active */
-    .sub-link.active {
-        background-color: #0d6efd !important;
+    /* Active State */
+    .nav-link-item.active {
+        background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
         color: #fff !important;
         font-weight: 600;
+        box-shadow: 0 8px 15px rgba(0, 210, 255, 0.25);
     }
 
-    /* Sub-link padding */
     .sub-link {
-        font-size: 0.85rem;
-        padding: 8px 10px;
-        border-radius: 6px;
+        font-size: 0.88rem;
+        padding: 10px 12px;
+        margin-left: 4px;
     }
 
-    /* Collapse logic styles */
-    .nav-link[data-bs-toggle="collapse"][aria-expanded="true"] {
-        color: #fff !important;
+    .sub-link.active {
+        background: rgba(255, 255, 255, 0.1) !important;
+        box-shadow: none;
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    .nav-link[aria-expanded="true"] .transition-icon {
-        transform: rotate(180deg);
-    }
-
+    /* Collapse icon rotate */
     .transition-icon {
         transition: transform 0.3s ease;
+        opacity: 0.5;
     }
 
+    .nav-link-item:not(.collapsed) .transition-icon {
+        transform: rotate(180deg);
+        opacity: 1;
+    }
+
+    /* Custom Scrollbar */
     .custom-scrollbar::-webkit-scrollbar {
-        width: 5px;
+        width: 4px;
     }
 
     .custom-scrollbar::-webkit-scrollbar-track {
@@ -210,11 +251,35 @@
     }
 
     .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: #495057;
+        background: rgba(255, 255, 255, 0.1);
         border-radius: 10px;
     }
 
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: #6c757d;
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .mt-auto {
+        margin-top: auto !important;
+    }
+
+    .sidebar-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .back-home-btn {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px dashed rgba(255, 255, 255, 0.2);
+        color: #94a3b8 !important;
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease !important;
+    }
+
+    .back-home-btn i {
+        margin-right: 0;
     }
 </style>
