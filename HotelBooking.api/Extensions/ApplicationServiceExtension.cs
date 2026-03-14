@@ -4,6 +4,7 @@ using HotelBooking.application.Services.Domains.AdminManagement;
 using HotelBooking.application.Services.Domains.HotelManagement;
 using HotelBooking.application.Services.Domains.RequestManagement;
 using HotelBooking.application.Services.Domains.UserManagement;
+using HotelBooking.application.Services.Domains.RoomManagement;
 
 public static class ApplicationServiceExtension
 {
@@ -18,6 +19,7 @@ public static class ApplicationServiceExtension
         services.AddScoped<IHotelService, HotelService>();
         services.AddScoped<IUpgradeRequestService, UpgradeRequestService>();
         services.AddScoped<IPhotoService, PhotoService>();
+        services.AddScoped<IRoomTypeService, RoomTypeService>();
 
         // Admin Management
         services.AddScoped<IManagementAdminService, ManagementAdminService>();

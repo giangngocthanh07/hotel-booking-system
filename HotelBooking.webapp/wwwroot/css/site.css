@@ -1,7 +1,11 @@
 @import url("open-iconic/font/css/open-iconic-bootstrap.min.css");
 
 body {
-  font-family: "Inter", sans-serif;
+  font-family: 'Inter', sans-serif;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'DM Serif Display', serif;
 }
 
 /* Header */
@@ -470,6 +474,7 @@ h2,
 h3 {
   color: #1a2a6c;
   font-weight: 700;
+  font-family: 'DM Serif Display', serif;
 }
 
 .lead {

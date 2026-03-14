@@ -313,6 +313,24 @@ public static class MessageResponse
         }
     }
 
+    public static class RoomManagement
+    {
+        public const string ROOM_TYPE_NAME_ALREADY_EXISTS = "Room type name already exists!";
+        public const string ROOM_TYPE_NAME_EMPTY = "Room type name must not be empty!";
+        public const string ROOM_TYPE_NAME_TOO_LONG = "Room type name must not exceed 100 characters!";
+        public const string ROOM_TYPE_DESCRIPTION_TOO_LONG = "Room type description must not exceed 500 characters!";
+        public const string ROOM_TYPE_PRICE_INVALID = "Price per night must be greater than or equal to 0!";
+        public const string ROOM_TYPE_CAPACITY_INVALID = "Capacity must be greater than 0!";
+        public const string ROOM_TYPE_ADULT_CAPACITY_INVALID = "Adult capacity must be greater than 0!";
+        public const string ROOM_TYPE_CHILD_CAPACITY_INVALID = "Child capacity must be greater than 0!";
+        public const string ROOM_TYPE_UNIT_TYPE_ID_INVALID = "Unit type ID must be greater than 0!";
+        public const string ROOM_TYPE_QUALITY_ID_INVALID = "Quality ID must be greater than 0!";
+        public const string ROOM_TYPE_ROOM_VIEW_ID_INVALID = "Room view ID must be greater than 0!";
+        public const string ROOM_TYPE_MAX_EXTRA_BEDS_INVALID = "Max extra beds must be greater than or equal to 0!";
+        public const string ROOM_TYPE_AREA_INVALID = "Area must be greater than 0!";
+        public const string ROOM_TYPE_TOTAL_ROOMS_INVALID = "Total rooms must be greater than 0!";
+    }
+
     // Alias for easier access
     public static class HotelApproval
     {

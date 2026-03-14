@@ -8,6 +8,7 @@ using HotelBooking.application.Helpers;
 
 // 2. Using Entities and Repo Interfaces from Infrastructure layer
 using HotelBooking.infrastructure.Models;
+using System.Linq.Expressions;
 
 namespace HotelBooking.Tests.Services.AdminManagement
 {
@@ -45,14 +46,14 @@ namespace HotelBooking.Tests.Services.AdminManagement
                 Module = ManageModuleEnum.Service
             };
 
-            _mockValidator.Setup(x => x.ValidateAsync(request, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new FluentValidation.Results.ValidationResult());
+            _mockValidator.Setup(x => x.ValidateAsync(It.IsAny<ManageMenuRequest>(), It.IsAny<CancellationToken>()))
+    .ReturnsAsync(new FluentValidation.Results.ValidationResult());
 
-            _mockServiceTypeRepo.Setup(x => x.GetAllAsync())
+            _mockServiceTypeRepo.Setup(x => x.WhereAsync(It.IsAny<Expression<Func<ServiceType, bool>>>()))
             .ReturnsAsync(new List<ServiceType>
             {
-                new ServiceType { Id = 1, Name = "Service 1" },
-                new ServiceType { Id = 2, Name = "Service 2" }
+                new ServiceType { Id = 1, Name = "Service 1", IsDeleted = false },
+                new ServiceType { Id = 2, Name = "Service 2", IsDeleted = false }
             });
 
             // Act
@@ -64,10 +65,10 @@ namespace HotelBooking.Tests.Services.AdminManagement
             result.Content.Should().NotBeNull();
             result.Content.Types.Should().NotBeNull();
             result.Content.Types.Should().HaveCount(2);
-            result.Content.Types.Should().BeEquivalentTo(new List<ServiceTypeDTO>
+            result.Content.Types.Should().BeEquivalentTo(new List<ManageTypeDTO>
             {
-                new ServiceTypeDTO { Id = 1, Name = "Service 1" },
-                new ServiceTypeDTO { Id = 2, Name = "Service 2" }
+                new ManageTypeDTO { Id = 1, Name = "Service 1" },
+                new ManageTypeDTO { Id = 2, Name = "Service 2" }
             });
         }
     }

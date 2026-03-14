@@ -1,4 +1,5 @@
 @page "/customer-login"
+@layout AuthLayout
 
 @using HotelBooking.Client
 
@@ -13,212 +14,316 @@
 
 <PageTitle>Login - Hotel Booking</PageTitle>
 
-<div>
-    <div class="d-flex justify-content-center align-items-center min-vh-100">
-        <div class="container mt-5">
-            <div class="row justify-content-center">
-                <div class="col-lg-8">
-                    <div class="bg-white border rounded shadow-sm p-4">
-                        <h2 class="mb-4 text-center fw-bold">Sign In</h2>
-
-                        @if (!string.IsNullOrEmpty(errorMessage))
-                        {
-                            <div class="custom-alert-error" role="alert">
-                                <div class="alert-icon">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round">
-                                        <circle cx="12" cy="12" r="10"></circle>
-                                        <line x1="12" y1="8" x2="12" y2="12"></line>
-                                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                                    </svg>
-                                </div>
-                                <div class="alert-content">
-                                    <div class="alert-title">Login Failed</div>
-                                    <div class="alert-message">@errorMessage</div>
-                                </div>
-                                <button type="button" class="alert-close" @onclick="() => errorMessage = null">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round">
-                                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                                    </svg>
-                                </button>
-                            </div>
-                        }
-
-                        <EditForm Model="userLogin" OnValidSubmit="HandleValidSubmit" class="container mt-5">
-                            <DataAnnotationsValidator />
-
-                            <div class="mb-3">
-                                <label for="inputUsernameEmail" class="form-label">Username or Email:</label>
-                                <InputText @bind-Value="userLogin.UsernameOrEmail" class="form-control"
-                                    id="inputUsernameEmail" placeholder="name@example.com" />
-                                <ValidationMessage For="@(() => userLogin.UsernameOrEmail)" class="text-danger" />
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="inputPassword" class="form-label">Password</label>
-                                <InputText type="password" @bind-Value="userLogin.Password" class="form-control"
-                                    id="inputPassword" placeholder="••••••••" />
-                                <ValidationMessage For="@(() => userLogin.Password)" class="text-danger" />
-                            </div>
-
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <div class="form-check">
-                                    <InputCheckbox class="form-check-input" @bind-Value="rememberMe"
-                                        id="rememberCheck" />
-                                    <label class="form-check-label" for="rememberCheck">
-                                        Remember me
-                                    </label>
-                                </div>
-                                <a href="#" class="forget-password-link">Forgot password?</a>
-                            </div>
-
-                            <div class="d-grid mb-3">
-                                <button type="submit" class="btn btn-primary">Sign In</button>
-                            </div>
-
-                            <div class="text-center">
-                                <small class="text-muted">Don't have an account? <a href="/customer-register"
-                                        class="register-link">Create an account</a></small>
-                            </div>
-                        </EditForm>
-                    </div>
-                </div>
+<div class="auth-wrapper">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header text-center">
+                <a href="/" class="auth-logo">
+                    <img src="favicon.ico" alt="Hotel Booking Logo" />
+                    <span class="ms-2">Hotel Booking</span>
+                </a>
+                <h2 class="mt-4 fw-bold">Welcome Back</h2>
+                <p class="text-muted">Sign in to continue your journey</p>
             </div>
 
-            <div class="text-center mt-3 small text-muted">
-                © @DateTime.Now.Year Your Company
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="custom-alert-error" role="alert">
+                    <div class="alert-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                    </div>
+                    <div class="alert-content">
+                        <div class="alert-message">@errorMessage</div>
+                    </div>
+                    <button type="button" class="alert-close" @onclick="() => errorMessage = null">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+            }
+
+            <EditForm Model="userLogin" OnValidSubmit="HandleValidSubmit" class="auth-form mt-2">
+                <DataAnnotationsValidator />
+
+                <div class="form-floating mb-3">
+                    <InputText @bind-Value="userLogin.UsernameOrEmail" class="form-control auth-input"
+                        id="inputUsernameEmail" placeholder="name@example.com" />
+                    <label for="inputUsernameEmail">Username or Email</label>
+                    <ValidationMessage For="@(() => userLogin.UsernameOrEmail)" class="text-danger small" />
+                </div>
+
+                <div class="form-floating mb-3">
+                    <InputText type="password" @bind-Value="userLogin.Password" class="form-control auth-input"
+                        id="inputPassword" placeholder="••••••••" />
+                    <label for="inputPassword">Password</label>
+                    <ValidationMessage For="@(() => userLogin.Password)" class="text-danger small" />
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="form-check custom-checkbox">
+                        <InputCheckbox class="form-check-input" @bind-Value="rememberMe"
+                            id="rememberCheck" />
+                        <label class="form-check-label small text-muted" for="rememberCheck">
+                            Remember me
+                        </label>
+                    </div>
+                    <a href="#" class="auth-link small">Forgot password?</a>
+                </div>
+
+                <div class="d-grid gap-2 mb-4">
+                    <button type="submit" class="btn btn-primary auth-btn btn-lg py-3">
+                        <span class="btn-text">Sign In</span>
+                    </button>
+                </div>
+
+                <div class="text-center">
+                    <p class="mb-0 text-muted small">
+                        Don't have an account? 
+                        <a href="/customer-register" class="auth-link fw-bold">Create one now</a>
+                    </p>
+                </div>
+            </EditForm>
+        </div>
+        
+        <div class="auth-footer text-center mt-4">
+            <p class="text-muted small">© @DateTime.Now.Year Hotel Booking. All rights reserved.</p>
+            <div class="auth-footer-links">
+                <a href="/" class="text-muted me-3">Privacy Policy</a>
+                <a href="/" class="text-muted">Terms of Service</a>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-    /* CSS maintained as provided but ensured consistent styling */
-    .register-link {
-        color: #0d6efd;
+    :root {
+        --primary-color: #4facfe;
+        --secondary-color: #00f2fe;
+        --card-bg: rgba(255, 255, 255, 0.12);
+        --text-main: #ffffff;
+        --text-muted: #cbd5e1;
+        --input-border: rgba(255, 255, 255, 0.25);
+        --input-focus: #4facfe;
+    }
+
+    .auth-wrapper {
+        min-height: 100vh;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364, #4facfe);
+        background-size: 400% 400%;
+        animation: gradientShift 15s ease infinite;
+        padding: 2rem 1rem;
+        position: relative;
+    }
+
+    .auth-wrapper::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 20% 50%, rgba(79, 172, 254, 0.15) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 20%, rgba(0, 242, 254, 0.1) 0%, transparent 50%);
+        pointer-events: none;
+    }
+
+    .auth-container {
+        width: 100%;
+        max-width: 450px;
+        animation: fadeIn 0.6s ease-out;
+        position: relative;
+        z-index: 1;
+    }
+
+    .auth-card {
+        background: var(--card-bg);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        padding: 3rem 2.5rem;
+        border-radius: 24px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .auth-logo {
+        display: inline-flex;
+        align-items: center;
         text-decoration: none;
-        font-weight: 500;
-        transition: all 0.3s ease;
+        color: var(--text-main);
+        font-weight: 800;
+        font-size: 1.25rem;
+        letter-spacing: -0.02em;
+        font-family: 'DM Serif Display', serif;
     }
 
-    .register-link:hover {
-        color: #0a58ca;
-        text-decoration: underline;
-        transform: translateX(2px);
+    .auth-logo img {
+        height: 32px;
+        width: 32px;
     }
 
-    .forget-password-link {
-        color: #6c757d;
+    .auth-header h2 {
+        color: var(--text-main);
+        font-size: 1.75rem;
+        letter-spacing: -0.02em;
+        font-family: 'DM Serif Display', serif;
+    }
+
+    .auth-header .text-muted {
+        color: var(--text-muted) !important;
+    }
+
+    .auth-input {
+        border: 1.5px solid var(--input-border);
+        border-radius: 12px;
+        padding-top: 1.625rem;
+        padding-bottom: 0.625rem;
+        height: 60px;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+    }
+
+    .auth-input:focus {
+        border-color: var(--input-focus);
+        box-shadow: 0 0 0 4px rgba(79, 172, 254, 0.2);
+        background: rgba(255, 255, 255, 0.12);
+        color: #fff;
+    }
+
+    .form-floating label {
+        color: var(--text-muted);
+    }
+
+    .auth-btn {
+        background: linear-gradient(135deg, var(--primary-color) 0%, #00c6ff 100%);
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        color: #fff;
+    }
+
+    .auth-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(79, 172, 254, 0.4);
+        background: linear-gradient(135deg, #3fa1f7 0%, #00b8ef 100%);
+    }
+
+    .auth-btn:active {
+        transform: translateY(0);
+    }
+
+    .auth-link {
+        color: var(--primary-color);
         text-decoration: none;
-        font-size: 14px;
-        transition: all 0.3s ease;
+        transition: color 0.2s ease;
     }
 
-    .forget-password-link:hover {
-        color: #495057;
+    .auth-link:hover {
+        color: #7dc4ff;
         text-decoration: underline;
-        transform: translateX(2px);
+    }
+
+    .custom-checkbox .form-check-input {
+        border-radius: 4px;
+        border: 1.5px solid var(--input-border);
+        cursor: pointer;
+        background-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .custom-checkbox .form-check-input:checked {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+    .form-check-label,
+    .text-muted {
+        color: var(--text-muted) !important;
     }
 
     .custom-alert-error {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         gap: 12px;
-        padding: 16px;
-        margin-bottom: 20px;
-        background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
-        border: 1px solid #ffcdd2;
-        border-left: 4px solid #dc3545;
+        padding: 12px 16px;
+        margin-bottom: 1.5rem;
+        background: rgba(190, 18, 60, 0.2);
+        border: 1px solid rgba(254, 205, 211, 0.3);
         border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.15);
-        animation: slideDown 0.4s ease-out, shake 0.5s ease-in-out;
-    }
-
-    .alert-icon {
-        flex-shrink: 0;
-        width: 24px;
-        height: 24px;
-        color: #dc3545;
-        margin-top: 2px;
-    }
-
-    .alert-content {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .alert-title {
-        font-weight: 600;
-        font-size: 15px;
-        color: #c62828;
-        margin-bottom: 4px;
+        color: #fca5a5;
+        animation: slideIn 0.3s ease-out;
     }
 
     .alert-message {
-        font-size: 14px;
-        color: #d32f2f;
-        line-height: 1.5;
-        word-break: break-word;
+        font-size: 0.9rem;
+        font-weight: 500;
+        flex: 1;
     }
 
     .alert-close {
-        flex-shrink: 0;
-        width: 28px;
-        height: 28px;
-        padding: 4px;
         background: transparent;
         border: none;
-        border-radius: 6px;
-        color: #d32f2f;
-        cursor: pointer;
-        transition: all 0.2s ease;
+        color: #fca5a5;
+        opacity: 0.5;
+        transition: opacity 0.2s;
         display: flex;
-        align-items: center;
-        justify-content: center;
+        padding: 4px;
     }
 
     .alert-close:hover {
-        background: rgba(220, 53, 69, 0.1);
-        transform: rotate(90deg);
+        opacity: 1;
     }
 
-    /* Keyframes unchanged */
-    @@keyframes slideDown {
-        from {
-            opacity: 0;
-            transform: translateY(-20px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    .auth-footer-links a {
+        text-decoration: none;
+        font-size: 0.8rem;
+        color: var(--text-muted) !important;
     }
 
-    @@keyframes shake {
+    .auth-footer-links a:hover {
+        text-decoration: underline;
+        color: #fff !important;
+    }
 
-        0%,
-        100% {
-            transform: translateX(0);
-        }
+    .auth-footer .text-muted {
+        color: rgba(255, 255, 255, 0.4) !important;
+    }
 
-        10%,
-        30%,
-        50%,
-        70%,
-        90% {
-            transform: translateX(-5px);
-        }
+    @@keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
 
-        20%,
-        40%,
-        60%,
-        80% {
-            transform: translateX(5px);
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @@keyframes slideIn {
+        from { opacity: 0; transform: translateX(-10px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+
+    @@media (max-width: 576px) {
+        .auth-card {
+            padding: 2rem 1.5rem;
+            border-radius: 16px;
         }
     }
 </style>

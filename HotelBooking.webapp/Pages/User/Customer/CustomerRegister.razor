@@ -1,4 +1,5 @@
 @page "/customer-register"
+@layout AuthLayout
 
 @* Add Service http client *@
 @inject IHttpClientFactory HttpClientFactory;
@@ -12,121 +13,317 @@
 
 <PageTitle>Create Account - Hotel Booking</PageTitle>
 
-<div class="d-flex justify-content-center align-items-center min-vh-100">
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="bg-white border rounded shadow-sm p-4">
-                    <div class="text-center mb-4">
-                        <h2 class="fw-bold mb-2">Create Account</h2>
-                        <h6 class="fw-normal text-secondary mb-2">Book your hotel with ease</h6>
-                        <p class="text-muted mb-0">
-                            <i class="bi bi-star-fill text-warning me-1"></i>
-                            Join us to experience the best booking services tailored for you.
-                            <i class="bi bi-star-fill text-warning ms-1"></i>
-                        </p>
+<div class="auth-wrapper">
+    <div class="auth-container wide">
+        <div class="auth-card">
+            <div class="auth-header text-center">
+                <a href="/" class="auth-logo">
+                    <img src="favicon.ico" alt="Hotel Booking Logo" />
+                    <span class="ms-2">Hotel Booking</span>
+                </a>
+                <h2 class="mt-4 fw-bold">Create Account</h2>
+                <p class="text-muted">Join us to experience exclusive booking services</p>
+            </div>
+
+            <EditForm Model="@userRegister" OnValidSubmit="HandleValidSubmit" class="auth-form mt-2">
+                <DataAnnotationsValidator />
+
+                @if (!string.IsNullOrEmpty(messageAlert))
+                {
+                    <div class="alert @(isError ? "alert-danger" : "alert-success") custom-alert animate__animated animate__fadeIn"
+                         role="alert">
+                        <div class="alert-content">
+                            @messageAlert
+                        </div>
+                    </div>
+                }
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <InputText @bind-Value="userRegister.Username" class="form-control auth-input" id="username"
+                                       placeholder="Enter username" />
+                            <label for="username">Username</label>
+                            <ValidationMessage For="@(() => userRegister.Username)" class="text-danger small mt-1" />
+                        </div>
                     </div>
 
-                    <EditForm Model="@userRegister" OnValidSubmit="HandleValidSubmit">
-                        <DataAnnotationsValidator />
-
-                        @if (!string.IsNullOrEmpty(messageAlert))
-                        {
-                            <div class="alert @(isError ? "alert-danger" : "alert-success") animate__animated animate__fadeIn"
-                                 role="alert">
-                                @messageAlert
-                            </div>
-                        }
-
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="username" class="form-label fw-bold small">Username</label>
-                                <InputText @bind-Value="userRegister.Username" class="form-control" id="username"
-                                           placeholder="Enter username" />
-                                <ValidationMessage For="@(() => userRegister.Username)" class="text-danger small" />
-                            </div>
-
-                            <div class="col-md-6">
-                                <label for="email" class="form-label fw-bold small">Email</label>
-                                <InputText @bind-Value="userRegister.Email" type="email" class="form-control" id="email"
-                                           placeholder="example@domain.com" />
-                                <ValidationMessage For="@(() => userRegister.Email)" class="text-danger small" />
-                            </div>
-
-                            <div class="col-md-6">
-                                <label for="fullname" class="form-label fw-bold small">Full Name</label>
-                                <InputText @bind-Value="userRegister.FullName" class="form-control" id="fullname"
-                                           placeholder="John Doe" />
-                                <ValidationMessage For="@(() => userRegister.FullName)" class="text-danger small" />
-                            </div>
-
-                            <div class="col-md-6">
-                                <label for="phone" class="form-label fw-bold small">Phone Number</label>
-                                <InputText @bind-Value="userRegister.PhoneNumber" class="form-control" id="phone"
-                                           placeholder="e.g., +84..." />
-                                <ValidationMessage For="@(() => userRegister.PhoneNumber)" class="text-danger small" />
-                            </div>
-
-                            <div class="col-md-6">
-                                <label for="password" class="form-label fw-bold small">Password</label>
-                                <InputText @bind-Value="userRegister.Password" type="password" class="form-control"
-                                           id="password" placeholder="••••••••" />
-                                <ValidationMessage For="@(() => userRegister.Password)" class="text-danger small" />
-                            </div>
-
-                            <div class="col-md-6">
-                                <label for="confirmPassword" class="form-label fw-bold small">Confirm Password</label>
-                                <InputText @bind-Value="userRegister.ConfirmPassword" type="password"
-                                           class="form-control" id="confirmPassword" placeholder="••••••••" />
-                                <ValidationMessage For="@(() => userRegister.ConfirmPassword)"
-                                                   class="text-danger small" />
-                            </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <InputText @bind-Value="userRegister.Email" type="email" class="form-control auth-input" id="email"
+                                       placeholder="name@domain.com" />
+                            <label for="email">Email address</label>
+                            <ValidationMessage For="@(() => userRegister.Email)" class="text-danger small mt-1" />
                         </div>
+                    </div>
 
-                        <div class="form-check mt-4">
-                            <input class="form-check-input" type="checkbox" id="receiveEmail"
-                                   @bind="userRegister.ReceiveEmail">
-                                <label class="form-check-label small" for="receiveEmail">
-                                    Yes, I want to receive exclusive offers and news from Hotel Booking
-                                </label>
-                            </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <InputText @bind-Value="userRegister.FullName" class="form-control auth-input" id="fullname"
+                                       placeholder="John Doe" />
+                            <label for="fullname">Full Name</label>
+                            <ValidationMessage For="@(() => userRegister.FullName)" class="text-danger small mt-1" />
+                        </div>
+                    </div>
 
-                            <div class="form-check mb-3">
-                                <InputCheckbox @bind-Value="userRegister.AgreeTerm" class="form-check-input"
-                                               id="agreeTerm" />
-                                <label class="form-check-label small" for="agreeTerm">
-                                    I agree to the <a href="/terms" class="text-primary">Terms & Conditions</a>, <a
-                                    href="/privacy" class="text-primary">Privacy Policy</a>, and Service Fees.
-                                </label>
-                                <ValidationMessage For="@(() => userRegister.AgreeTerm)" class="text-danger small" />
-                            </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <InputText @bind-Value="userRegister.PhoneNumber" class="form-control auth-input" id="phone"
+                                       placeholder="e.g., +84..." />
+                            <label for="phone">Phone Number</label>
+                            <ValidationMessage For="@(() => userRegister.PhoneNumber)" class="text-danger small mt-1" />
+                        </div>
+                    </div>
 
-                            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">Sign Up</button>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <InputText @bind-Value="userRegister.Password" type="password" class="form-control auth-input"
+                                       id="password" placeholder="••••••••" />
+                            <label for="password">Password</label>
+                            <ValidationMessage For="@(() => userRegister.Password)" class="text-danger small mt-1" />
+                        </div>
+                    </div>
 
-                            <div class="text-center mt-3">
-                                <small class="text-muted">Already have an account? <a href="/customer-login"
-                                                                                          class="login-link">Sign In</a></small>
-                                </div>
-                            </EditForm>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <InputText @bind-Value="userRegister.ConfirmPassword" type="password"
+                                       class="form-control auth-input" id="confirmPassword" placeholder="••••••••" />
+                            <label for="confirmPassword">Confirm Password</label>
+                            <ValidationMessage For="@(() => userRegister.ConfirmPassword)"
+                                               class="text-danger small mt-1" />
                         </div>
                     </div>
                 </div>
-            </div>
+
+                <div class="auth-options mt-4">
+                    <div class="form-check custom-checkbox mb-2">
+                        <InputCheckbox class="form-check-input" id="receiveEmail" @bind-Value="userRegister.ReceiveEmail" />
+                        <label class="form-check-label small text-muted" for="receiveEmail">
+                            Yes, I want to receive exclusive offers and news
+                        </label>
+                    </div>
+
+                    <div class="form-check custom-checkbox">
+                        <InputCheckbox @bind-Value="userRegister.AgreeTerm" class="form-check-input" id="agreeTerm" />
+                        <label class="form-check-label small text-muted" for="agreeTerm">
+                            I agree to the <a href="/terms" class="auth-link">Terms & Conditions</a> and <a
+                            href="/privacy" class="auth-link">Privacy Policy</a>.
+                        </label>
+                        <ValidationMessage For="@(() => userRegister.AgreeTerm)" class="text-danger small d-block mt-1" />
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 mt-4 mb-3">
+                    <button type="submit" class="btn btn-primary auth-btn btn-lg py-3">Sign Up</button>
+                </div>
+
+                <div class="text-center">
+                    <p class="mb-0 text-muted small">
+                        Already have an account? 
+                        <a href="/customer-login" class="auth-link fw-bold">Sign In</a>
+                    </p>
+                </div>
+            </EditForm>
         </div>
 
-        <style>
-            .login-link {
-                text-decoration: none;
-                font-weight: 600;
-                transition: all 0.3s ease;
-                color: #0d6efd;
-            }
+        <div class="auth-footer text-center mt-4">
+            <p class="text-muted small">© @DateTime.Now.Year Hotel Booking. All rights reserved.</p>
+        </div>
+    </div>
+</div>
 
-            .login-link:hover {
-                color: #0a58ca;
-                text-decoration: underline;
-            }
-        </style>
+<style>
+    :root {
+        --primary-color: #4facfe;
+        --secondary-color: #00f2fe;
+        --card-bg: rgba(255, 255, 255, 0.12);
+        --text-main: #ffffff;
+        --text-muted: #cbd5e1;
+        --input-border: rgba(255, 255, 255, 0.25);
+        --input-focus: #4facfe;
+    }
+
+    .auth-wrapper {
+        min-height: 100vh;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364, #4facfe);
+        background-size: 400% 400%;
+        animation: gradientShift 15s ease infinite;
+        padding: 3rem 1rem;
+        position: relative;
+    }
+
+    .auth-wrapper::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 20% 50%, rgba(79, 172, 254, 0.15) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 20%, rgba(0, 242, 254, 0.1) 0%, transparent 50%);
+        pointer-events: none;
+    }
+
+    .auth-container {
+        width: 100%;
+        max-width: 500px;
+        animation: fadeIn 0.6s ease-out;
+        position: relative;
+        z-index: 1;
+    }
+
+    .auth-container.wide {
+        max-width: 800px;
+    }
+
+    .auth-card {
+        background: var(--card-bg);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        padding: 3rem 2.5rem;
+        border-radius: 24px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .auth-logo {
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+        color: var(--text-main);
+        font-weight: 800;
+        font-size: 1.25rem;
+        letter-spacing: -0.02em;
+        font-family: 'DM Serif Display', serif;
+    }
+
+    .auth-logo img {
+        height: 32px;
+        width: 32px;
+    }
+
+    .auth-header h2 {
+        color: var(--text-main);
+        font-size: 1.75rem;
+        letter-spacing: -0.02em;
+        font-family: 'DM Serif Display', serif;
+    }
+
+    .auth-header .text-muted {
+        color: var(--text-muted) !important;
+    }
+
+    .auth-input {
+        border: 1.5px solid var(--input-border);
+        border-radius: 12px;
+        height: 58px;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+    }
+
+    .auth-input:focus {
+        border-color: var(--input-focus);
+        box-shadow: 0 0 0 4px rgba(79, 172, 254, 0.2);
+        background: rgba(255, 255, 255, 0.12);
+        color: #fff;
+    }
+
+    .form-floating label {
+        color: var(--text-muted);
+    }
+
+    .auth-btn {
+        background: linear-gradient(135deg, var(--primary-color) 0%, #00c6ff 100%);
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        color: #fff;
+    }
+
+    .auth-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(79, 172, 254, 0.4);
+        background: linear-gradient(135deg, #3fa1f7 0%, #00b8ef 100%);
+    }
+
+    .auth-link {
+        color: var(--primary-color);
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+
+    .auth-link:hover {
+        color: #7dc4ff;
+        text-decoration: underline;
+    }
+
+    .custom-checkbox .form-check-input {
+        border-radius: 4px;
+        border: 1.5px solid var(--input-border);
+        cursor: pointer;
+        background-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .custom-checkbox .form-check-input:checked {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+    .form-check-label,
+    .text-muted {
+        color: var(--text-muted) !important;
+    }
+
+    .custom-alert {
+        border-radius: 12px;
+        padding: 12px 16px;
+        margin-bottom: 1.5rem;
+        font-weight: 500;
+        font-size: 0.9rem;
+        border: none;
+    }
+
+    .custom-alert.alert-danger {
+        background: rgba(190, 18, 60, 0.2);
+        border: 1px solid rgba(254, 205, 211, 0.3);
+        color: #fca5a5;
+    }
+
+    .custom-alert.alert-success {
+        background: rgba(22, 163, 74, 0.2);
+        border: 1px solid rgba(134, 239, 172, 0.3);
+        color: #86efac;
+    }
+
+    .auth-footer .text-muted {
+        color: rgba(255, 255, 255, 0.4) !important;
+    }
+
+    @@keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @@media (max-width: 768px) {
+        .auth-card {
+            padding: 2rem 1.5rem;
+        }
+        .auth-container.wide {
+            max-width: 100%;
+        }
+    }
+</style>
 
 @code {
     private UserRegisterVM userRegister = new UserRegisterVM();

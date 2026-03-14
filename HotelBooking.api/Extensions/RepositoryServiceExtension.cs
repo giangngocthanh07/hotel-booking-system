@@ -41,6 +41,7 @@ public static class RepositoryServiceExtension
         services.AddScoped<IHotelRepository, HotelRepository>();
         services.AddScoped<IRoomRepository, RoomRepository>();
         services.AddScoped<IRoomTypeRepository, RoomTypeRepository>();
+        services.AddScoped<IRoomTypeBedConfigRepository, RoomTypeBedConfigRepository>();
         services.AddScoped<IHotelPolicyRepository, HotelPolicyRepository>();
         services.AddScoped<IHotelAmenityRepository, HotelAmenityRepository>();
         services.AddScoped<IHotelImageRepository, HotelImageRepository>();
