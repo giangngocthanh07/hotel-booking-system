@@ -1,43 +1,174 @@
-<footer class="footer py-5">
+<footer class="glass-footer-main py-5 force-gpu">
     <div class="container">
-        <div class="row">
+        <div class="row g-4">
+            @* --- Brand Column --- *@
             <div class="col-md-4 mb-4 mb-md-0">
-                <h5 class="fw-bold text-white">Hotel Booking</h5>
-                <p class="text-light">Providing a seamless and exceptional hotel booking experience, tailored just for
-                    you.</p>
+                <div class="d-flex align-items-center mb-3">
+                    <img src="/images/logo.png" alt="Logo" style="height:35px; filter: brightness(0) invert(1);"
+                         class="me-2" />
+                    <h5 class="fw-bold text-white m-0">Hotel <span class="text-info-glass">Booking</span></h5>
                 </div>
+                <p class="text-light-glass small lh-lg">
+                    Providing a seamless and exceptional hotel booking experience, tailored just for you. Your comfort
+                    is our priority.
+                </p>
+            </div>
 
-                <div class="col-md-4 mb-4 mb-md-0">
-                    <h5 class="fw-bold text-white">Contact Us</h5>
-                    <p class="mb-1">
-                        <i class="fas fa-envelope me-2"></i>
-                        <a href="mailto:support@hotelbooking.com"
-                           class="text-light text-decoration-none">support@hotelbooking.com</a>
-                    </p>
-                    <p class="mb-0">
-                        <i class="fas fa-phone-alt me-2"></i>
-                        <a href="tel:19001234" class="text-light text-decoration-none">1900 1234</a>
-                    </p>
+            @* --- Contact Column --- *@
+            <div class="col-md-4 mb-4 mb-md-0">
+                <h6 class="text-white fw-800 text-uppercase mb-4 tracking-wider">Contact Us</h6>
+                <div class="contact-item mb-3">
+                    <div class="icon-box-footer me-3"><i class="fas fa-envelope"></i></div>
+                    <a href="mailto:support@hotelbooking.com"
+                       class="text-light-glass text-decoration-none small">support@hotelbooking.com</a>
                 </div>
-
-                <div class="col-md-4">
-                    <h5 class="fw-bold text-white">Follow Us</h5>
-                    <div class="social-icons mt-2">
-                        <a href="#" class="text-light me-3"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="text-light me-3"><i class="fab fa-instagram"></i></a>
-                        <a href="#" class="text-light"><i class="fab fa-twitter"></i></a>
-                    </div>
+                <div class="contact-item">
+                    <div class="icon-box-footer me-3"><i class="fas fa-phone-alt"></i></div>
+                    <a href="tel:19001234" class="text-light-glass text-decoration-none small">1900 1234</a>
                 </div>
             </div>
 
-            <hr class="border-light my-4">
-
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
-                <p class="mb-0 text-light small">&copy; 2026 Hotel Booking. All rights reserved.</p>
-                <div class="footer-links mt-2 mt-md-0">
-                    <a href="/privacy" class="text-light text-decoration-none small me-3">Privacy Policy</a>
-                    <a href="/terms" class="text-light text-decoration-none small">Terms of Service</a>
+            @* --- Social Column --- *@
+            <div class="col-md-4">
+                <h6 class="text-white fw-800 text-uppercase mb-4 tracking-wider">Follow Our Socials</h6>
+                <div class="d-flex gap-3 mt-2">
+                    <a href="#" class="social-circle-btn force-gpu"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-circle-btn force-gpu"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-circle-btn force-gpu"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-circle-btn force-gpu"><i class="fab fa-linkedin-in"></i></a>
                 </div>
             </div>
         </div>
-    </footer>
+
+        <hr class="glass-hr my-5">
+
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+            <p class="mb-0 text-light-glass extra-small uppercase-tracking">
+                &copy; @DateTime.Now.Year Hotel Booking System. All rights reserved.
+            </p>
+            <div class="footer-legal-links">
+                <a href="/privacy" class="legal-link">Privacy Policy</a>
+                <span class="mx-2 opacity-25 text-white">|</span>
+                <a href="/terms" class="legal-link">Terms of Service</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<style>
+    /* --- GLASS FOOTER CORE --- */
+    .glass-footer-main {
+        background: rgba(15, 23, 42, 0.9) !important;
+        /* Slate 900 Glass */
+        backdrop-filter: blur(20px) saturate(160%);
+        -webkit-backdrop-filter: blur(20px) saturate(160%);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        margin-top: 4rem;
+        position: relative;
+    }
+
+    .text-info-glass {
+        color: #0ea5e9;
+    }
+
+    .text-light-glass {
+        color: rgba(248, 250, 252, 0.7);
+    }
+
+    .fw-800 {
+        font-weight: 800;
+    }
+
+    .tracking-wider {
+        letter-spacing: 1.5px;
+        font-size: 0.75rem;
+    }
+
+    /* Contact Items */
+    .contact-item {
+        display: flex;
+        align-items: center;
+        transition: 0.3s;
+    }
+
+    .contact-item:hover .text-light-glass {
+        color: #fff;
+    }
+
+    .icon-box-footer {
+        width: 32px;
+        height: 32px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #0ea5e9;
+        font-size: 0.85rem;
+    }
+
+    /* Social Buttons */
+    .social-circle-btn {
+        width: 42px;
+        height: 42px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        text-decoration: none;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .social-circle-btn:hover {
+        background: var(--admin-primary-gradient);
+        transform: translateY(-5px);
+        color: #fff;
+        box-shadow: 0 10px 20px rgba(58, 123, 213, 0.3);
+        border-color: transparent;
+    }
+
+    .glass-hr {
+        border: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    }
+
+    /* Legal Links */
+    .legal-link {
+        color: rgba(248, 250, 252, 0.5);
+        text-decoration: none;
+        font-size: 0.75rem;
+        font-weight: 600;
+        transition: 0.2s;
+    }
+
+    .legal-link:hover {
+        color: #fff;
+    }
+
+    .extra-small {
+        font-size: 0.65rem;
+    }
+
+    .uppercase-tracking {
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    @@media (max-width: 768px) {
+        .glass-footer-main {
+            text-align: center;
+        }
+
+        .contact-item {
+            justify-content: center;
+        }
+
+        .d-flex.gap-3 {
+            justify-content: center;
+        }
+    }
+</style>
