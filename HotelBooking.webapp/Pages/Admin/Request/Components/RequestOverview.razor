@@ -5,67 +5,192 @@
     [Parameter] public RequestStatsVM Stats { get; set; } = new();
 }
 
-<div class="row mb-4">
-    @* Upgrade Request Stats *@
-    <div class="col-md-3">
-        <div class="card bg-light border-0 shadow-sm p-3 text-center">
-            <h6>Pending</h6>
-            <h2 class="text-primary">@Stats.UpgradeRequest.Pending</h2>
+<div class="stats-overview">
+    @* Row 1: Status Cards *@
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card glass-card">
+                <div class="stat-label">Pending</div>
+                <div class="stat-value text-blue">@Stats.UpgradeRequest.Pending</div>
+                <div class="stat-indicator bg-blue"></div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card glass-card">
+                <div class="stat-label">Approved</div>
+                <div class="stat-value text-green">@Stats.UpgradeRequest.Approved</div>
+                <div class="stat-indicator bg-green"></div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card glass-card">
+                <div class="stat-label">Rejected</div>
+                <div class="stat-value text-red">@Stats.UpgradeRequest.Rejected</div>
+                <div class="stat-indicator bg-red"></div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card glass-card">
+                <div class="stat-label">Today</div>
+                <div class="stat-value text-cyan">@Stats.TotalToday</div>
+                <div class="stat-indicator bg-cyan"></div>
+            </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card bg-light border-0 shadow-sm p-3 text-center">
-            <h6>Approved</h6>
-            <h2 class="text-success">@Stats.UpgradeRequest.Approved</h2>
+
+    @* Row 2: Detail Cards *@
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card glass-card d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-small-label">This Week</div>
+                    <h3 class="stat-total-val">@Stats.UpgradeRequest.ThisWeek</h3>
+                </div>
+                <div class="stat-icon-box blue">
+                    <i class="fas fa-calendar-week"></i>
+                </div>
+            </div>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-light border-0 shadow-sm p-3 text-center">
-            <h6>Rejected</h6>
-            <h2 class="text-danger">@Stats.UpgradeRequest.Rejected</h2>
+        <div class="col-md-4">
+            <div class="stat-card glass-card d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-small-label">This Month</div>
+                    <h3 class="stat-total-val">@Stats.UpgradeRequest.ThisMonth</h3>
+                </div>
+                <div class="stat-icon-box green">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+            </div>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-light border-0 shadow-sm p-3 text-center">
-            <h6>Today</h6>
-            <h2 class="text-info">@Stats.TotalToday</h2>
+        <div class="col-md-4">
+            <div class="stat-card glass-card d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-small-label">Total</div>
+                    <h3 class="stat-total-val">@Stats.UpgradeRequest.Total</h3>
+                </div>
+                <div class="stat-icon-box dark">
+                    <i class="fas fa-list"></i>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-@* More Stats Row *@
-<div class="row mb-4">
-    <div class="col-md-4">
-        <div class="card border-0 shadow-sm p-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <small class="text-muted">This Week</small>
-                    <h4 class="mb-0">@Stats.UpgradeRequest.ThisWeek</h4>
-                </div>
-                <i class="fas fa-calendar-week fa-2x text-primary opacity-50"></i>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card border-0 shadow-sm p-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <small class="text-muted">This Month</small>
-                    <h4 class="mb-0">@Stats.UpgradeRequest.ThisMonth</h4>
-                </div>
-                <i class="fas fa-calendar-alt fa-2x text-success opacity-50"></i>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card border-0 shadow-sm p-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <small class="text-muted">Total</small>
-                    <h4 class="mb-0">@Stats.UpgradeRequest.Total</h4>
-                </div>
-                <i class="fas fa-list fa-2x text-secondary opacity-50"></i>
-            </div>
-        </div>
-    </div>
-</div>
+<style>
+    /* Card Style: Glassmorphism nhẹ */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7) !important;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.8) !important;
+        border-radius: 20px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04) !important;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        padding: 1.5rem;
+    }
+
+    .glass-card:hover {
+        transform: translateY(-5px);
+        background: rgba(255, 255, 255, 0.85) !important;
+        box-shadow: 0 12px 40px rgba(0, 96, 230, 0.08) !important;
+    }
+
+    /* Text & Values */
+    .stat-label {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+        font-size: 2.2rem;
+        font-weight: 800;
+        margin: 0;
+    }
+
+    .stat-small-label {
+        color: #94a3b8;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .stat-total-val {
+        color: #1e293b;
+        font-weight: 700;
+        margin-top: 4px;
+    }
+
+    /* Colors */
+    .text-blue {
+        color: #0060e6;
+    }
+
+    .text-green {
+        color: #10b981;
+    }
+
+    .text-red {
+        color: #ef4444;
+    }
+
+    .text-cyan {
+        color: #06b6d4;
+    }
+
+    .bg-blue {
+        background: #0060e6;
+    }
+
+    .bg-green {
+        background: #10b981;
+    }
+
+    .bg-red {
+        background: #ef4444;
+    }
+
+    .bg-cyan {
+        background: #06b6d4;
+    }
+
+    /* Indicator Line at bottom */
+    .stat-indicator {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 4px;
+        width: 100%;
+        opacity: 0.6;
+    }
+
+    /* Icons */
+    .stat-icon-box {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+    }
+
+    .stat-icon-box.blue {
+        background: rgba(0, 96, 230, 0.1);
+        color: #0060e6;
+    }
+
+    .stat-icon-box.green {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .stat-icon-box.dark {
+        background: rgba(30, 41, 59, 0.1);
+        color: #1e293b;
+    }
+</style>

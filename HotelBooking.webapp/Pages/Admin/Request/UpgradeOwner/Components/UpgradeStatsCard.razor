@@ -1,50 +1,122 @@
 @using HotelBooking.webapp.ViewModels.Request
 
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card border-warning h-100 cursor-pointer @(SelectedStatus == "Pending" ? "border-3" : "")"
-             @onclick="@(() => HandleStatusClick("Pending"))">
-            <div class="card-body text-center">
-                <i class="fas fa-hourglass-half fa-2x text-warning mb-2"></i>
-                <h3 class="mb-0 text-warning">@Stats.Pending</h3>
-                <small class="text-muted">Pending Approval</small>
+<div class="row g-4 mb-4 animate__animated animate__fadeIn">
+    @foreach (var item in new[] {
+        new { Label = "Pending", Val = Stats.Pending, Icon = "fa-hourglass-half", Color = "warning", Status = "Pending" },
+        new { Label = "Approved", Val = Stats.Approved, Icon = "fa-check-circle", Color = "success", Status = "Approved" },
+        new { Label = "Rejected", Val = Stats.Rejected, Icon = "fa-times-circle", Color = "danger", Status = "Rejected" },
+        new { Label = "Total", Val = Stats.Total, Icon = "fa-list", Color = "primary", Status = (string?)null }
+    })
+    {
+        <div class="col-md-3">
+            <div class="stat-glass-card @(SelectedStatus == item.Status ? "active" : "")"
+                 @onclick="@(() => HandleStatusClick(item.Status))">
+                <div class="stat-icon-wrap @item.Color"><i class="fas @item.Icon"></i></div>
+                <div class="stat-data text-end">
+                    <h3 class="@item.Color">@item.Val</h3>
+                    <small>@item.Label</small>
+                </div>
+                <div class="stat-bar @item.Color"></div>
             </div>
         </div>
-    </div>
-
-    <div class="col-md-3">
-        <div class="card border-success h-100 cursor-pointer @(SelectedStatus == "Approved" ? "border-3" : "")"
-             @onclick="@(() => HandleStatusClick("Approved"))">
-            <div class="card-body text-center">
-                <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
-                <h3 class="mb-0 text-success">@Stats.Approved</h3>
-                <small class="text-muted">Approved</small>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-3">
-        <div class="card border-danger h-100 cursor-pointer @(SelectedStatus == "Rejected" ? "border-3" : "")"
-             @onclick="@(() => HandleStatusClick("Rejected"))">
-            <div class="card-body text-center">
-                <i class="fas fa-times-circle fa-2x text-danger mb-2"></i>
-                <h3 class="mb-0 text-danger">@Stats.Rejected</h3>
-                <small class="text-muted">Rejected</small>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-3">
-        <div class="card border-primary h-100 cursor-pointer @(string.IsNullOrEmpty(SelectedStatus) ? "border-3" : "")"
-             @onclick="@(() => HandleStatusClick(null))">
-            <div class="card-body text-center">
-                <i class="fas fa-list fa-2x text-primary mb-2"></i>
-                <h3 class="mb-0 text-primary">@Stats.Total</h3>
-                <small class="text-muted">Total Requests</small>
-            </div>
-        </div>
-    </div>
+    }
 </div>
+
+<style>
+    .stat-glass-card {
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.8);
+    }
+
+    .stat-glass-card:hover,
+    .stat-glass-card.active {
+        transform: translateY(-5px);
+        background: #fff;
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.05);
+    }
+
+    .stat-glass-card.active {
+        border: 2px solid #00d2ff;
+    }
+
+    .stat-icon-wrap {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .stat-icon-wrap.warning {
+        background: rgba(255, 193, 7, 0.15);
+        color: #ffc107;
+    }
+
+    .stat-icon-wrap.success {
+        background: rgba(25, 135, 84, 0.15);
+        color: #198754;
+    }
+
+    .stat-icon-wrap.danger {
+        background: rgba(220, 53, 69, 0.15);
+        color: #dc3545;
+    }
+
+    .stat-icon-wrap.primary {
+        background: rgba(0, 96, 230, 0.15);
+        color: #0060e6;
+    }
+
+    .stat-data h3 {
+        font-weight: 800;
+        margin: 0;
+        font-size: 1.8rem;
+    }
+
+    .stat-data small {
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+    }
+
+    .stat-bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 4px;
+        width: 100%;
+        opacity: 0.5;
+    }
+
+    .stat-bar.warning {
+        background: #ffc107;
+    }
+
+    .stat-bar.success {
+        background: #198754;
+    }
+
+    .stat-bar.danger {
+        background: #dc3545;
+    }
+
+    .stat-bar.primary {
+        background: #0060e6;
+    }
+</style>
 
 @code {
     [Parameter] public RequestTypeStatsVM Stats { get; set; } = new();

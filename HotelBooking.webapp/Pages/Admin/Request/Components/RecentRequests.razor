@@ -3,12 +3,17 @@
 @inject NavigationManager NavigationManager
 @inject IHttpClientFactory _httpClientFactory
 
-<div class="card shadow-sm">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Recent Requests</h5>
-        <div class="d-flex gap-2">
-            <input type="text" class="form-control" placeholder="Search..." @bind="searchTerm" @bind:event="oninput" />
-            <select class="form-select" @bind="selectedStatus">
+<div class="glass-container animate__animated animate__fadeIn">
+    @* --- Table Header --- *@
+    <div class="glass-header d-flex justify-content-between align-items-center p-4">
+        <h5 class="mb-0 fw-bold text-dark">Recent Requests</h5>
+        <div class="d-flex gap-3 search-filter-area">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" class="form-control glass-input" placeholder="Search requests..." @bind="searchTerm"
+                       @bind:event="oninput" />
+            </div>
+            <select class="form-select glass-select" @bind="selectedStatus">
                 <option value="">All Status</option>
                 <option value="Pending">Pending</option>
                 <option value="Approved">Approved</option>
@@ -16,17 +21,17 @@
             </select>
         </div>
     </div>
-    <div class="table-responsive">
+
+    @* --- Table Content --- *@
+    <div class="table-responsive glass-table-wrapper">
         <table class="table align-middle mb-0">
-            <thead class="table-light">
+            <thead>
                 <tr>
                     <th>Request ID</th>
-                    <th>Username</th>
-                    <th>Full Name</th>
-                    @* <th>Phone Number</th> *@
+                    <th>User Information</th>
                     <th>Status</th>
                     <th>Requested At</th>
-                    <th>Actions</th>
+                    <th class="text-end">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -34,25 +39,25 @@
                 {
                     @foreach (var req in FilteredRequests)
                     {
-                        <tr>
-                            <td>@req.RequestId</td>
-                            <td>@req.UserName</td>
-                            <td>@req.FullName</td>
-                            @* <td>@req.PhoneNumber</td> *@
-
+                        <tr class="glass-tr">
+                            <td class="fw-bold text-primary">#@req.RequestId</td>
                             <td>
-                                <span class="badge @GetStatusBadgeClass(req.Status)">
-                                    @req.Status
+                                <div class="d-flex flex-column">
+                                    <span class="fw-semibold text-dark">@req.FullName</span>
+                                    <small class="text-muted">@req.UserName</small>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge-custom @GetStatusBadgeClass(req.Status)">
+                                    <span class="dot"></span> @req.Status
                                 </span>
                             </td>
-
-                            <td>@req.RequestedAt.ToString("dd/MM/yyyy HH:mm")</td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <button class="btn btn-sm btn-info" @onclick="() => ViewDetails(req.RequestId)">
-                                        <i class="fas fa-eye"></i> View
-                                    </button>
-                                </div>
+                            <td class="text-muted">@req.RequestedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="text-end">
+                                <button class="btn-view-details" @onclick="() => ViewDetails(req.RequestId)">
+                                    <span>View Details</span>
+                                    <i class="fas fa-arrow-right"></i>
+                                </button>
                             </td>
                         </tr>
                     }
@@ -60,50 +65,189 @@
                 else
                 {
                     <tr>
-                        <td colspan="6" class="text-center">
-                            @MessageResponse.RequestManagement.UpgradeRequest.NO_REQUESTS_FOUND</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+                        <td colspan="5" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="fas fa-inbox fa-3x mb-3 text-muted opacity-20"></i>
+                                <p class="text-muted">@MessageResponse.RequestManagement.UpgradeRequest.NO_REQUESTS_FOUND
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     </div>
+</div>
+
+<style>
+    .glass-container {
+        background: rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+        overflow: hidden;
+    }
+
+    /* Header Area */
+    .glass-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Input & Select */
+    .glass-input,
+    .glass-select {
+        background: rgba(255, 255, 255, 0.8) !important;
+        border: 1.5px solid #cbd5e1 !important;
+        border-radius: 12px;
+        color: #1e293b !important;
+        font-weight: 500;
+        padding: 0.6rem 1rem;
+        transition: all 0.2s ease;
+    }
+
+    .search-box {
+        position: relative;
+        min-width: 250px;
+    }
+
+    .search-box i {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+    }
+
+    /* Table Styles */
+    .glass-table-wrapper {
+        padding: 10px;
+    }
+
+    .table thead th {
+        text-align: center;
+        vertical-align: middle;
+
+        background: transparent;
+        border-bottom: none;
+        color: #64748b;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 1.5rem 1rem;
+    }
+
+    .table tbody td {
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .table th:nth-child(2),
+    .table td:nth-child(2) {
+        text-align: left;
+    }
+
+    .table td {
+        padding: 1.25rem 1rem;
+    }
+
+    .glass-tr {
+        transition: all 0.2s ease;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .glass-tr:hover {
+        background: rgba(255, 255, 255, 0.5) !important;
+        transform: scale(1.002);
+    }
+
+    /* Badge Custom */
+    .badge-custom {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .badge-custom .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+    .status-pending {
+        background: #e0f2fe;
+        color: #0369a1;
+    }
+
+    .status-approved {
+        background: #dcfce7;
+        color: #15803d;
+    }
+
+    .status-rejected {
+        background: #fef2f2;
+        color: #991b1b;
+    }
+
+    /* Button View */
+    .btn-view-details {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        padding: 8px 16px;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #475569;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-view-details:hover {
+        background: #0060e6;
+        color: #fff;
+        border-color: #0060e6;
+        box-shadow: 0 4px 12px rgba(0, 96, 230, 0.2);
+    }
+</style>
 
 @code {
     [Parameter] public List<UpgradeRequestVM> Requests { get; set; } = new();
     private string searchTerm = "";
     private string selectedStatus = "";
-
     private HttpClient? _httpClient;
 
     protected override void OnInitialized()
     {
         _httpClient = _httpClientFactory.CreateClient("HotelBookingAPI");
     }
+
     private IEnumerable<UpgradeRequestVM> FilteredRequests => Requests
-    .Where(r => (string.IsNullOrEmpty(searchTerm) ||
-    r.RequestId.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-    r.UserName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-    r.FullName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)))
-    .Where(r => string.IsNullOrEmpty(selectedStatus) || r.Status == selectedStatus)
-    .ToList();
+        .Where(r => (string.IsNullOrEmpty(searchTerm) ||
+        r.RequestId.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+        r.UserName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+        r.FullName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)))
+        .Where(r => string.IsNullOrEmpty(selectedStatus) || r.Status == selectedStatus)
+        .ToList();
 
     private string GetStatusBadgeClass(string status) => status switch
     {
-        "Pending" => "bg-primary",
-        "Approved" => "bg-success",
-        "Rejected" => "bg-danger",
-        "Cancelled" => "bg-secondary",
-        _ => "bg-secondary"
+        "Pending" => "status-pending",
+        "Approved" => "status-approved",
+        "Rejected" => "status-rejected",
+        _ => "bg-secondary text-white"
     };
 
     private void ViewDetails(int requestId)
     {
-        var request = Requests.FirstOrDefault(r => r.RequestId == requestId);
-        if (request != null)
-        {
-            NavigationManager.NavigateTo($"/admin/upgrade-requests/{requestId}");
-
-        }
+        NavigationManager.NavigateTo($"/admin/upgrade-requests/{requestId}");
     }
 }

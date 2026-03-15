@@ -13,13 +13,18 @@
 @inject IJSRuntime JSRuntime
 @inject ISnackbar Snackbar
 
-<div class="container-fluid py-4">
+<div class="container-fluid py-4 page-content-animate">
     <PageTitle>Upgrade Owner Requests</PageTitle>
 
-    <h2 class="text-center mb-4">Upgrade Owner Requests</h2>
+    @* --- Header Section --- *@
+    <div class="text-center mb-5">
+        <h2 class="fw-extrabold main-title">Upgrade Owner Requests</h2>
+        <p class="text-muted">Manage and verify partner registration requests</p>
+        <div class="title-underline"></div>
+    </div>
 
     @* Summary Statistics Cards *@
-    <UpgradeStatsCard Stats="@stats" OnStatusClick="FilterByStatus" />
+    <UpgradeStatsCard Stats="@stats" OnStatusClick="FilterByStatus" SelectedStatus="@selectedStatus" />
 
     @* Advanced Filtering Section *@
     <UpgradeFilters SearchTerm="@searchTerm" SelectedStatus="@selectedStatus" PageSize="@pageSize"
@@ -27,47 +32,162 @@
                     PageSizeChanged="OnPageSizeChanged" OnApply="ApplyFilters" OnReset="ResetFilters" />
 
     @* Data Management Table *@
-    <UpgradeTable Requests="@FilteredRequests" IsLoading="@isLoading" OnView="ViewDetails" OnApprove="ShowApproveModal"
-                  OnReject="ShowRejectModal" />
+    <div class="table-container-glass">
+        <UpgradeTable Requests="@FilteredRequests" IsLoading="@isLoading" CurrentPage="@currentPage"
+                      PageSize="@pageSize" TotalCount="@totalCount" OnView="ViewDetails" OnApprove="ShowApproveModal"
+                      OnReject="ShowRejectModal" SelectedStatus="@selectedStatus" SearchTerm="@searchTerm" />
+    </div>
 
     @* Standard Pagination *@
-    <Pagination CurrentPage="@currentPage" TotalPages="@totalPages" TotalCount="@totalCount" IsLoading="@isLoading"
-                OnPageChange="GoToPage" />
+    <div class="mt-4 d-flex justify-content-center">
+        <Pagination CurrentPage="@currentPage" TotalPages="@totalPages" TotalCount="@totalCount" IsLoading="@isLoading"
+                    OnPageChange="GoToPage" />
+    </div>
 </div>
 
-@* Action Confirmation Modal *@
+@* --- Action Confirmation Modal (Glass Style) --- *@
 <div class="modal fade" id="confirmModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header @modalHeaderClass text-white">
-                <h5 class="modal-title">
+        <div class="modal-content glass-modal">
+            <div class="modal-header border-0 @modalHeaderClass text-white glass-modal-header">
+                <h5 class="modal-title fw-bold">
                     <i class="@modalIcon me-2"></i>@modalTitle
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <p>@modalMessage</p>
+            <div class="modal-body p-4">
+                <p class="text-dark fw-medium fs-6">@modalMessage</p>
                 @if (selectedRequest != null)
                 {
-                    <div class="alert alert-light border">
-                        <strong>Request ID:</strong> @selectedRequest.RequestId<br />
-                        <strong>User:</strong> @selectedRequest.FullName (@selectedRequest.UserName)
+                    <div class="selected-request-info">
+                        <div class="info-row">
+                            <span class="label">Request ID:</span>
+                            <span class="value text-primary">#@selectedRequest.RequestId</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">User:</span>
+                            <span class="value">@selectedRequest.FullName (@selectedRequest.UserName)</span>
+                        </div>
                     </div>
                 }
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn @modalBtnClass" @onclick="ConfirmAction" disabled="@isProcessing">
+            <div class="modal-footer border-0 pb-4">
+                <button type="button" class="btn-glass-cancel" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn @modalBtnClass glass-btn-confirm" @onclick="ConfirmAction"
+                        disabled="@isProcessing">
                     @if (isProcessing)
                     {
                         <span class="spinner-border spinner-border-sm me-2"></span>
                     }
-                    Confirm
+                    <span>Confirm Action</span>
                 </button>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .page-content-animate {
+        animation: fadeInUp 0.6s ease;
+    }
+
+    /* Typography */
+    .main-title {
+        color: #1e293b;
+        font-family: 'DM Serif Display', serif;
+        font-size: 2.5rem;
+        letter-spacing: -0.5px;
+        margin-bottom: 0.25rem;
+    }
+
+    .title-underline {
+        width: 80px;
+        height: 4px;
+        background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+        margin: 1.5rem auto;
+        border-radius: 10px;
+    }
+
+    /* Modal Glass Style */
+    .glass-modal {
+        background: rgba(255, 255, 255, 0.9) !important;
+        backdrop-filter: blur(20px);
+        border-radius: 28px !important;
+        border: 1px solid rgba(255, 255, 255, 0.4) !important;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+    }
+
+    .glass-modal-header {
+        border-radius: 28px 28px 0 0 !important;
+        padding: 1.5rem;
+    }
+
+    .selected-request-info {
+        background: rgba(0, 96, 230, 0.05);
+        border: 1px solid rgba(0, 96, 230, 0.1);
+        padding: 1rem;
+        border-radius: 16px;
+        margin-top: 1rem;
+    }
+
+    .info-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 4px;
+        font-size: 0.9rem;
+    }
+
+    .info-row .label {
+        color: #64748b;
+        font-weight: 600;
+        min-width: 90px;
+    }
+
+    .info-row .value {
+        color: #1e293b;
+        font-weight: 700;
+    }
+
+    /* Buttons in Modal */
+    .btn-glass-cancel {
+        background: #f1f5f9;
+        border: none;
+        color: #64748b;
+        padding: 10px 24px;
+        border-radius: 12px;
+        font-weight: 700;
+        transition: 0.3s;
+    }
+
+    .btn-glass-cancel:hover {
+        background: #e2e8f0;
+        color: #1e293b;
+    }
+
+    .glass-btn-confirm {
+        padding: 10px 30px;
+        border-radius: 12px;
+        font-weight: 700;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Table Container padding */
+    .table-container-glass {
+        margin-top: 1.5rem;
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
 
 @code {
     private CancellationTokenSource _cts = new();

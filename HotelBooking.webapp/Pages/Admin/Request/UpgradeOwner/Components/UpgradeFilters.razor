@@ -1,55 +1,117 @@
 @using Microsoft.AspNetCore.Components
 
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <div class="row g-3 align-items-end">
-            <div class="col-md-4">
-                <label class="form-label">Search</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="fas fa-search"></i></span>
-                    <input type="text" class="form-control" placeholder="Username, Name, Phone..." value="@SearchTerm"
-                           @oninput="OnSearchInput" />
-                    @if (!string.IsNullOrEmpty(SearchTerm))
-                    {
-                        <button class="btn btn-outline-secondary" @onclick="ClearSearch">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    }
-                </div>
+<div class="glass-card-filter mb-4 p-4 animate__animated animate__fadeInDown">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label class="custom-label">Search Request</label>
+            <div class="input-group glass-input-group">
+                <span class="input-group-text bg-transparent border-0"><i class="fas fa-search text-primary"></i></span>
+                <input type="text" class="form-control glass-input" placeholder="Username, Name, Phone..."
+                       value="@SearchTerm" @oninput="OnSearchInput" />
+                @if (!string.IsNullOrEmpty(SearchTerm))
+                {
+                    <button class="btn-clear" @onclick="ClearSearch"><i class="fas fa-times"></i></button>
+                }
             </div>
+        </div>
 
-            <div class="col-md-3">
-                <label class="form-label">Status</label>
-                <select class="form-select" value="@SelectedStatus" @onchange="OnStatusChange">
-                    <option value="">All Statuses</option>
-                    @foreach (var status in StatusList)
-                    {
-                        <option value="@status">@status</option>
-                    }
-                </select>
-            </div>
+        <div class="col-md-3">
+            <label class="custom-label">Status</label>
+            <select class="form-select glass-select" value="@SelectedStatus" @onchange="OnStatusChange">
+                <option value="">All Statuses</option>
+                @foreach (var status in StatusList)
+                {
+                    <option value="@status">@status</option>
+                }
+            </select>
+        </div>
 
-            <div class="col-md-2">
-                <label class="form-label">Page Size</label>
-                <select class="form-select" @onchange="OnPageSizeChange">
-                    <option value="5" selected="@(PageSize == 5)">5</option>
-                    <option value="10" selected="@(PageSize == 10)">10</option>
-                    <option value="20" selected="@(PageSize == 20)">20</option>
-                    <option value="50" selected="@(PageSize == 50)">50</option>
-                </select>
-            </div>
+        <div class="col-md-2">
+            <label class="custom-label">Rows</label>
+            <select class="form-select glass-select" @onchange="OnPageSizeChange">
+                <option value="5" selected="@(PageSize == 5)">5</option>
+                <option value="10" selected="@(PageSize == 10)">10</option>
+                <option value="20" selected="@(PageSize == 20)">20</option>
+            </select>
+        </div>
 
-            <div class="col-md-3 text-end">
-                <button class="btn btn-outline-secondary me-2" @onclick="OnReset">
-                    <i class="fas fa-undo"></i> Reset
-                </button>
-                <button class="btn btn-primary" @onclick="OnApply">
-                    <i class="fas fa-filter"></i> Apply Filter
-                </button>
-            </div>
+        <div class="col-md-3 text-end">
+            <button class="btn-glass-secondary me-2" @onclick="OnReset">
+                <i class="fas fa-undo"></i> Reset
+            </button>
+            <button class="btn-glass-primary" @onclick="OnApply">
+                <i class="fas fa-filter"></i> Apply
+            </button>
         </div>
     </div>
 </div>
+
+<style>
+    .glass-card-filter {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(15px);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        box-shadow: 0 8px 32px rgba(0, 96, 230, 0.05);
+    }
+
+    .custom-label {
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: #475569;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .glass-input,
+    .glass-select {
+        background: #fff !important;
+        border: 1.5px solid #cbd5e1 !important;
+        border-radius: 12px;
+        color: #1e293b !important;
+        font-weight: 500;
+    }
+
+    .glass-input-group {
+        background: #fff;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .btn-glass-primary {
+        background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 12px;
+        font-weight: 700;
+        transition: 0.3s;
+    }
+
+    .btn-glass-secondary {
+        background: #fff;
+        border: 1.5px solid #cbd5e1;
+        color: #475569;
+        padding: 9px 20px;
+        border-radius: 12px;
+        font-weight: 700;
+        transition: 0.3s;
+    }
+
+    .btn-glass-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 210, 255, 0.3);
+    }
+
+    .btn-clear {
+        background: transparent;
+        border: none;
+        padding: 0 15px;
+        color: #94a3b8;
+    }
+</style>
 
 @code {
     [Parameter] public string SearchTerm { get; set; } = "";

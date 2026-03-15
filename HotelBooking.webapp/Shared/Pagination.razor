@@ -5,21 +5,21 @@
 
 @if (TotalPages > 1)
 {
-    <div class="@ContainerClass">
-        <nav aria-label="Page navigation">
-            <ul class="pagination @PaginationClass">
+    <div class="glass-pagination-wrapper">
+        @* Row 1: Pagination Buttons *@
+        <nav class="d-flex justify-content-center">
+            <ul class="pagination glass-pagination-list">
                 @* Previous Button *@
                 <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
-                    <button class="page-link" @onclick="GoToPrevious" disabled="@IsLoading" aria-label="Previous">
-                        <span aria-hidden="true">&laquo;</span>
+                    <button class="page-link glass-btn" @onclick="GoToPrevious" disabled="@IsLoading">
+                        <i class="fas fa-chevron-left"></i>
                     </button>
                 </li>
 
-                @* Dynamic Page Numbers *@
                 @foreach (var pageNumber in GetPageNumbers())
                 {
                     <li class="page-item @(pageNumber == CurrentPage ? "active" : "")">
-                        <button class="page-link" @onclick="() => GoToPage(pageNumber)" disabled="@IsLoading">
+                        <button class="page-link glass-btn" @onclick="() => GoToPage(pageNumber)" disabled="@IsLoading">
                             @pageNumber
                         </button>
                     </li>
@@ -27,21 +27,106 @@
 
                 @* Next Button *@
                 <li class="page-item @(CurrentPage == TotalPages ? "disabled" : "")">
-                    <button class="page-link" @onclick="GoToNext" disabled="@IsLoading" aria-label="Next">
-                        <span aria-hidden="true">&raquo;</span>
+                    <button class="page-link glass-btn" @onclick="GoToNext" disabled="@IsLoading">
+                        <i class="fas fa-chevron-right"></i>
                     </button>
                 </li>
             </ul>
         </nav>
-    </div>
 
-    @if (ShowInfo)
-    {
-        <div class="text-center text-muted">
-            <small>Page @CurrentPage of @TotalPages @(TotalCount > 0 ? $"(Total: {TotalCount} items)" : "")</small>
-        </div>
-    }
+        @* Row 2: Pagination Info *@
+        @if (ShowInfo)
+        {
+            <div class="glass-pagination-label">
+                Page <strong>@CurrentPage</strong> of <strong>@TotalPages</strong> — Total @TotalCount items
+            </div>
+        }
+    </div>
 }
+
+<style>
+    /* Center the entire pagination block */
+    .glass-pagination-wrapper {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        margin-top: 2rem !important;
+        margin-bottom: 1rem !important;
+        gap: 12px !important;
+    }
+
+    /* Force the pagination list to always be horizontal, no wrapping */
+    .glass-pagination-list {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        list-style: none !important;
+        gap: 8px !important;
+        border: none !important;
+    }
+
+    .page-item {
+        border: none !important;
+        margin: 0 !important;
+    }
+
+    /* Glassmorphism button design */
+    .glass-btn {
+        background: rgba(255, 255, 255, 0.7) !important;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1.5px solid rgba(255, 255, 255, 0.8) !important;
+        color: #334155 !important;
+        border-radius: 12px !important;
+        width: 40px !important;
+        height: 40px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-weight: 700 !important;
+        transition: all 0.3s ease !important;
+        padding: 0 !important;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02) !important;
+    }
+
+    /* Active page button */
+    .page-item.active .glass-btn {
+        background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%) !important;
+        color: #ffffff !important;
+        border: none !important;
+        box-shadow: 0 8px 15px rgba(0, 210, 255, 0.3) !important;
+    }
+
+    .glass-btn:hover:not(:disabled) {
+        transform: translateY(-3px) !important;
+        background: #ffffff !important;
+        border-color: #0060e6 !important;
+        color: #0060e6 !important;
+    }
+
+    .page-item.disabled .glass-btn {
+        opacity: 0.4 !important;
+        cursor: not-allowed !important;
+    }
+
+    /* Row 2: Pagination Info */
+    .glass-pagination-label {
+        color: #64748b !important;
+        font-size: 0.85rem !important;
+        font-weight: 500 !important;
+        text-align: center !important;
+        width: 100% !important;
+        display: block !important;
+    }
+
+    .glass-pagination-label strong {
+        color: #1e293b !important;
+    }
+</style>
 
 @code {
     /// <summary>
