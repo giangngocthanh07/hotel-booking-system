@@ -16,116 +16,102 @@
 @* --- 3. UI LOADING STATE --- *@
 @if (!ShouldRenderUI())
 {
-    <div class="d-flex justify-content-center align-items-center p-5">
-        <div class="spinner-border text-primary me-2"></div>
-        <span>@MessageResponse.Common.LOADING_DATA</span>
+    <div class="glass-loader-container force-gpu">
+        <div class="spinner-grow text-primary me-2"></div>
+        <span class="fw-bold text-primary">@MessageResponse.Common.LOADING_DATA</span>
     </div>
 }
 else
 {
     <MasterDetailLayout @ref="_layoutRef" TItem="BedTypeVM" TModel="BaseCreateOrUpdateAdminVM" Items="_items"
-    Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
-    OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
-    OnDelete="HandleDelete" OnCancel="ResetForm">
+                        Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
+                        OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
+                        OnDelete="HandleDelete" OnCancel="ResetForm">
 
-        @* --- A. SIDEBAR CONFIGURATION (RENDER FRAGMENT) --- *@
         <SidebarTopContent>
-            @* Global Navigation Component with dynamic dropdown logic *@
             <GlobalNavMenu CurrentModule="BedType" CurrentTypeId="TypeId" />
         </SidebarTopContent>
 
-        @* --- B. FORM CONFIGURATION --- *@
         <FormContent Context="m">
-            @* --- 1. PRE-RENDERING LOGIC --- *@
             @{
-                var activeModel = GetModel();
                 double? currentCapacity = _isUpdate ? _updateModel.DefaultCapacity : _createModel.DefaultCapacity;
+                bool isVarying = _isUpdate ? _updateModel.IsVaryingSize : _createModel.IsVaryingSize;
 
-                // Validation render fragment for BedType specific fields
                 RenderFragment RenderVal(string prop) => __builder =>
                 {
                     if (prop == "Capacity")
                     {
                         if (_isUpdate)
                         {
-                        <ValidationMessage For="() => _updateModel.DefaultCapacity" class="val-msg" />
+                            <ValidationMessage For="() => _updateModel.DefaultCapacity" class="val-msg-custom" />
                         }
                         else
                         {
-                        <ValidationMessage For="() => _createModel.DefaultCapacity" class="val-msg" />
+                            <ValidationMessage For="() => _createModel.DefaultCapacity" class="val-msg-custom" />
                         }
                     }
                     else if (prop == "Width")
                     {
                         if (_isUpdate)
                         {
-                        <ValidationMessage For="() => _updateModel.MinWidth" class="val-msg" />
+                            <ValidationMessage For="() => _updateModel.MinWidth" class="val-msg-custom" />
                         }
                         else
                         {
-                        <ValidationMessage For="() => _createModel.MinWidth" class="val-msg" />
+                            <ValidationMessage For="() => _createModel.MinWidth" class="val-msg-custom" />
                         }
                     }
                 };
             }
 
             @* --- 1. CAPACITY SETTINGS --- *@
-            <div class="mb-3">
-                <label class="form-label fw-bold small text-muted text-uppercase">Capacity (Persons)</label>
-                <div class="input-group shadow-sm">
-                    <span class="input-group-text bg-white"><i class="fa-solid fa-user-group text-muted"></i></span>
-                    <input type="number" class="form-control fw-bold" min="1" value="@currentCapacity"
-                    @oninput="@(e => HandleNumericInput(e.Value?.ToString(), "Capacity"))" />
+            <div class="glass-field-group mb-4 animate__animated animate__fadeIn">
+                <label class="glass-label-bold">Default Occupancy</label>
+                <div class="input-group glass-input-group-manage shadow-sm">
+                    <span class="input-group-text border-0 bg-transparent text-primary">
+                        <i class="fa-solid fa-users-viewfinder"></i>
+                    </span>
+                    <input type="number" class="form-control glass-input-inner fw-bold text-end" min="1"
+                           value="@currentCapacity" @oninput="@(e => HandleNumericInput(e.Value?.ToString(), "Capacity"))" />
+                    <span class="input-group-text border-0 bg-light-glass fw-bold small">Pers.</span>
                 </div>
                 @RenderVal("Capacity")
-                <div class="form-text extra-small mt-1">Default maximum occupancy for this bed type.</div>
+                <div class="helper-text-glass">Standard maximum guests for this bed type.</div>
             </div>
 
             @* --- 2. DIMENSION SETTINGS --- *@
-            @{
-                bool isVarying = _isUpdate ? _updateModel.IsVaryingSize : _createModel.IsVaryingSize;
-                double currentMinWidth = _isUpdate ? _updateModel.MinWidth : _createModel.MinWidth;
-                double currentMaxWidth = _isUpdate ? _updateModel.MaxWidth : _createModel.MaxWidth;
-            }
+            <div class="dimension-glass-card shadow-sm force-gpu">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <label class="glass-label-bold m-0 text-primary">Dimensions</label>
+                    <div class="form-check form-switch custom-switch">
+                        <input type="checkbox" class="form-check-input glass-switch" role="switch" id="swVarying"
+                               checked="@isVarying" @onchange="@(e => HandleToggleVarying((bool)(e.Value ?? false)))" />
+                    </div>
+                </div>
 
-            <div class="mb-4 p-3 bg-light rounded border shadow-sm">
-                <label class="form-label fw-bold small d-block mb-2 text-primary">DIMENSION SETTINGS</label>
-
-                <div class="form-check form-switch custom-switch mb-3">
-                    <input type="checkbox" class="form-check-input" role="switch" id="swVarying" checked="@isVarying"
-                    @onchange="@(e => HandleToggleVarying((bool)(e.Value ?? false)))"
-                    style="cursor: pointer; width: 2.5rem; height: 1.25rem;" />
-
-                    <label class="form-check-label ms-2 small fw-bold" for="swVarying">
-                        @(isVarying ? "Varying Dimensions" : "Fixed Dimensions")
-                    </label>
+                <div class="dimension-status-pill mb-3 @(isVarying ? "warning" : "info")">
+                    <i class="fa-solid @(isVarying ? "fa-arrows-left-right" : "fa-lock") me-2"></i>
+                    @(isVarying ? "Variable Dimensions" : "Fixed Standard Size")
                 </div>
 
                 @if (!isVarying)
                 {
-                    <div class="p-1 rounded bg-primary bg-opacity-10 border border-primary border-opacity-25 shadow-sm">
-                        <label class="fw-bold text-muted text-uppercase mb-1"
-                    style="font-size: 0.62rem; letter-spacing: 0.5px;">
-                            WIDTH (INCHES)
-                        </label>
+                    <div class="dimension-inputs-row animate__animated animate__slideInDown">
+                        <label class="extra-small-label">Width (Inches)</label>
                         <div class="d-flex align-items-center gap-2">
                             @if (_isUpdate)
                             {
-                                <InputNumber class="form-control form-control-sm fw-bold text-primary shadow-sm"
-                        style="width: 85px;" @bind-Value="_updateModel.MinWidth" />
-                                <span class="text-muted small">-</span>
-                                <InputNumber class="form-control form-control-sm fw-bold text-primary shadow-sm"
-                        style="width: 85px;" @bind-Value="_updateModel.MaxWidth" />
+                                <InputNumber class="form-control glass-input-sm" @bind-Value="_updateModel.MinWidth" />
+                                <span class="text-muted">→</span>
+                                <InputNumber class="form-control glass-input-sm" @bind-Value="_updateModel.MaxWidth" />
                             }
                             else
                             {
-                                <input type="number" class="form-control form-control-sm fw-bold text-primary text-center"
-                        style="width: 85px;" value="@currentMinWidth"
-                        @oninput="@(e => HandleNumericInput(e.Value?.ToString(), "Min"))" />
-                                <span class="text-muted small">-</span>
-                                <input type="number" class="form-control form-control-sm fw-bold text-primary text-center"
-                        style="width: 85px;" value="@currentMaxWidth"
-                        @oninput="@(e => HandleNumericInput(e.Value?.ToString(), "Max"))" />
+                                <input type="number" class="form-control glass-input-sm" value="@(_createModel.MinWidth)"
+                                       @oninput="@(e => HandleNumericInput(e.Value?.ToString(), "Min"))" />
+                                <span class="text-muted">→</span>
+                                <input type="number" class="form-control glass-input-sm" value="@(_createModel.MaxWidth)"
+                                       @oninput="@(e => HandleNumericInput(e.Value?.ToString(), "Max"))" />
                             }
                         </div>
                         @RenderVal("Width")
@@ -134,58 +120,194 @@ else
             </div>
         </FormContent>
 
-        @* --- C. TABLE CONFIGURATION --- *@
         <TableHeader>
-            <th class="text-center" style="width: 50px;">ID</th>
-            <th class="text-center" style="width: 150px;">Bed Type Name</th>
-            <th class="text-center" style="width: 120px;">Capacity</th>
-            <th class="text-center" style="width: 180px;">Dimensions (Inches)</th>
-            <th class="text-center">Description</th>
+            <th class="text-center" style="width: 60px;">ID</th>
+            <th class="text-start px-3" style="width: 200px;">Bed Type Name</th>
+            <th class="text-center" style="width: 140px;">Capacity</th>
+            <th class="text-center" style="width: 220px;">Dimensions (In)</th>
+            <th class="text-start px-3">Description</th>
         </TableHeader>
 
         <RowTemplate Context="row">
-            <td class="text-center text-muted small">@row.Id</td>
-            <td class="text-center align-middle text-primary">@row.Name</td>
+            <td class="text-center fw-bold text-muted small">#@row.Id</td>
+            <td class="text-start align-middle px-3">
+                <div class="fw-bold text-dark fs-6">@row.Name</div>
+            </td>
 
-            @* Content Centering & Capacity Badges *@
-            <td class="text-center">
-                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary px-3 py-2">
-                    <span class="fs-6 fw-bold me-1">@row.DefaultCapacity</span>
-                    <i class="fa-solid fa-user ms-1 opacity-50" style="font-size: 0.8em;"></i>
+            <td class="text-center align-middle">
+                <span class="capacity-pill-solid force-gpu">
+                    <i class="fa-solid fa-user-check me-2"></i>@row.DefaultCapacity
                 </span>
             </td>
 
             <td class="text-center align-middle">
                 @if (row.IsVaryingSize)
                 {
-                    <span class="text-muted small fst-italic">Varying</span>
+                    <span class="badge-varying">Varying Size</span>
                 }
                 else
                 {
-                    <div class="badge bg-primary bg-opacity-10 text-primary border border-primary shadow-sm px-2 py-1">
-                        <i class="fa-solid fa-ruler-horizontal me-1"></i> @row.MinWidth - @row.MaxWidth"
+                    <div class="dimension-pill-outline shadow-none">
+                        <i class="fa-solid fa-ruler-combined me-2"></i>@row.MinWidth - @row.MaxWidth
                     </div>
                 }
             </td>
 
-            @* Truncate description if too long *@
-            <td class="text-center align-middle text-muted small text-truncate" style="max-width: 250px;"
-            title="@row.Description">
-                @if (string.IsNullOrWhiteSpace(row.Description))
-                {
-                    <span class="text-muted opacity-50">---</span>
-                }
-                else
-                {
-                    <div class="text-muted small text-truncate mx-auto" style="max-width: 250px;" title="@row.Description">
-                        @row.Description
-                    </div>
-                }
+            <td class="text-start align-middle px-3">
+                <div class="text-muted small text-truncate-custom" title="@row.Description">
+                    @(string.IsNullOrWhiteSpace(row.Description) ? "---" : row.Description)
+                </div>
             </td>
         </RowTemplate>
-
     </MasterDetailLayout>
 }
+
+<style>
+    /* --- THEMED UI COMPONENTS --- */
+    .glass-loader-container {
+        padding: 5rem;
+        text-align: center;
+        background: var(--glass-bg);
+        border-radius: 24px;
+    }
+
+    .glass-label-bold {
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: block;
+        margin-bottom: 10px;
+        color: var(--text-dark);
+    }
+
+    .extra-small-label {
+        font-size: 0.65rem;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        margin-bottom: 5px;
+        display: block;
+    }
+
+    .glass-input-group-manage {
+        background: #fff;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .glass-input-inner {
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+    }
+
+    .bg-light-glass {
+        background: rgba(0, 0, 0, 0.03);
+        border-left: 1px solid #e2e8f0 !important;
+    }
+
+    .helper-text-glass {
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        margin-top: 5px;
+        font-style: italic;
+    }
+
+    /* Dimension Settings Card */
+    .dimension-glass-card {
+        background: var(--glass-bg-deep);
+        border: 1px solid var(--glass-border);
+        border-radius: 18px;
+        padding: 1.25rem;
+    }
+
+    .dimension-status-pill {
+        padding: 6px;
+        border-radius: 10px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-align: center;
+        text-transform: uppercase;
+    }
+
+    .dimension-status-pill.info {
+        background: #e0f2fe;
+        color: #0369a1;
+        border: 1px solid #bae6fd;
+    }
+
+    .dimension-status-pill.warning {
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fde68a;
+    }
+
+    .glass-input-sm {
+        border: 1.5px solid #cbd5e1 !important;
+        border-radius: 8px !important;
+        text-align: center;
+        font-weight: 700;
+        color: var(--admin-blue);
+        padding: 4px;
+    }
+
+    /* Table Visual Elements */
+    .capacity-pill-solid {
+        background: #e0f2fe;
+        color: var(--admin-blue);
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-weight: 800;
+        font-size: 0.8rem;
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid rgba(58, 123, 213, 0.2);
+    }
+
+    .dimension-pill-outline {
+        background: #fff;
+        color: var(--text-muted);
+        border: 1.5px solid #e2e8f0;
+        padding: 5px 12px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 0.75rem;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .badge-varying {
+        background: #f8fafc;
+        color: #94a3b8;
+        border: 1px solid #e2e8f0;
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        font-weight: 700;
+    }
+
+    .text-truncate-custom {
+        max-width: 350px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .val-msg-custom {
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: var(--color-danger);
+        margin-top: 4px;
+        display: block;
+    }
+
+    .glass-table td {
+        padding-top: 1.25rem !important;
+        padding-bottom: 1.25rem !important;
+    }
+</style>
 
 @code {
     // --- URL PARAMETERS ---

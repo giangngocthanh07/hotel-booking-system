@@ -1,34 +1,37 @@
 @if (_isVisible)
 {
-    <div class="modal-backdrop fade show"></div>
+    @* Blur Background *@
+    <div class="modal-backdrop-glass fade show force-gpu"></div>
 
-    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal fade show d-block" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content shadow-lg border-0">
+            <div class="modal-content glass-modal-content force-gpu shadow-lg">
 
-                @* HEADER *@
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title">
-                        <i class="fa-solid fa-triangle-exclamation me-2"></i> @Title
+                @* HEADER: Danger Zone*@
+                <div class="modal-header glass-modal-header border-0 shadow-sm">
+                    <h5 class="modal-title fw-bold text-white d-flex align-items-center">
+                        <div class="warning-icon-box me-3"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        @Title
                     </h5>
                     <button type="button" class="btn-close btn-close-white" @onclick="Hide"></button>
                 </div>
 
                 @* BODY *@
-                <div class="modal-body py-4">
-                    <p class="fw-bold fs-5">@Message</p>
-                    <p class="text-danger small mb-0">
-                        <i class="fa-solid fa-circle-info me-1"></i> This action cannot be undone.
+                <div class="modal-body py-5 px-4 text-center">
+                    <p class="fw-bold fs-5 text-dark mb-2">@Message</p>
+                    <p class="text-muted small mb-0">
+                        <i class="fa-solid fa-circle-info me-1 text-danger"></i> 
+                        This action cannot be undone. Please confirm carefully.
                     </p>
                 </div>
 
                 @* FOOTER *@
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary px-4" @onclick="Hide">
-                        <i class="fa-solid fa-xmark me-1"></i> Cancel
+                <div class="modal-footer border-0 p-4 pt-0 d-flex justify-content-center gap-3">
+                    <button type="button" class="btn-glass-cancel flex-grow-1" @onclick="Hide">
+                        <i class="fa-solid fa-xmark me-2"></i>Cancel
                     </button>
-                    <button type="button" class="btn btn-danger px-4 shadow-sm" @onclick="OnConfirmClicked">
-                        <i class="fa-solid fa-trash me-1"></i> Confirm Delete
+                    <button type="button" class="btn-glass-confirm-danger flex-grow-1 shadow-sm" @onclick="OnConfirmClicked">
+                        <i class="fa-solid fa-trash-can me-2"></i>Confirm Delete
                     </button>
                 </div>
 
@@ -37,44 +40,86 @@
     </div>
 }
 
+<style>
+    /* Blur Background*/
+    .modal-backdrop-glass {
+        position: fixed; top: 0; left: 0; z-index: 1040;
+        width: 100vw; height: 100vh;
+        background-color: rgba(15, 23, 42, 0.4); /* Slate 900 semi-transparent */
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+
+    /* Modal Content Style */
+    .glass-modal-content {
+        background: rgba(255, 255, 255, 0.9) !important;
+        border-radius: 28px !important;
+        border: 1px solid var(--glass-border) !important;
+        overflow: hidden;
+    }
+
+    .glass-modal-header {
+        background: var(--admin-primary-gradient); 
+        padding: 1.5rem 2rem;
+        border-radius: 0;
+    }
+    
+    /* Warning Icon Style*/
+    .warning-icon-box {
+        width: 35px; height: 35px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.1rem;
+    }
+
+    /* Buttons Style */
+    .btn-glass-cancel {
+        background: #f1f5f9;
+        border: 1.5px solid #e2e8f0;
+        color: var(--text-muted);
+        padding: 12px 24px;
+        border-radius: 14px;
+        font-weight: 700;
+        transition: 0.3s;
+    }
+    .btn-glass-cancel:hover { background: #e2e8f0; color: var(--text-dark); }
+
+    .btn-glass-confirm-danger {
+        background: linear-gradient(135deg, #f43f5e, #dc2626);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 14px;
+        font-weight: 700;
+        transition: 0.3s;
+    }
+    .btn-glass-confirm-danger:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.1);
+        box-shadow: 0 10px 20px rgba(220, 38, 38, 0.2) !important;
+    }
+
+    /* Fix table white spots when screenshot */
+    .force-gpu {
+        transform: translateZ(0);
+        -webkit-backface-visibility: hidden;
+    }
+</style>
+
 @code {
-    // --- 1. PARAMETERS (Content Configuration) ---
     [Parameter] public string Title { get; set; } = "Confirm Delete";
     [Parameter] public string Message { get; set; } = "Are you sure you want to delete this item?";
-
-    // Event callback to notify the parent component when "Confirm" is clicked
     [Parameter] public EventCallback OnConfirm { get; set; }
 
-    // --- 2. STATE ---
     private bool _isVisible = false;
 
-    // --- 3. PUBLIC METHODS (Invoked by Parent) ---
+    public void Show() { _isVisible = true; StateHasChanged(); }
+    public void Hide() { _isVisible = false; StateHasChanged(); }
 
-    /// <summary>
-    /// Opens the confirmation modal.
-    /// </summary>
-    public void Show()
-    {
-        _isVisible = true;
-        StateHasChanged();
-    }
-
-    /// <summary>
-    /// Closes the confirmation modal.
-    /// </summary>
-    public void Hide()
-    {
-        _isVisible = false;
-        StateHasChanged();
-    }
-
-    // --- 4. INTERNAL LOGIC ---
     private async Task OnConfirmClicked()
     {
-        // 1. Invoke the parent event
         await OnConfirm.InvokeAsync();
-
-        // 2. Automatically close the modal
         Hide();
     }
 }

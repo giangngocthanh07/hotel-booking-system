@@ -1,51 +1,203 @@
 @page "/admin/roomtypes/create"
 @layout AdminLayout
 
-<div class="container py-4">
-    <div class="card shadow-sm">
-        <div class="card-header bg-white">
-            <h4 class="mb-0">Create Room Type</h4>
+<div class="container py-5 page-fade-in">
+    <div class="glass-form-container mx-auto">
+        @* --- Header --- *@
+        <div class="glass-form-header">
+            <div class="d-flex align-items-center">
+                <div class="header-icon-box">
+                    <i class="fa-solid fa-door-open"></i>
+                </div>
+                <div class="ms-3">
+                    <h4 class="mb-0 fw-bold text-dark">Create Room Type</h4>
+                    <p class="text-muted small mb-0">Define basic structure for new hotel rooms</p>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
+
+        @* --- Form Body --- *@
+        <div class="glass-form-body p-4">
             <EditForm Model="@roomType" OnValidSubmit="HandleValidSubmit">
                 <DataAnnotationsValidator />
-                <ValidationSummary />
 
-                <div class="row g-3">
-                    <!-- Name -->
-                    <div class="col-md-6">
-                        <label class="form-label">Room Type Name</label>
-                        <InputText class="form-control" @bind-Value="roomType.Name" />
-                        <ValidationMessage For="@(() => roomType.Name)" />
-                    </div>
+                <div class="row g-4">
+                    @* Room Type Name *@
+                    <div class="col-md-12">
+                        <label class="custom-label">Room Type Name</label>
+                        <div class="input-group glass-input-group">
+                            <span class="input-group-text border-0 bg-transparent"><i
+                                class="fa-solid fa-signature text-primary"></i></span>
+                                <InputText class="form-control glass-control" @bind-Value="roomType.Name"
+                                           placeholder="e.g. Deluxe Double Room" />
+                            </div>
+                            <ValidationMessage For="@(() => roomType.Name)" class="val-msg-custom" />
+                        </div>
 
-                    <!-- Default Adult Capacity -->
-                    <div class="col-md-3">
-                        <label class="form-label">Default Adults</label>
-                        <InputNumber class="form-control" @bind-Value="roomType.DefaultAdultCapacity" />
-                    </div>
+                        @* Default Adults *@
+                        <div class="col-md-6">
+                            <label class="custom-label">Default Adults</label>
+                            <div class="input-group glass-input-group">
+                                <span class="input-group-text border-0 bg-transparent"><i
+                                    class="fa-solid fa-user text-muted"></i></span>
+                                    <InputNumber class="form-control glass-control fw-bold"
+                                                 @bind-Value="roomType.DefaultAdultCapacity" />
+                                </div>
+                                <ValidationMessage For="@(() => roomType.DefaultAdultCapacity)" class="val-msg-custom" />
+                            </div>
 
-                    <!-- Default Child Capacity -->
-                    <div class="col-md-3">
-                        <label class="form-label">Default Children</label>
-                        <InputNumber class="form-control" @bind-Value="roomType.DefaultChildCapacity" />
-                    </div>
+                            @* Default Children *@
+                            <div class="col-md-6">
+                                <label class="custom-label">Default Children</label>
+                                <div class="input-group glass-input-group">
+                                    <span class="input-group-text border-0 bg-transparent"><i
+                                        class="fa-solid fa-child text-muted"></i></span>
+                                        <InputNumber class="form-control glass-control fw-bold"
+                                                     @bind-Value="roomType.DefaultChildCapacity" />
+                                    </div>
+                                    <ValidationMessage For="@(() => roomType.DefaultChildCapacity)" class="val-msg-custom" />
+                                </div>
 
-                    <!-- Default Description -->
-                    <div class="col-12">
-                        <label class="form-label">Default Description</label>
-                        <InputTextArea class="form-control" rows="3" @bind-Value="roomType.DefaultDescription" />
+                                @* Description *@
+                                <div class="col-12">
+                                    <label class="custom-label">Default Description</label>
+                                    <InputTextArea class="form-control glass-control" rows="4"
+                                                   @bind-Value="roomType.DefaultDescription"
+                                                   placeholder="Describe the typical features of this room type..." />
+                                </div>
+                            </div>
+
+                            @* Action Button *@
+                            <div class="mt-5">
+                                <button type="submit" class="btn-glass-save w-100">
+                                    <i class="fa-solid fa-cloud-arrow-up me-2"></i>CREATE ROOM TYPE
+                                </button>
+                                <div class="text-center mt-3">
+                                    <a href="/admin/roomtypes" class="text-decoration-none text-muted small hover-primary">
+                                        <i class="fa-solid fa-arrow-left me-1"></i>Back to list
+                                    </a>
+                                </div>
+                            </div>
+                        </EditForm>
                     </div>
                 </div>
+            </div>
 
-                <!-- Save button -->
-                <div class="mt-4">
-                    <button type="submit" class="btn btn-primary w-100">SAVE</button>
-                </div>
-            </EditForm>
-        </div>
-    </div>
-</div>
+            <style>
+                .page-fade-in {
+                    animation: fadeIn 0.6s ease;
+                }
+
+                /* Container kính mờ */
+                .glass-form-container {
+                    max-width: 700px;
+                    background: rgba(255, 255, 255, 0.7);
+                    backdrop-filter: blur(20px);
+                    -webkit-backdrop-filter: blur(20px);
+                    border: 1px solid rgba(255, 255, 255, 0.8);
+                    border-radius: 30px;
+                    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+                    overflow: hidden;
+                }
+
+                /* Header */
+                .glass-form-header {
+                    padding: 2rem;
+                    background: rgba(255, 255, 255, 0.4);
+                    border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+                }
+
+                .header-icon-box {
+                    width: 55px;
+                    height: 55px;
+                    background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+                    color: white;
+                    border-radius: 15px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1.5rem;
+                    box-shadow: 0 8px 15px rgba(0, 210, 255, 0.2);
+                }
+
+                /* Form Controls */
+                .custom-label {
+                    font-size: 0.75rem;
+                    font-weight: 800;
+                    color: #64748b;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                    margin-bottom: 8px;
+                    display: block;
+                }
+
+                .glass-input-group {
+                    background: #fff;
+                    border: 1.5px solid #cbd5e1;
+                    border-radius: 14px;
+                    overflow: hidden;
+                    transition: 0.3s;
+                }
+
+                .glass-input-group:focus-within {
+                    border-color: #0060e6;
+                    box-shadow: 0 0 0 4px rgba(0, 96, 230, 0.1);
+                }
+
+                .glass-control {
+                    border: none !important;
+                    background: transparent !important;
+                    padding: 0.75rem 1rem;
+                    color: #1e293b;
+                    font-weight: 500;
+                }
+
+                .glass-control:focus {
+                    box-shadow: none !important;
+                }
+
+                /* Button */
+                .btn-glass-save {
+                    background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+                    border: none;
+                    color: white;
+                    padding: 14px;
+                    border-radius: 16px;
+                    font-weight: 800;
+                    letter-spacing: 1px;
+                    transition: 0.3s;
+                    box-shadow: 0 10px 20px rgba(0, 210, 255, 0.25);
+                }
+
+                .btn-glass-save:hover {
+                    transform: translateY(-3px);
+                    filter: brightness(1.1);
+                }
+
+                .val-msg-custom {
+                    font-size: 0.75rem;
+                    font-weight: 700;
+                    color: #dc2626;
+                    margin-top: 5px;
+                    display: block;
+                }
+
+                .hover-primary:hover {
+                    color: #0060e6 !important;
+                }
+
+                @@keyframes fadeIn {
+                    from {
+                        opacity: 0;
+                        transform: translateY(20px);
+                    }
+
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+            </style>
 
 @code {
     private RoomTypeDTO roomType = new();

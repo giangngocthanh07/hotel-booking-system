@@ -1,4 +1,5 @@
 @* File: Components/Manage/GlobalNavMenu.razor *@
+
 @using HotelBooking.webapp.Helpers
 @using HotelBooking.webapp.Services
 @using HotelBooking.webapp.ViewModels.Admin
@@ -6,37 +7,89 @@
 @inject IManagementService _manageService
 @inject ILogger<GlobalNavMenu> Logger
 
-
-@* 1. Module Selection Dropdown (Navigation) - Uses ManageModuleConstants *@
-<div class="mb-3">
-    <label class="form-label small fw-bold text-muted">Data Group</label>
-    <select class="form-select" value="@CurrentModule" @onchange="OnModuleChanged">
-        @foreach (var module in ManageModuleConstants.GetAll())
-        {
-            <option value="@module.Module.ToString()">@module.DisplayName</option>
-        }
-    </select>
-</div>
-
-@* 2. Type Selection Dropdown (Loaded via API) *@
-@if (_types != null && _types.Any())
-{
-    <div class="mb-3">
-        <label class="form-label small fw-bold text-muted">Category</label>
-        <select class="form-select" value="@CurrentTypeId" @onchange="OnTypeChanged">
-            @foreach (var t in _types)
+<div class="glass-nav-container">
+    @* 1. Module Selection *@
+    <div class="mb-4">
+        <label class="glass-nav-label">
+            <i class="bi bi-collection-fill me-2"></i>Data Group
+        </label>
+        <select class="form-select glass-select-nav" value="@CurrentModule" @onchange="OnModuleChanged">
+            @foreach (var module in ManageModuleConstants.GetAll())
             {
-                <option value="@t.Id">@t.Name</option>
+                <option value="@module.Module.ToString()">@module.DisplayName</option>
             }
         </select>
     </div>
-}
-else if (_isLoading)
-{
-    <div class="text-center small text-muted">
-        <span class="spinner-border spinner-border-sm me-1"></span>Loading menu...
-    </div>
-}
+
+    @* 2. Type Selection *@
+    @if (_types != null && _types.Any())
+    {
+        <div class="mb-2">
+            <label class="glass-nav-label">
+                <i class="bi bi-tags-fill me-2"></i>Category
+            </label>
+            @* Dùng biến --admin-cyan từ site.css *@
+            <select class="form-select glass-select-nav category-highlight" value="@CurrentTypeId"
+                    @onchange="OnTypeChanged">
+                @foreach (var t in _types)
+                {
+                    <option value="@t.Id">@t.Name</option>
+                }
+            </select>
+        </div>
+    }
+    else if (_isLoading)
+    {
+        <div class="text-center py-3">
+            @* Spinner dùng màu primary của hệ thống *@
+            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+            <div class="small text-muted mt-1">Loading menu...</div>
+        </div>
+    }
+</div>
+
+<style>
+    .glass-nav-container {
+        padding: 0.5rem;
+    }
+
+    .glass-nav-label {
+        font-size: 0.75rem;
+        font-weight: 800;
+        /* Sử dụng biến text-muted từ site.css */
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 0.6rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .glass-select-nav {
+        /* Sử dụng các biến Glassmorphism từ site.css */
+        background: var(--glass-bg-deep) !important;
+        border: 1.5px solid #cbd5e1 !important;
+        border-radius: 14px !important;
+        padding: 0.7rem 1rem !important;
+        font-weight: 600 !important;
+        color: var(--text-dark) !important;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02) !important;
+        transition: all 0.3s ease;
+    }
+
+    .glass-select-nav:focus {
+        /* Dùng màu admin-blue từ site.css */
+        border-color: var(--admin-blue) !important;
+        box-shadow: 0 0 0 4px rgba(0, 96, 230, 0.1) !important;
+        background: #ffffff !important;
+    }
+
+    .category-highlight {
+        background: #fff !important;
+        /* Dùng màu admin-cyan làm viền nhấn cho Category */
+        border-color: var(--admin-cyan) !important;
+    }
+</style>
 
 
 @code {

@@ -16,126 +16,238 @@
 @* --- 3. UI LOADING STATE --- *@
 @if (!ShouldRenderUI())
 {
-    <div class="d-flex justify-content-center align-items-center p-5">
-        <div class="spinner-border text-primary me-2"></div>
-        <span>@MessageResponse.Common.LOADING_DATA</span>
+    <div class="glass-loader-container force-gpu">
+        <div class="spinner-border text-primary me-3"></div>
+        <span class="fw-bold text-primary">@MessageResponse.Common.LOADING_DATA</span>
     </div>
 }
 else
 {
     <MasterDetailLayout @ref="_layoutRef" TItem="UnitTypeVM" TModel="BaseCreateOrUpdateAdminVM" Items="_items"
-    Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
-    OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
-    OnDelete="HandleDelete" OnCancel="ResetForm">
+                        Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
+                        OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
+                        OnDelete="HandleDelete" OnCancel="ResetForm">
 
-        @* --- A. SIDEBAR CONFIGURATION (RENDER FRAGMENT) --- *@
         <SidebarTopContent>
-            @* Integrated dynamic navigation menu *@
             <GlobalNavMenu CurrentModule="UnitType" CurrentTypeId="TypeId" />
         </SidebarTopContent>
 
-        @* --- B. FORM CONFIGURATION (Booking.com Standards) --- *@
         <FormContent Context="m">
-
-            @* 1. PROPERTY TYPE CONFIGURATION (IS ENTIRE PLACE) *@
             @{
                 bool isEntire = _isUpdate
                     ? (_updateModel.IsEntirePlace ?? false)
                     : (_createModel.IsEntirePlace ?? false);
             }
 
-            <div class="card bg-white border mb-3 shadow-sm animate__animated animate__fadeIn">
-                <div class="card-header bg-light py-2 border-bottom">
-                    <h6 class="mb-0 fw-bold small text-uppercase text-muted">Property Configuration</h6>
-                </div>
-                <div class="card-body">
-                    @* --- TOGGLE SWITCH --- *@
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <label class="form-label fw-bold text-dark mb-0">Is this an entire place rental?</label>
-                        <div class="form-check form-switch custom-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" checked="@isEntire"
-                            @onchange="@(e => HandleToggleEntire((bool)(e.Value ?? false)))"
-                            style="cursor: pointer; width: 3rem; height: 1.5rem;">
+            @* 1. CONFIGURATION CARD (Linked to site.css variables) *@
+            <div class="glass-config-card mb-4 animate__animated animate__fadeIn force-gpu">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <label class="glass-label-bold text-primary mb-0">
+                        <i class="fa-solid fa-sliders me-2"></i>Rental Configuration
+                    </label>
+                    <div class="form-check form-switch custom-switch-lg">
+                        <input class="form-check-input glass-switch" type="checkbox" role="switch" checked="@isEntire"
+                               @onchange="@(e => HandleToggleEntire((bool)(e.Value ?? false)))">
                         </div>
                     </div>
 
-                    @* --- VISUAL DESCRIPTION (BOOKING.COM STYLE) --- *@
-                    <div
-                    class="p-3 rounded border @(isEntire ? "bg-success bg-opacity-10 border-success" : "bg-light border-secondary")">
-                        <div class="d-flex align-items-start animate__animated animate__fadeIn">
-                            <div class="me-3">
-                                <span
-                                class="badge @(isEntire ? "bg-success" : "bg-secondary") rounded-circle p-2 shadow-sm">
-                                    <i class="fa-solid @(isEntire ? "fa-key" : "fa-bed") fs-5 text-white"></i>
-                                </span>
+                    @* 2. VISUAL EXPLANATION (Kính mờ đổi màu theo trạng thái) *@
+                    <div class="rental-info-box force-gpu @(isEntire ? "entire" : "private") shadow-sm">
+                        <div class="d-flex align-items-start">
+                            <div class="info-icon-circle shadow-sm">
+                                <i class="fa-solid @(isEntire ? "fa-house-lock" : "fa-door-closed")"></i>
                             </div>
-                            <div>
-                                <strong class="@(isEntire ? "text-success" : "text-dark")">
-                                    @(isEntire ? "Entire Place" : "Private Room / Hotel Room")
-                                </strong>
-                                <p class="mb-0 small text-muted mt-1 fst-italic">
+                            <div class="ms-3">
+                                <div class="info-tag">@(isEntire ? "ENTIRE PLACE" : "PRIVATE ROOM")</div>
+                                <div class="info-text">
                                     @if (isEntire)
                                     {
-                                        <span>Guests have the whole place to themselves (kitchen, private
-                                            entrance...).<br />Ideal for: Apartments, Villas, Studios.</span>
+                                        <span>Guests have the whole property to themselves. Ideal for Apartments, Villas.</span>
                                     }
                                     else
                                     {
-                                        <span>Guests rent a specific bedroom (typically with an ensuite bathroom).<br />Ideal
-                                            for: Hotels, Resorts, Guesthouses.</span>
+                                        <span>Guests rent a bedroom within the property. Ideal for Hotels, Guesthouses.</span>
                                     }
-                                </p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </FormContent>
+            </FormContent>
 
-        @* --- C. TABLE CONFIGURATION --- *@
-        <TableHeader>
-            <th class="text-center" style="width: 50px;">Id</th>
-            <th class="text-center" style="width: 250px;">Accommodation Type</th>
-            <th class="text-center">Description</th>
-            <th class="text-center" style="width: 250px;">Rental Type</th>
-        </TableHeader>
+            <TableHeader>
+                <th class="text-center" style="width: 60px;">ID</th>
+                <th class="text-start px-3" style="width: 250px;">Accommodation Type</th>
+                <th class="text-start px-3">Description</th>
+                <th class="text-center" style="width: 200px;">Rental Model</th>
+            </TableHeader>
 
-        <RowTemplate Context="row">
-            <td class="text-center text-muted small">@row.Id</td>
-            <td class="text-center align-middle text-primary fw-bold">@row.Name</td>
+            <RowTemplate Context="row">
+                <td class="text-center fw-bold text-muted small">#@row.Id</td>
 
-            <td class="text-center align-middle text-muted small text-truncate" style="max-width: 250px;"
-            title="@row.Description">
-                @if (string.IsNullOrWhiteSpace(row.Description))
-                {
-                    <span class="text-muted opacity-50">---</span>
-                }
-                else
-                {
-                    <div class="text-muted small text-truncate mx-auto" style="max-width: 500px;" title="@row.Description">
-                        @row.Description
-                    </div>
-                }
-            </td>
+                <td class="text-start align-middle px-3">
+                    <div class="fw-bold text-dark fs-6">@row.Name</div>
+                    <div class="text-muted extra-small">Ref: UT-0@row.Id</div>
+                </td>
 
-            <td class="text-center">
-                @if (row.IsEntirePlace == true)
-                {
-                    <span class="badge rounded-pill bg-success px-3 py-2 shadow-sm">
-                        <i class="fa-solid fa-key me-1"></i>Entire Place
-                    </span>
-                }
-                else
-                {
-                    <span class="badge rounded-pill bg-light text-dark border px-3 py-2 shadow-sm">
-                        <i class="fa-solid fa-bed me-1"></i>Private Room
-                    </span>
-                }
-            </td>
-        </RowTemplate>
+                <td class="text-start align-middle px-3">
+                    @if (string.IsNullOrWhiteSpace(row.Description))
+                    {
+                        <span class="text-muted opacity-30 small italic">---</span>
+                    }
+                    else
+                    {
+                        <div class="text-muted small text-truncate-custom" title="@row.Description">
+                            @row.Description
+                        </div>
+                    }
+                </td>
 
-    </MasterDetailLayout>
-}
+                <td class="text-center align-middle">
+                    @if (row.IsEntirePlace == true)
+                    {
+                        <span class="glass-pill-solid success force-gpu">
+                            <i class="fa-solid fa-key me-2"></i>Entire Place
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="glass-pill-solid slate force-gpu">
+                            <i class="fa-solid fa-bed me-2"></i>Private Room
+                        </span>
+                    }
+                </td>
+            </RowTemplate>
+        </MasterDetailLayout>
+    }
+
+    <style>
+        /* --- CSS REORGANIZED & LINKED TO site.css VARIABLES --- */
+        .glass-loader-container {
+            padding: 5rem;
+            text-align: center;
+            background: var(--glass-bg);
+            border-radius: 24px;
+        }
+
+        .glass-config-card {
+            background: var(--glass-bg-deep);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 1.5rem;
+        }
+
+        .glass-label-bold {
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: block;
+            color: var(--text-dark);
+        }
+
+        /* Toggle Style Customization */
+        .custom-switch-lg .glass-switch {
+            width: 3.2rem !important;
+            height: 1.6rem !important;
+            cursor: pointer;
+        }
+
+        /* Interactive Info Box */
+        .rental-info-box {
+            padding: 1.25rem;
+            border-radius: 16px;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .rental-info-box.entire {
+            background: rgba(16, 185, 129, 0.08);
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+
+        .rental-info-box.private {
+            background: rgba(100, 116, 139, 0.08);
+            border-color: rgba(100, 116, 139, 0.2);
+        }
+
+        .info-icon-circle {
+            width: 42px;
+            height: 42px;
+            background: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .entire .info-icon-circle {
+            color: var(--color-success);
+        }
+
+        .private .info-icon-circle {
+            color: var(--text-muted);
+        }
+
+        .info-tag {
+            font-size: 0.65rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            margin-bottom: 2px;
+        }
+
+        .entire .info-tag {
+            color: #059669;
+        }
+
+        .private .info-tag {
+            color: var(--text-dark);
+        }
+
+        .info-text {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+            font-style: italic;
+        }
+
+        /* Table Visual Elements */
+        .glass-pill-solid {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .glass-pill-solid.success {
+            background: #dcfce7;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+        }
+
+        .glass-pill-solid.slate {
+            background: #f1f5f9;
+            color: var(--text-muted);
+            border: 1px solid #e2e8f0;
+        }
+
+        .text-truncate-custom {
+            max-width: 350px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .glass-table td {
+            padding-top: 1.25rem !important;
+            padding-bottom: 1.25rem !important;
+        }
+    </style>
 
 @code {
     // --- URL PARAMETERS ---

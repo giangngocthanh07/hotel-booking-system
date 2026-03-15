@@ -13,328 +13,343 @@
 
 <PageTitle>Become a Partner - Hotel Booking</PageTitle>
 
-<div class="upgrade-wrapper">
-    <div class="upgrade-container">
+<div class="auth-wrapper force-gpu">
+    <div class="auth-container wide">
         @if (userInfo == null)
         {
-            <div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
-                <div class="spinner-border text-light me-2"></div>
-                <span class="text-light">Loading account information...</span>
-            </div>
-        }
-        else if (userInfo.Content == null)
-        {
-            <div class="upgrade-card">
-                <div class="alert alert-danger shadow-sm">
-                    <i class="fas fa-exclamation-circle me-2"></i>@userInfo.Message
-                </div>
+            <div class="glass-loader-center p-5 text-center force-gpu">
+                <div class="spinner-border text-primary mb-3" role="status"></div>
+                <div class="fw-bold text-primary text-uppercase tracking-wider">Syncing Account Data...</div>
             </div>
         }
         else
         {
-            <div class="upgrade-card">
-                <div class="text-center mb-4">
-                    <a href="/" class="upgrade-logo">
-                        <img src="favicon.ico" alt="Hotel Booking Logo" />
+            <div class="auth-card shadow-lg force-gpu">
+                @* --- Header Section --- *@
+                <div class="text-center mb-5">
+                    <a href="/" class="auth-logo-wrap mb-3">
+                        <img src="favicon.ico" alt="Logo" class="logo-img" />
                         <span class="ms-2">Hotel Booking</span>
                     </a>
-                    <h2 class="mt-3 fw-bold">Register for Partner Account</h2>
-                    <p class="upgrade-subtitle">Become a partner and start listing your services</p>
+                    <h2 class="mt-4 fw-bold text-dark">Partner Registration</h2>
+                    <p class="text-muted small uppercase-tracking">Upgrade your account to start business</p>
                 </div>
 
-                <p class="upgrade-desc mb-4">Please verify your account information and provide your business address
-                    and tax code to submit your upgrade request.</p>
-
+                @* --- Request Status Banner (Glass Style) --- *@
                 @if (requestStatus != "None")
                 {
-                    <div class="alert @GetStatusAlertClass(requestStatus) d-flex align-items-center shadow-sm" role="alert">
-                        <strong>Request Status:</strong>
-                        <span class="badge @GetStatusBadgeClass(requestStatus) ms-2 px-3 py-2">@requestStatus</span>
+                    <div class="glass-status-banner @GetStatusTheme(requestStatus) mb-4 animate__animated animate__fadeIn">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <div class="status-icon-circle me-3">
+                                    <i class="@GetStatusIcon(requestStatus)"></i>
+                                </div>
+                                <div>
+                                    <div class="status-label">CURRENT APPLICATION STATUS</div>
+                                    <div class="status-value">@requestStatus.ToUpper()</div>
+                                </div>
+                            </div>
+                            @if (requestStatus == "Pending")
+                            {
+                                <span class="pulse-indicator"></span>
+                            }
+                        </div>
                     </div>
                 }
+
+                <p class="text-muted small mb-4 px-1 italic-info">
+                    <i class="fas fa-info-circle me-1"></i> Please verify your profile info and provide business details
+                    below.
+                </p>
 
                 <EditForm Model="@requestModel" OnValidSubmit="HandleValidSubmit">
                     <DataAnnotationsValidator />
 
-                    <div class="row g-3">
+                    @* Row 1: Account Information (Readonly) *@
+                    <div class="row g-4 mb-4">
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold upgrade-label">Username</label>
-                            <input class="form-control upgrade-input-readonly" value="@userInfo.Content.UserName"
-                            readonly />
+                            <div class="form-floating">
+                                <input class="form-control glass-input-readonly" value="@userInfo.Content?.UserName"
+                                       readonly />
+                                <label>Account Username</label>
+                            </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold upgrade-label">Full Name</label>
-                            <input class="form-control upgrade-input-readonly" value="@userInfo.Content.FullName"
-                            readonly />
+                            <div class="form-floating">
+                                <input class="form-control glass-input-readonly" value="@userInfo.Content?.FullName"
+                                       readonly />
+                                <label>Full Name</label>
+                            </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold upgrade-label">Email Address</label>
-                            <input class="form-control upgrade-input-readonly" value="@userInfo.Content.Email" readonly />
+                            <div class="form-floating">
+                                <input class="form-control glass-input-readonly" value="@userInfo.Content?.Email"
+                                       readonly />
+                                <label>Email Contact</label>
+                            </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold upgrade-label">Phone Number</label>
-                            <input class="form-control upgrade-input-readonly" value="@userInfo.Content.PhoneNumber"
-                            readonly />
+                            <div class="form-floating">
+                                <input class="form-control glass-input-readonly" value="@userInfo.Content?.PhoneNumber"
+                                       readonly />
+                                <label>Phone Number</label>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="row g-3 mt-2">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold upgrade-label-editable">Business Address</label>
-                            <InputText class="form-control upgrade-input" @bind-Value="requestModel.Address"
-                            readonly="@isFormReadOnly" placeholder="Enter your business address" />
-                            <ValidationMessage For="@(() => requestModel.Address)" class="text-warning small" />
+                    @* Row 2: Business Details (Editable) *@
+                    <div class="row g-4">
+                        <div class="col-md-8">
+                            <div class="form-floating">
+                                <InputText class="form-control glass-input-auth" @bind-Value="requestModel.Address"
+                                           readonly="@isFormReadOnly" placeholder="Address" />
+                                <label>Registered Business Address</label>
+                                <ValidationMessage For="@(() => requestModel.Address)" class="val-msg-custom" />
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold upgrade-label-editable">Tax Code</label>
-                            <InputText class="form-control upgrade-input" @bind-Value="requestModel.TaxCode"
-                            readonly="@isFormReadOnly" placeholder="Enter your business tax code" />
-                            <ValidationMessage For="@(() => requestModel.TaxCode)" class="text-warning small" />
+                        <div class="col-md-4">
+                            <div class="form-floating">
+                                <InputText class="form-control glass-input-auth" @bind-Value="requestModel.TaxCode"
+                                           readonly="@isFormReadOnly" placeholder="Tax Code" />
+                                <label>Tax Identification (TIN)</label>
+                                <ValidationMessage For="@(() => requestModel.TaxCode)" class="val-msg-custom" />
+                            </div>
                         </div>
                     </div>
 
-                    <button type="submit" class="btn upgrade-btn w-100 mt-4 py-3 fw-bold" disabled="@isFormReadOnly">
-                        Submit Upgrade Request
-                    </button>
+                    @* Action Button *@
+                    <div class="mt-5">
+                        <button type="submit" class="btn-auth-primary w-100 py-3 force-gpu" disabled="@isFormReadOnly">
+                            @if (isFormReadOnly)
+                            {
+                                <i class="fas fa-lock me-2"></i>
+                            
+                                <span>APPLICATION UNDER REVIEW</span>
+                            }
+                            else
+                            {
+                                <i class="fas fa-paper-plane me-2"></i>
+                            
+                                <span>SUBMIT PARTNER REQUEST</span>
+                            }
+                        </button>
+                    </div>
 
-                    @if (requestStatus == "Pending")
-                    {
-                        <div class="upgrade-status-msg info mt-3">
-                            <i class="fas fa-clock me-2"></i>Your request has been submitted and is awaiting admin approval.
-                        </div>
-                    }
-                    else if (requestStatus == "Approved")
-                    {
-                        <div class="upgrade-status-msg success mt-3">
-                            <i class="fas fa-check-circle me-2"></i>Congratulations! Your request has been approved. You are now
-                            a partner.
-                        </div>
-                    }
-                    else if (requestStatus == "Rejected")
-                    {
-                        <div class="upgrade-status-msg warning mt-3">
-                            <i class="fas fa-exclamation-triangle me-2"></i>Your request was rejected. Please review your
-                            information and try again.
-                        </div>
-                    }
+                    @* Context Messages *@
+                    <div class="mt-4">
+                        @if (requestStatus == "Pending")
+                        {
+                            <div class="upgrade-helper-box info">
+                                <i class="fas fa-clock me-2"></i>
+                                Our admins are reviewing your business details. This usually takes 24-48h.
+                            </div>
+                        }
+                        else if (requestStatus == "Rejected")
+                        {
+                            <div class="upgrade-helper-box danger">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Your previous request was rejected. Please update your TIN or Address and re-submit.
+                            </div>
+                        }
+                    </div>
                 </EditForm>
-
-                @if (!string.IsNullOrEmpty(message))
-                {
-                    <div class="alert @alertClass mt-3 shadow-sm">@message</div>
-                }
             </div>
         }
 
         <div class="text-center mt-4">
-            <a href="/" class="upgrade-back-link">
-                <i class="fas fa-arrow-left me-2"></i>Back to Home
+            <a href="/" class="auth-link-back">
+                <i class="fas fa-chevron-left me-2"></i>Return to Homepage
             </a>
         </div>
     </div>
 </div>
 
-CSS
 <style>
-    .upgrade-wrapper {
+    /* --- INTEGRATED UPGRADE FORM STYLES --- */
+    .auth-wrapper {
         min-height: 100vh;
         width: 100%;
         display: flex;
         justify-content: center;
         align-items: center;
-        background-color: #f0f9ff;
-        background-image:
-            radial-gradient(at 0% 0%, hsla(190, 100%, 90%, 1) 0px, transparent 50%),
-            radial-gradient(at 50% 0%, hsla(205, 100%, 85%, 1) 0px, transparent 50%),
-            radial-gradient(at 100% 0%, hsla(188, 100%, 92%, 1) 0px, transparent 50%),
-            radial-gradient(at 100% 100%, hsla(215, 100%, 88%, 1) 0px, transparent 50%),
-            radial-gradient(at 0% 100%, hsla(195, 100%, 95%, 1) 0px, transparent 50%);
-        background-size: 150% 150%;
-        animation: upgradeGradientShift 20s ease infinite;
+        background: radial-gradient(circle at top left, #f0f9ff 0%, #e0f2fe 100%);
         padding: 3rem 1rem;
         position: relative;
-        overflow: hidden;
     }
 
-    .upgrade-wrapper::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.5) 0%, transparent 40%),
-            radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.4) 0%, transparent 40%);
-        pointer-events: none;
-    }
-
-    .upgrade-container {
+    .auth-container.wide {
         width: 100%;
-        max-width: 800px;
-        animation: upgradeFadeIn 0.6s ease-out;
-        position: relative;
-        z-index: 1;
+        max-width: 850px;
     }
 
-    .upgrade-card {
-        background: rgba(255, 255, 255, 0.65);
-        backdrop-filter: blur(20px) saturate(180%);
-        -webkit-backdrop-filter: blur(20px) saturate(180%);
-        padding: 3rem 2.5rem;
-        border-radius: 28px;
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.5);
+    .auth-card {
+        background: var(--glass-bg-deep);
+        backdrop-filter: var(--glass-blur) saturate(150%);
+        padding: 3.5rem 3rem;
+        border-radius: 32px;
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--glass-shadow);
     }
 
-    .upgrade-logo {
-        display: inline-flex;
+    /* Status Banners */
+    .glass-status-banner {
+        padding: 1.25rem 1.5rem;
+        border-radius: 20px;
+        border: 1px solid transparent;
+    }
+
+    .glass-status-banner.pending {
+        background: #e0f2fe;
+        border-color: #bae6fd;
+        color: #0369a1;
+    }
+
+    .glass-status-banner.approved {
+        background: #dcfce7;
+        border-color: #bbf7d0;
+        color: #15803d;
+    }
+
+    .glass-status-banner.rejected {
+        background: #fee2e2;
+        border-color: #fecaca;
+        color: #991b1b;
+    }
+
+    .status-icon-circle {
+        width: 42px;
+        height: 42px;
+        background: #fff;
+        border-radius: 12px;
+        display: flex;
         align-items: center;
-        text-decoration: none;
-        color: #0060e6;
+        justify-content: center;
+        font-size: 1.2rem;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .status-label {
+        font-size: 0.65rem;
         font-weight: 800;
-        font-size: 1.25rem;
-        font-family: 'DM Serif Display', serif;
+        letter-spacing: 1px;
+        opacity: 0.8;
     }
 
-    .upgrade-card h2 {
-        color: #1e293b;
-        font-family: 'DM Serif Display', serif;
-        font-size: 2.2rem;
-        margin-bottom: 0.5rem;
+    .status-value {
+        font-weight: 800;
+        font-size: 1.1rem;
     }
 
-    .upgrade-subtitle {
-        color: #475569;
-        font-weight: 500;
+    /* Form Elements Sync */
+    .glass-input-auth {
+        background: #ffffff !important;
+        border: 1.5px solid #e2e8f0 !important;
+        border-radius: 16px !important;
+        height: 60px !important;
+        color: var(--text-dark) !important;
+        font-weight: 600 !important;
     }
 
-    .upgrade-desc {
-        color: #64748b;
+    .glass-input-readonly {
+        background: rgba(0, 0, 0, 0.03) !important;
+        border: 1.5px solid #e2e8f0 !important;
+        border-radius: 16px !important;
+        height: 60px !important;
+        color: var(--text-muted) !important;
+        font-weight: 600 !important;
+    }
+
+    .btn-auth-primary {
+        background: var(--admin-primary-gradient);
+        border: none;
+        border-radius: 16px;
+        font-weight: 800;
         font-size: 1rem;
-        line-height: 1.6;
+        color: #fff;
+        transition: 0.3s;
     }
 
-    .upgrade-label {
-        color: #94a3b8;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+    .btn-auth-primary:hover:not(:disabled) {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(58, 123, 213, 0.3);
     }
 
-    .upgrade-label-editable {
-        color: #1e293b;
+    .btn-auth-primary:disabled {
+        background: #cbd5e1;
+        opacity: 0.8;
+        cursor: not-allowed;
+    }
+
+    .upgrade-helper-box {
+        padding: 1rem;
+        border-radius: 14px;
+        font-size: 0.85rem;
         font-weight: 600;
     }
 
-    .upgrade-input-readonly {
-        background: #f1f5f9 !important;
-        border: 1px solid #e2e8f0 !important;
-        color: #64748b !important;
-        border-radius: 12px;
-    }
-
-    .upgrade-input {
-        background: #ffffff !important;
-        border: 1.5px solid #cbd5e1 !important;
-        color: #1e293b !important;
-        border-radius: 12px;
-        transition: all 0.3s ease;
-    }
-
-    .upgrade-input::placeholder {
-        color: #94a3b8 !important;
-    }
-
-    .upgrade-input:focus {
-        background: #ffffff !important;
-        border-color: #0060e6 !important;
-        box-shadow: 0 0 0 4px rgba(0, 96, 230, 0.1);
-        outline: none;
-    }
-
-    .upgrade-btn {
-        background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
-        border: none;
-        border-radius: 14px;
-        font-size: 1.15rem;
-        font-weight: 700;
-        color: #ffffff;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    .upgrade-btn:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 25px rgba(58, 123, 213, 0.3);
-        filter: brightness(1.05);
-        color: #ffffff;
-    }
-
-    .upgrade-status-msg {
-        padding: 14px 18px;
-        border-radius: 14px;
-        font-size: 0.95rem;
-        font-weight: 500;
-    }
-
-    .upgrade-status-msg.info {
-        background: #e0f2fe;
+    .upgrade-helper-box.info {
+        background: rgba(14, 165, 233, 0.08);
         color: #0369a1;
-        border: 1px solid #bae6fd;
     }
 
-    .upgrade-status-msg.success {
-        background: #dcfce7;
-        color: #15803d;
-        border: 1px solid #bbf7d0;
+    .upgrade-helper-box.danger {
+        background: rgba(244, 63, 94, 0.08);
+        color: #991b1b;
     }
 
-    .upgrade-status-msg.warning {
-        background: #fef9c3;
-        color: #a16207;
-        border: 1px solid #fef08a;
-    }
-
-    .upgrade-back-link {
-        color: #64748b;
+    .auth-link-back {
+        color: var(--text-muted);
         text-decoration: none;
-        font-weight: 500;
-        transition: all 0.2s;
+        font-weight: 700;
+        transition: 0.2s;
+        font-size: 0.9rem;
     }
 
-    .upgrade-back-link:hover {
-        color: #0060e6;
+    .auth-link-back:hover {
+        color: var(--admin-blue);
     }
 
-    @@keyframes upgradeGradientShift {
+    .pulse-indicator {
+        width: 10px;
+        height: 10px;
+        background: #0ea5e9;
+        border-radius: 50%;
+        animation: pulse-blue 2s infinite;
+    }
+
+    @@keyframes pulse-blue {
         0% {
-            background-position: 0% 0%;
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7);
         }
 
-        50% {
-            background-position: 100% 100%;
+        70% {
+            transform: scale(1);
+            box-shadow: 0 0 0 10px rgba(14, 165, 233, 0);
         }
 
         100% {
-            background-position: 0% 0%;
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(14, 165, 233, 0);
         }
     }
 
-    @@keyframes upgradeFadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(25px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    .val-msg-custom {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--color-danger);
+        margin-top: 4px;
+        display: block;
     }
 
-    @@media (max-width: 768px) {
-        .upgrade-card {
-            padding: 2.5rem 1.5rem;
-        }
+    .uppercase-tracking {
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 700;
+    }
 
-        .upgrade-card h2 {
-            font-size: 1.75rem;
-        }
+    .italic-info {
+        font-style: italic;
     }
 </style>
 
@@ -350,117 +365,58 @@ CSS
     protected override async Task OnInitializedAsync()
     {
         _httpClient = HttpClientFactory.CreateClient("HotelBookingAPI");
-
         var token = await _localStorage.GetItemAsync<string>("accessToken");
         if (!string.IsNullOrEmpty(token))
-        {
-            _httpClient.DefaultRequestHeaders.Authorization =
-            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-        }
+            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer",
+token);
 
         try
         {
             userInfo = await _httpClient.GetFromJsonAsync<ApiResponse<UserForUpgradeVM?>>("v1/upgrade-requests/my-info");
-
             if (userInfo?.Content != null)
             {
                 requestStatus = userInfo.Content.RequestStatus ?? "None";
                 isFormReadOnly = requestStatus == "Pending" || requestStatus == "Approved";
-
-                if (requestStatus == "Approved")
-                {
-                    NavigationManager.NavigateTo("/owner-dashboard");
-                }
-            }
-            else
-            {
-                message = userInfo?.Message ?? "Unable to load user information.";
-                alertClass = "alert-danger";
-                requestStatus = "None";
+                if (requestStatus == "Approved") NavigationManager.NavigateTo("/owner-dashboard");
             }
         }
-        catch (Exception ex)
-        {
-            message = $"Error loading profile data: {ex.Message}";
-            alertClass = "alert-danger";
-        }
+        catch (Exception ex) { message = $"Error: {ex.Message}"; }
     }
 
     private async Task HandleValidSubmit()
     {
         var token = await _localStorage.GetItemAsync<string>("accessToken");
-        if (string.IsNullOrEmpty(token))
-        {
-            message = "Authentication required. Please sign in.";
-            alertClass = "alert-danger";
-            Snackbar.Add(message, Severity.Error);
-            return;
-        }
-
-        if (_httpClient == null)
-        {
-            message = "Critical error: HTTP client initialization failed.";
-            alertClass = "alert-danger";
-            Snackbar.Add(message, Severity.Error);
-            return;
-        }
-
-        _httpClient.DefaultRequestHeaders.Authorization =
-        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        if (_httpClient == null || string.IsNullOrEmpty(token)) return;
 
         try
         {
             var response = await _httpClient.PostAsJsonAsync("v1/upgrade-requests/create-request", requestModel);
-            var content = await response.Content.ReadAsStringAsync();
+            var apiResp = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
 
-            try
+            if (apiResp?.StatusCode == StatusCodeResponse.Success)
             {
-                var apiResp = JsonSerializer.Deserialize<ApiResponse<bool>>(content, new JsonSerializerOptions
-                { PropertyNameCaseInsensitive = true });
-
-                if (apiResp?.StatusCode == StatusCodeResponse.Success)
-                {
-                    alertClass = "alert-success";
-                    requestStatus = "Pending";
-                    isFormReadOnly = true;
-                    message = apiResp.Message ?? "Request submitted successfully. Please wait for admin approval.";
-                    Snackbar.Add(message, Severity.Success);
-                }
-                else
-                {
-                    message = apiResp?.Message ?? "Failed to submit request.";
-                    alertClass = "alert-danger";
-                    Snackbar.Add(message, Severity.Error);
-                }
+                requestStatus = "Pending";
+                isFormReadOnly = true;
+                Snackbar.Add("Request submitted successfully!", Severity.Success);
             }
-            catch
-            {
-                message = content ?? "Unexpected error occurred.";
-                alertClass = "alert-danger";
-                Snackbar.Add(message, Severity.Error);
-            }
+            else Snackbar.Add(apiResp?.Message ?? "Failed to submit.", Severity.Error);
         }
-        catch (Exception ex)
-        {
-            message = $"System Error: {ex.Message}";
-            alertClass = "alert-danger";
-            Snackbar.Add(message, Severity.Error);
-        }
+        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
     }
 
-    private string GetStatusAlertClass(string status) => status switch
+    private string GetStatusTheme(string status) => status switch
     {
-        "Pending" => "alert-info",
-        "Approved" => "alert-success",
-        "Rejected" => "alert-warning",
-        _ => "alert-secondary"
+        "Pending" => "pending",
+        "Approved" => "approved",
+        "Rejected" => "rejected",
+        _ => ""
     };
 
-    private string GetStatusBadgeClass(string status) => status switch
+    private string GetStatusIcon(string status) => status switch
     {
-        "Pending" => "bg-info text-white",
-        "Approved" => "bg-success text-white",
-        "Rejected" => "bg-warning text-dark",
-        _ => "bg-secondary text-white"
+        "Pending" => "fas fa-history",
+        "Approved" => "fas fa-check-double",
+        "Rejected" => "fas fa-times-circle",
+        _ => "fas fa-info-circle"
     };
 }

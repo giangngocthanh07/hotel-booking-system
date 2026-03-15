@@ -18,97 +18,215 @@
 @* --- 3. UI LOADING STATE (Controlled by Base Class) --- *@
 @if (!ShouldRenderUI())
 {
-    <div class="d-flex justify-content-center align-items-center p-5">
-        <div class="spinner-border text-primary me-2"></div>
-        <span>@MessageResponse.Common.LOADING_DATA</span>
+    <div class="glass-loader-container force-gpu">
+        <div class="spinner-border text-primary me-3"></div>
+        <span class="fw-bold text-primary">@MessageResponse.Common.LOADING_DATA</span>
     </div>
 }
 else
 {
     <MasterDetailLayout @ref="_layoutRef" TItem="RoomViewVM" TModel="BaseCreateOrUpdateAdminVM" Items="_items"
-    Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
-    OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
-    OnDelete="HandleDelete" OnCancel="ResetForm">
+                        Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
+                        OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
+                        OnDelete="HandleDelete" OnCancel="ResetForm">
 
-        @* --- A. SIDEBAR CONFIGURATION --- *@
         <SidebarTopContent>
-            @* Global Navigation Component with dynamic dropdown logic *@
             <GlobalNavMenu CurrentModule="RoomView" CurrentTypeId="TypeId" />
         </SidebarTopContent>
 
-        @* --- B. FORM CONFIGURATION (UI Enhancements) --- *@
         <FormContent Context="m">
-
-            @* 1. ICON PREVIEW *@
-            @* Resolves and displays a real-time icon preview based on the room view name *@
             @{
                 string currentName = _isUpdate ? _updateModel.Name : _createModel.Name;
             }
             @if (!string.IsNullOrEmpty(currentName))
             {
-                <div class="alert alert-light border d-flex align-items-center shadow-sm animate__animated animate__fadeIn">
-                    <div class="me-3">
-                        <div class="rounded-circle bg-white border d-flex align-items-center justify-content-center shadow-sm"
-                    style="width: 40px; height: 40px;">
-                            <i class="@GetViewIcon(currentName) text-primary fs-5"></i>
-                        </div>
+                @* --- 1. ICON PREVIEW (Linked to Sky variables) --- *@
+                <div class="view-preview-card animate__animated animate__fadeIn force-gpu">
+                    <div class="preview-icon-wrap shadow-sm">
+                        <i class="@GetViewIcon(currentName)"></i>
                     </div>
-                    <div>
-                        <small class="text-muted d-block text-uppercase extra-small fw-bold">Display Preview:</small>
-                        <strong class="text-dark">@currentName</strong>
+                    <div class="preview-text">
+                        <label class="extra-small-label">Visual Perspective</label>
+                        <div class="view-title">@currentName</div>
+                    </div>
+                    <div class="glass-shine"></div>
+                </div>
+
+                @* --- 2. STATUS INFO (Sky Style) --- *@
+                <div class="view-status-box mt-3 force-gpu">
+                    <div class="d-flex align-items-center">
+                        <i class="fa-solid fa-mountain-sun me-2 text-info pulse-slow"></i>
+                        <span class="small fw-bold text-info">Global room views are available for all properties.</span>
                     </div>
                 </div>
             }
         </FormContent>
 
-        @* --- C. TABLE CONFIGURATION --- *@
         <TableHeader>
-            <th class="text-center" style="width: 50px;">Id</th>
+            <th class="text-center" style="width: 60px;">ID</th>
             <th class="text-center" style="width: 80px;">Icon</th>
-            <th class="text-center" style="width: 320px;">View Name</th>
-            <th class="text-center">Description</th>
-            <th class="text-center" style="width: 150px;">Status</th>
+            <th class="text-start px-3" style="width: 300px;">View Perspective</th>
+            <th class="text-start px-3">Description / Details</th>
+            <th class="text-center" style="width: 120px;">Status</th>
         </TableHeader>
 
         <RowTemplate Context="row">
-            @* 1. ID *@
-            <td class="text-center text-muted small">@row.Id</td>
+            <td class="text-center fw-bold text-muted small">#@row.Id</td>
 
-            @* 2. Automatic Icon Column *@
             <td class="text-center">
-                <i class="@GetViewIcon(row.Name) fs-5 text-secondary opacity-75"></i>
+                <div class="view-icon-circle shadow-sm force-gpu">
+                    <i class="@GetViewIcon(row.Name)"></i>
+                </div>
             </td>
 
-            @* 3. View Name *@
-            <td class="text-center align-middle text-primary fw-bold">
-                @row.Name
+            <td class="text-start align-middle px-3">
+                <div class="fw-bold text-dark fs-6">@row.Name</div>
+                <small class="text-muted extra-small">ID: RQ-@row.Id</small>
             </td>
 
-            @* 4. Description - Truncated for layout consistency *@
-            <td class="text-center align-middle text-muted small text-truncate" style="max-width: 500px;"
-            title="@row.Description">
+            <td class="text-start align-middle px-3">
                 @if (string.IsNullOrWhiteSpace(row.Description))
                 {
-                    <span class="text-muted opacity-50">---</span>
+                    <span class="text-muted opacity-30 small italic">--- No remarks ---</span>
                 }
                 else
                 {
-                    <div class="text-muted small text-truncate mx-auto" style="max-width: 500px;" title="@row.Description">
+                    <div class="text-muted small text-truncate-custom" title="@row.Description">
                         @row.Description
                     </div>
                 }
             </td>
 
-            @* 5. Status Badge *@
             <td class="text-center">
-                <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-1 rounded-pill">
-                    Active
+                <span class="view-badge-active force-gpu">
+                    <span class="active-dot me-2"></span> Active
                 </span>
             </td>
         </RowTemplate>
-
     </MasterDetailLayout>
 }
+
+<style>
+    /* --- CSS LINKED TO site.css VARIABLES --- */
+    .glass-loader-container {
+        padding: 5rem;
+        text-align: center;
+        background: var(--glass-bg);
+        border-radius: 24px;
+    }
+
+    /* Icon Preview Card (Sky Blue Theme) */
+    .view-preview-card {
+        background: var(--glass-bg-deep);
+        border: 1px solid #bae6fd;
+        /* Light Blue Border */
+        border-radius: 20px;
+        padding: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .preview-icon-wrap {
+        width: 50px;
+        height: 50px;
+        background: #f0f9ff;
+        color: var(--color-info);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        border: 1px solid rgba(14, 165, 233, 0.2);
+    }
+
+    .extra-small-label {
+        font-size: 0.65rem;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        margin: 0;
+    }
+
+    .view-title {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #0c4a6e;
+    }
+
+    .view-status-box {
+        background: rgba(14, 165, 233, 0.08);
+        border: 1px solid rgba(14, 165, 233, 0.2);
+        padding: 10px 15px;
+        border-radius: 12px;
+    }
+
+    /* Table Visual Polish */
+    .view-icon-circle {
+        width: 38px;
+        height: 38px;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        color: var(--color-info);
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+    }
+
+    .view-badge-active {
+        background: #f0fdf4;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 0.75rem;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .active-dot {
+        width: 6px;
+        height: 6px;
+        background: var(--color-success);
+        border-radius: 50%;
+        box-shadow: 0 0 8px var(--color-success);
+    }
+
+    .text-truncate-custom {
+        max-width: 400px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .pulse-slow {
+        animation: pulseIcon 3s infinite ease-in-out;
+    }
+
+    @@keyframes pulseIcon {
+
+        0%,
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        50% {
+            opacity: 0.6;
+            transform: scale(1.1);
+        }
+    }
+
+    .glass-table td {
+        padding-top: 1.25rem !important;
+        padding-bottom: 1.25rem !important;
+    }
+</style>
 
 @code {
     // --- URL PARAMETERS ---

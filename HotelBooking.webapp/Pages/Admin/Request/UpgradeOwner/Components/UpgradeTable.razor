@@ -1,153 +1,135 @@
-@* filepath: e:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.webapp\Pages\Admin\Requests\UpgradeOwner\Components\UpgradeTable.razor *@
+@* filepath: HotelBooking.webapp\Pages\Admin\Requests\UpgradeOwner\Components\UpgradeTable.razor *@
 
 @using HotelBooking.webapp.ViewModels.Request
 @using HotelBooking.webapp.Helpers
 
-<div class="glass-container-table animate__animated animate__fadeInUp">
-    <div class="glass-header d-flex justify-content-between align-items-center p-3">
-        <h5 class="m-0 fw-bold text-dark"><i class="fas fa-table me-2 text-primary"></i>Request List</h5>
-        <div class="table-info-badge">Showing @DisplayCount / @TotalCount</div>
+<div class="glass-table-card animate__animated animate__fadeInUp force-gpu shadow-sm">
+    <div class="glass-header-inner d-flex justify-content-between align-items-center p-3">
+        <h5 class="m-0 fw-bold text-dark"><i class="fas fa-list-check me-2 text-primary"></i>Request Pipeline</h5>
+        <div class="table-info-pill force-gpu">Showing <strong>@DisplayCount</strong> of @TotalCount entries</div>
     </div>
 
     <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
+        <table class="table table-hover align-middle mb-0 glass-table-modern">
             <thead>
                 <tr>
-                    <th class="text-center">#</th>
-                    <th>User Information</th>
-                    <th>Phone / Tax Code</th>
-                    <th class="text-center">Status</th>
-                    <th class="text-center">Requested At</th>
-                    <th class="text-center">Actions</th>
+                    <th class="text-center" style="width: 80px;">ID</th>
+                    <th class="text-start px-4" style="width: 250px;">Partner Information</th>
+                    <th class="text-start px-4">Business Details</th>
+                    <th class="text-center" style="width: 140px;">Status</th>
+                    <th class="text-center" style="width: 160px;">Submission</th>
+                    <th class="text-center" style="width: 150px;">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var request in Requests)
                 {
-                    <tr class="glass-tr">
-                        <td class="text-center text-muted fw-bold">#@request.RequestId</td>
-                        <td>
+                    <tr class="glass-row">
+                        <td class="text-center fw-bold text-muted small">#@request.RequestId</td>
+                        <td class="text-start px-4">
                             <div class="d-flex flex-column">
-                                <span class="fw-bold text-dark">@request.FullName</span>
-                                <small class="text-primary">@@@request.UserName</small>
+                                <span class="fw-bold text-dark fs-6">@request.FullName</span>
+                                <small class="text-primary fw-600">@@@request.UserName</small>
                             </div>
                         </td>
-                        <td>
-                            <div class="text-dark small"><i
-                                class="fas fa-phone-alt me-2 text-muted"></i>@request.PhoneNumber</div>
-                                <div class="text-muted small mt-1"><i
-                                    class="fas fa-id-card me-2"></i><code>@request.TaxCode</code></div>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge-solid @GetStatusBadgeClass(request.Status)">@request.Status</span>
-                                </td>
-                                <td class="text-center text-muted small">
-                                    <span class="d-block fw-bold text-dark">@request.RequestedAt.ToString("MM/dd/yyyy")</span>
-                                    @request.RequestedAt.ToString("HH:mm")
-                                </td>
-                                <td class="text-center">
-                                    <div class="action-btns">
-                                        <button class="btn-action-view" @onclick="() => OnView.InvokeAsync(request)"><i
-                                            class="fas fa-eye"></i></button>
-                                            @if (request.Status == "Pending")
-                                            {
-                                                <button class="btn-action-approve" @onclick="() => OnApprove.InvokeAsync(request)"><i
-                                                    class="fas fa-check"></i></button>
-                                                    <button class="btn-action-reject" @onclick="() => OnReject.InvokeAsync(request)"><i
-                                                        class="fas fa-times"></i></button>
-                                                    }
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                        <td class="text-start px-4">
+                            <div class="text-dark small fw-600"><i class="fas fa-phone-alt me-2 text-muted opacity-50"></i>@request.PhoneNumber</div>
+                            <div class="text-muted extra-small mt-1"><i class="fas fa-id-card me-2"></i><code class="tax-code-inline">@request.TaxCode</code></div>
+                        </td>
+                        <td class="text-center">
+                            <span class="status-pill-soft @GetStatusBadgeClass(request.Status) force-gpu">
+                                <i class="@GetStatusIcon(request.Status) me-1"></i> @request.Status.ToUpper()
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <div class="text-dark small fw-bold">@request.RequestedAt.ToString("dd MMM yyyy")</div>
+                            <div class="text-muted extra-small">@request.RequestedAt.ToString("HH:mm")</div>
+                        </td>
+                        <td class="text-center">
+                            <div class="action-btn-group">
+                                <button class="btn-circle-action view force-gpu" title="View Details" @onclick="() => OnView.InvokeAsync(request)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                @if (request.Status == "Pending")
+                                {
+                                    <button class="btn-circle-action approve force-gpu" title="Approve Request" @onclick="() => OnApprove.InvokeAsync(request)">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button class="btn-circle-action reject force-gpu" title="Reject Request" @onclick="() => OnReject.InvokeAsync(request)">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
 
-                    <style>
-                        .glass-container-table {
-                            background: rgba(255, 255, 255, 0.55);
-                            backdrop-filter: blur(15px);
-                            border-radius: 24px;
-                            border: 1px solid rgba(255, 255, 255, 0.7);
-                            overflow: hidden;
-                        }
+<style>
+    /* --- TABLE CARD STYLING (site.css variables) --- */
+    .glass-table-card {
+        background: var(--glass-bg);
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
+        border-radius: 24px;
+        border: 1px solid var(--glass-border);
+        overflow: hidden;
+    }
 
-                        .glass-header {
-                            background: rgba(255, 255, 255, 0.3);
-                            border-bottom: 1px solid rgba(255, 255, 255, 0.4);
-                        }
+    .glass-header-inner {
+        background: rgba(255, 255, 255, 0.2);
+        border-bottom: 1px solid var(--glass-border);
+    }
 
-                        .table thead th {
-                            background: rgba(0, 0, 0, 0.03);
-                            color: #334155 !important;
-                            font-size: 0.75rem;
-                            font-weight: 800;
-                            text-transform: uppercase;
-                            padding: 1.2rem;
-                            text-align: center;
-                        }
+    .table-info-pill {
+        background: #f1f5f9; color: var(--text-muted);
+        padding: 4px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;
+    }
 
-                        .table thead th:nth-child(2),
-                        .table thead th:nth-child(3) {
-                            text-align: left;
-                        }
+    /* Modern Table Header */
+    .glass-table-modern thead th {
+        background: rgba(0, 0, 0, 0.02);
+        color: var(--text-muted) !important;
+        font-size: 0.7rem; font-weight: 800;
+        text-transform: uppercase; letter-spacing: 1px;
+        padding: 1.25rem 1rem; border: none;
+    }
 
-                        .glass-tr:hover {
-                            background: rgba(255, 255, 255, 0.7) !important;
-                        }
+    /* Table Body & Rows */
+    .glass-row { transition: all 0.2s ease; border-bottom: 1px solid rgba(0,0,0,0.03); }
+    .glass-row:hover { background: rgba(255, 255, 255, 0.5); }
+    .glass-row td { padding: 1.25rem 0.75rem; }
 
-                        .badge-solid {
-                            padding: 6px 12px;
-                            border-radius: 8px;
-                            font-weight: 700;
-                            font-size: 0.75rem;
-                            color: #fff;
-                            text-transform: uppercase;
-                        }
+    /* Soft-Solid Badges Sync with site.css */
+    .status-pill-soft {
+        display: inline-flex; align-items: center; padding: 6px 14px; border-radius: 50px;
+        font-weight: 800; font-size: 0.7rem; letter-spacing: 0.5px; border: 1px solid transparent;
+    }
+    .status-pending { background: #e0f2fe; color: #0369a1; border-color: #bae6fd; }
+    .status-approved { background: #dcfce7; color: var(--color-success); border-color: #bbf7d0; }
+    .status-rejected { background: #fee2e2; color: var(--color-danger); border-color: #fecaca; }
+    .status-cancelled { background: #f1f5f9; color: var(--text-muted); border-color: #e2e8f0; }
 
-                        .bg-warning.text-dark {
-                            background: #0284c7 !important;
-                            color: #fff !important;
-                        }
+    /* Action Buttons */
+    .action-btn-group { display: flex; gap: 8px; justify-content: center; }
+    .btn-circle-action {
+        width: 34px; height: 34px; border-radius: 10px; border: none; color: #fff;
+        display: flex; align-items: center; justify-content: center; transition: 0.2s;
+    }
+    .btn-circle-action.view { background: var(--color-info); }
+    .btn-circle-action.approve { background: var(--color-success); }
+    .btn-circle-action.reject { background: var(--color-danger); }
+    
+    .btn-circle-action:hover { transform: scale(1.1); filter: brightness(1.1); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
 
-                        .action-btns {
-                            display: flex;
-                            gap: 6px;
-                            justify-content: center;
-                        }
-
-                        .btn-action-view,
-                        .btn-action-approve,
-                        .btn-action-reject {
-                            width: 34px;
-                            height: 34px;
-                            border-radius: 10px;
-                            border: none;
-                            transition: 0.2s;
-                            color: #fff;
-                        }
-
-                        .btn-action-view {
-                            background: #0ea5e9;
-                        }
-
-                        .btn-action-approve {
-                            background: #10b981;
-                        }
-
-                        .btn-action-reject {
-                            background: #f43f5e;
-                        }
-
-                        .btn-action-view:hover,
-                        .btn-action-approve:hover,
-                        .btn-action-reject:hover {
-                            transform: scale(1.1);
-                            filter: brightness(1.2);
-                        }
-                    </style>
+    /* Utilities */
+    .tax-code-inline { color: var(--admin-blue); background: rgba(58, 123, 213, 0.05); padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+    .fw-600 { font-weight: 600; }
+    .extra-small { font-size: 0.65rem; }
+</style>
 
 @code {
     [Parameter] public IEnumerable<UpgradeRequestVM> Requests { get; set; } = new List<UpgradeRequestVM>();
@@ -165,11 +147,11 @@
 
     private string GetStatusBadgeClass(string status) => status switch
     {
-        "Pending" => "bg-warning text-dark",
-        "Approved" => "bg-success",
-        "Rejected" => "bg-danger",
-        "Cancelled" => "bg-secondary",
-        _ => "bg-secondary"
+        "Pending" => "status-pending",
+        "Approved" => "status-approved",
+        "Rejected" => "status-rejected",
+        "Cancelled" => "status-cancelled",
+        _ => "status-cancelled"
     };
 
     private string GetStatusIcon(string status) => status switch

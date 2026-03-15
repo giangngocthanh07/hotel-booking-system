@@ -3,17 +3,17 @@
 @inject NavigationManager NavigationManager
 @inject IHttpClientFactory _httpClientFactory
 
-<div class="glass-container animate__animated animate__fadeIn">
-    @* --- Table Header --- *@
-    <div class="glass-header d-flex justify-content-between align-items-center p-4">
+<div class="glass-inner-card animate__animated animate__fadeIn force-gpu">
+    @* --- Header Section with Filters --- *@
+    <div class="glass-header-controls d-flex justify-content-between align-items-center p-4">
         <h5 class="mb-0 fw-bold text-dark">Recent Requests</h5>
         <div class="d-flex gap-3 search-filter-area">
-            <div class="search-box">
+            <div class="search-box-glass">
                 <i class="fas fa-search"></i>
-                <input type="text" class="form-control glass-input" placeholder="Search requests..." @bind="searchTerm"
-                       @bind:event="oninput" />
+                <input type="text" class="form-control glass-input-search" placeholder="Search ID, Name..."
+                       @bind="searchTerm" @bind:event="oninput" />
             </div>
-            <select class="form-select glass-select" @bind="selectedStatus">
+            <select class="form-select glass-select-filter" @bind="selectedStatus">
                 <option value="">All Status</option>
                 <option value="Pending">Pending</option>
                 <option value="Approved">Approved</option>
@@ -22,16 +22,16 @@
         </div>
     </div>
 
-    @* --- Table Content --- *@
-    <div class="table-responsive glass-table-wrapper">
-        <table class="table align-middle mb-0">
+    @* --- Data Table Section --- *@
+    <div class="table-responsive">
+        <table class="table align-middle mb-0 glass-table-modern">
             <thead>
                 <tr>
-                    <th>Request ID</th>
-                    <th>User Information</th>
-                    <th>Status</th>
-                    <th>Requested At</th>
-                    <th class="text-end">Actions</th>
+                    <th class="text-center" style="width: 100px;">Request ID</th>
+                    <th class="text-start px-4">User Information</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-center">Requested At</th>
+                    <th class="text-end pe-4">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -39,22 +39,25 @@
                 {
                     @foreach (var req in FilteredRequests)
                     {
-                        <tr class="glass-tr">
-                            <td class="fw-bold text-primary">#@req.RequestId</td>
-                            <td>
+                        <tr class="glass-row-hover">
+                            <td class="text-center fw-bold text-primary">#@req.RequestId</td>
+                            <td class="text-start px-4">
                                 <div class="d-flex flex-column">
-                                    <span class="fw-semibold text-dark">@req.FullName</span>
-                                    <small class="text-muted">@req.UserName</small>
+                                    <span class="fw-bold text-dark fs-6">@req.FullName</span>
+                                    <small class="text-muted font-monospace" style="font-size: 0.7rem;">@@@req.UserName</small>
                                 </div>
                             </td>
-                            <td>
-                                <span class="badge-custom @GetStatusBadgeClass(req.Status)">
-                                    <span class="dot"></span> @req.Status
+                            <td class="text-center">
+                                <span class="status-badge-modern @GetStatusBadgeClass(req.Status) force-gpu">
+                                    <span class="status-dot"></span> @req.Status.ToUpper()
                                 </span>
                             </td>
-                            <td class="text-muted">@req.RequestedAt.ToString("dd/MM/yyyy HH:mm")</td>
-                            <td class="text-end">
-                                <button class="btn-view-details" @onclick="() => ViewDetails(req.RequestId)">
+                            <td class="text-center">
+                                <div class="text-dark small fw-600">@req.RequestedAt.ToString("dd/MM/yyyy")</div>
+                                <div class="text-muted extra-small">@req.RequestedAt.ToString("HH:mm")</div>
+                            </td>
+                            <td class="text-end pe-4">
+                                <button class="btn-glass-action" @onclick="() => ViewDetails(req.RequestId)">
                                     <span>View Details</span>
                                     <i class="fas fa-arrow-right"></i>
                                 </button>
@@ -66,10 +69,9 @@
                 {
                     <tr>
                         <td colspan="5" class="text-center py-5">
-                            <div class="empty-state">
-                                <i class="fas fa-inbox fa-3x mb-3 text-muted opacity-20"></i>
-                                <p class="text-muted">@MessageResponse.RequestManagement.UpgradeRequest.NO_REQUESTS_FOUND
-                                </p>
+                            <div class="empty-state-wrap">
+                                <i class="fas fa-inbox fa-3x mb-3 opacity-20"></i>
+                                <p class="text-muted fw-bold">No requests match your criteria</p>
                             </div>
                         </td>
                     </tr>
@@ -80,147 +82,161 @@
 </div>
 
 <style>
-    .glass-container {
-        background: rgba(255, 255, 255, 0.4);
-        backdrop-filter: blur(15px);
-        -webkit-backdrop-filter: blur(15px);
-        border-radius: 24px;
-        border: 1px solid rgba(255, 255, 255, 0.6);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
-        overflow: hidden;
+    /* --- CSS REORGANIZED & LINKED TO site.css VARIABLES --- */
+
+    .glass-inner-card {
+        background: transparent;
+        /* Parent Dashboard component handled the glass bg */
     }
 
-    /* Header Area */
-    .glass-header {
-        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    .glass-header-controls {
         background: rgba(255, 255, 255, 0.2);
+        border-bottom: 1px solid var(--glass-border);
     }
 
-    /* Input & Select */
-    .glass-input,
-    .glass-select {
-        background: rgba(255, 255, 255, 0.8) !important;
-        border: 1.5px solid #cbd5e1 !important;
-        border-radius: 12px;
-        color: #1e293b !important;
-        font-weight: 500;
-        padding: 0.6rem 1rem;
-        transition: all 0.2s ease;
-    }
-
-    .search-box {
+    /* Inputs & Search */
+    .search-box-glass {
         position: relative;
         min-width: 250px;
     }
 
-    .search-box i {
+    .search-box-glass i {
         position: absolute;
-        right: 15px;
+        left: 15px;
         top: 50%;
         transform: translateY(-50%);
-        color: #94a3b8;
+        color: var(--text-muted);
+        z-index: 5;
     }
 
-    /* Table Styles */
-    .glass-table-wrapper {
-        padding: 10px;
-    }
-
-    .table thead th {
-        text-align: center;
-        vertical-align: middle;
-
-        background: transparent;
-        border-bottom: none;
-        color: #64748b;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        padding: 1.5rem 1rem;
-    }
-
-    .table tbody td {
-        text-align: center;
-        vertical-align: middle;
-    }
-
-    .table th:nth-child(2),
-    .table td:nth-child(2) {
-        text-align: left;
-    }
-
-    .table td {
-        padding: 1.25rem 1rem;
-    }
-
-    .glass-tr {
-        transition: all 0.2s ease;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .glass-tr:hover {
-        background: rgba(255, 255, 255, 0.5) !important;
-        transform: scale(1.002);
-    }
-
-    /* Badge Custom */
-    .badge-custom {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 6px 14px;
-        border-radius: 50px;
+    .glass-input-search,
+    .glass-select-filter {
+        background: #fff !important;
+        border: 1.5px solid #e2e8f0 !important;
+        border-radius: 12px;
+        padding: 0.6rem 1rem 0.6rem 2.5rem;
+        /* Space for icon */
         font-size: 0.85rem;
         font-weight: 600;
+        color: var(--text-dark) !important;
+        transition: 0.3s;
     }
 
-    .badge-custom .dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: currentColor;
+    .glass-select-filter {
+        padding-left: 1rem;
+    }
+
+    .glass-input-search:focus,
+    .glass-select-filter:focus {
+        border-color: var(--admin-blue) !important;
+        box-shadow: 0 0 0 4px rgba(58, 123, 213, 0.1) !important;
+    }
+
+    /* Table Typography & Spacing */
+    .glass-table-modern thead th {
+        background: rgba(0, 0, 0, 0.02);
+        color: var(--text-muted) !important;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 1.25rem 1rem;
+        border: none;
+    }
+
+    .glass-row-hover {
+        transition: 0.2s;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+    }
+
+    .glass-row-hover:hover {
+        background: rgba(255, 255, 255, 0.5);
+    }
+
+    .glass-row-hover td {
+        padding: 1.25rem 0.75rem;
+    }
+
+    /* Modern Status Badges (Soft-Solid Style) */
+    .status-badge-modern {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-weight: 800;
+        font-size: 0.7rem;
+        letter-spacing: 0.5px;
+        border: 1px solid transparent;
     }
 
     .status-pending {
         background: #e0f2fe;
         color: #0369a1;
+        border-color: #bae6fd;
     }
 
     .status-approved {
         background: #dcfce7;
-        color: #15803d;
+        color: var(--color-success);
+        border-color: #bbf7d0;
     }
 
     .status-rejected {
-        background: #fef2f2;
-        color: #991b1b;
+        background: #fee2e2;
+        color: var(--color-danger);
+        border-color: #fecaca;
     }
 
-    /* Button View */
-    .btn-view-details {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
+    .status-dot {
+        width: 6px;
+        height: 6px;
+        background: currentColor;
+        border-radius: 50%;
+    }
+
+    /* Action Button */
+    .btn-glass-action {
+        background: #fff;
+        border: 1.5px solid #e2e8f0;
         padding: 8px 16px;
         border-radius: 10px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: #475569;
-        transition: all 0.2s;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--text-muted);
         display: inline-flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
+        transition: 0.2s;
     }
 
-    .btn-view-details:hover {
-        background: #0060e6;
+    .btn-glass-action:hover {
+        background: var(--admin-blue);
         color: #fff;
-        border-color: #0060e6;
-        box-shadow: 0 4px 12px rgba(0, 96, 230, 0.2);
+        border-color: var(--admin-blue);
+        box-shadow: 0 4px 12px rgba(58, 123, 213, 0.2);
+    }
+
+    /* General Utilities */
+    .fw-600 {
+        font-weight: 600;
+    }
+
+    .extra-small {
+        font-size: 0.65rem;
+    }
+
+    .opacity-20 {
+        opacity: 0.2;
     }
 </style>
 
 @code {
     [Parameter] public List<UpgradeRequestVM> Requests { get; set; } = new();
+
+    [Parameter] public EventCallback<int> OnApprove { get; set; }
+    [Parameter] public EventCallback<int> OnReject { get; set; }
+
     private string searchTerm = "";
     private string selectedStatus = "";
     private HttpClient? _httpClient;

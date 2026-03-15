@@ -19,107 +19,218 @@
 @* --- 3. UI LOADING STATE (Check flag from Base Class) --- *@
 @if (!ShouldRenderUI())
 {
-    <div class="d-flex justify-content-center align-items-center p-5">
-        <div class="spinner-border text-primary me-2"></div>
-        <span>@MessageResponse.Common.LOADING_DATA</span>
+    <div class="glass-loader-container force-gpu">
+        <div class="spinner-border text-primary me-3"></div>
+        <span class="fw-bold text-primary">@MessageResponse.Common.LOADING_DATA</span>
     </div>
 }
 else
 {
     <MasterDetailLayout @ref="_layoutRef" TItem="AmenityVM" TModel="BaseCreateOrUpdateAdminVM" Items="_items"
-    Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
-    OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
-    OnDelete="HandleDelete" OnCancel="ResetForm">
+                        Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
+                        OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
+                        OnDelete="HandleDelete" OnCancel="ResetForm">
 
-        @* --- A. SIDEBAR CONFIGURATION (RENDER FRAGMENT) --- *@
         <SidebarTopContent>
-            @* Global Navigation Component with dynamic dropdown logic *@
             <GlobalNavMenu CurrentModule="Amenity" CurrentTypeId="TypeId" />
         </SidebarTopContent>
 
-        @* --- B. FORM CONTENT (Amenities are FREE by default) --- *@
         <FormContent Context="m">
-
-            @* --- 1. ICON PREVIEW --- *@
-            @* Displays a real-time icon preview based on the amenity name *@
-            <div
-            class="d-flex align-items-center mb-3 p-2 border rounded bg-light shadow-sm animate__animated animate__fadeIn">
-                <div class="rounded-circle bg-white d-flex align-items-center justify-content-center shadow-sm me-3"
-                style="width: 45px; height: 45px;">
-                    <i class="@GetAmenityIcon(m.Name) fs-4 text-success"></i>
+            @* --- 1. ICON PREVIEW (Linked to variables) --- *@
+            <div class="glass-preview-card animate__animated animate__fadeIn force-gpu">
+                <div class="icon-circle-wrap shadow-sm">
+                    <i class="@GetAmenityIcon(m.Name) amenity-preview-icon"></i>
                 </div>
-                <div>
-                    <div class="extra-small text-muted fw-bold text-uppercase">Detected Icon</div>
-                    <div class="small fw-bold text-dark">@(string.IsNullOrEmpty(m.Name) ? "Awaiting name..." : m.Name)</div>
+                <div class="preview-info">
+                    <label class="extra-small-label">Visual Asset</label>
+                    <div class="preview-name">@(string.IsNullOrEmpty(m.Name) ? "Awaiting Name..." : m.Name)</div>
                 </div>
             </div>
 
-            <div class="card border-success bg-success bg-opacity-10 mb-3">
-                <div class="card-body py-2 d-flex align-items-center">
-                    <i class="fa-solid fa-circle-check text-success me-2"></i>
-                    <span class="small fw-bold text-success">Room amenities are always FREE by default.</span>
+            @* --- 2. FREE SERVICE NOTIFICATION (Mint Style) --- *@
+            <div class="free-badge-alert shadow-sm force-gpu">
+                <div class="d-flex align-items-center">
+                    <div class="gift-box-icon"><i class="fa-solid fa-gift pulse-icon"></i></div>
+                    <span class="ms-2">All amenities are <strong>FREE</strong> for guests.</span>
                 </div>
             </div>
         </FormContent>
 
-        @* --- C. TABLE CONFIGURATION (Standardized UI) --- *@
         <TableHeader>
-            <th class="text-center" style="width: 50px;">Id</th>
+            <th class="text-center" style="width: 70px;">ID</th>
             <th class="text-center" style="width: 80px;">Icon</th>
-            <th class="text-center" style="width: 300px;">Amenity Name</th>
-            <th class="text-center">Description / Notes</th> @* Flexible column *@
-            <th class="text-center" style="width: 120px;">Category</th>
+            <th class="text-start px-3" style="width: 250px;">Amenity Name</th>
+            <th class="text-start px-3">Description / Details</th>
+            <th class="text-center" style="width: 140px;">Group Type</th>
             <th class="text-center" style="width: 100px;">Status</th>
         </TableHeader>
 
         <RowTemplate Context="row">
-            @* 1. ID - Centered *@
-            <td class="text-center text-muted small">@row.Id</td>
+            <td class="text-center fw-bold text-muted small">#@row.Id</td>
 
-            @* 2. Icon - Centered preview *@
             <td class="text-center">
-                <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center shadow-sm mx-auto"
-                style="width: 32px; height: 32px;">
-                    <i class="@GetAmenityIcon(row.Name) text-success"></i>
+                <div class="icon-table-box shadow-sm force-gpu">
+                    <i class="@GetAmenityIcon(row.Name)"></i>
                 </div>
             </td>
 
-            @* 3. Name *@
-            <td class="text-center align-middle text-dark">
-                @row.Name
+            <td class="text-start align-middle px-3">
+                <span class="fw-bold text-dark fs-6">@row.Name</span>
             </td>
 
-            @* 4. DESCRIPTION - Truncated for UI consistency *@
-            <td class="text-center align-middle text-truncate">
+            <td class="text-start align-middle px-3">
                 @if (string.IsNullOrWhiteSpace(row.Description))
                 {
-                    <span class="text-muted opacity-50">---</span>
+                    <span class="text-muted opacity-30 small italic">---</span>
                 }
                 else
                 {
-                    <div class="text-muted small text-truncate mx-auto" style="max-width: 280px;" title="@row.Description">
+                    <div class="text-muted small text-truncate-custom" title="@row.Description">
                         @row.Description
                     </div>
                 }
             </td>
 
-            @* 5. Category *@
             <td class="text-center">
-                <span class="badge bg-light text-secondary border px-2 py-1" style="font-size: 0.75rem;">
-                    <i class="fa-solid fa-tag me-1"></i>Group #@row.TypeId
+                <span class="badge-group-type force-gpu">
+                    <i class="fa-solid fa-folder-open me-1 opacity-50"></i>Type @row.TypeId
                 </span>
             </td>
 
-            @* 6. Status *@
             <td class="text-center">
-                <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-1">
-                    Free
-                </span>
+                <span class="status-pill-free">FREE</span>
             </td>
         </RowTemplate>
-
     </MasterDetailLayout>
 }
+
+<style>
+    /* --- REORGANIZED CSS WITH VARIABLES --- */
+    .glass-loader-container {
+        padding: 5rem;
+        text-align: center;
+        background: var(--glass-bg);
+        border-radius: 24px;
+    }
+
+    /* Form UI Components */
+    .glass-preview-card {
+        background: var(--glass-bg-deep);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 1.5rem;
+    }
+
+    .icon-circle-wrap {
+        width: 50px;
+        height: 50px;
+        background: #f0fdf4;
+        /* Light Emerald */
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--color-success);
+        font-size: 1.5rem;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .extra-small-label {
+        font-size: 0.65rem;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        margin: 0;
+    }
+
+    .preview-name {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-dark);
+    }
+
+    .free-badge-alert {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        padding: 12px 16px;
+        border-radius: 14px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    /* Table Data Alignment & Styles */
+    .icon-table-box {
+        width: 38px;
+        height: 38px;
+        background: #fff;
+        color: var(--color-success);
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        border: 1px solid rgba(0, 0, 0, 0.03);
+    }
+
+    .badge-group-type {
+        background: #f8fafc;
+        color: var(--text-muted);
+        border: 1px solid #e2e8f0;
+        padding: 6px 12px;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        display: inline-block;
+    }
+
+    .status-pill-free {
+        background: rgba(16, 185, 129, 0.1);
+        color: #059669;
+        font-weight: 800;
+        font-size: 0.7rem;
+        padding: 4px 14px;
+        border-radius: 20px;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        letter-spacing: 0.5px;
+    }
+
+    /* Utilities */
+    .text-truncate-custom {
+        max-width: 300px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .pulse-icon {
+        animation: pulseGreen 2s infinite;
+    }
+
+    @@keyframes pulseGreen {
+        0% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.1);
+            opacity: 0.9;
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .glass-table td {
+        padding-top: 1.25rem !important;
+        padding-bottom: 1.25rem !important;
+    }
+</style>
 
 @code {
     // --- URL PARAMETERS ---

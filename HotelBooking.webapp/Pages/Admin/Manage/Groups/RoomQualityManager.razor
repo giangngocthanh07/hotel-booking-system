@@ -17,128 +17,292 @@
 @* --- 3. UI LOADING STATE (Controlled by Base Class) --- *@
 @if (!ShouldRenderUI())
 {
-    <div class="d-flex justify-content-center align-items-center p-5">
-        <div class="spinner-border text-primary me-2"></div>
-        <span>@MessageResponse.Common.LOADING_DATA</span>
+    <div class="glass-loader-container force-gpu">
+        <div class="spinner-border text-info me-3"></div>
+        <span class="fw-bold text-info">@MessageResponse.Common.LOADING_DATA</span>
     </div>
 }
 else
 {
     <MasterDetailLayout @ref="_layoutRef" TItem="RoomQualityVM" TModel="BaseCreateOrUpdateAdminVM" Items="_items"
-    Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
-    OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
-    OnDelete="HandleDelete" OnCancel="ResetForm">
+                        Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
+                        OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
+                        OnDelete="HandleDelete" OnCancel="ResetForm">
 
-        @* --- A. SIDEBAR CONFIGURATION (RENDER FRAGMENT) --- *@
         <SidebarTopContent>
-            @* Global Navigation Component for dynamic module selection *@
             <GlobalNavMenu CurrentModule="RoomQuality" CurrentTypeId="TypeId" />
         </SidebarTopContent>
 
-        @* --- B. FORM CONFIGURATION (UI Enhancements) --- *@
         <FormContent Context="m">
-
             @{
-                // Validation error display fragment for SortOrder field
+                int? currentSort = _isUpdate ? _updateModel.SortOrder : _createModel.SortOrder;
+
                 RenderFragment RenderVal(string prop) => __builder =>
                 {
                     if (_isUpdate && prop == "SortOrder")
                     {
-                    <ValidationMessage For="() => _updateModel.SortOrder" class="val-msg" />
+                        <ValidationMessage For="() => _updateModel.SortOrder" class="val-msg-custom" />
                     }
                     else if (!_isUpdate && prop == "SortOrder")
                     {
-                    <ValidationMessage For="() => _createModel.SortOrder" class="val-msg" />
+                        <ValidationMessage For="() => _createModel.SortOrder" class="val-msg-custom" />
                     }
                 };
-
-                // Get current SortOrder value for preview logic
-                int? currentSort = _isUpdate ? _updateModel.SortOrder : _createModel.SortOrder;
             }
 
-            @* 1. SORT ORDER SETTING *@
-            <div class="mb-3">
-                <label class="form-label fw-bold small text-muted text-uppercase">Priority Sort Order</label>
-                <div class="input-group" style="max-width: 150px;">
-                    <span class="input-group-text bg-white"><i class="fa-solid fa-sort-numeric-down text-muted"></i></span>
-                    <input type="number" class="form-control text-center fw-bold" value="@currentSort"
-                    @oninput="@(e => HandleSortInput(e.Value?.ToString()))" />
+            @* 1. SORT ORDER SETTING (Linked to site.css variables) *@
+            <div class="glass-field-card mb-4 animate__animated animate__fadeIn force-gpu">
+                <label class="glass-label-bold text-primary">
+                    <i class="fa-solid fa-arrow-up-wide-short me-2"></i>Priority Sort Order
+                </label>
+
+                <div class="d-flex align-items-center gap-3 mt-2">
+                    <div class="input-group glass-input-group-manage" style="max-width: 130px;">
+                        <span class="input-group-text border-0 bg-transparent text-muted"><i
+                            class="fa-solid fa-layer-group"></i></span>
+                            <input type="number" class="form-control glass-input-inner fw-extrabold text-center"
+                                   value="@currentSort" @oninput="@(e => HandleSortInput(e.Value?.ToString()))" />
+                        </div>
+
+                        <div class="sort-preview-badge">
+                            @if (currentSort >= 5)
+                            {
+                                <span class="badge-premium force-gpu animate__animated animate__pulse animate__infinite">
+                                    <i class="fa-solid fa-crown me-1"></i>Premium
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge-standard">Standard</span>
+                            }
+                        </div>
+                    </div>
+                    @RenderVal("SortOrder")
+
+                    <div class="helper-box-glass mt-3">
+                        <i class="fa-solid fa-lightbulb text-warning me-2"></i>
+                        Higher numbers rank this quality higher in results.
+                    </div>
                 </div>
-                @RenderVal("SortOrder")
-                <div class="form-text extra-small mt-2 animate__animated animate__fadeIn">
-                    <i class="fa-solid fa-circle-info me-1 text-info"></i>
-                    Higher numbers prioritize this quality level in display results.
-                </div>
-            </div>
 
-            @* Priority Badge Preview *@
-            @if (currentSort >= 5)
-            {
-                <div
-            class="alert alert-info border-0 py-2 px-3 d-flex align-items-center shadow-sm animate__animated animate__bounceIn">
-                    <i class="fa-solid fa-star me-2 fs-5"></i>
-                    <div class="small fw-bold">This is a HIGH PRIORITY quality level.</div>
-                </div>
-            }
-        </FormContent>
-
-        @* --- C. TABLE CONFIGURATION --- *@
-        <TableHeader>
-            <th class="text-center" style="width: 50px;">Id</th>
-            <th class="text-center" style="width: 400px;">Quality Level Name</th>
-            <th class="text-center" style="width: 100px;"></th> @* Badge Column *@
-            <th class="text-center">Description / Notes</th> @* Flexible description column *@
-            <th class="text-center" style="width: 150px;">Sort Order</th>
-        </TableHeader>
-
-        <RowTemplate Context="row">
-            @* 1. ID *@
-            <td class="text-center text-muted small">@row.Id</td>
-
-            @* 2. Quality Level Name *@
-            <td class="text-center align-middle">
-                <span class="@(row.SortOrder >= 5 ? "text-primary fw-bold" : "text-dark")">
-                    @row.Name
-                </span>
-            </td>
-
-            @* 3. Priority Badge *@
-            <td class="text-center align-middle">
-                @if (row.SortOrder >= 5)
+                @* 2. PRIORITY ALERT (Glassmorphism Gold Style) *@
+                @if (currentSort >= 5)
                 {
-                    <span
-                class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill px-3 py-2 animate__animated animate__fadeIn"
-                style="font-size: 0.65rem; letter-spacing: 0.5px; text-transform: uppercase;">
-                        <i class="fa-solid fa-star me-1"></i>High Priority
-                    </span>
-                }
-            </td>
-
-            @* 4. Description *@
-            <td class="text-center align-middle">
-                @if (string.IsNullOrWhiteSpace(row.Description))
-                {
-                    <span class="text-muted opacity-50">---</span>
-                }
-                else
-                {
-                    <div class="text-muted small text-truncate mx-auto" style="max-width: 250px;" title="@row.Description">
-                        @row.Description
+                    <div class="priority-alert-glass animate__animated animate__backInRight force-gpu shadow-sm">
+                        <div class="d-flex align-items-center">
+                            <div class="alert-icon-gold"><i class="fa-solid fa-award"></i></div>
+                            <div class="ms-3">
+                                <div class="fw-bold text-dark small">High Priority Level</div>
+                                <div class="extra-small text-muted">This will be featured as a top tier.</div>
+                            </div>
+                        </div>
                     </div>
                 }
-            </td>
+            </FormContent>
 
-            @* 5. Sort Order Preview *@
-            <td class="text-center">
-                <div class="d-inline-flex align-items-center justify-content-center bg-light border rounded-circle fw-bold text-secondary shadow-sm"
-                style="width: 32px; height: 32px; font-size: 0.85rem;">
-                    @row.SortOrder
-                </div>
-            </td>
-        </RowTemplate>
+            <TableHeader>
+                <th class="text-center" style="width: 60px;">ID</th>
+                <th class="text-start px-3" style="width: 250px;">Quality Level</th>
+                <th class="text-center" style="width: 150px;">Tier Badge</th>
+                <th class="text-start px-3">Description</th>
+                <th class="text-center" style="width: 120px;">Rank</th>
+            </TableHeader>
 
-    </MasterDetailLayout>
-}
+            <RowTemplate Context="row">
+                <td class="text-center fw-bold text-muted small">#@row.Id</td>
+
+                <td class="text-start align-middle px-3">
+                    <div class="fw-bold @(row.SortOrder >= 5 ? "text-gold-accent" : "text-dark") fs-6">
+                        @row.Name
+                    </div>
+                </td>
+
+                <td class="text-center align-middle">
+                    @if (row.SortOrder >= 5)
+                    {
+                        <span class="glass-badge-gold force-gpu">
+                            <i class="fa-solid fa-gem me-1"></i>High Tier
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="glass-badge-muted">Basic Tier</span>
+                    }
+                </td>
+
+                <td class="text-start align-middle px-3">
+                    <div class="text-muted small text-truncate-custom" title="@row.Description">
+                        @(string.IsNullOrWhiteSpace(row.Description) ? "---" : row.Description)
+                    </div>
+                </td>
+
+                <td class="text-center">
+                    <div class="rank-circle-modern force-gpu @(row.SortOrder >= 5 ? "gold" : "blue")">
+                        @row.SortOrder
+                    </div>
+                </td>
+            </RowTemplate>
+        </MasterDetailLayout>
+    }
+
+    <style>
+        /* --- CSS REORGANIZED & LINKED TO site.css VARIABLES --- */
+        .glass-loader-container {
+            padding: 5rem;
+            text-align: center;
+            background: var(--glass-bg);
+            border-radius: 24px;
+        }
+
+        .glass-field-card {
+            background: var(--glass-bg-deep);
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            padding: 1.25rem;
+        }
+
+        .glass-label-bold {
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: block;
+            color: var(--text-dark);
+        }
+
+        .glass-input-group-manage {
+            background: #fff;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .glass-input-inner {
+            border: none !important;
+            color: var(--text-dark);
+            background: transparent !important;
+        }
+
+        .helper-box-glass {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            background: rgba(0, 0, 0, 0.02);
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-style: italic;
+        }
+
+        /* Tier Badges & Alerts */
+        .priority-alert-glass {
+            background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%);
+            border: 1px solid #fde68a;
+            border-radius: 16px;
+            padding: 1rem;
+        }
+
+        .alert-icon-gold {
+            width: 35px;
+            height: 35px;
+            background: var(--color-warning);
+            color: #fff;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .badge-premium {
+            background: var(--color-warning);
+            color: #78350f;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+        }
+
+        .badge-standard {
+            background: #f1f5f9;
+            color: var(--text-muted);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.7rem;
+        }
+
+        /* Table Visual Alignment Fixes */
+        .text-gold-accent {
+            color: #b45309 !important;
+        }
+
+        .glass-badge-gold {
+            background: rgba(251, 191, 36, 0.1);
+            color: #b45309;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            padding: 5px 12px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .glass-badge-muted {
+            background: #f8fafc;
+            color: var(--text-muted);
+            border: 1px solid #e2e8f0;
+            padding: 5px 12px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+        .rank-circle-modern {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.85rem;
+        }
+
+        .rank-circle-modern.gold {
+            background: #fef3c7;
+            color: #b45309;
+            border: 1px solid #fde68a;
+        }
+
+        .rank-circle-modern.blue {
+            background: #e0f2fe;
+            color: #0369a1;
+            border: 1px solid #bae6fd;
+        }
+
+        .text-truncate-custom {
+            max-width: 300px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .val-msg-custom {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--color-danger);
+            margin-top: 4px;
+            display: block;
+        }
+
+        .glass-table td {
+            padding-top: 1.25rem !important;
+            padding-bottom: 1.25rem !important;
+        }
+
+        .fw-extrabold {
+            font-weight: 900;
+        }
+    </style>
 
 @code {
     // --- URL PARAMETERS ---

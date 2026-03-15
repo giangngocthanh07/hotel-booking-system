@@ -1,23 +1,29 @@
 @using Microsoft.AspNetCore.Components
 
-<div class="glass-card-filter mb-4 p-4 animate__animated animate__fadeInDown">
+<div class="glass-filter-card mb-4 p-4 animate__animated animate__fadeInDown force-gpu">
     <div class="row g-3 align-items-end">
+        @* --- Search Input Section --- *@
         <div class="col-md-4">
-            <label class="custom-label">Search Request</label>
-            <div class="input-group glass-input-group">
-                <span class="input-group-text bg-transparent border-0"><i class="fas fa-search text-primary"></i></span>
-                <input type="text" class="form-control glass-input" placeholder="Username, Name, Phone..."
+            <label class="filter-label">Search Request</label>
+            <div class="input-group glass-input-group-filter shadow-sm">
+                <span class="input-group-text border-0 bg-transparent ps-3">
+                    <i class="fas fa-search text-primary"></i>
+                </span>
+                <input type="text" class="form-control glass-input-field" placeholder="Username, Name, Phone..."
                        value="@SearchTerm" @oninput="OnSearchInput" />
                 @if (!string.IsNullOrEmpty(SearchTerm))
                 {
-                    <button class="btn-clear" @onclick="ClearSearch"><i class="fas fa-times"></i></button>
+                    <button class="btn-clear-search force-gpu" @onclick="ClearSearch" title="Clear search">
+                        <i class="fas fa-times"></i>
+                    </button>
                 }
             </div>
         </div>
 
+        @* --- Status Filter Section --- *@
         <div class="col-md-3">
-            <label class="custom-label">Status</label>
-            <select class="form-select glass-select" value="@SelectedStatus" @onchange="OnStatusChange">
+            <label class="filter-label">Current Status</label>
+            <select class="form-select glass-select-field shadow-sm" value="@SelectedStatus" @onchange="OnStatusChange">
                 <option value="">All Statuses</option>
                 @foreach (var status in StatusList)
                 {
@@ -26,90 +32,129 @@
             </select>
         </div>
 
+        @* --- Page Size Section --- *@
         <div class="col-md-2">
-            <label class="custom-label">Rows</label>
-            <select class="form-select glass-select" @onchange="OnPageSizeChange">
-                <option value="5" selected="@(PageSize == 5)">5</option>
-                <option value="10" selected="@(PageSize == 10)">10</option>
-                <option value="20" selected="@(PageSize == 20)">20</option>
+            <label class="filter-label">Display Rows</label>
+            <select class="form-select glass-select-field shadow-sm" @onchange="OnPageSizeChange">
+                <option value="5" selected="@(PageSize == 5)">5 Items</option>
+                <option value="10" selected="@(PageSize == 10)">10 Items</option>
+                <option value="20" selected="@(PageSize == 20)">20 Items</option>
             </select>
         </div>
 
+        @* --- Action Buttons Section --- *@
         <div class="col-md-3 text-end">
-            <button class="btn-glass-secondary me-2" @onclick="OnReset">
-                <i class="fas fa-undo"></i> Reset
-            </button>
-            <button class="btn-glass-primary" @onclick="OnApply">
-                <i class="fas fa-filter"></i> Apply
-            </button>
+            <div class="d-flex justify-content-end gap-2">
+                <button class="btn-filter-secondary force-gpu" @onclick="OnReset" title="Reset all filters">
+                    <i class="fas fa-undo me-2"></i>Reset
+                </button>
+                <button class="btn-filter-primary force-gpu shadow-sm" @onclick="OnApply">
+                    <i class="fas fa-filter me-2"></i>Apply
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
 <style>
-    .glass-card-filter {
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(15px);
+    /* --- FILTER CARD STYLING --- */
+    .glass-filter-card {
+        background: var(--glass-bg);
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--glass-border);
         border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.8);
-        box-shadow: 0 8px 32px rgba(0, 96, 230, 0.05);
     }
 
-    .custom-label {
-        font-size: 0.75rem;
+    .filter-label {
+        font-size: 0.7rem;
         font-weight: 800;
-        color: #475569;
+        color: var(--text-muted);
         text-transform: uppercase;
+        letter-spacing: 0.5px;
         margin-bottom: 8px;
         display: block;
     }
 
-    .glass-input,
-    .glass-select {
-        background: #fff !important;
-        border: 1.5px solid #cbd5e1 !important;
-        border-radius: 12px;
-        color: #1e293b !important;
-        font-weight: 500;
-    }
-
-    .glass-input-group {
+    /* Input & Select Sync with site.css */
+    .glass-input-group-filter {
         background: #fff;
         border: 1.5px solid #cbd5e1;
         border-radius: 12px;
         overflow: hidden;
+        transition: border-color 0.2s;
     }
 
-    .btn-glass-primary {
-        background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+    .glass-input-group-filter:focus-within {
+        border-color: var(--admin-blue);
+        box-shadow: 0 0 0 4px rgba(58, 123, 213, 0.1) !important;
+    }
+
+    .glass-input-field, .glass-select-field {
+        background: transparent !important;
+        border: none !important;
+        color: var(--text-dark) !important;
+        font-weight: 600;
+        font-size: 0.85rem;
+        padding: 0.65rem 1rem;
+    }
+
+    .glass-select-field {
+        background: #fff !important;
+        border: 1.5px solid #cbd5e1 !important;
+        border-radius: 12px !important;
+    }
+
+    .glass-select-field:focus {
+        border-color: var(--admin-blue) !important;
+        outline: none;
+    }
+
+    /* Buttons */
+    .btn-filter-primary {
+        background: var(--admin-primary-gradient);
         color: white;
         border: none;
+        padding: 10px 24px;
+        border-radius: 12px;
+        font-weight: 700;
+        transition: 0.3s;
+        font-size: 0.85rem;
+    }
+
+    .btn-filter-secondary {
+        background: #fff;
+        border: 1.5px solid #e2e8f0;
+        color: var(--text-muted);
         padding: 10px 20px;
         border-radius: 12px;
         font-weight: 700;
         transition: 0.3s;
+        font-size: 0.85rem;
     }
 
-    .btn-glass-secondary {
-        background: #fff;
-        border: 1.5px solid #cbd5e1;
-        color: #475569;
-        padding: 9px 20px;
-        border-radius: 12px;
-        font-weight: 700;
-        transition: 0.3s;
-    }
-
-    .btn-glass-primary:hover {
+    .btn-filter-primary:hover {
         transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0, 210, 255, 0.3);
+        filter: brightness(1.1);
+        box-shadow: 0 8px 20px rgba(58, 123, 213, 0.2) !important;
     }
 
-    .btn-clear {
+    .btn-filter-secondary:hover {
+        background: #f8fafc;
+        color: var(--text-dark);
+        border-color: var(--admin-blue);
+    }
+
+    .btn-clear-search {
         background: transparent;
         border: none;
         padding: 0 15px;
-        color: #94a3b8;
+        color: var(--text-muted);
+        transition: color 0.2s;
+    }
+
+    .btn-clear-search:hover {
+        color: var(--color-danger);
     }
 </style>
 

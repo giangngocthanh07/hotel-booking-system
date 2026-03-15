@@ -2,74 +2,62 @@
 @typeparam TModel where TModel : BaseCreateOrUpdateAdminVM
 @using HotelBooking.webapp.ViewModels.Admin.Base
 
-@* --- OUTER CONTAINER: Full height (vh-100 minus header if applicable) --- *@
-<div class="container-fluid p-0 overflow-hidden-lg" style="min-height: 100vh; height: auto;">
-    <div class="row g-3" style="height: auto; min-height: calc(100vh - 80px);">
+@* --- OUTER CONTAINER --- *@
+<div class="container-fluid p-3 overflow-hidden-lg manage-layout-animate">
+    <div class="row g-4">
 
-        @* --- LEFT COLUMN: SIDEBAR (col-lg-3) --- *@
+        @* --- LEFT COLUMN: CONFIGURATION FORM --- *@
         <div class="col-12 col-lg-3 order-2 order-lg-1">
-            <div class="card shadow-sm border-0 mb-3 mb-lg-0 h-100-lg d-flex flex-column">
-                <div class="card-body bg-white rounded d-flex flex-column overflow-auto custom-scroll">
-                    @* Sidebar Header & Menu Configuration *@
-                    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-                        <h6 class="fw-bold text-uppercase text-secondary mb-0">
-                            <i class="bi bi-gear-fill me-2"></i>Configuration
-                        </h6>
-                        @if (IsEditMode)
-                        {
-                            <span class="badge bg-warning text-dark">Editing</span>
-                        }
-                    </div>
+            <div class="glass-side-card h-100 force-gpu">
+                <div class="glass-card-header-manage">
+                    <h6 class="m-0 fw-bold"><i class="bi bi-sliders me-2"></i>Configuration</h6>
+                    @if (IsEditMode)
+                    {
+                        <span class="badge-editing">EDIT MODE</span>
+                    }
+                </div>
 
-                    @* MODULE NAVIGATION MENU *@
-                    <div class="mb-3">
-                        @if (SidebarTopContent != null)
-                        {
-                            @SidebarTopContent
-                        }
-                    </div>
+                <div class="glass-card-body-manage custom-scroll">
+                    @* Module Navigation *@
+                    <div class="mb-4">@SidebarTopContent</div>
 
-                    @* Sidebar-integrated Data Entry Form *@
-                    <div class="mt-auto pt-3 border-top">
-                        <h6 class="@(IsEditMode ? "text-warning" : "text-primary") fw-bold mb-3">
-                            @(IsEditMode ? "UPDATE DATA" : "ADD NEW")
+                    @* Data Entry Form *@
+                    <div class="mt-auto pt-4 border-top-glass">
+                        <h6 class="form-title @(IsEditMode ? "edit" : "add")">
+                            @(IsEditMode ? "UPDATE INFORMATION" : "CREATE NEW ENTRY")
                         </h6>
+
                         <EditForm Model="@Model" OnSubmit="HandleSubmit" @ref="_internalForm">
                             <DataAnnotationsValidator />
 
-                            @* --- COMMON SHARED FIELDS --- *@
                             <div class="mb-4">
-                                <label class="form-label fw-bold small text-muted text-uppercase">Display Name</label>
-                                <input type="text" class="form-control border-primary shadow-sm" value="@Model.Name"
-                                    @oninput="@(e => HandleCommonChange(e.Value?.ToString(), "Name"))"
-                                    @onblur="HandleNameBlur" placeholder="Enter name..." />
-                                <ValidationMessage For="() => Model.Name" class="val-msg" />
+                                <label class="custom-form-label">Display Name</label>
+                                <input type="text" class="form-control glass-input-manage" value="@Model.Name"
+                                       @oninput="@(e => HandleCommonChange(e.Value?.ToString(), "Name"))"
+                                       @onblur="HandleNameBlur" placeholder="e.g. Premium Service" />
+                                <ValidationMessage For="() => Model.Name" class="val-msg-custom" />
                             </div>
 
-                            <div class="mb-3">
-                                <label class="form-label fw-bold small text-muted text-uppercase">Detailed
-                                    Description</label>
-                                <textarea class="form-control shadow-sm" rows="3" value="@Model.Description"
-                                    @oninput="@(e => HandleCommonChange(e.Value?.ToString(), "Description"))"
-                                    placeholder="Enter description..."></textarea>
-                                <ValidationMessage For="() => Model.Description" class="val-msg" />
+                            <div class="mb-4">
+                                <label class="custom-form-label">Description</label>
+                                <textarea class="form-control glass-input-manage" rows="4" value="@Model.Description"
+                                          @oninput="@(e => HandleCommonChange(e.Value?.ToString(), "Description"))"
+                                          placeholder="Enter details..."></textarea>
+                                <ValidationMessage For="() => Model.Description" class="val-msg-custom" />
                             </div>
-                            <div class="form-text small mt-1">Used to explain processes or special notes.</div>
 
-                            <hr class="my-4 opacity-50" />
-
-                            @* Custom FormContent rendering (Context is TModel) *@
                             @if (FormContent != null)
                             {
                                 @FormContent(Model)
                             }
 
-                            <div class="d-grid gap-2 mt-4">
-                                <button type="submit"
-                                    class="btn @(IsEditMode ? "btn-warning" : "btn-primary") fw-bold shadow-sm">Save Changes</button>
+                            <div class="d-grid gap-3 mt-4">
+                                <button type="submit" class="btn-save-manage @(IsEditMode ? "warning" : "primary")">
+                                    <i class="bi bi-check-lg me-2"></i>Save Changes
+                                </button>
                                 @if (IsEditMode)
                                 {
-                                    <button type="button" class="btn btn-light border" @onclick="CancelEdit">Cancel</button>
+                                    <button type="button" class="btn-cancel-manage" @onclick="CancelEdit">Cancel</button>
                                 }
                             </div>
                         </EditForm>
@@ -78,143 +66,258 @@
             </div>
         </div>
 
-        @* --- RIGHT COLUMN: DATA LIST (col-lg-9) --- *@
-        <div class="col-12 col-lg-9 order-1 order-lg-2 h-100-lg">
-            <div class="card shadow-sm border-0 h-100 d-flex flex-column">
-                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold text-dark">Data List</h5>
-                    <div class="text-muted small">Showing <strong>@Items?.Count</strong> / <strong>@TotalCount</strong>
+        @* --- RIGHT COLUMN: DATA LISTING --- *@
+        <div class="col-12 col-lg-9 order-1 order-lg-2">
+            <div class="glass-main-card h-100 d-flex flex-column force-gpu">
+                <div class="glass-main-header d-flex justify-content-between align-items-center">
+                    <h5 class="m-0 fw-bold">Data Management List</h5>
+                    <div class="items-counter">
+                        Showing <strong>@Items?.Count</strong> / @TotalCount items
                     </div>
                 </div>
 
-                <div class="card-body p-0 d-flex flex-column flex-grow-1 overflow-hidden position-relative">
+                <div class="glass-main-body p-0 flex-grow-1">
                     @if (Items == null)
                     {
-                        <div class="p-4 text-center">Loading list...</div>
+                        <div class="p-5 text-center">
+                            <div class="spinner-grow text-primary"></div>
+                        </div>
                     }
                     else if (!Items.Any())
                     {
-                        <div class="p-4 text-center text-muted">No data available.</div>
-                    }
+                        <div class="p-5 text-center text-muted"><i class="bi bi-inbox fa-3x d-block mb-3 opacity-25"></i>No
+                            entries found.</div>
+                        }
                     else
-                    {
-                        <div class="table-responsive flex-grow-1 custom-scroll" style="overflow-y: auto;">
-                            <table class="table table-hover table-striped table-sm-mobile align-middle mb-0">
-                                <thead class="bg-light text-secondary text-uppercase small fw-bold sticky-top"
-                                style="z-index: 5;">
-                                    <tr>
-                                        @TableHeader
-                                        <th class="text-center bg-light shadow-sm"
-                                        style="width: 120px; position: sticky; right: 0;">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var item in Items)
-                                    {
+                        {
+                            <div class="table-responsive h-100 custom-scroll px-2">
+                                <table class="table table-hover align-middle mb-0 glass-table">
+                                    <thead>
                                         <tr>
-                                            @RowTemplate(item)
-                                            <td class="text-center bg-white border-start" style="position: sticky; right: 0;">
-                                                <button class="btn btn-sm btn-outline-primary border-0 me-1"
-                                            @onclick="() => EditItem(item)"><i class="bi bi-pencil-square"></i></button>
-                                                <button class="btn btn-sm btn-outline-danger border-0"
-                                            @onclick="() => RequestDelete(item)"><i class="bi bi-trash"></i></button>
-                                            </td>
+                                            @TableHeader
+                                            <th class="text-center sticky-action-head">Actions</th>
                                         </tr>
-                                    }
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in Items)
+                                        {
+                                            <tr class="glass-tr">
+                                                @RowTemplate(item)
+                                                <td class="text-center sticky-action-col">
+                                                    <div class="d-flex justify-content-center gap-2">
+                                                        <button class="btn-action edit" @onclick="() => EditItem(item)"><i
+                                                            class="bi bi-pencil-fill"></i></button>
+                                                            <button class="btn-action delete" @onclick="() => RequestDelete(item)"><i
+                                                                class="bi bi-trash-fill"></i></button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                }
+                            </div>
+
+                            @if (TotalPages > 1)
+                            {
+                                <div class="glass-main-footer py-3 border-top-glass">
+                                    <Pagination CurrentPage="PageIndex" TotalPages="TotalPages" TotalCount="TotalCount"
+                                                OnPageChange="HandlePageChange" ShowInfo="false" />
+                                </div>
+                            }
                         </div>
-                    }
-                </div>
-
-                @* FOOTER: PAGINATION (Using shared component) *@
-                @if (TotalPages > 1)
-                {
-                    <div class="card-footer bg-white py-2 border-top">
-                        <Pagination CurrentPage="PageIndex" TotalPages="TotalPages" TotalCount="TotalCount"
-                        OnPageChange="HandlePageChange" ShowInfo="false"
-                        ContainerClass="d-flex justify-content-center mb-0" PaginationClass="pagination-sm mb-0" />
                     </div>
-                }
+                </div>
             </div>
-        </div>
-    </div>
-</div>
 
-@* --- CUSTOM SCROLLBAR & VALIDATION STYLING --- *@
-<style>
-    /* Desktop: Screens 992px and above */
-    @@media (min-width: 992px) {
-        .h-100-lg {
-            height: 100% !important;
-        }
+            <style>
+                /* --- THEME VARIABLES --- */
+                :root {
+                    --glass-bg: rgba(255, 255, 255, 0.65);
+                    --glass-border: rgba(255, 255, 255, 0.8);
+                    --glass-header: rgba(255, 255, 255, 0.35);
+                    --text-dark: #1e293b;
+                    --text-muted: #64748b;
+                    --primary-gradient: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+                }
 
-        .overflow-hidden-lg {
-            overflow: hidden !important;
-        }
+                .manage-layout-animate {
+                    animation: fadeIn 0.6s ease;
+                }
 
-        /* Fixed table height for independent scrolling */
-        .table-responsive {
-            max-height: calc(100vh - 250px);
-        }
-    }
+                /* --- HARDWARE ACCELERATION (Fixes FullPage Screenshot white gaps) --- */
+                .force-gpu {
+                    transform: translateZ(0);
+                    -webkit-backface-visibility: hidden;
+                    backface-visibility: hidden;
+                }
 
-    /* Mobile: Screens below 992px */
-    @@media (max-width: 991.98px) {
-        .table-responsive {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
+                /* --- GLASS CARDS --- */
+                .glass-side-card,
+                .glass-main-card {
+                    background: var(--glass-bg);
+                    backdrop-filter: blur(20px);
+                    -webkit-backdrop-filter: blur(20px);
+                    border: 1px solid var(--glass-border);
+                    border-radius: 24px;
+                    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
+                    overflow: hidden;
+                }
 
-        .btn-sm {
-            padding: 0.25rem 0.4rem;
-        }
-    }
+                .glass-card-header-manage,
+                .glass-main-header {
+                    padding: 1.25rem 1.5rem;
+                    background: var(--glass-header);
+                    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+                }
 
-    /* Custom Scrollbar Styles */
-    .custom-scroll::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-    }
+                .glass-card-body-manage {
+                    padding: 1.5rem;
+                    height: calc(100vh - 220px);
+                    /* Adjust based on your top nav height */
+                    overflow-y: auto;
+                }
 
-    .custom-scroll::-webkit-scrollbar-track {
-        background: #f1f1f1;
-    }
+                /* --- FORM STYLING --- */
+                .custom-form-label {
+                    font-size: 0.75rem;
+                    font-weight: 800;
+                    color: var(--text-muted);
+                    text-transform: uppercase;
+                    margin-bottom: 6px;
+                    display: block;
+                }
 
-    .custom-scroll::-webkit-scrollbar-thumb {
-        background: #ced4da;
-        border-radius: 3px;
-    }
+                .glass-input-manage {
+                    background: #fff !important;
+                    border: 1.5px solid #e2e8f0 !important;
+                    border-radius: 12px;
+                    padding: 0.7rem;
+                    color: var(--text-dark) !important;
+                    font-weight: 500;
+                    transition: border-color 0.2s;
+                }
 
-    .custom-scroll::-webkit-scrollbar-thumb:hover {
-        background: #adb5bd;
-    }
+                .glass-input-manage:focus {
+                    border-color: #0060e6 !important;
+                    outline: none;
+                }
 
-    /* Ensure Table Header sticks to the top during scroll */
-    thead.sticky-top th {
-        position: sticky;
-        top: 0;
-        background-color: #f8f9fa;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-        z-index: 5;
-    }
+                .form-title {
+                    font-size: 0.85rem;
+                    font-weight: 800;
+                    margin-bottom: 1.5rem;
+                    letter-spacing: 0.5px;
+                }
 
-    /* Styling for Validation Messages */
-    .val-msg {
-        display: inline-block;
-        margin-top: 0.4rem;
-        padding: 0.2rem 0.6rem;
-        font-size: 0.75rem;
-        font-weight: bold;
-        color: #dc3545;
-        background-color: rgba(220, 53, 69, 0.08);
-        border-left: 3px solid darkred;
-        border-radius: 4px;
-    }
-</style>
+                .form-title.add {
+                    color: #0060e6;
+                }
+
+                .form-title.edit {
+                    color: #d97706;
+                }
+
+                /* --- TABLE ALIGNMENT FIXES --- */
+                .glass-table {
+                    table-layout: auto;
+                    width: 100%;
+                }
+
+                .glass-table thead th {
+                    background: rgba(0, 0, 0, 0.02);
+                    color: var(--text-muted) !important;
+                    font-size: 0.7rem;
+                    font-weight: 800;
+                    text-transform: uppercase;
+                    padding: 1rem;
+                    border: none;
+                }
+
+                .glass-tr {
+                    transition: 0.2s;
+                    border-bottom: 1px solid rgba(0, 0, 0, 0.02);
+                }
+
+                .glass-tr td {
+                    padding: 1.25rem 0.75rem;
+                }
+
+                .sticky-action-head,
+                .sticky-action-col {
+                    position: sticky;
+                    right: 0;
+                    background: rgba(255, 255, 255, 0.95) !important;
+                    backdrop-filter: blur(10px);
+                    z-index: 5;
+                    border-left: 1px solid rgba(0, 0, 0, 0.03) !important;
+                }
+
+                /* --- BUTTONS & BADGES --- */
+                .btn-save-manage {
+                    border: none;
+                    padding: 12px;
+                    border-radius: 14px;
+                    font-weight: 700;
+                    color: #fff;
+                    transition: 0.3s;
+                }
+
+                .btn-save-manage.primary {
+                    background: var(--primary-gradient);
+                    box-shadow: 0 4px 15px rgba(58, 123, 213, 0.2);
+                }
+
+                .btn-save-manage.warning {
+                    background: #d97706;
+                }
+
+                .btn-action {
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 10px;
+                    border: none;
+                    color: #fff;
+                    transition: 0.2s;
+                }
+
+                .btn-action.edit {
+                    background: #0ea5e9;
+                }
+
+                .btn-action.delete {
+                    background: #f43f5e;
+                }
+
+                .items-counter {
+                    font-size: 0.75rem;
+                    color: var(--text-muted);
+                }
+
+                .badge-editing {
+                    background: #fef3c7;
+                    color: #92400e;
+                    padding: 4px 10px;
+                    border-radius: 8px;
+                    font-size: 0.7rem;
+                    font-weight: 800;
+                }
+
+                /* --- RESPONSIVE ADJUSTMENTS --- */
+                @@media (min-width: 992px) {
+                    .overflow-hidden-lg {
+                        overflow: hidden !important;
+                    }
+
+                    .table-responsive {
+                        height: calc(100vh - 280px) !important;
+                    }
+                }
+            </style>
 
 <ConfirmModal @ref="_confirmModal" Title="Delete Record?"
-    Message="Are you sure you want to permanently delete this entry?" OnConfirm="ConfirmDelete" />
+              Message="Are you sure you want to permanently delete this entry?" OnConfirm="ConfirmDelete" />
 
 @code {
     // --- DATA PROPERTIES ---

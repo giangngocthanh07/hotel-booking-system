@@ -2,51 +2,39 @@
 @layout AuthLayout
 
 @using HotelBooking.Client
-
 @using HotelBooking.webapp.ViewModels.Form
 @using HotelBooking.webapp.ViewModels.Response
 
 @inject NavigationManager _nav
 @inject AuthenticationStateProvider AuthStateProvider
-
 @inject IHttpClientFactory HttpClientFactory
 @inject Blazored.LocalStorage.ILocalStorageService localStorage
 
 <PageTitle>Login - Hotel Booking</PageTitle>
 
-<div class="auth-wrapper">
+<div class="auth-wrapper force-gpu">
     <div class="auth-container">
-        <div class="auth-card">
-            <div class="auth-header text-center">
-                <a href="/" class="auth-logo">
-                    <img src="favicon.ico" alt="Hotel Booking Logo" />
+        @* --- LOGIN CARD (Glassmorphism Deep) --- *@
+        <div class="auth-card shadow-lg force-gpu">
+            <div class="auth-header text-center mb-4">
+                <a href="/" class="auth-logo-wrap">
+                    <img src="favicon.ico" alt="Logo" class="logo-img" />
                     <span class="ms-2">Hotel Booking</span>
                 </a>
-                <h2 class="mt-4 fw-bold">Welcome Back</h2>
-                <p class="text-muted">Sign in to continue your journey</p>
+                <h2 class="mt-4 fw-bold text-dark">Welcome Back</h2>
+                <p class="text-muted small uppercase-tracking">Sign in to manage your journey</p>
             </div>
 
             @if (!string.IsNullOrEmpty(errorMessage))
             {
-                <div class="custom-alert-error" role="alert">
-                    <div class="alert-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="12" y1="8" x2="12" y2="12"></line>
-                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                        </svg>
+                <div class="glass-error-alert animate__animated animate__shakeX" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-circle me-3"></i>
+                        <div class="alert-message flex-grow-1">@errorMessage</div>
+                        <button type="button" class="btn-close-alert" @onclick="() => errorMessage = null">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
-                    <div class="alert-content">
-                        <div class="alert-message">@errorMessage</div>
-                    </div>
-                    <button type="button" class="alert-close" @onclick="() => errorMessage = null">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                        </svg>
-                    </button>
                 </div>
             }
 
@@ -54,279 +42,218 @@
                 <DataAnnotationsValidator />
 
                 <div class="form-floating mb-3">
-                    <InputText @bind-Value="userLogin.UsernameOrEmail" class="form-control auth-input"
-                        id="inputUsernameEmail" placeholder="name@example.com" />
+                    <InputText @bind-Value="userLogin.UsernameOrEmail" class="form-control glass-input-auth"
+                               id="inputUsernameEmail" placeholder="Username" />
                     <label for="inputUsernameEmail">Username or Email</label>
-                    <ValidationMessage For="@(() => userLogin.UsernameOrEmail)" class="text-danger small" />
+                    <ValidationMessage For="@(() => userLogin.UsernameOrEmail)" class="val-msg-custom" />
                 </div>
 
                 <div class="form-floating mb-3">
-                    <InputText type="password" @bind-Value="userLogin.Password" class="form-control auth-input"
-                        id="inputPassword" placeholder="••••••••" />
+                    <InputText type="password" @bind-Value="userLogin.Password" class="form-control glass-input-auth"
+                               id="inputPassword" placeholder="••••••••" />
                     <label for="inputPassword">Password</label>
-                    <ValidationMessage For="@(() => userLogin.Password)" class="text-danger small" />
+                    <ValidationMessage For="@(() => userLogin.Password)" class="val-msg-custom" />
                 </div>
 
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div class="form-check custom-checkbox">
+                <div class="d-flex justify-content-between align-items-center mb-4 px-1">
+                    <div class="form-check custom-checkbox-glass">
                         <InputCheckbox class="form-check-input" @bind-Value="rememberMe" id="rememberCheck" />
-                        <label class="form-check-label small text-muted" for="rememberCheck">
+                        <label class="form-check-label small fw-600 text-muted" for="rememberCheck">
                             Remember me
                         </label>
                     </div>
-                    <a href="#" class="auth-link small">Forgot password?</a>
+                    <a href="#" class="auth-link-forgot small fw-bold">Forgot password?</a>
                 </div>
 
                 <div class="d-grid gap-2 mb-4">
-                    <button type="submit" class="btn btn-primary auth-btn btn-lg py-3">
-                        <span class="btn-text">Sign In</span>
+                    <button type="submit" class="btn-auth-primary force-gpu py-3" disabled="@isSubmitting">
+                        @if (isSubmitting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                            <span>Authenticating...</span>
+                        }
+                        else
+                        {
+                            <span class="btn-text">SIGN IN</span>
+                        }
                     </button>
                 </div>
 
-                <div class="text-center">
+                <div class="text-center mt-2">
                     <p class="mb-0 text-muted small">
-                        Don't have an account?
-                        <a href="/customer-register" class="auth-link fw-bold">Create one now</a>
+                        New to Hotel Booking?
+                        <a href="/customer-register" class="auth-link-register ms-1">Create an account</a>
                     </p>
                 </div>
             </EditForm>
         </div>
 
-        <div class="auth-footer text-center mt-4">
-            <p class="text-muted small">© @DateTime.Now.Year Hotel Booking. All rights reserved.</p>
+        @* --- FOOTER --- *@
+        <div class="auth-footer text-center mt-4 animate__animated animate__fadeIn">
+            <p class="text-muted extra-small uppercase-tracking mb-2">© @DateTime.Now.Year Hotel Booking System</p>
             <div class="auth-footer-links">
-                <a href="/" class="text-muted me-3">Privacy Policy</a>
-                <a href="/" class="text-muted">Terms of Service</a>
+                <a href="/">Privacy</a>
+                <span class="mx-2 opacity-25">|</span>
+                <a href="/">Terms</a>
+                <span class="mx-2 opacity-25">|</span>
+                <a href="/">Contact Support</a>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-    :root {
-        --primary-color: #0060e6;
-        --secondary-color: #00b4d8;
-        --card-bg: rgba(255, 255, 255, 0.65);
-        --text-main: #1e293b;
-        --text-muted: #64748b;
-        --input-bg: #ffffff;
-        --input-border: #cbd5e1;
-        --input-focus: #0060e6;
-    }
-
+    /* --- INTEGRATED AUTH STYLES --- */
     .auth-wrapper {
         min-height: 100vh;
         width: 100%;
         display: flex;
         justify-content: center;
         align-items: center;
-        background-color: #f0f9ff;
-        background-image:
-            radial-gradient(at 0% 0%, hsla(190, 100%, 90%, 1) 0px, transparent 50%),
-            radial-gradient(at 50% 0%, hsla(205, 100%, 85%, 1) 0px, transparent 50%),
-            radial-gradient(at 100% 0%, hsla(188, 100%, 92%, 1) 0px, transparent 50%),
-            radial-gradient(at 100% 100%, hsla(215, 100%, 88%, 1) 0px, transparent 50%),
-            radial-gradient(at 0% 100%, hsla(195, 100%, 95%, 1) 0px, transparent 50%);
-        background-size: 150% 150%;
-        animation: gradientShift 20s ease infinite;
+        background: radial-gradient(circle at top left, #f0f9ff 0%, #e0f2fe 100%);
         padding: 2rem 1rem;
         position: relative;
-        overflow: hidden;
-    }
-
-    .auth-wrapper::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.5) 0%, transparent 40%),
-            radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.4) 0%, transparent 40%);
-        pointer-events: none;
     }
 
     .auth-container {
         width: 100%;
-        max-width: 450px;
-        animation: fadeIn 0.6s ease-out;
-        position: relative;
-        z-index: 1;
+        max-width: 440px;
     }
 
     .auth-card {
-        background: var(--card-bg);
-        backdrop-filter: blur(20px) saturate(180%);
-        -webkit-backdrop-filter: blur(20px) saturate(180%);
-        padding: 3rem 2.5rem;
-        border-radius: 28px;
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.5);
+        background: var(--glass-bg-deep);
+        backdrop-filter: var(--glass-blur) saturate(150%);
+        -webkit-backdrop-filter: var(--glass-blur) saturate(150%);
+        padding: 3.5rem 2.5rem;
+        border-radius: 32px;
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--glass-shadow);
     }
 
-    .auth-logo {
+    /* Logo & Header */
+    .auth-logo-wrap {
         display: inline-flex;
         align-items: center;
         text-decoration: none;
-        color: var(--primary-color);
+        color: var(--admin-blue);
         font-weight: 800;
-        font-size: 1.25rem;
+        font-size: 1.4rem;
         font-family: 'DM Serif Display', serif;
     }
 
-    .auth-logo img {
-        height: 32px;
-        width: 32px;
+    .logo-img {
+        height: 36px;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
     }
 
-    .auth-header h2 {
-        color: var(--text-main);
-        font-size: 2rem;
-        font-family: 'DM Serif Display', serif;
-        margin-bottom: 0.5rem;
-    }
-
-    .auth-header .text-muted {
-        color: var(--text-muted) !important;
-        font-size: 0.95rem;
-    }
-
-    .auth-input {
-        background: var(--input-bg) !important;
-        border: 1.5px solid var(--input-border) !important;
-        border-radius: 14px;
-        height: 58px;
-        color: var(--text-main) !important;
-        transition: all 0.3s ease;
-    }
-
-    .auth-input:focus {
-        border-color: var(--input-focus) !important;
-        box-shadow: 0 0 0 4px rgba(0, 96, 230, 0.1);
-        outline: none;
-    }
-
-    .form-floating label {
-        color: #94a3b8;
-    }
-
-    .auth-btn {
-        background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
-        border: none;
-        border-radius: 14px;
+    .uppercase-tracking {
+        text-transform: uppercase;
+        letter-spacing: 1px;
         font-weight: 700;
-        font-size: 1.1rem;
-        color: #ffffff;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
-    .auth-btn:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 25px rgba(58, 123, 213, 0.3);
-        filter: brightness(1.05);
-        color: #ffffff;
+    /* Inputs */
+    .glass-input-auth {
+        background: #ffffff !important;
+        border: 1.5px solid #e2e8f0 !important;
+        border-radius: 16px !important;
+        height: 60px !important;
+        color: var(--text-dark) !important;
+        font-weight: 600 !important;
     }
 
-    .auth-link {
-        color: var(--primary-color);
+    .glass-input-auth:focus {
+        border-color: var(--admin-blue) !important;
+        box-shadow: 0 0 0 4px rgba(58, 123, 213, 0.1) !important;
+    }
+
+    /* Checkbox & Links */
+    .custom-checkbox-glass .form-check-input:checked {
+        background-color: var(--admin-blue);
+        border-color: var(--admin-blue);
+    }
+
+    .auth-link-forgot {
+        color: var(--text-muted);
         text-decoration: none;
-        font-weight: 600;
-        transition: color 0.2s;
+        transition: 0.2s;
     }
 
-    .auth-link:hover {
-        color: #3a7bd5;
+    .auth-link-forgot:hover {
+        color: var(--admin-blue);
+    }
+
+    .auth-link-register {
+        color: var(--admin-blue);
+        font-weight: 800;
+        text-decoration: none;
+    }
+
+    .auth-link-register:hover {
         text-decoration: underline;
     }
 
-    .custom-checkbox .form-check-input {
-        border: 1.5px solid var(--input-border);
-        cursor: pointer;
+    /* Action Button */
+    .btn-auth-primary {
+        background: var(--admin-primary-gradient);
+        border: none;
+        border-radius: 16px;
+        font-weight: 800;
+        font-size: 1rem;
+        color: #fff;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
-    .custom-checkbox .form-check-input:checked {
-        background-color: var(--primary-color);
-        border-color: var(--primary-color);
+    .btn-auth-primary:hover:not(:disabled) {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 25px rgba(58, 123, 213, 0.35);
+        filter: brightness(1.05);
     }
 
-    .custom-alert-error {
-        display: flex;
-        align-items: center;
-        gap: 12px;
+    /* Alerts */
+    .glass-error-alert {
+        background: rgba(244, 63, 94, 0.08);
+        border: 1px solid rgba(244, 63, 94, 0.2);
         padding: 14px 18px;
+        border-radius: 16px;
+        color: var(--color-danger);
+        font-weight: 700;
+        font-size: 0.85rem;
         margin-bottom: 1.5rem;
-        background: #fef2f2;
-        border: 1px solid #fee2e2;
-        border-radius: 14px;
-        color: #991b1b;
-        animation: slideIn 0.3s ease-out;
     }
 
-    .alert-icon svg {
-        color: #dc2626;
-    }
-
-    .alert-close {
+    .btn-close-alert {
         background: transparent;
         border: none;
-        color: #991b1b;
-        opacity: 0.5;
-        display: flex;
-    }
-
-    .auth-footer .text-muted {
-        color: #94a3b8 !important;
+        color: var(--color-danger);
+        opacity: 0.6;
     }
 
     .auth-footer-links a {
-        color: #64748b !important;
+        color: var(--text-muted);
         text-decoration: none;
-        font-size: 0.85rem;
+        font-weight: 600;
+        font-size: 0.8rem;
     }
 
     .auth-footer-links a:hover {
-        color: var(--primary-color) !important;
+        color: var(--admin-blue);
     }
 
-    @@keyframes gradientShift {
-        0% {
-            background-position: 0% 0%;
-        }
-
-        50% {
-            background-position: 100% 100%;
-        }
-
-        100% {
-            background-position: 0% 0%;
-        }
+    .val-msg-custom {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--color-danger);
+        margin-top: 4px;
+        display: block;
     }
 
-    @@keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    .fw-600 {
+        font-weight: 600;
     }
 
-    @@keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateX(-10px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-
-    @@media (max-width: 576px) {
-        .auth-card {
-            padding: 2.5rem 1.5rem;
-        }
+    .extra-small {
+        font-size: 0.65rem;
     }
 </style>
 
@@ -335,75 +262,63 @@
     private string? errorMessage;
     private HttpClient? _httpClient;
     private bool rememberMe = false;
+    private bool isSubmitting = false; // Thêm trạng thái loading cho nút bấm
 
     protected override async Task OnInitializedAsync()
     {
         _httpClient = HttpClientFactory.CreateClient("HotelBookingAPI");
-
         var savedRememberMe = await localStorage.GetItemAsync<bool>("rememberMe");
         if (savedRememberMe)
         {
             rememberMe = true;
             var savedUsername = await localStorage.GetItemAsync<string>("savedUsername");
-            if (!string.IsNullOrEmpty(savedUsername))
-            {
-                userLogin.UsernameOrEmail = savedUsername;
-            }
+            if (!string.IsNullOrEmpty(savedUsername)) userLogin.UsernameOrEmail = savedUsername;
         }
     }
 
     private async Task HandleValidSubmit()
     {
+        if (isSubmitting) return;
+        isSubmitting = true;
+        errorMessage = null;
+
         try
         {
-            if (_httpClient == null)
-            {
-                errorMessage = "System error: HttpClient is not initialized.";
-                return;
-            }
+            if (_httpClient == null) { errorMessage = "System error: Service unavailable."; return; }
 
             var response = await _httpClient.PostAsJsonAsync("v1/authentication/login", userLogin);
             var loginResponse = await response.Content.ReadFromJsonAsync<ApiResponse<LoginResponseVM>>();
 
-            if (response.IsSuccessStatusCode)
+            if (response.IsSuccessStatusCode && loginResponse?.Content?.AccessToken != null)
             {
-                if (loginResponse?.Content?.AccessToken != null)
+                if (rememberMe)
                 {
-                    if (rememberMe)
-                    {
-                        await localStorage.SetItemAsync("rememberMe", true);
-                        await localStorage.SetItemAsync("savedUsername", userLogin.UsernameOrEmail);
-                    }
-                    else
-                    {
-                        await localStorage.RemoveItemAsync("rememberMe");
-                        await localStorage.RemoveItemAsync("savedUsername");
-                    }
-
-                    await ((CustomAuthStateProvider)AuthStateProvider).MarkUserAsAuthenticated(loginResponse.Content.AccessToken);
-                    errorMessage = null;
-                    _nav.NavigateTo("/", forceLoad: true);
+                    await localStorage.SetItemAsync("rememberMe", true);
+                    await localStorage.SetItemAsync("savedUsername", userLogin.UsernameOrEmail);
                 }
                 else
                 {
-                    errorMessage = "Login successful, but no security token was received.";
+                    await localStorage.RemoveItemAsync("rememberMe");
+                    await localStorage.RemoveItemAsync("savedUsername");
                 }
+
+                await ((CustomAuthStateProvider)AuthStateProvider).MarkUserAsAuthenticated(loginResponse.Content.AccessToken);
+                _nav.NavigateTo("/", forceLoad: true);
             }
             else
             {
-                errorMessage = loginResponse?.Message ?? "Invalid username or password. Please try again.";
+                errorMessage = loginResponse?.Message ?? "Invalid credentials. Please try again.";
             }
-        }
-        catch (HttpRequestException)
-        {
-            errorMessage = "Unable to connect to the server. Please check your internet connection.";
         }
         catch (Exception ex)
         {
-            errorMessage = $"An unexpected error occurred: {ex.Message}";
+            errorMessage = "An unexpected error occurred. Please try again later.";
+            Console.WriteLine(ex.Message);
         }
-        await InvokeAsync(StateHasChanged);
+        finally
+        {
+            isSubmitting = false;
+            await InvokeAsync(StateHasChanged);
+        }
     }
-
-
 }

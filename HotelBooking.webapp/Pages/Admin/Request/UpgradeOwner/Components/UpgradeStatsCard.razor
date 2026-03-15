@@ -1,120 +1,160 @@
 @using HotelBooking.webapp.ViewModels.Request
 
-<div class="row g-4 mb-4 animate__animated animate__fadeIn">
+<div class="row g-4 mb-4 animate__animated animate__fadeIn force-gpu">
     @foreach (var item in new[] {
-        new { Label = "Pending", Val = Stats.Pending, Icon = "fa-hourglass-half", Color = "warning", Status = "Pending" },
-        new { Label = "Approved", Val = Stats.Approved, Icon = "fa-check-circle", Color = "success", Status = "Approved" },
-        new { Label = "Rejected", Val = Stats.Rejected, Icon = "fa-times-circle", Color = "danger", Status = "Rejected" },
-        new { Label = "Total", Val = Stats.Total, Icon = "fa-list", Color = "primary", Status = (string?)null }
+    new { Label = "Pending", Val = Stats.Pending, Icon = "fa-hourglass-half", ColorClass = "warning", Status = "Pending" },
+    new { Label = "Approved", Val = Stats.Approved, Icon = "fa-check-circle", ColorClass = "success", Status =
+    "Approved" },
+    new { Label = "Rejected", Val = Stats.Rejected, Icon = "fa-times-circle", ColorClass = "danger", Status = "Rejected" },
+    new { Label = "Total", Val = Stats.Total, Icon = "fa-list", ColorClass = "primary", Status = (string?)null }
     })
     {
         <div class="col-md-3">
-            <div class="stat-glass-card @(SelectedStatus == item.Status ? "active" : "")"
+            <div class="stat-glass-card @(SelectedStatus == item.Status ? "active" : "") force-gpu"
                  @onclick="@(() => HandleStatusClick(item.Status))">
-                <div class="stat-icon-wrap @item.Color"><i class="fas @item.Icon"></i></div>
-                <div class="stat-data text-end">
-                    <h3 class="@item.Color">@item.Val</h3>
-                    <small>@item.Label</small>
+
+                <div class="stat-icon-wrap @item.ColorClass force-gpu">
+                    <i class="fas @item.Icon"></i>
                 </div>
-                <div class="stat-bar @item.Color"></div>
+
+                <div class="stat-data-content text-end">
+                    <h3 class="stat-number @item.ColorClass">@item.Val</h3>
+                    <small class="stat-label-text">@item.Label</small>
+                </div>
+
+                <div class="stat-indicator-bar @item.ColorClass"></div>
             </div>
         </div>
     }
 </div>
 
 <style>
+    /* --- STAT CARD BASE (Linked to site.css) --- */
     .stat-glass-card {
-        background: rgba(255, 255, 255, 0.75);
-        backdrop-filter: blur(10px);
-        border-radius: 20px;
-        padding: 20px;
+        background: var(--glass-bg);
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        padding: 1.5rem;
         display: flex;
         align-items: center;
         justify-content: space-between;
         cursor: pointer;
-        transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
         overflow: hidden;
-        border: 1px solid rgba(255, 255, 255, 0.8);
     }
 
-    .stat-glass-card:hover,
-    .stat-glass-card.active {
+    .stat-glass-card:hover {
         transform: translateY(-5px);
-        background: #fff;
-        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.05);
+        background: var(--glass-bg-deep);
+        box-shadow: var(--glass-shadow) !important;
     }
 
+    /* Trạng thái được chọn (Selected/Active) */
     .stat-glass-card.active {
-        border: 2px solid #00d2ff;
+        background: #fff !important;
+        border-color: var(--admin-blue) !important;
+        box-shadow: 0 10px 25px rgba(58, 123, 213, 0.15) !important;
+        transform: translateY(-5px) scale(1.02);
     }
 
+    /* Icon Styling */
     .stat-icon-wrap {
-        width: 50px;
-        height: 50px;
-        border-radius: 12px;
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.5rem;
+        font-size: 1.4rem;
+        transition: 0.3s;
     }
 
     .stat-icon-wrap.warning {
-        background: rgba(255, 193, 7, 0.15);
-        color: #ffc107;
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--color-warning);
     }
 
     .stat-icon-wrap.success {
-        background: rgba(25, 135, 84, 0.15);
-        color: #198754;
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--color-success);
     }
 
     .stat-icon-wrap.danger {
-        background: rgba(220, 53, 69, 0.15);
-        color: #dc3545;
+        background: rgba(244, 63, 94, 0.1);
+        color: var(--color-danger);
     }
 
     .stat-icon-wrap.primary {
-        background: rgba(0, 96, 230, 0.15);
-        color: #0060e6;
+        background: rgba(58, 123, 213, 0.1);
+        color: var(--admin-blue);
     }
 
-    .stat-data h3 {
-        font-weight: 800;
+    /* Typography */
+    .stat-number {
+        font-weight: 900;
         margin: 0;
-        font-size: 1.8rem;
+        font-size: 2rem;
+        line-height: 1;
     }
 
-    .stat-data small {
-        font-weight: 700;
-        color: #64748b;
+    .stat-number.warning {
+        color: var(--color-warning);
+    }
+
+    .stat-number.success {
+        color: var(--color-success);
+    }
+
+    .stat-number.danger {
+        color: var(--color-danger);
+    }
+
+    .stat-number.primary {
+        color: var(--admin-blue);
+    }
+
+    .stat-label-text {
+        font-weight: 800;
+        color: var(--text-muted);
         text-transform: uppercase;
         font-size: 0.7rem;
+        letter-spacing: 0.5px;
+        margin-top: 4px;
+        display: block;
     }
 
-    .stat-bar {
+    /* Bottom Decorative Indicator Bar */
+    .stat-indicator-bar {
         position: absolute;
         bottom: 0;
         left: 0;
-        height: 4px;
+        height: 5px;
         width: 100%;
-        opacity: 0.5;
+        opacity: 0.4;
     }
 
-    .stat-bar.warning {
-        background: #ffc107;
+    .stat-indicator-bar.warning {
+        background: var(--color-warning);
     }
 
-    .stat-bar.success {
-        background: #198754;
+    .stat-indicator-bar.success {
+        background: var(--color-success);
     }
 
-    .stat-bar.danger {
-        background: #dc3545;
+    .stat-indicator-bar.danger {
+        background: var(--color-danger);
     }
 
-    .stat-bar.primary {
-        background: #0060e6;
+    .stat-indicator-bar.primary {
+        background: var(--admin-blue);
+    }
+
+    .active .stat-indicator-bar {
+        opacity: 1;
+        height: 6px;
     }
 </style>
 
@@ -122,16 +162,11 @@
     [Parameter] public RequestTypeStatsVM Stats { get; set; } = new();
     [Parameter] public string? SelectedStatus { get; set; }
 
-    /// <summary>
-    /// Supported event names for backward compatibility.
-    /// Handles filtering when a status card is clicked.
-    /// </summary>
     [Parameter] public EventCallback<string?> OnStatusClick { get; set; }
     [Parameter] public EventCallback<string?> OnFilterByStatus { get; set; }
 
     private async Task HandleStatusClick(string? status)
     {
-        // Invoke available delegates
         if (OnFilterByStatus.HasDelegate)
             await OnFilterByStatus.InvokeAsync(status);
         else if (OnStatusClick.HasDelegate)

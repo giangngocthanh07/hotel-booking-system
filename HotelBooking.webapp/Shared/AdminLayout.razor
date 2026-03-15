@@ -4,8 +4,6 @@
 <MudThemeProvider />
 <MudPopoverProvider />
 
-@* Snackbar và Dialog phải nằm NGOÀI app-layout-wrapper *@
-@* để tránh bị clip bởi overflow:hidden + position:relative (stacking context) *@
 <MudDialogProvider />
 <MudSnackbarProvider />
 
@@ -30,7 +28,6 @@
 <style>
     :root {
         --sidebar-bg: #1e293b;
-        /* Xanh than đậm cho chuyên nghiệp */
         --primary-blue: #0060e6;
         --app-bg-light: #f0f9ff;
     }
@@ -45,7 +42,7 @@
         background-color: var(--app-bg-light);
     }
 
-    /* Header: Đồng bộ với tone trắng xanh */
+    /* Header:  */
     .app-header {
         flex: 0 0 auto;
         height: 64px;
@@ -63,7 +60,7 @@
         overflow: hidden;
     }
 
-    /* Sidebar: Đậm màu để tách biệt với vùng nội dung sáng */
+    /* Sidebar:  */
     .app-sidebar {
         width: 260px;
         min-width: 260px;
@@ -74,7 +71,7 @@
         box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
     }
 
-    /* Main Content Area: Nền loang nhẹ sáng sủa */
+    /* Main Content Area: */
     .app-main {
         flex: 1;
         background-color: #f0f9ff;
@@ -90,17 +87,16 @@
         position: relative;
     }
 
-    /* Content Inner: Các trang con khi render vào đây nên dùng class .mud-paper hoặc .card */
+    /* Content Inner: */
     .main-content-inner {
         padding: 1.5rem;
         min-height: 100%;
     }
 
-    /* Container cho các bảng danh sách */
+    /* Container Limited: */
     .container-limited {
         max-width: 1440px;
         margin: 0 auto;
-        /* Nếu bạn muốn nội dung bên trong có hiệu ứng kính */
         background: rgba(255, 255, 255, 0.4);
         backdrop-filter: blur(10px);
         border-radius: 16px;
@@ -108,7 +104,7 @@
         padding: 20px;
     }
 
-    /* Custom Scrollbar cho mượt */
+    /* Custom Scrollbar */
     .app-main::-webkit-scrollbar {
         width: 6px;
     }

@@ -1,17 +1,14 @@
-@* Reusable Pagination Component
-    Usage: <Pagination CurrentPage="@currentPage" TotalPages="@totalPages" 
-                       TotalCount="@totalCount" OnPageChange="GoToPage" />
-*@
+@* filepath: e:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.webapp\Components\Common\Pagination.razor *@
 
 @if (TotalPages > 1)
 {
-    <div class="glass-pagination-wrapper">
+    <div class="glass-pagination-wrapper force-gpu animate__animated animate__fadeIn">
         @* Row 1: Pagination Buttons *@
         <nav class="d-flex justify-content-center">
             <ul class="pagination glass-pagination-list">
                 @* Previous Button *@
                 <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
-                    <button class="page-link glass-btn" @onclick="GoToPrevious" disabled="@IsLoading">
+                    <button class="page-link glass-btn force-gpu" @onclick="GoToPrevious" disabled="@IsLoading">
                         <i class="fas fa-chevron-left"></i>
                     </button>
                 </li>
@@ -19,7 +16,7 @@
                 @foreach (var pageNumber in GetPageNumbers())
                 {
                     <li class="page-item @(pageNumber == CurrentPage ? "active" : "")">
-                        <button class="page-link glass-btn" @onclick="() => GoToPage(pageNumber)" disabled="@IsLoading">
+                        <button class="page-link glass-btn force-gpu" @onclick="() => GoToPage(pageNumber)" disabled="@IsLoading">
                             @pageNumber
                         </button>
                     </li>
@@ -27,7 +24,7 @@
 
                 @* Next Button *@
                 <li class="page-item @(CurrentPage == TotalPages ? "disabled" : "")">
-                    <button class="page-link glass-btn" @onclick="GoToNext" disabled="@IsLoading">
+                    <button class="page-link glass-btn force-gpu" @onclick="GoToNext" disabled="@IsLoading">
                         <i class="fas fa-chevron-right"></i>
                     </button>
                 </li>
@@ -38,26 +35,27 @@
         @if (ShowInfo)
         {
             <div class="glass-pagination-label">
-                Page <strong>@CurrentPage</strong> of <strong>@TotalPages</strong> — Total @TotalCount items
+                Page <strong class="text-dark">@CurrentPage</strong> of <strong>@TotalPages</strong> 
+                <span class="mx-1 opacity-50">—</span> 
+                Total <strong>@TotalCount</strong> items
             </div>
         }
     </div>
 }
 
 <style>
-    /* Center the entire pagination block */
+    /* --- INTEGRATED PAGINATION STYLES --- */
     .glass-pagination-wrapper {
         display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
         justify-content: center !important;
         width: 100% !important;
-        margin-top: 2rem !important;
-        margin-bottom: 1rem !important;
-        gap: 12px !important;
+        margin-top: 1.5rem !important;
+        margin-bottom: 0.5rem !important;
+        gap: 14px !important;
     }
 
-    /* Force the pagination list to always be horizontal, no wrapping */
     .glass-pagination-list {
         display: flex !important;
         flex-direction: row !important;
@@ -65,119 +63,80 @@
         padding: 0 !important;
         margin: 0 !important;
         list-style: none !important;
-        gap: 8px !important;
+        gap: 10px !important;
         border: none !important;
     }
 
-    .page-item {
-        border: none !important;
-        margin: 0 !important;
-    }
-
-    /* Glassmorphism button design */
+    /* Glassmorphism Button Core */
     .glass-btn {
-        background: rgba(255, 255, 255, 0.7) !important;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1.5px solid rgba(255, 255, 255, 0.8) !important;
-        color: #334155 !important;
+        background: var(--glass-bg) !important;
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--glass-border) !important;
+        color: var(--text-main) !important;
         border-radius: 12px !important;
-        width: 40px !important;
-        height: 40px !important;
+        width: 42px !important;
+        height: 42px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         font-weight: 700 !important;
-        transition: all 0.3s ease !important;
+        font-size: 0.9rem !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
         padding: 0 !important;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02) !important;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03) !important;
     }
 
-    /* Active page button */
+    /* Active State Sync with Admin Theme */
     .page-item.active .glass-btn {
-        background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%) !important;
+        background: var(--admin-primary-gradient) !important;
         color: #ffffff !important;
         border: none !important;
-        box-shadow: 0 8px 15px rgba(0, 210, 255, 0.3) !important;
+        box-shadow: 0 8px 20px rgba(58, 123, 213, 0.25) !important;
+        transform: scale(1.05);
     }
 
+    /* Hover State */
     .glass-btn:hover:not(:disabled) {
         transform: translateY(-3px) !important;
         background: #ffffff !important;
-        border-color: #0060e6 !important;
-        color: #0060e6 !important;
+        border-color: var(--admin-blue) !important;
+        color: var(--admin-blue) !important;
     }
 
     .page-item.disabled .glass-btn {
-        opacity: 0.4 !important;
+        opacity: 0.3 !important;
         cursor: not-allowed !important;
+        box-shadow: none !important;
     }
 
-    /* Row 2: Pagination Info */
+    /* Info Label Text */
     .glass-pagination-label {
-        color: #64748b !important;
-        font-size: 0.85rem !important;
-        font-weight: 500 !important;
-        text-align: center !important;
-        width: 100% !important;
-        display: block !important;
+        color: var(--text-muted) !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
     .glass-pagination-label strong {
-        color: #1e293b !important;
+        color: var(--text-dark) !important;
+        font-weight: 800;
     }
 </style>
 
 @code {
-    /// <summary>
-    /// Current active page (1-indexed)
-    /// </summary>
+    // Logic code giữ nguyên 100%
     [Parameter] public int CurrentPage { get; set; } = 1;
-
-    /// <summary>
-    /// Total number of pages
-    /// </summary>
     [Parameter] public int TotalPages { get; set; }
-
-    /// <summary>
-    /// Total number of items (optional, used for informational display)
-    /// </summary>
     [Parameter] public int TotalCount { get; set; }
-
-    /// <summary>
-    /// Loading state flag to disable interactions
-    /// </summary>
     [Parameter] public bool IsLoading { get; set; }
-
-    /// <summary>
-    /// Whether to display the "Page x of y" info text
-    /// </summary>
     [Parameter] public bool ShowInfo { get; set; } = true;
-
-    /// <summary>
-    /// Number of pages to show on each side of the current page
-    /// E.g., CurrentPage=5, Spread=2 -> shows [3,4,5,6,7]
-    /// </summary>
     [Parameter] public int Spread { get; set; } = 2;
-
-    /// <summary>
-    /// CSS class for the container div (Default: d-flex justify-content-center mt-4)
-    /// </summary>
     [Parameter] public string ContainerClass { get; set; } = "d-flex justify-content-center mt-4";
-
-    /// <summary>
-    /// Additional CSS classes for the ul.pagination element
-    /// </summary>
     [Parameter] public string PaginationClass { get; set; } = "";
-
-    /// <summary>
-    /// Event callback triggered when a user navigates to a different page
-    /// </summary>
     [Parameter] public EventCallback<int> OnPageChange { get; set; }
 
-    /// <summary>
-    /// Calculates the range of page numbers to display based on the spread parameter.
-    /// </summary>
     private IEnumerable<int> GetPageNumbers()
     {
         var start = Math.Max(1, CurrentPage - Spread);
@@ -187,22 +146,12 @@
 
     private async Task GoToPage(int page)
     {
-        // Guard clause: Prevent unnecessary or invalid calls
         if (page >= 1 && page <= TotalPages && page != CurrentPage && !IsLoading)
         {
             await OnPageChange.InvokeAsync(page);
         }
     }
 
-    private async Task GoToPrevious()
-    {
-        if (CurrentPage > 1)
-            await GoToPage(CurrentPage - 1);
-    }
-
-    private async Task GoToNext()
-    {
-        if (CurrentPage < TotalPages)
-            await GoToPage(CurrentPage + 1);
-    }
+    private async Task GoToPrevious() { if (CurrentPage > 1) await GoToPage(CurrentPage - 1); }
+    private async Task GoToNext() { if (CurrentPage < TotalPages) await GoToPage(CurrentPage + 1); }
 }

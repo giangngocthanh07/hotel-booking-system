@@ -5,71 +5,71 @@
     [Parameter] public RequestStatsVM Stats { get; set; } = new();
 }
 
-<div class="stats-overview">
-    @* Row 1: Status Cards *@
+<div class="stats-overview force-gpu">
+    @* --- Row 1: Primary Status Indicators --- *@
     <div class="row g-4 mb-4">
         <div class="col-md-3">
-            <div class="stat-card glass-card">
+            <div class="stat-card-glass shadow-sm">
                 <div class="stat-label">Pending</div>
                 <div class="stat-value text-blue">@Stats.UpgradeRequest.Pending</div>
                 <div class="stat-indicator bg-blue"></div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="stat-card glass-card">
+            <div class="stat-card-glass shadow-sm">
                 <div class="stat-label">Approved</div>
                 <div class="stat-value text-green">@Stats.UpgradeRequest.Approved</div>
                 <div class="stat-indicator bg-green"></div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="stat-card glass-card">
+            <div class="stat-card-glass shadow-sm">
                 <div class="stat-label">Rejected</div>
                 <div class="stat-value text-red">@Stats.UpgradeRequest.Rejected</div>
                 <div class="stat-indicator bg-red"></div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="stat-card glass-card">
+            <div class="stat-card-glass shadow-sm">
                 <div class="stat-label">Today</div>
-                <div class="stat-value text-cyan">@Stats.TotalToday</div>
-                <div class="stat-indicator bg-cyan"></div>
+                <div class="stat-value text-info">@Stats.TotalToday</div>
+                <div class="stat-indicator bg-info"></div>
             </div>
         </div>
     </div>
 
-    @* Row 2: Detail Cards *@
+    @* --- Row 2: Historical/Timeline Stats --- *@
     <div class="row g-4 mb-4">
         <div class="col-md-4">
-            <div class="stat-card glass-card d-flex justify-content-between align-items-center">
+            <div class="stat-card-glass detail-type shadow-sm d-flex justify-content-between align-items-center">
                 <div>
                     <div class="stat-small-label">This Week</div>
                     <h3 class="stat-total-val">@Stats.UpgradeRequest.ThisWeek</h3>
                 </div>
-                <div class="stat-icon-box blue">
+                <div class="stat-icon-box blue force-gpu">
                     <i class="fas fa-calendar-week"></i>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="stat-card glass-card d-flex justify-content-between align-items-center">
+            <div class="stat-card-glass detail-type shadow-sm d-flex justify-content-between align-items-center">
                 <div>
                     <div class="stat-small-label">This Month</div>
                     <h3 class="stat-total-val">@Stats.UpgradeRequest.ThisMonth</h3>
                 </div>
-                <div class="stat-icon-box green">
+                <div class="stat-icon-box green force-gpu">
                     <i class="fas fa-calendar-alt"></i>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="stat-card glass-card d-flex justify-content-between align-items-center">
+            <div class="stat-card-glass detail-type shadow-sm d-flex justify-content-between align-items-center">
                 <div>
-                    <div class="stat-small-label">Total</div>
+                    <div class="stat-small-label">Total History</div>
                     <h3 class="stat-total-val">@Stats.UpgradeRequest.Total</h3>
                 </div>
-                <div class="stat-icon-box dark">
-                    <i class="fas fa-list"></i>
+                <div class="stat-icon-box dark force-gpu">
+                    <i class="fas fa-list-check"></i>
                 </div>
             </div>
         </div>
@@ -77,120 +77,128 @@
 </div>
 
 <style>
-    /* Card Style: Glassmorphism nhẹ */
-    .glass-card {
-        background: rgba(255, 255, 255, 0.7) !important;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.8) !important;
-        border-radius: 20px;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04) !important;
-        transition: all 0.3s ease;
+    /* --- INTEGRATED CSS WITH site.css VARIABLES --- */
+
+    .stat-card-glass {
+        background: var(--glass-bg);
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        padding: 1.5rem;
         position: relative;
         overflow: hidden;
-        padding: 1.5rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .glass-card:hover {
+    .stat-card-glass:hover {
         transform: translateY(-5px);
-        background: rgba(255, 255, 255, 0.85) !important;
-        box-shadow: 0 12px 40px rgba(0, 96, 230, 0.08) !important;
+        background: var(--glass-bg-deep);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05) !important;
     }
 
-    /* Text & Values */
+    /* Text Elements */
     .stat-label {
-        font-size: 0.85rem;
-        font-weight: 700;
-        color: #64748b;
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: var(--text-muted);
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 1px;
         margin-bottom: 0.5rem;
     }
 
     .stat-value {
-        font-size: 2.2rem;
-        font-weight: 800;
+        font-size: 2.5rem;
+        font-weight: 900;
+        line-height: 1;
         margin: 0;
     }
 
     .stat-small-label {
-        color: #94a3b8;
-        font-size: 0.9rem;
-        font-weight: 600;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
     }
 
     .stat-total-val {
-        color: #1e293b;
-        font-weight: 700;
-        margin-top: 4px;
+        color: var(--text-dark);
+        font-weight: 800;
+        font-size: 1.75rem;
+        margin: 0;
     }
 
-    /* Colors */
+    /* Semantic Colors using Variables */
     .text-blue {
-        color: #0060e6;
+        color: var(--admin-blue);
     }
 
     .text-green {
-        color: #10b981;
+        color: var(--color-success);
     }
 
     .text-red {
-        color: #ef4444;
+        color: var(--color-danger);
     }
 
-    .text-cyan {
-        color: #06b6d4;
+    .text-info {
+        color: var(--color-info);
     }
 
     .bg-blue {
-        background: #0060e6;
+        background: var(--admin-blue);
     }
 
     .bg-green {
-        background: #10b981;
+        background: var(--color-success);
     }
 
     .bg-red {
-        background: #ef4444;
+        background: var(--color-danger);
     }
 
-    .bg-cyan {
-        background: #06b6d4;
+    .bg-info {
+        background: var(--color-info);
     }
 
-    /* Indicator Line at bottom */
+    /* Bottom Decorative Indicator */
     .stat-indicator {
         position: absolute;
         bottom: 0;
         left: 0;
-        height: 4px;
+        height: 5px;
         width: 100%;
-        opacity: 0.6;
+        opacity: 0.4;
     }
 
-    /* Icons */
+    /* Icon Boxes */
     .stat-icon-box {
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.4rem;
+        font-size: 1.5rem;
     }
 
     .stat-icon-box.blue {
-        background: rgba(0, 96, 230, 0.1);
-        color: #0060e6;
+        background: rgba(58, 123, 213, 0.1);
+        color: var(--admin-blue);
     }
 
     .stat-icon-box.green {
         background: rgba(16, 185, 129, 0.1);
-        color: #10b981;
+        color: var(--color-success);
     }
 
     .stat-icon-box.dark {
         background: rgba(30, 41, 59, 0.1);
-        color: #1e293b;
+        color: var(--text-main);
+    }
+
+    /* Details styling */
+    .stat-card-glass.detail-type {
+        padding: 1.25rem 1.5rem;
     }
 </style>

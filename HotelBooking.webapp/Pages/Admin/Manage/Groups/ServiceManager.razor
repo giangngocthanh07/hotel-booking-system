@@ -18,10 +18,13 @@
 @inject ILogger<ServiceManager> Logger
 @inject ISnackbar _snackbar
 
-@* --- 3. MASTER DETAIL LAYOUT (OPTIMIZED VERSION) --- *@
+@* --- 3. UI RENDERING --- *@
 @if (!ShouldRenderUI())
 {
-    <div class="p-4 text-center">@MessageResponse.Common.LOADING_AUTH</div>
+    <div class="glass-loader-container force-gpu">
+        <div class="spinner-border text-primary me-3"></div>
+        <span class="fw-bold text-primary">@MessageResponse.Common.LOADING_AUTH</span>
+    </div>
 }
 else
 {
@@ -30,438 +33,534 @@ else
                         OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
                         OnDelete="HandleDelete" OnCancel="ResetForm" OnNameBlur="SuggestDefaultValues">
 
-        @* --- A. SIDEBAR CONFIGURATION (RENDER FRAGMENT) --- *@
         <SidebarTopContent>
-            @* Global Navigation Component with dynamic dropdown logic *@
             <GlobalNavMenu CurrentModule="Service" CurrentTypeId="TypeId" />
         </SidebarTopContent>
 
-        @* --- B. FORM CONFIGURATION --- *@
         <FormContent Context="m">
-
-            @* --- 1. LOCAL RENDERING HELPERS --- *@
             @{
-                // Displays validation messages based on the active model state
+                decimal currentPrice = _isUpdate ? _updateModel.Price : _createModel.Price;
+
                 RenderFragment RenderVal(string prop) => __builder =>
                 {
-                    @if (_isUpdate)
+                    if (_isUpdate)
                     {
                         if (prop == "Price")
                         {
-                            <ValidationMessage For="() => _updateModel.Price" class="val-msg" />
+                            <ValidationMessage For="() => _updateModel.Price" class="val-msg-custom" />
                         }
                         else if (prop == "Unit" && StdUp != null)
                         {
-                            <ValidationMessage For="() => StdUp.Unit" class="val-msg" />
+                            <ValidationMessage For="() => StdUp.Unit" class="val-msg-custom" />
                         }
                         else if (prop == "RoundTripPrice")
                         {
-                            <ValidationMessage For="() => ((ServiceAirportUpdateVM)_updateModel).RoundTripPrice" class="val-msg" />
+                            <ValidationMessage For="() => ((ServiceAirportUpdateVM)_updateModel).RoundTripPrice" class="val-msg-custom" />
                         }
                         else if (prop == "AdditionalFee")
                         {
-                            <ValidationMessage For="() => ((ServiceAirportUpdateVM)_updateModel).AdditionalFee" class="val-msg" />
+                            <ValidationMessage For="() => ((ServiceAirportUpdateVM)_updateModel).AdditionalFee" class="val-msg-custom" />
                         }
                     }
                     else
                     {
                         if (prop == "Price")
                         {
-                            <ValidationMessage For="() => _createModel.Price" class="val-msg" />
+                            <ValidationMessage For="() => _createModel.Price" class="val-msg-custom" />
                         }
                         else if (prop == "Unit" && StdCr != null)
                         {
-                            <ValidationMessage For="() => StdCr.Unit" class="val-msg" />
+                            <ValidationMessage For="() => StdCr.Unit" class="val-msg-custom" />
                         }
                         else if (prop == "RoundTripPrice")
                         {
-                            <ValidationMessage For="() => ((ServiceAirportCreateVM)_createModel).RoundTripPrice" class="val-msg" />
+                            <ValidationMessage For="() => ((ServiceAirportCreateVM)_createModel).RoundTripPrice" class="val-msg-custom" />
                         }
                         else if (prop == "AdditionalFee")
                         {
-                            <ValidationMessage For="() => ((ServiceAirportCreateVM)_createModel).AdditionalFee" class="val-msg" />
+                            <ValidationMessage For="() => ((ServiceAirportCreateVM)_createModel).AdditionalFee" class="val-msg-custom" />
                         }
                     }
                 };
-
-                decimal currentPrice = _isUpdate ? _updateModel.Price : _createModel.Price;
             }
-
-            @* --- CASE 1: STANDARD SERVICE --- *@
-            @if (TypeId == 1)
-            {
-                @* --- 1. UNIT OF MEASUREMENT --- *@
-                <div class="mb-3">
-                    <label class="small text-muted fw-bold text-uppercase">Unit of Measurement</label>
-                    @if (_isUpdate && StdUp != null)
-                    {
-                        <input type="text" class="form-control shadow-sm" value="@StdUp.Unit"
-                               @oninput="@(e => HandleUnitInput(e.Value?.ToString()))" placeholder="Trip, Person, Kg..." />
-                    }
-                    else if (!_isUpdate && StdCr != null)
-                    {
-                        <input type="text" class="form-control shadow-sm" value="@StdCr.Unit"
-                               @oninput="@(e => HandleUnitInput(e.Value?.ToString()))" placeholder="Trip, Person, Kg..." />
-                    }
-                    @RenderVal("Unit")
-                </div>
-
-                @* --- 2. SUGGESTED PRICE --- *@
-                <div class="mb-3">
-                    <label class="small text-muted fw-bold text-uppercase">Suggested Price</label>
-                    <div class="input-group shadow-sm">
-                        <span class="input-group-text bg-white text-success">
-                            <i class="fa-solid fa-money-bill-wave"></i>
-                        </span>
-                        <input type="text" class="form-control text-end fw-bold text-success" inputmode="numeric"
-                               value="@(currentPrice.ToString("N0"))"
-                               @oninput="@(e => HandlePriceInput(e.Value?.ToString(), "Price"))" placeholder="Enter amount..." />
-                        <span class="input-group-text bg-light fw-bold">VND</span>
-                    </div>
-                    @RenderVal("Price")
-                </div>
-            }
-
-            @* --- CASE 2: AIRPORT TRANSFER (DYNAMIC FLOW) --- *@
-            else if (TypeId == 2)
-            {
-                @* Vehicle Specs *@
-                <div class="row g-2 mb-4 bg-light p-2 rounded border mx-0 align-items-stretch">
-                    <div class="col-6 text-center border-end d-flex flex-column">
-                        <label class="extra-small text-muted fw-bold">MAX PASSENGERS</label>
-                        <div class="d-flex align-items-center justify-content-center w-100 mt-auto">
-                            <i class="fa-solid fa-users text-info flex-shrink-0"></i>
-                            @if (_isUpdate && AirUp != null)
-                            {
-                                <input type="number" @bind="AirUp.MaxPassengers"
-                                       class="form-control form-control-sm border-0 bg-transparent fw-bold p-0 text-center flex-grow-0"
-                                       style="width: 50px;" />
-                            }
-                            else if (AirCr != null)
-                            {
-                                <input type="number" @bind="AirCr.MaxPassengers"
-                                       class="form-control form-control-sm border-0 bg-transparent fw-bold p-0 text-center flex-grow-0"
-                                       style="width: 50px;" />
-                            }
-                        </div>
-                    </div>
-                    <div class="col-6 text-center d-flex flex-column">
-                        <label class="extra-small text-muted fw-bold">MAX LUGGAGE BAGS</label>
-                        <div class="d-flex align-items-center justify-content-center w-100 mt-auto">
-                            <i class="fa-solid fa-suitcase text-info flex-shrink-0"></i>
-                            @if (_isUpdate && AirUp != null)
-                            {
-                                <input type="number" @bind="AirUp.MaxLuggage"
-                                       class="form-control form-control-sm border-0 bg-transparent fw-bold p-0 text-center flex-grow-0"
-                                       style="width: 50px;" />
-                            }
-                            else if (AirCr != null)
-                            {
-                                <input type="number" @bind="AirCr.MaxLuggage"
-                                       class="form-control form-control-sm border-0 bg-transparent fw-bold p-0 text-center flex-grow-0"
-                                       style="width: 50px;" />
-                            }
-                        </div>
-                    </div>
-                </div>
-
-                @* One-Way Service *@
-                bool is1W = (_isUpdate && AirUp?.IsOneWayPaid == true) || (!_isUpdate && AirCr?.IsOneWayPaid == true);
-                <div class="mb-3">
-                    <label class="form-label fw-bold small d-block mb-2">1. Is the one-way service chargeable?</label>
-                    <div
-                        class="form-check form-switch custom-switch p-2 rounded border bg-light d-flex align-items-center justify-content-between mb-2 shadow-sm">
-                        <label class="small fw-bold text-muted mb-0 ms-1 uppercase">
-                            <i class="fa-solid fa-hand-holding-dollar me-2 @(is1W ? "text-success" : "text-secondary")"></i>
-                            @(is1W ? "CHARGEABLE SERVICE" : "COMPLIMENTARY")
-                        </label>
-                        <input class="form-check-input" type="checkbox" role="switch" checked="@is1W"
-                               @onchange="@(e => HandleOneWayToggle((bool)e.Value!))"
-                               style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
-                        </div>
-
-                        @if (is1W)
-                        {
-                            <div class="mt-2 ps-3 border-start border-primary border-3 bg-light p-2 rounded shadow-sm">
-                                <div class="col-12 mt-1">
-                                    <label class="extra-small fw-bold text-muted uppercase mb-1">ONE-WAY PRICE</label>
-                                    <div class="input-group shadow-sm">
-                                        <span class="input-group-text bg-white text-success">
-                                            <i class="fa-solid fa-money-bill-wave"></i>
-                                        </span>
-                                        <input type="text" class="form-control text-end fw-bold text-primary" inputmode="numeric"
-                                               value="@(currentPrice.ToString("N0"))"
-                                               @oninput="@(e => HandlePriceInput(e.Value?.ToString(), "Price"))" />
-                                        <span class="input-group-text bg-light fw-bold">VND</span>
-                                    </div>
-                                    @RenderVal("Price")
-                                </div>
-                            </div>
-                            }
-                        </div>
-
-                        @* Round Trip *@
-                        bool hasRT = _isUpdate ? AirUp?.HasRoundTrip == true : AirCr?.HasRoundTrip == true;
-                        bool rtPaid = _isUpdate ? AirUp?.IsRoundTripPaid == true : AirCr?.IsRoundTripPaid == true;
-                        decimal rtPriceValue = _isUpdate ? (AirUp?.RoundTripPrice ?? 0) : (AirCr?.RoundTripPrice ?? 0);
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold small d-block mb-2">2. Is round-trip service available?</label>
-                            <div
-                                class="form-check form-switch custom-switch p-2 rounded border bg-light d-flex align-items-center justify-content-between mb-2 shadow-sm">
-                                <label class="small fw-bold text-muted mb-0 uppercase">
-                                    <i class="fa-solid fa-arrows-left-right me-2 @(hasRT ? "text-warning" : "text-secondary")"></i>
-                                    @(hasRT ? "ROUND-TRIP SUPPORTED" : "ONE-WAY ONLY")
-                                </label>
-                                <input class="form-check-input" type="checkbox" role="switch" checked="@hasRT"
-                                       @onchange="@(e => HandleRoundTripToggle((bool)e.Value!))"
-                                       style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
-                                </div>
-
-                                @if (hasRT)
-                                {
-                                    <div
-                                        class="mt-2 ps-3 border-start border-warning border-3 bg-light p-2 rounded shadow-sm animate__animated animate__fadeIn">
-                                        <label class="extra-small fw-bold text-muted mb-1 d-block">IS THE ROUND-TRIP CHARGEABLE?</label>
-                                        <div class="d-flex gap-3 mb-2 px-1">
-                                            <div class="form-check custom-radio">
-                                                <input type="radio" class="form-check-input" name="rt_option_@TypeId" checked="@(!rtPaid)"
-                                                       @onclick="() => SetRoundTripPaid(false)" />
-                                                <label class="small fw-bold text-success cursor-pointer">Free</label>
-                                            </div>
-                                            <div class="form-check custom-radio">
-                                                <input type="radio" class="form-check-input" name="rt_option_@TypeId" checked="@rtPaid"
-                                                       @onclick="() => SetRoundTripPaid(true)" />
-                                                <label class="small fw-bold text-danger cursor-pointer">Chargeable</label>
-                                            </div>
-                                        </div>
-
-                                        @if (rtPaid)
-                                        {
-                                            <div class="col-12 mt-1 animate__animated animate__fadeInDown animate__faster">
-                                                <label class="extra-small fw-bold text-muted uppercase mb-1">ROUND-TRIP PRICE</label>
-                                                <div class="input-group shadow-sm">
-                                                    <span class="input-group-text bg-white text-warning">
-                                                        <i class="fa-solid fa-money-bill-transfer"></i>
-                                                    </span>
-                                                    <input type="text" class="form-control text-end fw-bold text-warning" inputmode="numeric"
-                                                           value="@(rtPriceValue.ToString("N0"))"
-                                                           @oninput="@(e => HandlePriceInput(e.Value?.ToString(), "RoundTrip"))" />
-                                                    <span class="input-group-text bg-light fw-bold">VND</span>
-                                                </div>
-                                                @RenderVal("RoundTripPrice")
-                                            </div>
-                                            }
-                                        </div>
-                                    }
-                                </div>
-
-                                @* Night Surcharge *@
-                                bool hasNight = _isUpdate ? AirUp?.HasNightFee == true : AirCr?.HasNightFee == true;
-                                decimal nightFeeValue = _isUpdate ? (AirUp?.AdditionalFee ?? 0) : (AirCr?.AdditionalFee ?? 0);
-                                var startTime = AirUp?.AdditionalFeeStartTime ?? AirCr?.AdditionalFeeStartTime;
-                                var endTime = AirUp?.AdditionalFeeEndTime ?? AirCr?.AdditionalFeeEndTime;
-
-                                double totalHours = 0;
-                                if (startTime.HasValue && endTime.HasValue)
-                                {
-                                    var diff = endTime.Value - startTime.Value;
-                                    totalHours = diff.TotalHours < 0 ? diff.TotalHours + 24 : diff.TotalHours;
-                                }
-                                bool isOvernight = startTime.HasValue && endTime.HasValue && startTime > endTime;
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold small d-block mb-2">3. Apply night service surcharge?</label>
-                                    <div
-                                        class="form-check form-switch custom-switch p-2 rounded border bg-light d-flex align-items-center justify-content-between mb-2 shadow-sm">
-                                        <label class="small fw-bold text-muted mb-0 ms-1 uppercase">
-                                            <i class="fa-solid fa-moon me-2 @(hasNight ? "text-danger" : "text-secondary")"></i>
-                                            @(hasNight ? "SURCHARGE APPLIED" : "NO NIGHT FEE")
-                                        </label>
-                                        <input class="form-check-input" type="checkbox" role="switch" checked="@hasNight"
-                                               @onchange="@(e => HandleNightFeeToggle((bool)e.Value!))"
-                                               style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
-                                        </div>
-
-                                        @if (hasNight)
-                                        {
-                                            <div class="mt-2 ps-3 border-start border-danger border-3 bg-light p-2 rounded shadow-sm">
-                                                <div class="row g-2">
-                                                    <div class="col-6">
-                                                        <label class="extra-small fw-bold text-muted mb-1">FROM</label>
-                                                        @* Bug #4 Fix: use _isUpdate && AirUp to prevent binding to wrong model *@
-                                                        @if (_isUpdate && AirUp != null)
-                                                        {
-                                                            <input type="time" @bind="AirUp!.AdditionalFeeStartTime" class="form-control form-control-sm" />
-                                                        }
-                                                        else if (AirCr != null)
-                                                        {
-                                                            <input type="time" @bind="AirCr!.AdditionalFeeStartTime" class="form-control form-control-sm" />
-                                                        }
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <label class="extra-small fw-bold text-muted mb-1">TO</label>
-                                                        @* Bug #4 Fix: use _isUpdate && AirUp to prevent binding to wrong model *@
-                                                        @if (_isUpdate && AirUp != null)
-                                                        {
-                                                            <input type="time" @bind="AirUp!.AdditionalFeeEndTime" class="form-control form-control-sm" />
-                                                        }
-                                                        else if (AirCr != null)
-                                                        {
-                                                            <input type="time" @bind="AirCr!.AdditionalFeeEndTime" class="form-control form-control-sm" />
-                                                        }
-                                                    </div>
-
-                                                    <div class="col-12 mt-2">
-                                                        @if (isOvernight)
-                                                        {
-                                                            <div class="alert alert-warning py-1 px-2 mb-1 border-0 shadow-none d-flex align-items-center"
-                                                                 style="font-size: 0.65rem;">
-                                                                <i class="fa-solid fa-moon me-2"></i>
-                                                                <span><strong>Overnight</strong> mode active (ends next morning).</span>
-                                                            </div>
-                                                        }
-                                                        @if (totalHours > 12)
-                                                        {
-                                                            <div class="alert alert-danger py-1 px-2 mb-2 border-0 shadow-none d-flex align-items-center"
-                                                                 style="font-size: 0.65rem;">
-                                                                <i class="fa-solid fa-circle-exclamation me-2"></i>
-                                                                <span>Error: Duration too long (<strong>@Math.Round(totalHours, 1)h</strong>). Max
-                                                                    12h.</span>
-                                                                </div>
-                                                            }
-                                    else if (totalHours > 0)
-                                                            {
-                                                                <div class="text-muted ps-1 mb-2" style="font-size: 0.65rem;">
-                                                                    <i class="fa-solid fa-hourglass-half me-1"></i> Total: <strong>@Math.Round(totalHours, 1)
-                                                                    hours</strong> surcharge duration.
-                                                                </div>
-                                                            }
-                                                        </div>
-
-                                                        <div class="col-12 mt-1 animate__animated animate__fadeInDown animate__faster">
-                                                            <label class="extra-small fw-bold text-muted uppercase mb-1">SURCHARGE FEE</label>
-                                                            <div class="input-group shadow-sm">
-                                                                <span class="input-group-text bg-white text-success">
-                                                                    <i class="fa-solid fa-money-bill-wave"></i>
-                                                                </span>
-                                                                <input type="text" class="form-control text-end fw-bold text-danger" inputmode="numeric"
-                                                                       value="@(nightFeeValue.ToString("N0"))"
-                                                                       @oninput="@(e => HandlePriceInput(e.Value?.ToString(), "NightFee"))" />
-                                                                <span class="input-group-text bg-light fw-bold">VND</span>
-                                                            </div>
-                                                            @RenderVal("AdditionalFee")
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            }
-                                        </div>
-            }
-
-        </FormContent>
-
-        @* --- C. TABLE CONFIGURATION --- *@
-        <TableHeader>
-            <th class="text-center" style="width: 50px;">Id</th>
-            <th class="text-center" style="width: 60px;">Icon</th>
-            <th class="text-center" style="width: 200px;">Service Template</th>
-            <th class="text-center">Description / Notes</th>
 
             @if (TypeId == 1 || TypeId == null)
             {
-                <th class="text-center" style="width: 100px;">Unit</th>
-                <th class="text-center" style="width: 150px;">Suggested Price</th>
-                <th style="width: 50px;"></th>
-            }
-            else if (TypeId == 2)
-            {
-                <th class="text-center" style="width: 150px;">Price (1W/2W)</th>
-                <th class="text-center" style="width: 120px;">Capacity</th>
-                <th class="text-center" style="min-width: 150px;">Night Fee</th>
-            }
-        </TableHeader>
-
-        <RowTemplate Context="row">
-            <td class="text-center text-muted small">@row.Id</td>
-            <td class="text-center">
-                <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center shadow-sm mx-auto"
-                     style="width: 32px; height: 32px;">
-                    <i class="@GetServiceIcon(row.Name) text-primary"></i>
-                </div>
-            </td>
-            <td class="text-center align-middle text-dark fw-bold">@row.Name</td>
-            <td class="text-center align-middle">
-                <div class="text-muted small text-truncate mx-auto" style="max-width: 400px;" title="@row.Description">
-                    @(string.IsNullOrWhiteSpace(row.Description) ? "---" : row.Description)
-                </div>
-            </td>
-
-            @if (row is ServiceStandardVM standard)
-            {
-                <td class="text-center align-middle">
-                    <span class="badge bg-light text-dark border px-2 shadow-sm">@standard.Unit</span>
-                </td>
-                <td class="text-center align-middle fw-bold text-success">
-                    @standard.Price.ToString("N0")đ
-                </td>
-                <td></td>
-            }
-            else if (row is ServiceAirportTransferVM at)
-            {
-                <td class="text-center align-middle">
-                    <div class="d-flex flex-column align-items-center justify-content-center">
-                        <div class="small w-100 mb-1 d-flex justify-content-center gap-1" style="min-width: 120px;">
-                            <span class="text-muted" style="width: 25px; text-align: left;">1W:</span>
-                            <span class="fw-bold @(at.IsOneWayPaid ? "text-primary" : "text-success")"
-                                  style="min-width: 70px; text-align: right;">
-                                @(at.IsOneWayPaid ? at.Price.ToString("N0") + "đ" : "Free")
-                            </span>
+                <div class="glass-field-group mb-4 animate__animated animate__fadeIn">
+                    <label class="glass-label-bold">Pricing Configuration</label>
+                    <div class="mb-3">
+                        <label class="extra-small-label">Unit of Measurement</label>
+                        <input type="text" class="form-control glass-input-simple"
+                               value="@(_isUpdate? StdUp?.Unit : StdCr?.Unit)"
+                               @oninput="@(e => HandleUnitInput(e.Value?.ToString()))" placeholder="e.g. Trip, Person, Kg" />
+                        @RenderVal("Unit")
+                    </div>
+                    <div class="mb-2">
+                        <label class="extra-small-label">Suggested Base Price</label>
+                        <div class="input-group glass-input-group-manage shadow-sm">
+                            <span class="input-group-text border-0 bg-transparent text-success"><i
+                                class="fa-solid fa-tag"></i></span>
+                                <input type="text" class="form-control glass-input-inner fw-bold text-success text-end"
+                                       value="@(currentPrice.ToString("N0"))"
+                                       @oninput="@(e => HandlePriceInput(e.Value?.ToString(), "Price"))" />
+                                <span class="input-group-text border-0 bg-light-glass fw-bold">VND</span>
+                            </div>
+                            @RenderVal("Price")
                         </div>
-                        <div class="small w-100 d-flex justify-content-center gap-1" style="min-width: 120px;">
-                            <span class="text-muted" style="width: 25px; text-align: left;">2W:</span>
-                            @if (at.HasRoundTrip)
+                    </div>
+                }
+        else if (TypeId == 2)
+                {
+                    <div class="airport-config-wrapper animate__animated animate__fadeIn">
+                        <div class="specs-glass-pill mb-4 shadow-sm">
+                            <div class="spec-item">
+                                <i class="fa-solid fa-users text-primary"></i>
+                                <div class="spec-control">
+                                    <label>Max Pax</label>
+                                    <input type="number" value="@(_isUpdate? AirUp!.MaxPassengers : AirCr!.MaxPassengers)"
+                                           @onchange="@(e => { int.TryParse(e.Value?.ToString(), out var v); if (_isUpdate) AirUp!.MaxPassengers = v; else AirCr!.MaxPassengers = v; })" />
+                                </div>
+                            </div>
+                            <div class="spec-divider"></div>
+                            <div class="spec-item">
+                                <i class="fa-solid fa-suitcase-rolling text-primary"></i>
+                                <div class="spec-control">
+                                    <label>Luggage</label>
+                                    <input type="number" value="@(_isUpdate? AirUp!.MaxLuggage : AirCr!.MaxLuggage)"
+                                           @onchange="@(e => { int.TryParse(e.Value?.ToString(), out var v); if (_isUpdate) AirUp!.MaxLuggage = v; else AirCr!.MaxLuggage = v; })" />
+                                </div>
+                            </div>
+                        </div>
+
+                        @{
+                            bool is1W = (_isUpdate && AirUp?.IsOneWayPaid == true) || (!_isUpdate && AirCr?.IsOneWayPaid == true);
+                        }
+                        <div class="glass-section-card mb-3 shadow-sm">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <label class="glass-label-bold m-0"><i class="fa-solid fa-route me-2"></i>One-Way Service</label>
+                                <div class="form-check form-switch custom-switch">
+                                    <input class="form-check-input" type="checkbox" checked="@is1W"
+                                           @onchange="@(e => HandleOneWayToggle((bool)e.Value!))" />
+                                </div>
+                            </div>
+                            @if (is1W)
                             {
-                                <span class="fw-bold @(at.IsRoundTripPaid ? "text-warning" : "text-success")"
-                                      style="min-width: 70px; text-align: right;">
-                                    @(at.IsRoundTripPaid? at.RoundTripPrice?.ToString("N0") + "đ" : "Free")
-                                </span>
+                                <div class="input-group glass-input-group-manage sm">
+                                    <input type="text" class="form-control glass-input-inner text-end fw-bold text-primary"
+                                           value="@(currentPrice.ToString("N0"))"
+                                           @oninput="@(e => HandlePriceInput(e.Value?.ToString(), "Price"))" />
+                                    <span class="input-group-text border-0 bg-transparent fw-bold small">VND</span>
+                                </div>
+                                @RenderVal("Price")
                             }
                             else
                             {
-                                <span class="text-muted opacity-50" style="min-width: 70px; text-align: right;">---</span>
+
+                                <div class="badge-complimentary">Complimentary</div>
                             }
                         </div>
-                    </div>
-                </td>
-                <td class="text-center align-middle">
-                    <div class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill px-3 py-1 shadow-sm">
-                        <i class="fa-solid fa-users me-1"></i> @at.MaxPassengers
-                        <span class="mx-1 text-muted opacity-50">|</span>
-                        <i class="fa-solid fa-suitcase me-1"></i> @at.MaxLuggage
-                    </div>
-                </td>
-                <td class="text-center align-middle">
-                    @if (at.HasNightFee || (at.AdditionalFee.HasValue && at.AdditionalFee > 0))
-                    {
-                        <div class="p-1 rounded bg-danger bg-opacity-10 border border-danger border-opacity-25 shadow-sm">
-                            <div class="text-danger fw-bold small mb-0">
-                                <i class="fa-solid fa-moon me-1"></i>+@(at.AdditionalFee?.ToString("N0") ?? "0")đ
+
+                        @{
+                            bool hasRT = _isUpdate ? AirUp?.HasRoundTrip == true : AirCr?.HasRoundTrip == true;
+                            bool rtPaid = _isUpdate ? AirUp?.IsRoundTripPaid == true : AirCr?.IsRoundTripPaid == true;
+                            decimal rtPriceValue = _isUpdate ? (AirUp?.RoundTripPrice ?? 0) : (AirCr?.RoundTripPrice ?? 0);
+                        }
+                        <div class="glass-section-card mb-3 shadow-sm">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <label class="glass-label-bold m-0"><i
+                                    class="fa-solid fa-arrows-left-right me-2"></i>Round-Trip</label>
+                                    <div class="form-check form-switch custom-switch">
+                                        <input class="form-check-input" type="checkbox" checked="@hasRT"
+                                               @onchange="@(e => HandleRoundTripToggle((bool)e.Value!))" />
+                                    </div>
+                                </div>
+                                @if (hasRT)
+                                {
+                                    <div class="rt-options d-flex gap-2 mb-2">
+                                        <button type="button" class="btn-option @(!rtPaid ? "active" : "")"
+                                                @onclick="() => SetRoundTripPaid(false)">Free</button>
+                                        <button type="button" class="btn-option @(rtPaid ? "active" : "")"
+                                                @onclick="() => SetRoundTripPaid(true)">Paid</button>
+                                    </div>
+                                    @if (rtPaid)
+                                    {
+                                        <div class="input-group glass-input-group-manage sm">
+                                            <input type="text" class="form-control glass-input-inner text-end fw-bold text-warning"
+                                                   value="@(rtPriceValue.ToString("N0"))"
+                                                   @oninput="@(e => HandlePriceInput(e.Value?.ToString(), "RoundTrip"))" />
+                                            <span class="input-group-text border-0 bg-transparent fw-bold small">VND</span>
+                                        </div>
+                                        @RenderVal("RoundTripPrice")
+                                    }
+                                }
                             </div>
-                            <div class="extra-small text-muted fw-bold" style="font-size: 0.65rem;">
-                                @(at.AdditionalFeeStartTime?.ToString("HH:mm") ?? "--:--") -
-                                @(at.AdditionalFeeEndTime?.ToString("HH:mm") ?? "--:--")
+
+                            @{
+                                bool hasNight = _isUpdate ? AirUp?.HasNightFee == true : AirCr?.HasNightFee == true;
+                                decimal nightFeeValue = _isUpdate ? (AirUp?.AdditionalFee ?? 0) : (AirCr?.AdditionalFee ?? 0);
+                            }
+                            <div class="glass-section-card border-night shadow-sm">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <label class="glass-label-bold m-0 text-danger"><i class="fa-solid fa-moon me-2"></i>Night
+                                        Surcharge</label>
+                                        <div class="form-check form-switch custom-switch">
+                                            <input class="form-check-input shadow-none" type="checkbox" checked="@hasNight"
+                                                   @onchange="@(e => HandleNightFeeToggle((bool)e.Value!))" />
+                                        </div>
+                                    </div>
+                                    @if (hasNight)
+                                    {
+                                        <div class="row g-2 mb-2">
+                                            <div class="col-6">
+                                                <input type="time" class="form-control glass-input-sm"
+                                                       value="@((_isUpdate ? AirUp!.AdditionalFeeStartTime : AirCr!.AdditionalFeeStartTime)?.ToString("HH:mm"))"
+                                                       @onchange="@(e => { if (TimeOnly.TryParse(e.Value?.ToString(), out var t)) { if (_isUpdate) AirUp!.AdditionalFeeStartTime = t; else AirCr!.AdditionalFeeStartTime = t; } })" />
+                                            </div>
+                                            <div class="col-6">
+                                                <input type="time" class="form-control glass-input-sm"
+                                                       value="@((_isUpdate ? AirUp!.AdditionalFeeEndTime : AirCr!.AdditionalFeeEndTime)?.ToString("HH:mm"))"
+                                                       @onchange="@(e => { if (TimeOnly.TryParse(e.Value?.ToString(), out var t)) { if (_isUpdate) AirUp!.AdditionalFeeEndTime = t; else AirCr!.AdditionalFeeEndTime = t; } })" />
+                                            </div>
+                                        </div>
+                                        <div class="input-group glass-input-group-manage sm border-danger-glass">
+                                            <input type="text" class="form-control glass-input-inner text-end fw-bold text-danger"
+                                                   value="@(nightFeeValue.ToString("N0"))"
+                                                   @oninput="@(e => HandlePriceInput(e.Value?.ToString(), "NightFee"))" />
+                                            <span class="input-group-text border-0 bg-transparent fw-bold small text-danger">VND</span>
+                                        </div>
+                                        @RenderVal("AdditionalFee")
+                                    }
+                                </div>
                             </div>
-                        </div>
+                        }
+                    </FormContent>
+
+                    <TableHeader>
+                        <th class="text-center" style="width: 60px;">ID</th>
+                        <th class="text-center" style="width: 70px;">Icon</th>
+                        <th class="text-start px-3" style="width: 220px;">Service Template</th>
+                        <th class="text-start px-3">Description</th>
+                        @if (TypeId == 1 || TypeId == null)
+                        {
+                            <th class="text-center" style="width: 120px;">Unit</th>
+                            <th class="text-end pe-4" style="width: 150px;">Price</th>
+                        }
+                        else if (TypeId == 2)
+                        {
+                            <th class="text-center" style="width: 160px;">Price (1W/2W)</th>
+                            <th class="text-center" style="width: 130px;">Capacity</th>
+                            <th class="text-center" style="width: 160px;">Night Surcharge</th>
+                        }
+                    </TableHeader>
+
+                    <RowTemplate Context="row">
+                        <td class="text-center fw-bold text-muted small">#@row.Id</td>
+                        <td class="text-center">
+                            <div class="service-icon-box shadow-sm mx-auto force-gpu"><i class="@GetServiceIcon(row.Name)"></i></div>
+                        </td>
+                        <td class="text-start align-middle px-3">
+                            <div class="fw-bold text-dark fs-6">@row.Name</div>
+                            @if (row is ServiceAirportTransferVM)
+                            {
+                                <small class="text-primary fw-bold"
+                                       style="font-size: 0.65rem;">Airport Transfer</small>
+                            }
+                        </td>
+                        <td class="text-start align-middle px-3">
+                            <div class="text-muted small text-truncate" style="max-width: 280px;" title="@row.Description">
+                                @(row.Description ?? "---")</div>
+                            </td>
+
+                            @if (row is ServiceStandardVM standard)
+                            {
+                                <td class="text-center"><span class="badge-unit">@standard.Unit</span></td>
+                                <td class="text-end fw-bold text-success pe-4 fs-6">@standard.Price.ToString("N0")<small>đ</small></td>
+                            }
+                            else if (row is ServiceAirportTransferVM at)
+                            {
+                                <td class="text-center align-middle px-3">
+                                    <div class="price-stack-aligned mx-auto">
+                                        <div class="price-row">
+                                            <span class="p-label">1W:</span>
+                                            <span class="p-value @(at.IsOneWayPaid ? "text-primary" : "text-success")">
+                                                @(at.IsOneWayPaid? at.Price.ToString("N0") + "đ" : "Free")
+                                            </span>
+                                        </div>
+                                        <div class="price-row">
+                                            <span class="p-label">2W:</span>
+                                            <span class="p-value @(at.IsRoundTripPaid ? "text-warning" : "text-success")">
+                                                @(at.HasRoundTrip ? (at.IsRoundTripPaid ? at.RoundTripPrice?.ToString("N0") + "đ" : "Free") :
+                                                "N/A")
+                                            </span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <div class="specs-pill-compact shadow-sm force-gpu">
+                                        <i class="fa-solid fa-users me-1"></i>@at.MaxPassengers
+                                        <span class="mx-2 opacity-25">|</span>
+                                        <i class="fa-solid fa-suitcase-rolling me-1"></i>@at.MaxLuggage
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    @if (at.HasNightFee)
+                                    {
+                                        <div class="night-badge-modern mx-auto force-gpu">
+                                            <span class="n-fee">+@at.AdditionalFee?.ToString("N0")đ</span>
+                                            <span
+                                            class="n-time">@at.AdditionalFeeStartTime?.ToString("HH:mm")-@at.AdditionalFeeEndTime?.ToString("HH:mm")</span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+
+                                        <span class="text-muted opacity-25 small italic">None</span>
+                                    }
+                                </td>
+                            }
+                        </RowTemplate>
+                    </MasterDetailLayout>
+                }
+
+                <style>
+                    /* --- CSS REORGANIZED & LINKED TO site.css VARIABLES --- */
+                    .glass-loader-container {
+                        padding: 5rem;
+                        text-align: center;
+                        background: var(--glass-bg);
+                        border-radius: 24px;
                     }
-                    else
-                    {
-                        <span class="text-muted small opacity-50 fst-italic">Not applicable</span>
+
+                    /* Form Labels & Inputs */
+                    .glass-label-bold {
+                        font-size: 0.75rem;
+                        font-weight: 800;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                        display: block;
+                        margin-bottom: 12px;
+                        color: var(--text-dark);
                     }
-                </td>
-            }
-        </RowTemplate>
-    </MasterDetailLayout>
-}
+
+                    .extra-small-label {
+                        font-size: 0.65rem;
+                        font-weight: 800;
+                        color: var(--text-muted);
+                        text-transform: uppercase;
+                        margin-bottom: 4px;
+                        display: block;
+                    }
+
+                    .glass-input-simple {
+                        background: #fff !important;
+                        border: 1.5px solid #cbd5e1 !important;
+                        border-radius: 10px;
+                        padding: 0.6rem;
+                        font-weight: 600;
+                        color: var(--text-dark);
+                    }
+
+                    .glass-input-group-manage {
+                        background: #fff;
+                        border: 1.5px solid #cbd5e1;
+                        border-radius: 12px;
+                        overflow: hidden;
+                    }
+
+                    .glass-input-inner {
+                        border: none !important;
+                        box-shadow: none !important;
+                        background: transparent !important;
+                    }
+
+                    .bg-light-glass {
+                        background: rgba(0, 0, 0, 0.03);
+                        border-left: 1px solid #e2e8f0 !important;
+                    }
+
+                    /* Airport Transfer Form Components */
+                    .specs-glass-pill {
+                        background: #fff;
+                        border: 1.5px solid #e2e8f0;
+                        border-radius: 16px;
+                        display: flex;
+                        align-items: center;
+                        padding: 10px 15px;
+                    }
+
+                    .spec-item {
+                        flex: 1;
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                    }
+
+                    .spec-control label {
+                        display: block;
+                        font-size: 0.6rem;
+                        font-weight: 800;
+                        color: var(--text-muted);
+                        text-transform: uppercase;
+                        margin: 0;
+                    }
+
+                    .spec-control input {
+                        border: none;
+                        width: 45px;
+                        font-weight: 800;
+                        color: var(--text-dark);
+                        outline: none;
+                        background: transparent;
+                    }
+
+                    .spec-divider {
+                        width: 1.5px;
+                        height: 30px;
+                        background: #e2e8f0;
+                        margin: 0 15px;
+                    }
+
+                    .glass-section-card {
+                        background: rgba(255, 255, 255, 0.7);
+                        border: 1px solid var(--glass-border);
+                        border-radius: 16px;
+                        padding: 1.25rem;
+                    }
+
+                    .border-night {
+                        border-color: rgba(244, 63, 94, 0.2);
+                        background: rgba(244, 63, 94, 0.02);
+                    }
+
+                    .badge-complimentary {
+                        font-size: 0.7rem;
+                        font-weight: 800;
+                        color: var(--color-success);
+                        text-transform: uppercase;
+                        background: #dcfce7;
+                        padding: 4px 12px;
+                        border-radius: 20px;
+                        display: inline-block;
+                        border: 1px solid rgba(16, 185, 129, 0.2);
+                    }
+
+                    .btn-option {
+                        flex: 1;
+                        border: 1.5px solid #cbd5e1;
+                        background: #fff;
+                        border-radius: 8px;
+                        padding: 6px;
+                        font-size: 0.75rem;
+                        font-weight: 700;
+                        color: var(--text-muted);
+                        transition: 0.2s;
+                    }
+
+                    .btn-option.active {
+                        border-color: var(--admin-blue);
+                        background: #e0f2fe;
+                        color: var(--admin-blue);
+                    }
+
+                    /* Table Visual Alignment Fixes */
+                    .service-icon-box {
+                        width: 38px;
+                        height: 38px;
+                        background: #fff;
+                        color: var(--admin-blue);
+                        border-radius: 12px;
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 1.2rem;
+                    }
+
+                    .badge-unit {
+                        background: #f8fafc;
+                        color: var(--text-muted);
+                        padding: 4px 10px;
+                        border-radius: 8px;
+                        font-size: 0.7rem;
+                        font-weight: 700;
+                        border: 1px solid #e2e8f0;
+                    }
+
+                    .price-stack-aligned {
+                        display: inline-flex;
+                        flex-direction: column;
+                        gap: 4px;
+                        min-width: 130px;
+                    }
+
+                    .price-row {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        font-size: 0.8rem;
+                        font-weight: 700;
+                    }
+
+                    .p-label {
+                        color: var(--text-muted);
+                        font-weight: 600;
+                        font-size: 0.65rem;
+                        width: 30px;
+                        text-align: left;
+                    }
+
+                    .p-value {
+                        min-width: 80px;
+                        text-align: right;
+                    }
+
+                    .specs-pill-compact {
+                        background: #f0f9ff;
+                        color: #0369a1;
+                        border: 1px solid #bae6fd;
+                        padding: 6px 12px;
+                        border-radius: 12px;
+                        font-size: 0.8rem;
+                        font-weight: 800;
+                        display: inline-flex;
+                        align-items: center;
+                    }
+
+                    .night-badge-modern {
+                        background: #fff1f2;
+                        border: 1px solid #fecaca;
+                        border-radius: 10px;
+                        padding: 6px 12px;
+                        display: inline-flex;
+                        flex-direction: column;
+                        min-width: 120px;
+                    }
+
+                    .n-fee {
+                        color: var(--color-danger);
+                        font-weight: 800;
+                        font-size: 0.8rem;
+                    }
+
+                    .n-time {
+                        color: #9f1239;
+                        font-size: 0.65rem;
+                        font-weight: 600;
+                        opacity: 0.7;
+                    }
+
+                    /* Validation & Global Spacing */
+                    .val-msg-custom {
+                        font-size: 0.65rem;
+                        font-weight: 700;
+                        margin-top: 4px;
+                        display: block;
+                    }
+
+                    .glass-table td {
+                        padding-top: 1.25rem !important;
+                        padding-bottom: 1.25rem !important;
+                    }
+                </style>
 
 @code {
     [Parameter] public int? TypeId { get; set; }
@@ -489,7 +588,6 @@ else
     {
         if (_isUpdate) ServiceHelper.ApplyDefaultValues(_updateModel, TypeId ?? 1);
         else ServiceHelper.ApplyDefaultValues(_createModel, TypeId ?? 1);
-
         StateHasChanged();
         _layoutRef?.TriggerValidate();
     }
@@ -498,7 +596,6 @@ else
     {
         if (_isUpdate && StdUp != null) StdUp.Unit = val ?? "";
         else if (StdCr != null) StdCr.Unit = val ?? "";
-
         StateHasChanged();
         _layoutRef?.TriggerValidate();
     }
@@ -510,36 +607,19 @@ else
 
         if (field == "Price")
         {
-            if (_isUpdate)
-            {
-                _updateModel.Price = amount;
-                if (AirUp != null) AirUp.IsOneWayPaid = amount > 0;
-            }
-            else
-            {
-                _createModel.Price = amount;
-                if (AirCr != null) AirCr.IsOneWayPaid = amount > 0;
-            }
+            if (_isUpdate) { _updateModel.Price = amount; if (AirUp != null) AirUp.IsOneWayPaid = amount > 0; }
+            else { _createModel.Price = amount; if (AirCr != null) AirCr.IsOneWayPaid = amount > 0; }
         }
         else if (field == "RoundTrip")
         {
-            if (_isUpdate && AirUp != null)
-            {
-                AirUp.RoundTripPrice = amount;
-                AirUp.IsRoundTripPaid = amount > 0;
-            }
-            else if (AirCr != null)
-            {
-                AirCr.RoundTripPrice = amount;
-                AirCr.IsRoundTripPaid = amount > 0;
-            }
+            if (_isUpdate && AirUp != null) { AirUp.RoundTripPrice = amount; AirUp.IsRoundTripPaid = amount > 0; }
+            else if (AirCr != null) { AirCr.RoundTripPrice = amount; AirCr.IsRoundTripPaid = amount > 0; }
         }
         else if (field == "NightFee")
         {
             if (_isUpdate && AirUp != null) AirUp.AdditionalFee = amount;
             else if (AirCr != null) AirCr.AdditionalFee = amount;
         }
-
         StateHasChanged();
         _layoutRef?.TriggerValidate();
     }
@@ -547,16 +627,8 @@ else
     private void HandleOneWayToggle(bool isEnabled)
     {
         decimal val = isEnabled ? 350000 : 0;
-        if (_isUpdate && AirUp != null)
-        {
-            AirUp.IsOneWayPaid = isEnabled;
-            AirUp.Price = val;
-        }
-        else if (AirCr != null)
-        {
-            AirCr.IsOneWayPaid = isEnabled;
-            AirCr.Price = val;
-        }
+        if (_isUpdate && AirUp != null) { AirUp.IsOneWayPaid = isEnabled; AirUp.Price = val; }
+        else if (AirCr != null) { AirCr.IsOneWayPaid = isEnabled; AirCr.Price = val; }
         StateHasChanged();
         _layoutRef?.TriggerValidate();
     }
@@ -591,11 +663,7 @@ else
                 AirUp.AdditionalFeeStartTime = new TimeOnly(22, 0);
                 AirUp.AdditionalFeeEndTime = new TimeOnly(5, 0);
             }
-            else if (!isEnabled) // Bug #6 Fix: clear times so stale values are not sent to API
-            {
-                AirUp.AdditionalFeeStartTime = null;
-                AirUp.AdditionalFeeEndTime = null;
-            }
+            else if (!isEnabled) { AirUp.AdditionalFeeStartTime = null; AirUp.AdditionalFeeEndTime = null; }
         }
         else if (AirCr != null)
         {
@@ -606,11 +674,7 @@ else
                 AirCr.AdditionalFeeStartTime = new TimeOnly(22, 0);
                 AirCr.AdditionalFeeEndTime = new TimeOnly(5, 0);
             }
-            else if (!isEnabled) // Bug #6 Fix: clear times so stale values are not sent to API
-            {
-                AirCr.AdditionalFeeStartTime = null;
-                AirCr.AdditionalFeeEndTime = null;
-            }
+            else if (!isEnabled) { AirCr.AdditionalFeeStartTime = null; AirCr.AdditionalFeeEndTime = null; }
         }
         StateHasChanged();
         _layoutRef?.TriggerValidate();
@@ -619,25 +683,13 @@ else
     private void SetRoundTripPaid(bool isPaid)
     {
         decimal val = isPaid ? 650000 : 0;
-        if (_isUpdate && AirUp != null)
-        {
-            AirUp.IsRoundTripPaid = isPaid;
-            AirUp.RoundTripPrice = val;
-        }
-        else if (AirCr != null)
-        {
-            AirCr.IsRoundTripPaid = isPaid;
-            AirCr.RoundTripPrice = val;
-        }
+        if (_isUpdate && AirUp != null) { AirUp.IsRoundTripPaid = isPaid; AirUp.RoundTripPrice = val; }
+        else if (AirCr != null) { AirCr.IsRoundTripPaid = isPaid; AirCr.RoundTripPrice = val; }
         StateHasChanged();
         _layoutRef?.TriggerValidate();
     }
 
-    private BaseCreateOrUpdateAdminVM GetModel()
-    {
-        if (_isUpdate) return _updateModel ?? new ServiceStandardUpdateVM();
-        return _createModel ?? new ServiceStandardCreateVM();
-    }
+    private BaseCreateOrUpdateAdminVM GetModel() => _isUpdate ? _updateModel : _createModel;
 
     private string GetServiceIcon(string? name) => ServiceIconHelper.GetIcon(name);
 
@@ -646,7 +698,6 @@ else
         if (Disposed) return;
         items = null;
         StateHasChanged();
-
         try
         {
             var res = await Service.GetServicesByType(TypeId, _paging);
@@ -659,19 +710,11 @@ else
             else
             {
                 items = new List<ServiceVM>();
-                if (res.StatusCode != StatusCodeResponse.Success)
-                    SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
+                if (res.StatusCode != StatusCodeResponse.Success) SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
             }
         }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error loading service data");
-            items = new List<ServiceVM>();
-        }
-        finally
-        {
-            if (!Disposed) StateHasChanged();
-        }
+        catch (Exception ex) { Logger.LogError(ex, "Error loading service data"); items = new List<ServiceVM>(); }
+        finally { if (!Disposed) StateHasChanged(); }
     }
 
     protected override void OnInitialized() => ResetForm();
@@ -683,26 +726,17 @@ else
         {
             _previousTypeId = TypeId;
             ResetForm();
-            if (IsJsReady)
-            {
-                _paging.PageIndex = 1;
-                await LoadDataAsync();
-            }
+            if (IsJsReady) { _paging.PageIndex = 1; await LoadDataAsync(); }
         }
     }
 
-    private async Task HandlePageChanged(int newPage)
-    {
-        _paging.PageIndex = newPage;
-        await LoadDataAsync();
-    }
+    private async Task HandlePageChanged(int newPage) { _paging.PageIndex = newPage; await LoadDataAsync(); }
 
     private void ResetForm()
     {
         _isUpdate = false;
         _currentEditingId = 0;
         _createModel = ServiceHelper.CreateNewServiceModel(TypeId ?? 1);
-        // Bug #7 Fix: reset to matching type so AirUp/AirCr computed props stay consistent
         _updateModel = TypeId == 2 ? new ServiceAirportUpdateVM() : (ServiceUpdateVM)new ServiceStandardUpdateVM();
         _layoutRef?.TriggerValidate();
         StateHasChanged();
@@ -725,112 +759,30 @@ else
 
     private async Task SaveData()
     {
-        // --- 1. VALIDATION HELPER ---
-        // This local function is strongly typed and reusable for any model
         bool IsModelValid<T>(T model) where T : class
         {
             var context = new ValidationContext(model);
             var results = new List<ValidationResult>();
-
-            // This triggers your [Range], [Required], etc.
             if (!Validator.TryValidateObject(model, context, results, true))
             {
-                _snackbar.Clear(); // Prevents snackbar stacking
+                _snackbar.Clear();
                 _snackbar.Add(results.First().ErrorMessage ?? MessageResponse.Common.ERROR_IN_SERVER, Severity.Error);
                 return false;
             }
             return true;
         }
 
-        // Run the validation based on current state
         if (_isUpdate) { if (!IsModelValid(_updateModel)) return; }
         else { if (!IsModelValid(_createModel)) return; }
 
-
-        // --- 2. BUSINESS LOGIC (Specific Type Checks) ---
-
-        decimal p = _isUpdate ? _updateModel.Price : _createModel.Price;
-        if (p <= 0 && TypeId == 1)
-        {
-            _snackbar.Add(MessageResponse.AdminManagement.Service.REQUIRED_PRICE, Severity.Warning);
-            return;
-        }
-
-        if (TypeId == 2)
-        {
-            bool hasOneWay, hasRoundTrip, hasNightFee;
-            decimal? oneWayFee, roundTripFee, nightFee;
-            TimeOnly? start, end;
-
-            // Extracting data based on model type
-            if (_isUpdate)
-            {
-                var vm = (ServiceAirportUpdateVM)_updateModel;
-                hasOneWay = vm.IsOneWayPaid; oneWayFee = vm.Price;
-                hasRoundTrip = vm.HasRoundTrip; roundTripFee = vm.RoundTripPrice; // Bug #3 Fix: was vm.IsRoundTripPaid
-                hasNightFee = vm.HasNightFee; nightFee = vm.AdditionalFee;
-                start = vm.AdditionalFeeStartTime; end = vm.AdditionalFeeEndTime;
-            }
-            else
-            {
-                var vm = (ServiceAirportCreateVM)_createModel;
-                hasOneWay = vm.IsOneWayPaid; oneWayFee = vm.Price;
-                hasRoundTrip = vm.HasRoundTrip; roundTripFee = vm.RoundTripPrice; // Bug #3 Fix: was vm.IsRoundTripPaid
-                hasNightFee = vm.HasNightFee; nightFee = vm.AdditionalFee;
-                start = vm.AdditionalFeeStartTime; end = vm.AdditionalFeeEndTime;
-            }
-
-            // Price Validation (Covers Null, 0, and < 10,000)
-            if (hasOneWay && (oneWayFee ?? 0) < 10000)
-            {
-                _snackbar.Add(MessageResponse.AdminManagement.Service.INVALID_ONE_WAY_PRICE, Severity.Error);
-                return;
-            }
-
-            if (hasRoundTrip && (roundTripFee ?? 0) < 10000)
-            {
-                _snackbar.Add(MessageResponse.AdminManagement.Service.INVALID_ROUND_TRIP_PRICE, Severity.Error);
-                return;
-            }
-
-            // Night Fee Validation
-            if (hasNightFee)
-            {
-                if ((nightFee ?? 0) < 10000)
-                {
-                    _snackbar.Add(MessageResponse.AdminManagement.Service.DEFAULT_ADDITIONAL_FEE, Severity.Error);
-                    return;
-                }
-
-                if (start.HasValue && end.HasValue)
-                {
-                    double hours = (end.Value - start.Value).TotalHours;
-                    if (hours < 0) hours += 24;
-
-                    if (hours > 12)
-                    {
-                        _snackbar.Add(MessageResponse.AdminManagement.Service.ADDITIONAL_FEE_TIME_EXCEEDS_LIMIT, Severity.Error);
-                        return;
-                    }
-                    if (start == end)
-                    {
-                        _snackbar.Add(MessageResponse.AdminManagement.Service.INVALID_ADDITIONAL_FEE_START_END_TIME, Severity.Error);
-                        return;
-                    }
-                }
-            }
-        }
-
-        // --- 3. API EXECUTION ---
         ApiResponse<ServiceVM> res;
         if (_isUpdate) res = await Service.UpdateService(_currentEditingId, _updateModel);
         else res = await Service.CreateService(_createModel);
 
         if (res.StatusCode == StatusCodeResponse.Success)
         {
-            SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message!);
-            await LoadDataAsync();
-            ResetForm();
+            SnackbarHelper.Show(_snackbar, res.StatusCode, res.Message!); await
+            LoadDataAsync(); ResetForm();
         }
         else SnackbarHelper.Show(_snackbar, res.StatusCode ?? StatusCodeResponse.Error, res.Message ??
         MessageResponse.Common.ERROR_IN_SERVER);
