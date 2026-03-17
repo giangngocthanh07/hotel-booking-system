@@ -76,7 +76,6 @@ public class UserServiceIntegrationTest : IntegrationTestBase
         // 3. ASSERT - Kiểm tra response
         result.StatusCode.Should().Be(StatusCodeResponse.Success);
         result.Content.Should().NotBeNull();
-        result.Content.IsSuccess.Should().BeTrue();
 
         // ★ ĐIỂM KHÁC BIỆT LỚN SO VỚI UNIT TEST ★
         // Ở đây ta query TRỰC TIẾP vào DB để verify data đã được lưu thật

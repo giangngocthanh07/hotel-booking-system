@@ -237,6 +237,7 @@ public static class MessageResponse
             // Phone validation messages
             public const string EMPTY_PHONE = "Phone number must not be empty!";
             public const string INVALID_PHONE = "Phone number must be exactly 10 digits!";
+            public const string INVALID_PHONE_FORMAT = "Phone number must contain only digits!";
 
             // Password validation messages
             public const string SHORT_PASSWORD = "Password must be at least 8 characters!";
@@ -245,6 +246,7 @@ public static class MessageResponse
             public const string NUMBER_PASSWORD = "Password must contain at least one digit!";
             public const string LOWERCASE_LETTER_PASSWORD = "Password must contain at least one lowercase letter!";
             public const string SPECIAL_CHARACTER_PASSWORD = "Password must contain at least one special character!";
+            public const string PASSWORDS_DO_NOT_MATCH = "Password and confirm password do not match!";
         }
 
         // User Management Messages

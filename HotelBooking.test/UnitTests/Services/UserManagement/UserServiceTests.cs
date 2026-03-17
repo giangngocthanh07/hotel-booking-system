@@ -95,8 +95,7 @@ namespace HotelBooking.Tests.Services.UserManagement
             result.StatusCode.Should().Be(StatusCodeResponse.Success);
             result.Message.Should().Be(MessageResponse.UserManagement.Register.SUCCESS);
             result.Content.Should().NotBeNull();
-            result.Content!.IsSuccess.Should().BeTrue();
-            result.Content.Should().BeEquivalentTo(new RegisterResponseDTO { FullName = input.FullName, Email = input.Email, Username = input.Username, IsSuccess = true });
+            result.Content.Should().BeEquivalentTo(new RegisterResponseDTO { FullName = input.FullName, Email = input.Email, Username = input.Username });
 
             // Verify AddAsync was called exactly once
             Verify_Repo_AddAsync<IUserRepository, User>(_mockUserRepo, 1);
@@ -298,7 +297,6 @@ namespace HotelBooking.Tests.Services.UserManagement
             result.StatusCode.Should().Be(StatusCodeResponse.Success);
             result.Message.Should().Be(MessageResponse.UserManagement.Register.SUCCESS);
             result.Content.Should().NotBeNull();
-            result.Content!.IsSuccess.Should().BeTrue();
 
             Verify_Repo_AddAsync<IUserRepository, User>(_mockUserRepo, 1);
             Verify_Saved(2);

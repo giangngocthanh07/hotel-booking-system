@@ -104,7 +104,7 @@ namespace HotelBooking.application.Services.Domains.UserManagement
                 if (!adminValidation.IsValid)
                 {
                     var response = ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, adminValidation.Errors.First().ErrorMessage);
-                    response.Content = new RegisterResponseDTO { IsSuccess = false };
+                    response.Content = null;
                     return response;
                 }
 
@@ -116,7 +116,7 @@ namespace HotelBooking.application.Services.Domains.UserManagement
                         checkAdmin.UserName == newAdmin.Username
                             ? MessageResponse.UserManagement.Register.USERNAME_EXIST
                             : MessageResponse.UserManagement.Register.EMAIL_EXIST);
-                    response.Content = new RegisterResponseDTO { IsSuccess = false };
+                    response.Content = null;
                     return response;
                 }
 
@@ -150,7 +150,6 @@ namespace HotelBooking.application.Services.Domains.UserManagement
 
                 return ResponseFactory.Success(new RegisterResponseDTO
                 {
-                    IsSuccess = true,
                     FullName = user.FullName,
                     Email = user.Email
                 }, MessageResponse.UserManagement.Register.SUCCESS);
@@ -158,7 +157,7 @@ namespace HotelBooking.application.Services.Domains.UserManagement
             catch (Exception)
             {
                 var response = ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.Error, MessageResponse.UserManagement.Register.FAIL);
-                response.Content = new RegisterResponseDTO { IsSuccess = false };
+                response.Content = null;
                 return response;
             }
         }
@@ -218,8 +217,6 @@ namespace HotelBooking.application.Services.Domains.UserManagement
 
                 return ResponseFactory.Success(new RegisterResponseDTO
                 {
-                    IsSuccess = true,
-
                     FullName = user.FullName,
                     Email = user.Email
                 }, MessageResponse.UserManagement.Register.SUCCESS);
