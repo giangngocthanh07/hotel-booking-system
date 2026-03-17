@@ -16,6 +16,11 @@ public abstract class BaseServiceTest
         // Default setup for Unit of Work (required by ~99% of tests)
         // Simulates SaveChangesAsync returning 1 (successful persistence)
         _mockUnitOfWork.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
+
+        // Simulate transaction methods (if used in service)
+        _mockUnitOfWork.Setup(x => x.BeginTransactionAsync()).Returns(Task.CompletedTask);
+        _mockUnitOfWork.Setup(x => x.CommitTransactionAsync()).Returns(Task.CompletedTask);
+        _mockUnitOfWork.Setup(x => x.RollBackTransactionAsync()).Returns(Task.CompletedTask);
     }
 
     // ==========================================
@@ -49,7 +54,7 @@ public abstract class BaseServiceTest
     // ==========================================
 
     // Verifies the AddAsync method call for any Repository
-    protected void Verify_Repo_AddAsync<TRepo, TEntity>(Mock<TRepo> mockRepo, int times = 1) 
+    protected void Verify_Repo_AddAsync<TRepo, TEntity>(Mock<TRepo> mockRepo, int times = 1)
         where TRepo : class, IRepository<TEntity>
         where TEntity : class
     {
@@ -83,7 +88,7 @@ public abstract class BaseServiceTest
     // ==========================================
     // 5. GENERIC HELPER: VERIFY SaveChangesAsync CALLS
     // ==========================================
-    
+
     // Verifies that database changes were saved
     protected void Verify_Saved(int times = 1)
     {

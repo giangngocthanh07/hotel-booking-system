@@ -5,6 +5,7 @@ using HotelBooking.application.Services.Domains.HotelManagement;
 using HotelBooking.application.Services.Domains.RequestManagement;
 using HotelBooking.application.Services.Domains.UserManagement;
 using HotelBooking.application.Services.Domains.RoomManagement;
+using HotelBooking.application.Services.Domains.UserManagement.Register;
 
 public static class ApplicationServiceExtension
 {
@@ -20,7 +21,7 @@ public static class ApplicationServiceExtension
         services.AddScoped<IUpgradeRequestService, UpgradeRequestService>();
         services.AddScoped<IPhotoService, PhotoService>();
         services.AddScoped<IRoomTypeService, RoomTypeService>();
-        services.AddScoped<IRoomNameSuggestionService, RoomNameSuggestionService>();
+
 
         // Admin Management
         services.AddScoped<IManagementAdminService, ManagementAdminService>();
@@ -33,9 +34,14 @@ public static class ApplicationServiceExtension
         services.AddScoped<IUnitTypeService, UnitTypeService>();
         services.AddScoped<IRoomViewService, RoomViewService>();
 
+        // Room Management
+        services.AddScoped<IRoomNameSuggestionService, RoomNameSuggestionService>();
+
         // Request Management
         services.AddScoped<IRequestOverviewService, RequestOverviewService>();
 
+        // User Management
+        services.AddScoped<IRegisterService, RegisterService>();
 
         // Helpers
         services.AddSingleton<IImageHelper, ImageHelper>();

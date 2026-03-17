@@ -45,22 +45,22 @@ namespace HotelBooking.api.Controllers.V1.Public
         /// <summary>
         /// Register customer account (public)
         /// </summary>
-        [HttpPost("register")]
-        public async Task<IActionResult> RegisterCustomer([FromBody] RegisterCustomerDTO newCustomer)
-        {
-            var response = await _userService.RegisterCustomer(newCustomer);
-            return ApiResponseHandlerHelper.HandleResponse(response);
-        }
+        // [HttpPost("register")]
+        // public async Task<IActionResult> RegisterCustomer([FromBody] RegisterCustomerDTO newCustomer)
+        // {
+        //     var response = await _userService.RegisterCustomer(newCustomer);
+        //     return ApiResponseHandlerHelper.HandleResponse(response);
+        // }
 
         /// <summary>
         /// Login (public)
         /// </summary>
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginUserDTO loginRequest)
-        {
-            var response = await _userService.LoginUser(loginRequest);
-            return ApiResponseHandlerHelper.HandleResponse(response);
-        }
+        // [HttpPost("login")]
+        // public async Task<IActionResult> Login([FromBody] LoginUserDTO loginRequest)
+        // {
+        //     var response = await _userService.LoginUser(loginRequest);
+        //     return ApiResponseHandlerHelper.HandleResponse(response);
+        // }
 
     }
 }

@@ -7,6 +7,7 @@ using HotelBooking.application.DTOs.User;
 using HotelBooking.application.DTOs.User.Register;
 using HotelBooking.application.DTOs.User.Login;
 using HotelBooking.application.Services.Domains.Auth;
+using HotelBooking.application.Services.Domains.UserManagement.Register;
 
 // Note: MessageRegister and MessageLogin are consolidated into MessageResponse in Helpers/Messages/
 // Use MessageResponse.UserManagement.Register.* and MessageResponse.UserManagement.Login.* for new code
@@ -17,10 +18,7 @@ namespace HotelBooking.application.Services.Domains.UserManagement
     public interface IUserService
     {
         public Task<ApiResponse<UserDetailDTO>> GetByIdAsync(int id);
-        public Task<ApiResponse<RegisterResponseDTO>> RegisterAdmin(RegisterAdminDTO newAdmin);
-        public Task<ApiResponse<RegisterResponseDTO>> RegisterCustomer(RegisterCustomerDTO newCustomer);
-        public Task<ApiResponse<LoginResponseDTO>> LoginUser(LoginUserDTO userLogin);
-        public Task<ApiResponse<bool>> ApproveUpgradeToOwnerAsync(int requestId, int adminId);
+        // public Task<ApiResponse<bool>> ApproveUpgradeToOwnerAsync(int requestId, int adminId);
         // public Task<bool> RejectUpgradeToOwnerAsync(int requestId, int adminId);
     }
 
@@ -28,32 +26,22 @@ namespace HotelBooking.application.Services.Domains.UserManagement
     {
         private readonly IUserRepository _userRepository;
         private readonly IUserRoleRepository _userRoleRepository;
-        private readonly IUpgradeRequestRepository _upgradeRequestRepository;
-        public JwtAuthService _jwtAuthService;
+        public readonly IRegisterService _registerService;
+        // public JwtAuthService _jwtAuthService;
         public IUnitOfWork _dbu;
-
-        private readonly IValidator<RegisterCustomerDTO> _registerCustomerValidator;
-        private readonly IValidator<RegisterAdminDTO> _registerAdminValidator;
-        private readonly IValidator<LoginUserDTO> _loginValidator;
 
         public UserService(IUserRepository userRepository,
                            IUserRoleRepository userRoleRepository,
-                           IUpgradeRequestRepository upgradeRequestRepository,
-                           JwtAuthService jwtAuthService,
-                           IUnitOfWork dbu,
-                           IValidator<RegisterCustomerDTO> registerCustomerValidator,
-                           IValidator<RegisterAdminDTO> registerAdminValidator,
-                           IValidator<LoginUserDTO> loginValidator)
+                           IRegisterService registerService,
+                           // JwtAuthService jwtAuthService,
+                           IUnitOfWork dbu)
         {
             _userRepository = userRepository;
             _userRoleRepository = userRoleRepository;
-            _upgradeRequestRepository = upgradeRequestRepository;
-            _jwtAuthService = jwtAuthService;
+            _registerService = registerService;
+            // _jwtAuthService = jwtAuthService;
             _dbu = dbu;
 
-            _registerCustomerValidator = registerCustomerValidator;
-            _registerAdminValidator = registerAdminValidator;
-            _loginValidator = loginValidator;
         }
 
         public async Task<ApiResponse<UserDetailDTO>> GetByIdAsync(int id)
@@ -91,231 +79,242 @@ namespace HotelBooking.application.Services.Domains.UserManagement
             }
             catch (Exception)
             {
-                return ResponseFactory.Failure<UserDetailDTO>(StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
+                return ResponseFactory.ServerError<UserDetailDTO>();
             }
         }
 
-        public async Task<ApiResponse<RegisterResponseDTO>> RegisterAdmin(RegisterAdminDTO newAdmin)
-        {
-            try
-            {
-                // Validate input using injected FluentValidation validator
-                var adminValidation = _registerAdminValidator.Validate(newAdmin);
-                if (!adminValidation.IsValid)
-                {
-                    var response = ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, adminValidation.Errors.First().ErrorMessage);
-                    response.Content = null;
-                    return response;
-                }
+        // public async Task<ApiResponse<RegisterResponseDTO>> RegisterAdmin(RegisterAdminDTO newAdmin)
+        // {
+        //     try
+        //     {
+        //         // Validate input using injected FluentValidation validator
+        //         var adminValidation = _registerAdminValidator.Validate(newAdmin);
+        //         if (!adminValidation.IsValid)
+        //         {
+        //             var response = ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, adminValidation.Errors.First().ErrorMessage);
+        //             response.Content = null;
+        //             return response;
+        //         }
 
-                var checkAdmin = await _userRepository.SingleOrDefaultAsync(admin => admin.Email == newAdmin.Email || admin.UserName == newAdmin.Username);
-                if (checkAdmin != null)
-                {
-                    var response = ResponseFactory.Failure<RegisterResponseDTO>(
-                        StatusCodeResponse.Conflict,
-                        checkAdmin.UserName == newAdmin.Username
-                            ? MessageResponse.UserManagement.Register.USERNAME_EXIST
-                            : MessageResponse.UserManagement.Register.EMAIL_EXIST);
-                    response.Content = null;
-                    return response;
-                }
+        //         var checkAdmin = await _userRepository.SingleOrDefaultAsync(admin => admin.Email == newAdmin.Email || admin.UserName == newAdmin.Username);
+        //         if (checkAdmin != null)
+        //         {
+        //             var response = ResponseFactory.Failure<RegisterResponseDTO>(
+        //                 StatusCodeResponse.Conflict,
+        //                 checkAdmin.UserName == newAdmin.Username
+        //                     ? MessageResponse.UserManagement.Register.USERNAME_EXIST
+        //                     : MessageResponse.UserManagement.Register.EMAIL_EXIST);
+        //             response.Content = null;
+        //             return response;
+        //         }
 
-                var user = new User
-                {
-                    UserName = newAdmin.Username,
-                    FullName = newAdmin.FullName,
-                    Email = newAdmin.Email,
-                    PhoneNumber = newAdmin.PhoneNumber,
-                    PasswordHash = PasswordHelper.HashPassword(newAdmin.Password),
-                    IsDeleted = false,
-                    CreatedAt = DateTime.Now,
-                    DateOfBirth = null,
-                    IsActive = true
-                };
+        //         var user = new User
+        //         {
+        //             UserName = newAdmin.Username,
+        //             FullName = newAdmin.FullName,
+        //             Email = newAdmin.Email,
+        //             PhoneNumber = newAdmin.PhoneNumber,
+        //             PasswordHash = PasswordHelper.HashPassword(newAdmin.Password),
+        //             IsDeleted = false,
+        //             CreatedAt = DateTime.Now,
+        //             DateOfBirth = null,
+        //             IsActive = true
+        //         };
 
-                // Add new user to Users table
-                await _userRepository.AddAsync(user);
-                // Persist to database
-                await _dbu.SaveChangesAsync(); // Save to generate user.Id
-                                               // Add role to UserRoles table
-                var userRole = new UserRole
-                {
-                    UserId = user.Id,
-                    RoleId = newAdmin.GetRoleId()
-                };
+        //         // Start transaction
+        //         await _dbu.BeginTransactionAsync();
 
-                // Add role reference
-                user.UserRoles.Add(userRole);
-                await _dbu.SaveChangesAsync(); // Save again to save UserRole
+        //         // Add new user to Users table
+        //         await _userRepository.AddAsync(user);
+        //         // Persist to database
+        //         await _dbu.SaveChangesAsync(); // Save to generate user.Id
+        //                                        // Add role to UserRoles table
+        //         var userRole = new UserRole
+        //         {
+        //             UserId = user.Id,
+        //             RoleId = newAdmin.GetRoleId()
+        //         };
 
-                return ResponseFactory.Success(new RegisterResponseDTO
-                {
-                    FullName = user.FullName,
-                    Email = user.Email
-                }, MessageResponse.UserManagement.Register.SUCCESS);
-            }
-            catch (Exception)
-            {
-                var response = ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.Error, MessageResponse.UserManagement.Register.FAIL);
-                response.Content = null;
-                return response;
-            }
-        }
+
+        //         // Add role reference
+        //         user.UserRoles.Add(userRole);
+        //         await _dbu.SaveChangesAsync(); // Save again to save UserRole
+
+        //         await _dbu.CommitTransactionAsync(); // Commit transaction
+
+        //         return ResponseFactory.Success(new RegisterResponseDTO
+        //         {
+        //             FullName = user.FullName,
+        //             Email = user.Email
+        //         }, MessageResponse.UserManagement.Register.SUCCESS);
+        //     }
+        //     catch (Exception)
+        //     {
+        //         await _dbu.RollBackTransactionAsync(); // Rollback transaction on error
+        //         return ResponseFactory.ServerError<RegisterResponseDTO>();
+        //     }
+        // }
 
         public async Task<ApiResponse<RegisterResponseDTO>> RegisterCustomer(RegisterCustomerDTO newCustomer)
         {
-            try
-            {
-                // Validate input using injected FluentValidation validator
-                var validation = _registerCustomerValidator.Validate(newCustomer);
-                if (!validation.IsValid)
-                {
-                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, validation.Errors.First().ErrorMessage);
-                }
+            throw new NotImplementedException();
+            // try
+            // {
+            //     // Validate input using injected FluentValidation validator
+            //     var validation = _registerCustomerValidator.Validate(newCustomer);
+            //     if (!validation.IsValid)
+            //     {
+            //         return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, validation.Errors.First().ErrorMessage);
+            //     }
 
-                // --- 3. CHECK DUPLICATES ---
-                // 1. Check if user already exists
-                var checkCustomer = await _userRepository.SingleOrDefaultAsync(customer =>
-                    customer.Email == newCustomer.Email ||
-                    customer.UserName == newCustomer.Username
-                );
+            //     // --- 3. CHECK DUPLICATES ---
+            //     // 1. Check if user already exists
+            //     var checkCustomer = await _userRepository.SingleOrDefaultAsync(customer =>
+            //         customer.Email == newCustomer.Email ||
+            //         customer.UserName == newCustomer.Username
+            //     );
 
-                // 2. If found (non-null) -> return error immediately
-                if (checkCustomer != null)
-                {
-                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.Conflict, checkCustomer.UserName == newCustomer.Username ? MessageResponse.UserManagement.Register.USERNAME_EXIST : MessageResponse.UserManagement.Register.EMAIL_EXIST);
-                }
+            //     // 2. If found (non-null) -> return error immediately
+            //     if (checkCustomer != null)
+            //     {
+                    // return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.Conflict, checkCustomer.UserName == newCustomer.Username ? MessageResponse.UserManagement.Register.USERNAME_EXIST : MessageResponse.UserManagement.Register.EMAIL_EXIST);
+            //     }
 
-                var user = new User
-                {
-                    UserName = newCustomer.Username,
-                    FullName = newCustomer.FullName,
-                    Email = newCustomer.Email,
-                    PhoneNumber = newCustomer.PhoneNumber,
-                    PasswordHash = PasswordHelper.HashPassword(newCustomer.Password),
-                    IsDeleted = false,
-                    CreatedAt = DateTime.Now,
-                    DateOfBirth = null,
-                    IsActive = true
-                };
+            //     var user = new User
+            //     {
+            //         UserName = newCustomer.Username,
+            //         FullName = newCustomer.FullName,
+            //         Email = newCustomer.Email,
+            //         PhoneNumber = newCustomer.PhoneNumber,
+            //         PasswordHash = PasswordHelper.HashPassword(newCustomer.Password),
+            //         IsDeleted = false,
+            //         CreatedAt = DateTime.Now,
+            //         DateOfBirth = null,
+            //         IsActive = true
+            //     };
 
-                // Add new user to Users table
-                await _userRepository.AddAsync(user);
-                await _dbu.SaveChangesAsync(); // Save to generate user.Id
+            //     await _dbu.BeginTransactionAsync();
 
-                // Add role to UserRoles table
-                var userRole = new UserRole
-                {
-                    UserId = user.Id,
-                    RoleId = newCustomer.GetRoleId()
-                };
+            //     // Add new user to Users table
+            //     await _userRepository.AddAsync(user);
+            //     await _dbu.SaveChangesAsync(); // Save to generate user.Id
 
-                // Add role reference
-                user.UserRoles.Add(userRole);
-                // Persist changes to database
-                await _dbu.SaveChangesAsync();
+            //     // Add role to UserRoles table
+            //     var userRole = new UserRole
+            //     {
+            //         UserId = user.Id,
+            //         RoleId = newCustomer.GetRoleId()
+            //     };
 
-                return ResponseFactory.Success(new RegisterResponseDTO
-                {
-                    FullName = user.FullName,
-                    Email = user.Email
-                }, MessageResponse.UserManagement.Register.SUCCESS);
-            }
-            catch (Exception)
-            {
-                return ResponseFactory.ServerError<RegisterResponseDTO>();
-            }
+            //     // Add role reference
+            //     user.UserRoles.Add(userRole);
+            //     // Persist changes to database
+            //     await _dbu.SaveChangesAsync();
+
+            //     await _dbu.CommitTransactionAsync();
+
+            //     return ResponseFactory.Success(new RegisterResponseDTO
+            //     {
+            //         FullName = user.FullName,
+            //         Email = user.Email
+            //     }, MessageResponse.UserManagement.Register.SUCCESS);
+            // }
+            // catch (Exception)
+            // {
+            //     await _dbu.RollBackTransactionAsync();
+            //     return ResponseFactory.ServerError<RegisterResponseDTO>();
+            // }
         }
 
-        public async Task<ApiResponse<LoginResponseDTO>> LoginUser(LoginUserDTO userLogin)
-        {
-            try
-            {
-                // Validate login input using injected validator
-                var loginValidation = _loginValidator.Validate(userLogin);
-                if (!loginValidation.IsValid)
-                {
-                    return ResponseFactory.Failure<LoginResponseDTO>(StatusCodeResponse.BadRequest, loginValidation.Errors.First().ErrorMessage);
-                }
+        // public async Task<ApiResponse<LoginResponseDTO>> LoginUser(LoginUserDTO userLogin)
+        // {
+        //     try
+        //     {
+        //         // Validate login input using injected validator
+        //         var loginValidation = _loginValidator.Validate(userLogin);
+        //         if (!loginValidation.IsValid)
+        //         {
+        //             return ResponseFactory.Failure<LoginResponseDTO>(StatusCodeResponse.BadRequest, loginValidation.Errors.First().ErrorMessage);
+        //         }
 
-                var user = await _userRepository.GetUserWithRoles(u => u.UserName == userLogin.UsernameOrEmail || u.Email == userLogin.UsernameOrEmail);
+        //         var user = await _userRepository.GetUserWithRoles(u => u.UserName == userLogin.UsernameOrEmail || u.Email == userLogin.UsernameOrEmail);
 
-                // If user not found or password does not match -> return Unauthorized
-                if (user == null || !PasswordHelper.VerifyPassword(userLogin.Password, user.PasswordHash))
-                {
-                    return ResponseFactory.Failure<LoginResponseDTO>(
-                        StatusCodeResponse.Unauthorized,
-                        MessageResponse.UserManagement.Login.INVALID_CREDENTIALS);
-                }
+        //         // If user not found or password does not match -> return Unauthorized
+        //         if (user == null || !PasswordHelper.VerifyPassword(userLogin.Password, user.PasswordHash))
+        //         {
+        //             return ResponseFactory.Failure<LoginResponseDTO>(
+        //                 StatusCodeResponse.Unauthorized,
+        //                 MessageResponse.UserManagement.Login.INVALID_CREDENTIALS);
+        //         }
 
-                // Generate JWT token
-                var token = _jwtAuthService.GenerateToken(user);
-                var roles = user.UserRoles.Select(ur => ur.Role.Name).ToList();
-                return ResponseFactory.Success(new LoginResponseDTO
-                {
-                    AccessToken = token,
-                    FullName = user.FullName!,
-                    AvatarUrl = user.AvatarUrl,
-                    Roles = roles,
-                }, MessageResponse.UserManagement.Login.SUCCESS);
-            }
-            catch (Exception)
-            {
-                return ResponseFactory.Failure<LoginResponseDTO>(StatusCodeResponse.Error, MessageResponse.UserManagement.Login.ERROR_IN_SERVER);
-            }
-        }
+        //         // Generate JWT token
+        //         var token = _jwtAuthService.GenerateToken(user);
+        //         var roles = user.UserRoles.Select(ur => ur.Role.Name).ToList();
+        //         return ResponseFactory.Success(new LoginResponseDTO
+        //         {
+        //             AccessToken = token,
+        //             FullName = user.FullName!,
+        //             AvatarUrl = user.AvatarUrl,
+        //             Roles = roles,
+        //         }, MessageResponse.UserManagement.Login.SUCCESS);
+        //     }
+        //     catch (Exception)
+        //     {
+        //         return ResponseFactory.Failure<LoginResponseDTO>(StatusCodeResponse.Error, MessageResponse.UserManagement.Login.ERROR_IN_SERVER);
+        //     }
+        // }
 
-        public async Task<ApiResponse<bool>> ApproveUpgradeToOwnerAsync(int requestId, int adminId)
-        {
-            try
-            {
-                var request = await _upgradeRequestRepository
-                    .SingleOrDefaultAsync(r => r.Id == requestId && r.Status == "Pending");
-                if (request == null)
-                {
-                    return ResponseFactory.Failure<bool>(StatusCodeResponse.BadRequest, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_STATUS_INVALID);
-                }
+        // public async Task<ApiResponse<bool>> ApproveUpgradeToOwnerAsync(int requestId, int adminId)
+        // {
+        //     try
+        //     {
+        //         var request = await _upgradeRequestRepository
+        //             .SingleOrDefaultAsync(r => r.Id == requestId && r.Status == "Pending");
+        //         if (request == null)
+        //         {
+        //             return ResponseFactory.Failure<bool>(StatusCodeResponse.BadRequest, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_STATUS_INVALID);
+        //         }
 
-                var user = await _userRepository.SingleOrDefaultAsync(u => u.Id == request.UserId);
-                if (user == null)
-                {
-                    return ResponseFactory.Failure<bool>(StatusCodeResponse.NotFound, MessageResponse.RequestManagement.UpgradeRequest.USER_NOT_FOUND);
-                }
+        //         var user = await _userRepository.SingleOrDefaultAsync(u => u.Id == request.UserId);
+        //         if (user == null)
+        //         {
+        //             return ResponseFactory.Failure<bool>(StatusCodeResponse.NotFound, MessageResponse.RequestManagement.UpgradeRequest.USER_NOT_FOUND);
+        //         }
 
-                // Check if user already has Owner role
-                var hasOwnerRole = await _userRoleRepository
-                    .AnyAsync(ur => ur.UserId == user.Id && ur.RoleId == RoleTypeConstDTO.Owner);
+        //         // Check if user already has Owner role
+        //         var hasOwnerRole = await _userRoleRepository
+        //             .AnyAsync(ur => ur.UserId == user.Id && ur.RoleId == RoleTypeConstDTO.Owner);
 
-                if (hasOwnerRole)
-                {
-                    return ResponseFactory.Failure<bool>(StatusCodeResponse.Conflict, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_APPROVE_FAILED);
-                }
+        //         if (hasOwnerRole)
+        //         {
+        //             return ResponseFactory.Failure<bool>(StatusCodeResponse.Conflict, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_APPROVE_FAILED);
+        //         }
 
-                // Assign Owner role to user
-                var newUserRole = new UserRole
-                {
-                    UserId = user.Id,
-                    RoleId = RoleTypeConstDTO.Owner
-                };
-                await _userRoleRepository.AddAsync(newUserRole);
+        //         // Assign Owner role to user
+        //         var newUserRole = new UserRole
+        //         {
+        //             UserId = user.Id,
+        //             RoleId = RoleTypeConstDTO.Owner
+        //         };
+        //         await _userRoleRepository.AddAsync(newUserRole);
 
-                // Update request status
-                request.Status = "Approved";
-                request.ApprovedAt = DateTime.Now;
-                request.ApprovedBy = adminId;
+        //         // Update request status
+        //         request.Status = "Approved";
+        //         request.ApprovedAt = DateTime.Now;
+        //         request.ApprovedBy = adminId;
 
-                await _upgradeRequestRepository.UpdateAsync(request);
+        //         await _upgradeRequestRepository.UpdateAsync(request);
 
-                var saved = await _dbu.SaveChangesAsync() > 0;
-                return saved
-                    ? ResponseFactory.Success(true, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_APPROVED_SUCCESS)
-                    : ResponseFactory.Failure<bool>(StatusCodeResponse.Error, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_APPROVE_FAILED);
-            }
-            catch (Exception)
-            {
-                return ResponseFactory.Failure<bool>(StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
-            }
-        }
+        //         var saved = await _dbu.SaveChangesAsync() > 0;
+        //         return saved
+        //             ? ResponseFactory.Success(true, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_APPROVED_SUCCESS)
+        //             : ResponseFactory.Failure<bool>(StatusCodeResponse.Error, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_APPROVE_FAILED);
+        //     }
+        //     catch (Exception)
+        //     {
+        //         return ResponseFactory.Failure<bool>(StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
+        //     }
+        // }
 
         // Helper method to validate email format (can be private at the bottom of the Service class)
         private bool IsValidEmail(string email)

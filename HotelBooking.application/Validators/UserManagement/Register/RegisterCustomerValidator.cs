@@ -7,6 +7,8 @@ namespace HotelBooking.application.Validators.UserManagement.Register
     {
         public RegisterCustomerValidator()
         {
+            RuleLevelCascadeMode = CascadeMode.Stop;
+
             RuleFor(x => x.Username)
                 .NotEmpty().WithMessage(MessageResponse.UserManagement.Register.USERNAME_REQUIRED)
                 .Length(8, 50).WithMessage(MessageResponse.UserManagement.Register.INVALID_USERNAME);

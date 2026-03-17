@@ -15,6 +15,27 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             _validator = new RegisterCustomerValidator();
         }
 
+        [Fact]
+        public void RegisterCustomerValidator_ValidRequest_ShouldPassValidation()
+        {
+            // 1. Arrange
+            var request = new RegisterCustomerDTO
+            {
+                Username = "testuser",
+                FullName = "John Doe",
+                Email = "john@example.com",
+                Password = "Password@123",
+                ConfirmPassword = "Password@123",
+                PhoneNumber = "0912345678"
+            };
+
+            // 2. Act
+            var result = _validator.Validate(request);
+
+            // 3. Assert
+            result.IsValid.Should().BeTrue();
+        }
+
         // Username Tests
         [Fact]
         public void RegisterCustomerValidator_EmptyUsername_ShouldHaveValidationError()
@@ -37,6 +58,28 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             // 3. Assert
             result.IsValid.Should().BeFalse();
             result.Errors.Should().ContainSingle(e => e.PropertyName == "Username" && e.ErrorMessage == MessageResponse.UserManagement.Register.USERNAME_REQUIRED);
+        }
+
+        [Fact]
+        public void RegisterCustomerValidator_ShortUsername_ShouldHaveValidationError()
+        {
+            // 1. Arrange
+            var request = new RegisterCustomerDTO
+            {
+                Username = "user", // 4 characters, should be at least 8
+                FullName = "John Doe",
+                Email = "john@example.com",
+                Password = "Password@123",
+                ConfirmPassword = "Password@123",
+                PhoneNumber = "0912345678"
+            };
+
+            // 2. Act
+            var result = _validator.Validate(request);
+
+            // 3. Assert
+            result.IsValid.Should().BeFalse();
+            result.Errors.Should().ContainSingle(e => e.PropertyName == "Username" && e.ErrorMessage == MessageResponse.UserManagement.Register.INVALID_USERNAME);
         }
 
         [Fact]
@@ -403,8 +446,8 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
                 Username = "testuser",
                 FullName = "John Doe",
                 Email = "john@example.com",
-                Password = "Password123",
-                ConfirmPassword = "DifferentPassword",
+                Password = "Password@123",
+                ConfirmPassword = "Password@456",
                 PhoneNumber = "0912345678"
             };
 

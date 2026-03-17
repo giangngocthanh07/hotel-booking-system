@@ -11,6 +11,8 @@ using HotelBooking.application.Services.Domains.UserManagement;
 using HotelBooking.infrastructure.Models;
 
 using HotelBooking.Tests.Integration.Base;
+using HotelBooking.application.Services.Domains.UserManagement.Register;
+using HotelBooking.application.Services.Domains.UserManagement.Login;
 
 namespace HotelBooking.Tests.Integration;
 
@@ -43,10 +45,16 @@ public class UserServiceIntegrationTest : IntegrationTestBase
             .BuildServiceProvider();
     }
 
-    private IUserService GetService()
+    private IRegisterService GetRegisterService()
     {
         var scope = _serviceProvider.CreateScope();
-        return scope.ServiceProvider.GetRequiredService<IUserService>();
+        return scope.ServiceProvider.GetRequiredService<IRegisterService>();
+    }
+
+    private ILoginService GetLoginService()
+    {
+        var scope = _serviceProvider.CreateScope();
+        return scope.ServiceProvider.GetRequiredService<ILoginService>();
     }
 
     #region RegisterCustomer Integration Tests
@@ -59,7 +67,7 @@ public class UserServiceIntegrationTest : IntegrationTestBase
     {
         // 1. ARRANGE
         await CleanupDataAsync(); // Xóa data cũ cho sạch
-        var service = GetService();
+        var service = GetRegisterService();
 
         var input = new RegisterCustomerDTO
         {
@@ -104,7 +112,7 @@ public class UserServiceIntegrationTest : IntegrationTestBase
     {
         // 1. ARRANGE - Insert user trước vào DB thật
         await CleanupDataAsync();
-        var service = GetService();
+        var service = GetRegisterService();
 
         // Tạo user đầu tiên thành công
         var firstUser = new RegisterCustomerDTO
@@ -145,7 +153,7 @@ public class UserServiceIntegrationTest : IntegrationTestBase
     {
         // 1. ARRANGE
         await CleanupDataAsync();
-        var service = GetService();
+        var service = GetRegisterService();
 
         var firstUser = new RegisterCustomerDTO
         {
@@ -189,7 +197,8 @@ public class UserServiceIntegrationTest : IntegrationTestBase
     {
         // 1. ARRANGE - Đăng ký user trước (tạo data thật trong DB)
         await CleanupDataAsync();
-        var service = GetService();
+        var registerService = GetRegisterService();
+        var loginService = GetLoginService();
 
         var registerInput = new RegisterCustomerDTO
         {
@@ -199,7 +208,7 @@ public class UserServiceIntegrationTest : IntegrationTestBase
             FullName = "Login Test User",
             PhoneNumber = "0905555555"
         };
-        await service.RegisterCustomer(registerInput);
+        await registerService.RegisterCustomer(registerInput);
 
         // 2. ACT - Login bằng username
         var loginInput = new LoginUserDTO
@@ -207,7 +216,7 @@ public class UserServiceIntegrationTest : IntegrationTestBase
             UsernameOrEmail = "login_test_user",
             Password = "LoginPass@123"
         };
-        var result = await service.LoginUser(loginInput);
+        var result = await loginService.LoginUser(loginInput);
 
         // 3. ASSERT
         result.StatusCode.Should().Be(StatusCodeResponse.Success);
@@ -227,7 +236,8 @@ public class UserServiceIntegrationTest : IntegrationTestBase
     {
         // 1. ARRANGE - Đăng ký user trước
         await CleanupDataAsync();
-        var service = GetService();
+        var registerService = GetRegisterService();
+        var loginService = GetLoginService();
 
         var registerInput = new RegisterCustomerDTO
         {
@@ -237,7 +247,7 @@ public class UserServiceIntegrationTest : IntegrationTestBase
             FullName = "Wrong Pass User",
             PhoneNumber = "0906666666"
         };
-        await service.RegisterCustomer(registerInput);
+        await registerService.RegisterCustomer(registerInput);
 
         // 2. ACT - Login với password SAI
         var loginInput = new LoginUserDTO
@@ -245,7 +255,7 @@ public class UserServiceIntegrationTest : IntegrationTestBase
             UsernameOrEmail = "wrong_pass_user",
             Password = "WrongPassword@999"       // ← SAI!
         };
-        var result = await service.LoginUser(loginInput);
+        var result = await loginService.LoginUser(loginInput);
 
         // 3. ASSERT
         result.Content.Should().BeNull();

@@ -474,7 +474,7 @@
         try
         {
             var url = actionType == "approve"
-                                                                            ? $"v1/admin/upgrade-requests/{RequestId}/approve"
+                                                                                        ? $"v1/admin/upgrade-requests/{RequestId}/approve"
             : $"v1/admin/upgrade-requests/{RequestId}/reject";
 
             var response = await _httpClient.PostAsync(url, null);
