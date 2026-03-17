@@ -221,9 +221,18 @@ public static class MessageResponse
         {
             public const string SUCCESS = "Account registered successfully!";
             public const string FAIL = "Failed to register account!";
+            public const string USERNAME_REQUIRED = "Username must not be empty!";
             public const string USERNAME_EXIST = "Username already exists!";
+            public const string INVALID_USERNAME = "Username must be between 8 and 50 characters!";
             public const string EMAIL_EXIST = "Email already exists!";
-            public const string INVALID_EMAIL = "Invalid email format!";
+            public const string EMAIL_REQUIRED = "Email must not be empty!";
+            public const string INVALID_EMAIL = "Email must be between 8 and 50 characters!";
+            public const string INVALID_EMAIL_FORMAT = "Invalid email format!";
+
+            // FullName validation messages
+            public const string FULLNAME_REQUIRED = "Full name must not be empty!";
+            public const string INVALID_FULLNAME = "Full name must be between 8 and 50 characters!";
+
 
             // Phone validation messages
             public const string EMPTY_PHONE = "Phone number must not be empty!";
@@ -329,6 +338,27 @@ public static class MessageResponse
         public const string ROOM_TYPE_MAX_EXTRA_BEDS_INVALID = "Max extra beds must be greater than or equal to 0!";
         public const string ROOM_TYPE_AREA_INVALID = "Area must be greater than 0!";
         public const string ROOM_TYPE_TOTAL_ROOMS_INVALID = "Total rooms must be greater than 0!";
+
+        // Room Name Suggestion Messages
+        public const string ROOM_NAME_SUGGESTION_REQUEST_NULL = "Room name suggestion request is null!";
+        public const string ROOM_NAME_SUGGESTION_UNIT_TYPE_ID_REQUIRED = "Unit type ID is required!";
+        public const string ROOM_NAME_SUGGESTION_UNIT_TYPE_ID_INVALID = "Unit type ID must be greater than 0!";
+        public const string ROOM_NAME_SUGGESTION_QUALITY_ID_INVALID = "Quality ID must be greater than 0!";
+        public const string ROOM_NAME_SUGGESTION_ROOM_VIEW_ID_INVALID = "Room view ID must be greater than 0!";
+        public const string ROOM_NAME_SUGGESTION_ADULT_CAPACITY_REQUIRED = "Adult capacity is required!";
+        public const string ROOM_NAME_SUGGESTION_ADULT_CAPACITY_INVALID = "Adult capacity must be greater than 0!";
+        public const string ROOM_NAME_SUGGESTION_CHILDREN_CAPACITY_REQUIRED = "Children capacity is required!";
+        public const string ROOM_NAME_SUGGESTION_CHILDREN_CAPACITY_INVALID = "Children capacity must be greater than or equal to 0!";
+        public const string ROOM_NAME_SUGGESTION_IS_PRIVATE_BATHROOM_INVALID = "Is private bathroom must be true or false!";
+        public const string ROOM_NAME_SUGGESTION_HAS_BALCONY_INVALID = "Has balcony must be true or false!";
+        public const string ROOM_NAME_SUGGESTION_HAS_TERRACE_INVALID = "Has terrace must be true or false!";
+        public const string ROOM_NAME_SUGGESTION_CAN_ADD_EXTRA_BEDS_INVALID = "Can add extra beds must be true or false!";
+        public const string ROOM_NAME_SUGGESTION_MAX_EXTRA_BEDS_REQUIRED = "Max extra beds is required when can add extra beds is true!";
+        public const string ROOM_NAME_SUGGESTION_MAX_EXTRA_BEDS_INVALID = "Max extra beds must be greater than 0!";
+        public const string ROOM_NAME_SUGGESTION_MAX_EXTRA_BEDS_MUST_BE_NULL_OR_ZERO = "Max extra beds must be null or 0 when can add extra beds is false!";
+        public const string ROOM_NAME_SUGGESTION_BED_TYPES_REQUIRED = "Bed types are required!";
+        public const string ROOM_NAME_SUGGESTION_BED_TYPES_INVALID = "Each bed type must have a valid BedTypeId and quantity greater than 0!";
+
     }
 
     // Alias for easier access

@@ -61,7 +61,7 @@ public static class ValidatorServiceExtension
     public static void AddRoomManagementValidators(this IServiceCollection services)
     {
         services.AddScoped<IValidator<RoomTypeCreateDTO>, RoomTypeValidator>();
-        // Add other room management validators here (e.g., for updating room types, managing rooms, etc.)
+        services.AddScoped<IValidator<RoomNameSuggestionRequest>, RoomNameSuggestionValidator>();
     }
 
     private static void AddCommonValidators(this IServiceCollection services)

@@ -20,6 +20,7 @@ public static class ApplicationServiceExtension
         services.AddScoped<IUpgradeRequestService, UpgradeRequestService>();
         services.AddScoped<IPhotoService, PhotoService>();
         services.AddScoped<IRoomTypeService, RoomTypeService>();
+        services.AddScoped<IRoomNameSuggestionService, RoomNameSuggestionService>();
 
         // Admin Management
         services.AddScoped<IManagementAdminService, ManagementAdminService>();

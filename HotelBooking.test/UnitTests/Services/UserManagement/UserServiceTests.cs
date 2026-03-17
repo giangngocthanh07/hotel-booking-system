@@ -25,7 +25,7 @@ namespace HotelBooking.Tests.Services.UserManagement
         private readonly Mock<IUpgradeRequestRepository> _mockUpgradeRepo;
 
         // Validator Mocks
-        private readonly Mock<IValidator<RegisterCustomerDTO>> _mockRegisterCustomerValidator;
+        private readonly RegisterCustomerValidator _registerCustomerValidator; // Using real validator for accurate validation behavior
         private readonly Mock<IValidator<RegisterAdminDTO>> _mockRegisterAdminValidator;
         private readonly Mock<IValidator<LoginUserDTO>> _mockLoginValidator;
 
@@ -40,9 +40,7 @@ namespace HotelBooking.Tests.Services.UserManagement
             _mockUpgradeRepo = new Mock<IUpgradeRequestRepository>();
 
             // Initialize Validator Mocks (using real validators to maintain behavioral integrity)
-            _mockRegisterCustomerValidator = new Mock<IValidator<RegisterCustomerDTO>>();
-            _mockRegisterCustomerValidator.Setup(v => v.Validate(It.IsAny<RegisterCustomerDTO>()))
-                .Returns((RegisterCustomerDTO dto) => new RegisterCustomerValidator().Validate(dto));
+            _registerCustomerValidator = new RegisterCustomerValidator();
 
             _mockRegisterAdminValidator = new Mock<IValidator<RegisterAdminDTO>>();
             _mockRegisterAdminValidator.Setup(v => v.Validate(It.IsAny<RegisterAdminDTO>()))
@@ -60,7 +58,7 @@ namespace HotelBooking.Tests.Services.UserManagement
                 _mockUpgradeRepo.Object,        // 3. UpgradeRequestRepository
                 null!,                          // 4. JwtAuthService (Not required for registration)
                 _mockUnitOfWork.Object,         // 5. UnitOfWork (Inherited from Base)
-                _mockRegisterCustomerValidator.Object,
+                _registerCustomerValidator,
                 _mockRegisterAdminValidator.Object,
                 _mockLoginValidator.Object
             );
@@ -83,8 +81,11 @@ namespace HotelBooking.Tests.Services.UserManagement
                 PhoneNumber = "0912345678"
             };
 
+            var validationResult = _registerCustomerValidator.Validate(input);
+            validationResult.IsValid.Should().BeTrue("because the input data is valid and should pass all validation rules");
+
             // Using Generic Helper from Base class
-            // Mock DB returning null (meaning Username/Email are available)
+            // Mock: No existing user with same username or email
             MockRepo_Find_Returns<IUserRepository, User>(_mockUserRepo, null);
 
             // 2. ACT
@@ -95,6 +96,7 @@ namespace HotelBooking.Tests.Services.UserManagement
             result.Message.Should().Be(MessageResponse.UserManagement.Register.SUCCESS);
             result.Content.Should().NotBeNull();
             result.Content!.IsSuccess.Should().BeTrue();
+            result.Content.Should().BeEquivalentTo(new RegisterResponseDTO { FullName = input.FullName, Email = input.Email, Username = input.Username, IsSuccess = true });
 
             // Verify AddAsync was called exactly once
             Verify_Repo_AddAsync<IUserRepository, User>(_mockUserRepo, 1);
@@ -117,6 +119,9 @@ namespace HotelBooking.Tests.Services.UserManagement
                 Password = "TestPassword@123",
                 FullName = "User Test"
             };
+
+            var validationResult = _registerCustomerValidator.Validate(input);
+            validationResult.IsValid.Should().BeTrue("because the input data is valid and should pass all validation rules");
 
             // Mock DB finding an existing user with the same username
             var existingUser = new User { UserName = "existing_user", Email = "old@gmail.com" };
@@ -149,6 +154,9 @@ namespace HotelBooking.Tests.Services.UserManagement
                 FullName = "User Test"
             };
 
+            var validationResult = _registerCustomerValidator.Validate(input);
+            validationResult.IsValid.Should().BeTrue("because the input data is valid and should pass all validation rules");
+
             // Mock DB finding an existing user with the same email
             var existingUser = new User { UserName = "old_user", Email = "duplicate@gmail.com" };
             MockRepo_Find_Returns(_mockUserRepo, existingUser);
@@ -179,6 +187,9 @@ namespace HotelBooking.Tests.Services.UserManagement
                 Password = "TestPassword@123",
                 FullName = "User Test"
             };
+
+            var validationResult = _registerCustomerValidator.Validate(input);
+            validationResult.IsValid.Should().BeTrue("because the input data is valid and should pass all validation rules");
 
             MockRepo_Find_Returns<IUserRepository, User>(_mockUserRepo, null);
 

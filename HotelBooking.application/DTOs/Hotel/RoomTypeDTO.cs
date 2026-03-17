@@ -6,10 +6,10 @@ public class RoomTypeCreateDTO
     public string? Description { get; set; }
     public bool? IsDeleted { get; set; } = false;
     public decimal PricePerNight { get; set; }
-    public int? Capacity { get; set; }
-    public int? AdultCapacity { get; set; }
-    public int? ChildCapacity { get; set; }
-    public int? UnitTypeId { get; set; }
+    public int Capacity { get; set; }
+    public int AdultCapacity { get; set; }
+    public int ChildCapacity { get; set; }
+    public int UnitTypeId { get; set; }
     public int? QualityId { get; set; }
     public int? RoomViewId { get; set; }
     public bool IsPrivateBathroom { get; set; } = true;
@@ -34,21 +34,21 @@ public class BedTypeConfigDTO
 public class RoomNameSuggestionRequest
 {
     // Input parameters for suggesting room names based on attributes
-    public int? UnitTypeId { get; set; }
+    public int UnitTypeId { get; set; }
     public int? QualityId { get; set; }
     public int? RoomViewId { get; set; }
 
     // "2 Adults, 1 Child", "4 Adults"
-    public int? AdultCapacity { get; set; }
-    public int? ChildrenCapacity { get; set; }
+    public int AdultCapacity { get; set; }
+    public int ChildrenCapacity { get; set; }
 
     // "with Balcony", "with Private Bathroom"
-    public bool? IsPrivateBathroom { get; set; }
-    public bool? HasBalcony { get; set; }
-    public bool? HasTerrace { get; set; }
+    public bool IsPrivateBathroom { get; set; } = true;
+    public bool HasBalcony { get; set; } = false;
+    public bool HasTerrace { get; set; } = false;
 
     // Extra bed configuration
-    public bool? CanAddExtraBeds { get; set; }
+    public bool CanAddExtraBeds { get; set; } = false;
     public int? MaxExtraBeds { get; set; }
 
     // "Double Room", "Twin Room", "King Room"

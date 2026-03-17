@@ -1,4 +1,3 @@
-using HotelBooking.infrastructure.Models;
 using HotelBooking.application.Services.Domains.RoomManagement;
 using HotelBooking.application.DTOs.Hotel;
 

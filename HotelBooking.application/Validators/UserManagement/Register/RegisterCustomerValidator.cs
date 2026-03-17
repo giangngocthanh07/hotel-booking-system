@@ -8,13 +8,16 @@ namespace HotelBooking.application.Validators.UserManagement.Register
         public RegisterCustomerValidator()
         {
             RuleFor(x => x.Username)
-                .NotEmpty().WithMessage(MessageResponse.Validation.EMPTY_NAME);
+                .NotEmpty().WithMessage(MessageResponse.UserManagement.Register.USERNAME_REQUIRED)
+                .Length(8, 50).WithMessage(MessageResponse.UserManagement.Register.INVALID_USERNAME);
 
             RuleFor(x => x.FullName)
-                .NotEmpty().WithMessage(MessageResponse.Validation.EMPTY_NAME);
+                .NotEmpty().WithMessage(MessageResponse.UserManagement.Register.FULLNAME_REQUIRED)
+                .Length(8, 50).WithMessage(MessageResponse.UserManagement.Register.INVALID_FULLNAME);
 
             RuleFor(x => x.Email)
-                .NotEmpty().WithMessage(MessageResponse.UserManagement.Register.INVALID_EMAIL)
+                .NotEmpty().WithMessage(MessageResponse.UserManagement.Register.EMAIL_REQUIRED)
+                .Length(8, 50).WithMessage(MessageResponse.UserManagement.Register.INVALID_EMAIL)
                 .EmailAddress().WithMessage(MessageResponse.UserManagement.Register.INVALID_EMAIL);
 
             RuleFor(x => x.PhoneNumber)

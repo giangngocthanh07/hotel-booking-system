@@ -555,6 +555,7 @@ public partial class HotelBookingDBContext : DbContext
 
             entity.HasOne(d => d.UnitType).WithMany(p => p.RoomTypes)
                 .HasForeignKey(d => d.UnitTypeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_RoomTypes_UnitType");
         });
 

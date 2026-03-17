@@ -15,15 +15,15 @@ public partial class RoomType
 
     public decimal PricePerNight { get; set; }
 
-    public int? Capacity { get; set; }
+    public int Capacity { get; set; }
 
     public bool? IsDeleted { get; set; }
 
-    public int? AdultCapacity { get; set; }
+    public int AdultCapacity { get; set; }
 
-    public int? ChildCapacity { get; set; }
+    public int ChildCapacity { get; set; }
 
-    public int? UnitTypeId { get; set; }
+    public int UnitTypeId { get; set; }
 
     public int? QualityId { get; set; }
 
@@ -59,5 +59,5 @@ public partial class RoomType
 
     public virtual ICollection<Room> Rooms { get; set; } = new List<Room>();
 
-    public virtual UnitType? UnitType { get; set; }
+    public virtual UnitType UnitType { get; set; } = null!;
 }
