@@ -6,6 +6,7 @@ using HotelBooking.application.Services.Domains.RequestManagement;
 using HotelBooking.application.Services.Domains.UserManagement;
 using HotelBooking.application.Services.Domains.RoomManagement;
 using HotelBooking.application.Services.Domains.UserManagement.Register;
+using HotelBooking.application.Services.Domains.UserManagement.Login;
 
 public static class ApplicationServiceExtension
 {
@@ -42,6 +43,9 @@ public static class ApplicationServiceExtension
 
         // User Management
         services.AddScoped<IRegisterService, RegisterService>();
+        services.AddScoped<ILoginService, LoginService>();
+
+
 
         // Helpers
         services.AddSingleton<IImageHelper, ImageHelper>();

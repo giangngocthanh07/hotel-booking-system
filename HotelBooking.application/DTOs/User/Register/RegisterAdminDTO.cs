@@ -15,6 +15,7 @@ namespace HotelBooking.application.DTOs.User.Register
         public string Email { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
+        public string ConfirmPassword { get; set; } = string.Empty;
 
         private int RoleId = RoleTypeConstDTO.Admin;
         public int GetRoleId()
