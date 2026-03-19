@@ -45,7 +45,7 @@ public abstract class BaseServiceTest
         where TEntity : class
     {
         mockRepo.Setup(x => x.AddAsync(It.IsAny<TEntity>()))
-                .ThrowsAsync(new Exception("Database Error Simulation"));
+                .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
     }
 
     #region VERIFY HELPERS
