@@ -37,53 +37,11 @@ namespace HotelBooking.application.Services.Domains.RoomManagement
                 return ResponseFactory.Failure<int>(StatusCodeResponse.BadRequest, validationResult.Errors[0].ErrorMessage);
             }
 
-            var isHotelExisted = await _hotelRepo.AnyAsync(x => x.Id == request.HotelId);
-            if (!isHotelExisted)
+            var ghostIdValidation = await ValidateGhostIdsAsync(request);
+            if (!ghostIdValidation.IsValid)
             {
-                return ResponseFactory.Failure<int>(StatusCodeResponse.NotFound, MessageResponse.RoomManagement.ROOM_TYPE_HOTEL_NOT_FOUND);
+                return ResponseFactory.Failure<int>(StatusCodeResponse.NotFound, ghostIdValidation.Message);
             }
-
-            var isUnitTypeExisted = await _attributeFacade.IsUnitTypeExistedAsync(request.UnitTypeId);
-            if (!isUnitTypeExisted)
-            {
-                return ResponseFactory.Failure<int>(StatusCodeResponse.NotFound, MessageResponse.RoomManagement.ROOM_TYPE_UNIT_TYPE_NOT_FOUND);
-            }
-
-            if (request.QualityId.HasValue)
-            {
-                var isQualityExisted = await _attributeFacade.IsRoomQualityExistedAsync(request.QualityId.Value);
-                if (!isQualityExisted)
-                {
-                    return ResponseFactory.Failure<int>(StatusCodeResponse.NotFound, MessageResponse.RoomManagement.ROOM_TYPE_QUALITY_NOT_FOUND);
-                }
-            }
-
-            if (request.RoomViewId.HasValue)
-            {
-                var isRoomViewExisted = await _attributeFacade.IsRoomViewExistedAsync(request.RoomViewId.Value);
-                if (!isRoomViewExisted)
-                {
-                    return ResponseFactory.Failure<int>(StatusCodeResponse.NotFound, MessageResponse.RoomManagement.ROOM_TYPE_ROOM_VIEW_NOT_FOUND);
-                }
-            }
-
-            var isBedTypeIdsExisted = true;
-            foreach (var bedType in request.BedTypes)
-            {
-                var isBedTypeExisted = await _attributeFacade.IsBedTypeExistedAsync(bedType.BedTypeId);
-                if (!isBedTypeExisted)
-                {
-                    isBedTypeIdsExisted = false;
-                    break;
-                }
-            }
-
-            if (!isBedTypeIdsExisted)
-            {
-                return ResponseFactory.Failure<int>(StatusCodeResponse.NotFound, MessageResponse.RoomManagement.ROOM_TYPE_BED_TYPE_NOT_FOUND);
-            }
-
-
 
             try
             {
@@ -140,6 +98,54 @@ namespace HotelBooking.application.Services.Domains.RoomManagement
                 await _dbu.RollBackTransactionAsync();
                 return ResponseFactory.ServerError<int>();
             }
+        }
+
+        // --- HELPER FUNCTION: Convert child paged result to parent paged result ---
+        private async Task<(bool IsValid, string Message)> ValidateGhostIdsAsync(RoomTypeCreateDTO request)
+        {
+            // Check Hotel
+            var isHotelExisted = await _hotelRepo.AnyAsync(x => x.Id == request.HotelId);
+            if (!isHotelExisted)
+            {
+                return (false, MessageResponse.RoomManagement.ROOM_TYPE_HOTEL_NOT_FOUND);
+            }
+            // Check UnitType
+            var isUnitTypeExisted = await _attributeFacade.IsUnitTypeExistedAsync(request.UnitTypeId);
+            if (!isUnitTypeExisted)
+            {
+                return (false, MessageResponse.RoomManagement.ROOM_TYPE_UNIT_TYPE_NOT_FOUND);
+            }
+            // Check Quality (if provided)
+            if (request.QualityId.HasValue)
+            {
+                var isQualityExisted = await _attributeFacade.IsRoomQualityExistedAsync(request.QualityId.Value);
+                if (!isQualityExisted)
+                {
+                    return (false, MessageResponse.RoomManagement.ROOM_TYPE_QUALITY_NOT_FOUND);
+                }
+            }
+            // Check RoomView (if provided)
+            if (request.RoomViewId.HasValue)
+            {
+                var isRoomViewExisted = await _attributeFacade.IsRoomViewExistedAsync(request.RoomViewId.Value);
+                if (!isRoomViewExisted)
+                {
+                    return (false, MessageResponse.RoomManagement.ROOM_TYPE_ROOM_VIEW_NOT_FOUND);
+                }
+            }
+
+            // Check BedTypes
+            foreach (var bedType in request.BedTypes)
+            {
+                var isBedTypeExisted = await _attributeFacade.IsBedTypeExistedAsync(bedType.BedTypeId);
+                if (!isBedTypeExisted)
+                {
+                    return (false, MessageResponse.RoomManagement.ROOM_TYPE_BED_TYPE_NOT_FOUND);
+                }
+            }
+
+
+            return (true, string.Empty);
         }
     }
 }

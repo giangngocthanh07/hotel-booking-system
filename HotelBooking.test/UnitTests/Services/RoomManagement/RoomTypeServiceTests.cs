@@ -35,11 +35,7 @@ namespace HotelBooking.Tests.Services.RoomManagement
         {
             // 1. Arrange
             MockValidationSuccess();
-            MockHotelExists(true);
-            MockUnitTypeExists(true);
-            MockQualityExists(true);
-            MockRoomViewExists(true);
-            MockBedTypeExists(true);
+            MockAllGhostIdsExist();
 
             var request = new RoomTypeCreateDTO
             {
@@ -86,7 +82,7 @@ namespace HotelBooking.Tests.Services.RoomManagement
         {
             // 1. Arrange
             MockValidationSuccess();
-            MockHotelExists(false);
+            MockAllGhostIdsExist(hotelExists: false);
 
             var request = new RoomTypeCreateDTO
             {
@@ -118,8 +114,7 @@ namespace HotelBooking.Tests.Services.RoomManagement
         {
             // 1. Arrange
             MockValidationSuccess();
-            MockHotelExists(true);
-            MockUnitTypeExists(false);
+            MockAllGhostIdsExist(unitTypeExists: false);
 
             var request = new RoomTypeCreateDTO
             {
@@ -151,9 +146,7 @@ namespace HotelBooking.Tests.Services.RoomManagement
         {
             // 1. Arrange
             MockValidationSuccess();
-            MockHotelExists(true);
-            MockUnitTypeExists(true);
-            MockQualityExists(false);
+            MockAllGhostIdsExist(qualityExists: false);
 
             var request = new RoomTypeCreateDTO
             {
@@ -186,10 +179,7 @@ namespace HotelBooking.Tests.Services.RoomManagement
         {
             // 1. Arrange
             MockValidationSuccess();
-            MockHotelExists(true);
-            MockUnitTypeExists(true);
-            MockQualityExists(true);
-            MockRoomViewExists(false);
+            MockAllGhostIdsExist(roomViewExists: false);
 
             var request = new RoomTypeCreateDTO
             {
@@ -223,11 +213,7 @@ namespace HotelBooking.Tests.Services.RoomManagement
         {
             // 1. Arrange
             MockValidationSuccess();
-            MockHotelExists(true);
-            MockUnitTypeExists(true);
-            MockQualityExists(true);
-            MockRoomViewExists(true);
-            MockBedTypeExists(false);
+            MockAllGhostIdsExist(bedTypeExists: false);
 
             var request = new RoomTypeCreateDTO
             {
@@ -261,11 +247,7 @@ namespace HotelBooking.Tests.Services.RoomManagement
         {
             // 1. Arrange
             MockValidationSuccess();
-            MockHotelExists(true);
-            MockUnitTypeExists(true);
-            MockQualityExists(true);
-            MockRoomViewExists(true);
-            MockBedTypeExists(true);
+            MockAllGhostIdsExist();
 
             var request = new RoomTypeCreateDTO
             {
@@ -316,11 +298,7 @@ namespace HotelBooking.Tests.Services.RoomManagement
         {
             // 1. Arrange
             MockValidationSuccess();
-            MockHotelExists(true);
-            MockUnitTypeExists(true);
-            MockQualityExists(true);
-            MockRoomViewExists(true);
-            MockBedTypeExists(true);
+            MockAllGhostIdsExist();
 
             var request = new RoomTypeCreateDTO
             {
@@ -375,34 +353,32 @@ namespace HotelBooking.Tests.Services.RoomManagement
                 .ReturnsAsync(new FluentValidation.Results.ValidationResult());
         }
 
-        private void MockHotelExists(bool exists)
+        private void MockAllGhostIdsExist(
+        bool hotelExists = true,
+        bool unitTypeExists = true,
+        bool qualityExists = true,
+        bool roomViewExists = true,
+        bool bedTypeExists = true)
         {
-            _mockHotelRepo.Setup(r => r.AnyAsync(It.IsAny<Expression<Func<Hotel, bool>>>()))
-                .ReturnsAsync(exists);
-        }
+            _mockHotelRepo
+                .Setup(r => r.AnyAsync(It.IsAny<Expression<Func<Hotel, bool>>>()))
+                .ReturnsAsync(hotelExists);
 
-        private void MockUnitTypeExists(bool exists)
-        {
-            _mockAttributeFacade.Setup(f => f.IsUnitTypeExistedAsync(It.IsAny<int>()))
-                .ReturnsAsync(exists);
-        }
+            _mockAttributeFacade
+                .Setup(f => f.IsUnitTypeExistedAsync(It.IsAny<int>()))
+                .ReturnsAsync(unitTypeExists);
 
-        private void MockQualityExists(bool exists)
-        {
-            _mockAttributeFacade.Setup(f => f.IsRoomQualityExistedAsync(It.IsAny<int>()))
-                .ReturnsAsync(exists);
-        }
+            _mockAttributeFacade
+                .Setup(f => f.IsRoomQualityExistedAsync(It.IsAny<int>()))
+                .ReturnsAsync(qualityExists);
 
-        private void MockRoomViewExists(bool exists)
-        {
-            _mockAttributeFacade.Setup(f => f.IsRoomViewExistedAsync(It.IsAny<int>()))
-                .ReturnsAsync(exists);
-        }
+            _mockAttributeFacade
+                .Setup(f => f.IsRoomViewExistedAsync(It.IsAny<int>()))
+                .ReturnsAsync(roomViewExists);
 
-        private void MockBedTypeExists(bool exists)
-        {
-            _mockAttributeFacade.Setup(f => f.IsBedTypeExistedAsync(It.IsAny<int>()))
-                .ReturnsAsync(exists);
+            _mockAttributeFacade
+                .Setup(f => f.IsBedTypeExistedAsync(It.IsAny<int>()))
+                .ReturnsAsync(bedTypeExists);
         }
     }
 }
