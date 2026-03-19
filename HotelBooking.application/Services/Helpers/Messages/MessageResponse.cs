@@ -19,6 +19,7 @@ public static class MessageResponse
         public const string UPDATE_FAILED = "Failed to update!";
         public const string DELETE_SUCCESSFULLY = "Deleted successfully!";
         public const string DELETE_FAILED = "Failed to delete!";
+        public const string CHECK_EXISTED_SUCCESSFULLY = "Checked existence successfully!";
 
         // Status messages
         public const string NOT_FOUND = "Not found!";
@@ -324,43 +325,66 @@ public static class MessageResponse
         }
     }
 
+    // =====================================================
+    // 6. ROOM MANAGEMENT MESSAGES
+    // =====================================================
     public static class RoomManagement
     {
-        public const string ROOM_TYPE_NAME_ALREADY_EXISTS = "Room type name already exists!";
+        // --- ROOM TYPE: VALIDATION MESSAGES (Layer 1 - BadRequest) ---
+        public const string ROOM_TYPE_HOTEL_ID_INVALID = "Hotel ID must be greater than 0!";
         public const string ROOM_TYPE_NAME_EMPTY = "Room type name must not be empty!";
         public const string ROOM_TYPE_NAME_TOO_LONG = "Room type name must not exceed 100 characters!";
         public const string ROOM_TYPE_DESCRIPTION_TOO_LONG = "Room type description must not exceed 500 characters!";
         public const string ROOM_TYPE_PRICE_INVALID = "Price per night must be greater than or equal to 0!";
         public const string ROOM_TYPE_CAPACITY_INVALID = "Capacity must be greater than 0!";
         public const string ROOM_TYPE_ADULT_CAPACITY_INVALID = "Adult capacity must be greater than 0!";
-        public const string ROOM_TYPE_CHILD_CAPACITY_INVALID = "Child capacity must be greater than 0!";
+        public const string ROOM_TYPE_CHILD_CAPACITY_INVALID = "Child capacity must be greater than or equal to 0!";
         public const string ROOM_TYPE_UNIT_TYPE_ID_INVALID = "Unit type ID must be greater than 0!";
         public const string ROOM_TYPE_QUALITY_ID_INVALID = "Quality ID must be greater than 0!";
         public const string ROOM_TYPE_ROOM_VIEW_ID_INVALID = "Room view ID must be greater than 0!";
-        public const string ROOM_TYPE_MAX_EXTRA_BEDS_INVALID = "Max extra beds must be greater than or equal to 0!";
+        public const string ROOM_TYPE_MAX_EXTRA_BEDS_INVALID = "Max extra beds must be greater than 0!";
+        public const string ROOM_TYPE_MAX_EXTRA_BEDS_MUST_BE_NULL_OR_ZERO = "Max extra beds must be null or 0 when extra bed is not allowed!";
         public const string ROOM_TYPE_AREA_INVALID = "Area must be greater than 0!";
         public const string ROOM_TYPE_TOTAL_ROOMS_INVALID = "Total rooms must be greater than 0!";
+        public const string ROOM_TYPE_BED_TYPES_REQUIRED = "At least one bed type is required!";
+        public const string ROOM_TYPE_BED_TYPE_ID_INVALID = "Bed type ID must be greater than 0!";
+        public const string ROOM_TYPE_BED_TYPE_QUANTITY_INVALID = "Bed type quantity must be greater than 0!";
+        public const string ROOM_TYPE_NAME_ALREADY_EXISTS = "Room type name already exists!";
 
-        // Room Name Suggestion Messages
-        public const string ROOM_NAME_SUGGESTION_REQUEST_NULL = "Room name suggestion request is null!";
-        public const string ROOM_NAME_SUGGESTION_UNIT_TYPE_ID_REQUIRED = "Unit type ID is required!";
+        // --- ROOM TYPE: NOT FOUND MESSAGES (Layer 2 - Ghost ID Check) ---
+        public const string ROOM_TYPE_HOTEL_NOT_FOUND = "Hotel not found!";
+        public const string ROOM_TYPE_UNIT_TYPE_NOT_FOUND = "Unit type not found!";
+        public const string ROOM_TYPE_QUALITY_NOT_FOUND = "Room quality not found!";
+        public const string ROOM_TYPE_ROOM_VIEW_NOT_FOUND = "Room view not found!";
+        public const string ROOM_TYPE_BED_TYPE_NOT_FOUND = "Bed type not found!";
+
+        // --- ROOM TYPE: OPERATION MESSAGES (Layer 3 - Persistence) ---
+        public const string ROOM_TYPE_CREATED_SUCCESS = "Room type created successfully!";
+        public const string ROOM_TYPE_CREATED_FAILED = "Failed to create room type!";
+        public const string ROOM_TYPE_UPDATED_SUCCESS = "Room type updated successfully!";
+        public const string ROOM_TYPE_UPDATED_FAILED = "Failed to update room type!";
+        public const string ROOM_TYPE_DELETED_SUCCESS = "Room type deleted successfully!";
+        public const string ROOM_TYPE_DELETED_FAILED = "Failed to delete room type!";
+        public const string ROOM_TYPE_NOT_FOUND = "Room type not found!";
+
+        // --- ROOM NAME SUGGESTION: VALIDATION MESSAGES ---
+        public const string ROOM_NAME_SUGGESTION_REQUEST_NULL = "Room name suggestion request must not be null!";
         public const string ROOM_NAME_SUGGESTION_UNIT_TYPE_ID_INVALID = "Unit type ID must be greater than 0!";
         public const string ROOM_NAME_SUGGESTION_QUALITY_ID_INVALID = "Quality ID must be greater than 0!";
         public const string ROOM_NAME_SUGGESTION_ROOM_VIEW_ID_INVALID = "Room view ID must be greater than 0!";
-        public const string ROOM_NAME_SUGGESTION_ADULT_CAPACITY_REQUIRED = "Adult capacity is required!";
         public const string ROOM_NAME_SUGGESTION_ADULT_CAPACITY_INVALID = "Adult capacity must be greater than 0!";
         public const string ROOM_NAME_SUGGESTION_CHILDREN_CAPACITY_REQUIRED = "Children capacity is required!";
-        public const string ROOM_NAME_SUGGESTION_CHILDREN_CAPACITY_INVALID = "Children capacity must be greater than or equal to 0!";
-        public const string ROOM_NAME_SUGGESTION_IS_PRIVATE_BATHROOM_INVALID = "Is private bathroom must be true or false!";
-        public const string ROOM_NAME_SUGGESTION_HAS_BALCONY_INVALID = "Has balcony must be true or false!";
-        public const string ROOM_NAME_SUGGESTION_HAS_TERRACE_INVALID = "Has terrace must be true or false!";
-        public const string ROOM_NAME_SUGGESTION_CAN_ADD_EXTRA_BEDS_INVALID = "Can add extra beds must be true or false!";
-        public const string ROOM_NAME_SUGGESTION_MAX_EXTRA_BEDS_REQUIRED = "Max extra beds is required when can add extra beds is true!";
+        public const string ROOM_NAME_SUGGESTION_MAX_EXTRA_BEDS_REQUIRED = "Max extra beds is required when extra bed is allowed!";
         public const string ROOM_NAME_SUGGESTION_MAX_EXTRA_BEDS_INVALID = "Max extra beds must be greater than 0!";
-        public const string ROOM_NAME_SUGGESTION_MAX_EXTRA_BEDS_MUST_BE_NULL_OR_ZERO = "Max extra beds must be null or 0 when can add extra beds is false!";
-        public const string ROOM_NAME_SUGGESTION_BED_TYPES_REQUIRED = "Bed types are required!";
-        public const string ROOM_NAME_SUGGESTION_BED_TYPES_INVALID = "Each bed type must have a valid BedTypeId and quantity greater than 0!";
+        public const string ROOM_NAME_SUGGESTION_MAX_EXTRA_BEDS_MUST_BE_NULL_OR_ZERO = "Max extra beds must be null or 0 when extra bed is not allowed!";
+        public const string ROOM_NAME_SUGGESTION_BED_TYPES_REQUIRED = "At least one bed type is required!";
+        public const string ROOM_NAME_SUGGESTION_BED_TYPES_INVALID = "Each bed type must have a valid ID and quantity greater than 0!";
 
+        // --- ROOM NAME SUGGESTION: NOT FOUND MESSAGES ---
+        public const string ROOM_NAME_SUGGESTION_UNIT_TYPE_NOT_FOUND = "Unit type not found!";
+        public const string ROOM_NAME_SUGGESTION_QUALITY_NOT_FOUND = "Room quality not found!";
+        public const string ROOM_NAME_SUGGESTION_ROOM_VIEW_NOT_FOUND = "Room view not found!";
+        public const string ROOM_NAME_SUGGESTION_BED_TYPE_NOT_FOUND = "Bed type not found!";
     }
 
     // Alias for easier access

@@ -6,6 +6,7 @@ using HotelBooking.application.Interfaces;
 public interface IRoomViewService : IStandardManage<RoomViewDTO, RoomViewCreateDTO, RoomViewUpdateDTO>
 {
     Task<ApiResponse<PagedManageResult<RoomViewDTO>>> GetPagedListAsync(PagingRequest paging);
+    Task<ApiResponse<bool>> RoomViewExistsAsync(int id);
 }
 
 public class RoomViewService : BaseManage<RoomView, IRoomViewRepository, RoomViewDTO, RoomViewCreateDTO, RoomViewUpdateDTO>, IRoomViewService
@@ -45,7 +46,7 @@ public class RoomViewService : BaseManage<RoomView, IRoomViewRepository, RoomVie
     {
         bool exists = await _repo.AnyAsync(x => x.Name == dto.Name);
 
-        if (exists) 
+        if (exists)
             return ValidationResult.Fail(MessageResponse.AdminManagement.RoomAttribute.RoomView.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
 
         return ValidationResult.Success();
@@ -81,6 +82,19 @@ public class RoomViewService : BaseManage<RoomView, IRoomViewRepository, RoomVie
         catch (Exception)
         {
             return ResponseFactory.ServerError<List<RoomViewDTO>>();
+        }
+    }
+
+    public async Task<ApiResponse<bool>> RoomViewExistsAsync(int id)
+    {
+        try
+        {
+            var exists = await _repo.AnyAsync(x => x.Id == id && x.IsDeleted == false);
+            return ResponseFactory.Success(exists, MessageResponse.Common.CHECK_EXISTED_SUCCESSFULLY);
+        }
+        catch (Exception)
+        {
+            return ResponseFactory.ServerError<bool>();
         }
     }
 

@@ -6,6 +6,8 @@ using HotelBooking.application.Interfaces;
 public interface IUnitTypeService : IStandardManage<UnitTypeDTO, UnitTypeCreateDTO, UnitTypeUpdateDTO>
 {
     Task<ApiResponse<PagedManageResult<UnitTypeDTO>>> GetPagedListAsync(PagingRequest paging);
+
+    Task<ApiResponse<bool>> UnitTypeExistsAsync(int id);
 }
 
 public class UnitTypeService : BaseManage<UnitType, IUnitTypeRepository, UnitTypeDTO, UnitTypeCreateDTO, UnitTypeUpdateDTO>, IUnitTypeService
@@ -74,6 +76,21 @@ public class UnitTypeService : BaseManage<UnitType, IUnitTypeRepository, UnitTyp
 
         return ValidationResult.Success();
     }
+
+    public async Task<ApiResponse<bool>> UnitTypeExistsAsync(int id)
+    {
+        try
+        {
+            bool exists = await _repo.AnyAsync(x => x.Id == id && x.IsDeleted == false);
+            return ResponseFactory.Success(exists, MessageResponse.Common.CHECK_EXISTED_SUCCESSFULLY);
+        }
+        catch (Exception)
+        {
+            return ResponseFactory.ServerError<bool>();
+        }
+    }
+
+    // --- IMPLEMENTATION: GET ALL RECORDS ---
 
     public async Task<ApiResponse<List<UnitTypeDTO>>> GetAllAsync()
     {

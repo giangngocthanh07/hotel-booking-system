@@ -7,6 +7,7 @@ using HotelBooking.application.Interfaces;
 public interface IBedTypeService : IStandardManage<BedTypeDTO, BedTypeCreateDTO, BedTypeUpdateDTO>
 {
     Task<ApiResponse<PagedManageResult<BedTypeDTO>>> GetPagedListAsync(PagingRequest paging);
+    Task<ApiResponse<bool>> BedTypeExistsAsync(int id);
 }
 
 public class BedTypeService : BaseManage<BedType, IBedTypeRepository, BedTypeDTO, BedTypeCreateDTO, BedTypeUpdateDTO>, IBedTypeService
@@ -90,6 +91,21 @@ public class BedTypeService : BaseManage<BedType, IBedTypeRepository, BedTypeDTO
 
         return ValidationResult.Success();
     }
+
+    public async Task<ApiResponse<bool>> BedTypeExistsAsync(int id)
+    {
+        try
+        {
+            bool exists = await _repo.AnyAsync(x => x.Id == id && x.IsDeleted == false);
+            return ResponseFactory.Success(exists, MessageResponse.Common.CHECK_EXISTED_SUCCESSFULLY);
+        }
+        catch (Exception)
+        {
+            return ResponseFactory.ServerError<bool>();
+        }
+    }
+
+    // --- IMPLEMENT METHOD: GET ALL ---
 
     public async Task<ApiResponse<List<BedTypeDTO>>> GetAllAsync()
     {

@@ -7,6 +7,8 @@ public interface IRoomQualityService : ITypedManage<RoomQualityDTO, RoomQualityG
 {
     Task<ApiResponse<List<RoomQualityDTO>>> GetAllByTypeAsync(int? typeId = null);
     Task<ApiResponse<PagedManageResult<RoomQualityDTO>>> GetRoomQualitiesByTypeAsync(int? typeId, PagingRequest paging);
+
+    Task<ApiResponse<bool>> RoomQualityExistsAsync(int id);
 }
 
 public class RoomQualityService : BaseManage<RoomQuality, IRoomQualityRepository, RoomQualityDTO, RoomQualityCreateDTO, RoomQualityUpdateDTO>, IRoomQualityService
@@ -80,6 +82,19 @@ public class RoomQualityService : BaseManage<RoomQuality, IRoomQualityRepository
             return ValidationResult.Fail(MessageResponse.AdminManagement.RoomAttribute.RoomQuality.NAME_ALREADY_EXISTS, StatusCodeResponse.Conflict);
 
         return ValidationResult.Success();
+    }
+
+    public async Task<ApiResponse<bool>> RoomQualityExistsAsync(int id)
+    {
+        try
+        {
+            var exists = await _repo.AnyAsync(x => x.Id == id && x.IsDeleted == false);
+            return ResponseFactory.Success(exists, MessageResponse.Common.CHECK_EXISTED_SUCCESSFULLY);
+        }
+        catch (Exception)
+        {
+            return ResponseFactory.ServerError<bool>();
+        }
     }
 
 

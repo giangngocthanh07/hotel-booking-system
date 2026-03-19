@@ -6,7 +6,6 @@ public class RoomTypeCreateDTO
     public string? Description { get; set; }
     public bool? IsDeleted { get; set; } = false;
     public decimal PricePerNight { get; set; }
-    public int Capacity { get; set; }
     public int AdultCapacity { get; set; }
     public int ChildCapacity { get; set; }
     public int UnitTypeId { get; set; }

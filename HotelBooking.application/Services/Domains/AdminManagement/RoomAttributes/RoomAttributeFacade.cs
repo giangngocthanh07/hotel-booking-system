@@ -12,6 +12,12 @@ public interface IRoomAttributeFacade
     // --- METHOD: GET PAGED LIST BY ENUM ---
     Task<ApiResponse<PagedManageResult<RoomAttributeDTO>>> GetPagedByTypeAsync(
         GetRoomAttributeRequest request);
+
+    // 
+    Task<bool> IsUnitTypeExistedAsync(int id);
+    Task<bool> IsRoomQualityExistedAsync(int id);
+    Task<bool> IsRoomViewExistedAsync(int id);
+    Task<bool> IsBedTypeExistedAsync(int id);
 }
 
 
@@ -81,6 +87,32 @@ public class RoomAttributeFacade : IRoomAttributeFacade
         {
             return ResponseFactory.ServerError<PagedManageResult<RoomAttributeDTO>>();
         }
+    }
+
+    // --- IMPLEMENTATION: CHECK EXISTENCE ---
+    // Note: These methods are used by RoomTypeService to validate foreign keys (UnitTypeId, QualityId, RoomViewId, BedTypeId)
+    public async Task<bool> IsUnitTypeExistedAsync(int id)
+    {
+        var response = await UnitTypeService.UnitTypeExistsAsync(id);
+        return response.Content;
+    }
+
+    public async Task<bool> IsRoomQualityExistedAsync(int id)
+    {
+        var response = await RoomQualityService.RoomQualityExistsAsync(id);
+        return response.Content;
+    }
+
+    public async Task<bool> IsRoomViewExistedAsync(int id)
+    {
+        var response = await RoomViewService.RoomViewExistsAsync(id);
+        return response.Content;
+    }
+
+    public async Task<bool> IsBedTypeExistedAsync(int id)
+    {
+        var response = await BedTypeService.BedTypeExistsAsync(id);
+        return response.Content;
     }
 
     // --- HELPER: CONVERT CHILD RESULT TO PARENT RESULT ---

@@ -12,28 +12,19 @@ public class RoomNameSuggestionValidator : AbstractValidator<RoomNameSuggestionR
             .GreaterThan(0).WithMessage(MessageResponse.RoomManagement.ROOM_NAME_SUGGESTION_UNIT_TYPE_ID_INVALID);
 
         RuleFor(x => x.QualityId)
-            .GreaterThan(0).WithMessage(MessageResponse.RoomManagement.ROOM_NAME_SUGGESTION_QUALITY_ID_INVALID);
+            .GreaterThan(0).WithMessage(MessageResponse.RoomManagement.ROOM_NAME_SUGGESTION_QUALITY_ID_INVALID)
+            .When(x => x.QualityId.HasValue);
 
         RuleFor(x => x.RoomViewId)
-            .GreaterThan(0).WithMessage(MessageResponse.RoomManagement.ROOM_NAME_SUGGESTION_ROOM_VIEW_ID_INVALID);
+            .GreaterThan(0).WithMessage(MessageResponse.RoomManagement.ROOM_NAME_SUGGESTION_ROOM_VIEW_ID_INVALID)
+            .When(x => x.RoomViewId.HasValue);
 
         RuleFor(x => x.AdultCapacity)
             .GreaterThan(0).WithMessage(MessageResponse.RoomManagement.ROOM_NAME_SUGGESTION_ADULT_CAPACITY_INVALID);
 
-        RuleFor(x => x.ChildrenCapacity)
-            .NotNull().WithMessage(MessageResponse.RoomManagement.ROOM_NAME_SUGGESTION_CHILDREN_CAPACITY_REQUIRED);
-
-        RuleFor(x => x.IsPrivateBathroom)
-            .NotNull().WithMessage(MessageResponse.RoomManagement.ROOM_NAME_SUGGESTION_IS_PRIVATE_BATHROOM_INVALID);
-
-        RuleFor(x => x.HasBalcony)
-            .NotNull().WithMessage(MessageResponse.RoomManagement.ROOM_NAME_SUGGESTION_HAS_BALCONY_INVALID);
-
-        RuleFor(x => x.HasTerrace)
-            .NotNull().WithMessage(MessageResponse.RoomManagement.ROOM_NAME_SUGGESTION_HAS_TERRACE_INVALID);
-
-        RuleFor(x => x.CanAddExtraBeds)
-            .NotNull().WithMessage(MessageResponse.RoomManagement.ROOM_NAME_SUGGESTION_CAN_ADD_EXTRA_BEDS_INVALID);
+        // RuleFor(x => x.CanAddExtraBeds)
+        //     .NotNull().WithMessage(MessageResponse.RoomManagement.ROOM_NAME_SUGGESTION_CAN_ADD_EXTRA_BEDS_REQUIRED)
+        //     .When(x => x.CanAddExtraBeds == true);
 
         When(x => x.CanAddExtraBeds == true, () =>
         {
