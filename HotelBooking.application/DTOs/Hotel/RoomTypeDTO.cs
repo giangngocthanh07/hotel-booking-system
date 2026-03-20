@@ -1,4 +1,5 @@
 namespace HotelBooking.application.DTOs.Hotel;
+
 public class RoomTypeCreateDTO
 {
     public int HotelId { get; set; }

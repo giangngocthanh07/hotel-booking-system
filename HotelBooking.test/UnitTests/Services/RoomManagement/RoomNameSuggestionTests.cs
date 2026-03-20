@@ -20,7 +20,13 @@ namespace HotelBooking.Tests.Services.RoomManagement
         }
 
         #region Test Cases
-        // 1. Failed Test Cases
+        [Fact]
+        public async Task SuggestRoomNamesAsync_ValidRequest_ShouldReturnSuccess()
+        {
+            
+        }
+        
+        // 2. Failed Test Cases
         // ---------- a) The Null or Empty Request ----------
         [Fact]
         public async Task SuggestRoomNamesAsync_NullRequest_ReturnsBadRequest()

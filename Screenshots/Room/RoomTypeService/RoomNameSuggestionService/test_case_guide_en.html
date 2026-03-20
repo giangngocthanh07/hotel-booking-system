@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Select Test Cases — TDD</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Syne:wght@700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0b0f;
+    --surface: #13151c;
+    --surface2: #1c1f2a;
+    --surface3: #252836;
+    --border: #2e3245;
+    --text: #e4e6f0;
+    --muted: #7680a0;
+
+    --purple: #a78bfa;
+    --purple-bg: rgba(167,139,250,0.12);
+    --purple-border: rgba(167,139,250,0.35);
+
+    --teal: #2dd4bf;
+    --teal-bg: rgba(45,212,191,0.12);
+    --teal-border: rgba(45,212,191,0.35);
+
+    --amber: #fbbf24;
+    --amber-bg: rgba(251,191,36,0.12);
+    --amber-border: rgba(251,191,36,0.35);
+
+    --coral: #fb7185;
+    --coral-bg: rgba(251,113,133,0.12);
+    --coral-border: rgba(251,113,133,0.35);
+
+    --blue: #60a5fa;
+    --blue-bg: rgba(96,165,250,0.12);
+    --blue-border: rgba(96,165,250,0.35);
+
+    --green: #4ade80;
+    --green-bg: rgba(74,222,128,0.12);
+    --green-border: rgba(74,222,128,0.35);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  .app {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  .header { margin-bottom: 48px; }
+
+  .header-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .header-tag::before {
+    content: '';
+    display: inline-block;
+    width: 24px;
+    height: 2px;
+    background: var(--teal);
+    border-radius: 2px;
+  }
+
+  .header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 38px;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #e4e6f0 0%, #a78bfa 50%, #2dd4bf 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .header-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .pill {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  .dots-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 32px;
+    align-items: center;
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--surface3);
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid var(--border);
+  }
+
+  .dot:hover { transform: scale(1.3); }
+  .dot.done { background: var(--teal); border-color: var(--teal); }
+  .dot.active { background: var(--purple); border-color: var(--purple); width: 28px; border-radius: 5px; }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .panel-header {
+    padding: 20px 28px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .step-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  .panel-meta { flex: 1; }
+
+  .step-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .step-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+  }
+
+  .panel-body { padding: 24px 28px; }
+
+  .rule {
+    border-radius: 12px;
+    border: 1px solid;
+    padding: 14px 18px;
+    margin: 10px 0;
+  }
+
+  .rule-q  { background: var(--purple-bg); border-color: var(--purple-border); }
+  .rule-t  { background: var(--teal-bg);   border-color: var(--teal-border); }
+  .rule-a  { background: var(--amber-bg);  border-color: var(--amber-border); }
+  .rule-c  { background: var(--coral-bg);  border-color: var(--coral-border); }
+  .rule-b  { background: var(--blue-bg);   border-color: var(--blue-border); }
+  .rule-g  { background: var(--green-bg);  border-color: var(--green-border); }
+  .rule-n  { background: var(--surface2);  border-color: var(--border); }
+
+  .rule-name {
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 5px;
+    color: var(--text);
+  }
+
+  .rule-desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    background: var(--surface3);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--teal);
+  }
+
+  .badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-right: 4px;
+  }
+
+  .bq { background: var(--amber-bg);  color: var(--amber);  border: 1px solid var(--amber-border); }
+  .bv { background: var(--blue-bg);   color: var(--blue);   border: 1px solid var(--blue-border); }
+  .bf { background: var(--coral-bg);  color: var(--coral);  border: 1px solid var(--coral-border); }
+  .bok{ background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+
+  .ex-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin: 4px 0;
+    background: var(--surface2);
+    font-size: 13px;
+    transition: background 0.15s;
+  }
+
+  .ex-row:hover { background: var(--surface3); }
+
+  .ex-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--purple);
+    min-width: 60px;
+    text-align: right;
+  }
+
+  .test-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--surface3);
+    font-size: 12px;
+  }
+
+  .test-item:last-child { border-bottom: none; }
+
+  .test-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+
+  .nav { display: flex; align-items: center; gap: 12px; }
+
+  .nav-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .nav-btn:hover {
+    background: var(--surface3);
+    border-color: var(--purple);
+    color: var(--purple);
+  }
+
+  .nav-prog {
+    flex: 1;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  p { margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="header-tag">TDD — Unit Testing Guide</div>
+    <h1>How to Select Test Cases</h1>
+    <div class="header-pills">
+      <span class="pill">7 steps</span>
+      <span class="pill">13 test cases</span>
+      <span class="pill">3 layers</span>
+    </div>
+  </div>
+
+  <div class="dots-row" id="dots"></div>
+  <div class="panel" id="panel"></div>
+
+  <div class="nav">
+    <button class="nav-btn" onclick="prev()">← Back</button>
+    <span class="nav-prog" id="prog"></span>
+    <button class="nav-btn" onclick="next()">Next →</button>
+  </div>
+
+</div>
+
+<script>
+const iconBgs = [
+  'background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border)',
+  'background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal-border)',
+  'background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)',
+  'background:var(--coral-bg);color:var(--coral);border:1px solid var(--coral-border)',
+  'background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)',
+  'background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)',
+  'background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border)',
+];
+
+const steps = [
+  {
+    tag: 'Step 1 — Core principle',
+    title: 'Each test case verifies exactly one behavior',
+    body: `
+      <p style="color:var(--muted)">Ask yourself these 3 questions before writing any test:</p>
+      <div class="rule rule-q">
+        <div class="rule-name">If this test FAILS, what do I learn?</div>
+        <div class="rule-desc">If you can't answer this clearly → the test has no real value.</div>
+      </div>
+      <div class="rule rule-t">
+        <div class="rule-name">How is this test DIFFERENT from the others?</div>
+        <div class="rule-desc">If two tests verify the same thing → one of them is redundant and should be removed.</div>
+      </div>
+      <div class="rule rule-a">
+        <div class="rule-name">Is the expected output PRECISE?</div>
+        <div class="rule-desc"><code>Be(4)</code> is better than <code>BeGreaterThan(0)</code> — you must know the exact expected value.</div>
+      </div>`
+  },
+  {
+    tag: 'Step 2 — Layer separation',
+    title: 'Each layer has its own type of test',
+    body: `
+      <div class="rule rule-g">
+        <div class="rule-name">Layer 1 — Pure helpers (no dependencies)</div>
+        <div class="rule-desc">FormatCapacity, FormatBedConfiguration<br>→ Test the method directly — no mocks needed at all.</div>
+      </div>
+      <div class="rule rule-t">
+        <div class="rule-name">Layer 2 — Validator</div>
+        <div class="rule-desc">RoomNameSuggestionValidator<br>→ Test each rule: invalid input → does the right error appear?</div>
+      </div>
+      <div class="rule rule-q">
+        <div class="rule-name">Layer 3 — Service logic</div>
+        <div class="rule-desc">SuggestRoomNamesAsync<br>→ Test behavior: does input X produce the correct count and format?</div>
+      </div>
+      <div class="rule rule-n" style="margin-top:14px">
+        <div class="rule-name" style="color:var(--coral)">Golden rule</div>
+        <div class="rule-desc">Never mix layers in one test — ValidatorTest should not call Service, ServiceTest should not call the real DB.</div>
+      </div>`
+  },
+  {
+    tag: 'Step 3 — Happy path',
+    title: 'Start with the minimum successful case',
+    body: `
+      <p style="color:var(--muted)">Happy path = only <strong style="color:var(--text)">required</strong> fields, no optional fields provided.</p>
+      <div class="rule rule-b">
+        <div class="rule-name">Required fields for SuggestRoomNames:</div>
+        <div class="rule-desc">
+          UnitTypeId ✅ &nbsp; BedTypes ✅ &nbsp; AdultCapacity &gt; 0 ✅<br>
+          Quality = null &nbsp;&nbsp; View = null &nbsp;&nbsp; No features
+        </div>
+      </div>
+      <div class="rule rule-g">
+        <div class="rule-name">Templates that pass with minimum fields:</div>
+        <div class="rule-desc">
+          A: [UnitType] &nbsp;&nbsp; C: [Bed]+[UnitType]<br>
+          N: [UnitType]+[Capacity] &nbsp;&nbsp; P: [Bed]+[UnitType]+[Capacity]<br>
+          → Exactly <strong style="color:var(--green)">4 names</strong>
+        </div>
+      </div>
+      <div class="rule rule-n" style="margin-top:14px">
+        <div class="rule-name">Test name:</div>
+        <div class="rule-desc"><code>SuggestRoomNames_NoOptionals_ShouldReturn4Names</code></div>
+      </div>`
+  },
+  {
+    tag: 'Step 4 — Failure case',
+    title: 'Validation fail → service rejects immediately',
+    body: `
+      <p style="color:var(--muted)">The service injects a validator → when validation fails, return BadRequest.</p>
+      <div class="rule rule-c">
+        <div class="rule-name">Only one test case needed for validation</div>
+        <div class="rule-desc">
+          The service does not care <em>why</em> the validator failed — only that IsValid = false.<br>
+          Specific reasons are already covered thoroughly in ValidatorTests.
+        </div>
+      </div>
+      <div class="rule rule-a">
+        <div class="rule-name">Avoid rewriting validation tests inside service tests</div>
+        <div class="rule-desc">
+          Wrong: test "AdultCapacity invalid" in ServiceTest<br>
+          Right: test "AdultCapacity invalid" in ValidatorTest — ServiceTest only tests "validator fail → return BadRequest"
+        </div>
+      </div>
+      <div class="rule rule-n" style="margin-top:14px">
+        <div class="rule-name">Test name:</div>
+        <div class="rule-desc"><code>SuggestRoomNames_InvalidRequest_ShouldReturnBadRequest</code></div>
+      </div>`
+  },
+  {
+    tag: 'Step 5 — Optional combinations',
+    title: 'Each combination = one separate test case',
+    body: `
+      <p style="color:var(--muted)">The number of names depends on <em>all</em> optional fields together — not just one field in isolation.</p>
+      <div class="ex-row"><span><span class="badge bq">Q=null</span><span class="badge bv">V=null</span> No features</span><span class="ex-count">4 names</span></div>
+      <div class="ex-row"><span><span class="badge bok">Q=✅</span><span class="badge bv">V=null</span> No features</span><span class="ex-count">8 names</span></div>
+      <div class="ex-row"><span><span class="badge bq">Q=null</span><span class="badge bok">V=✅</span> No features</span><span class="ex-count">7 names</span></div>
+      <div class="ex-row"><span><span class="badge bok">Q=✅</span><span class="badge bok">V=✅</span> No features</span><span class="ex-count">14 names</span></div>
+      <div class="ex-row"><span><span class="badge bok">Q=✅</span><span class="badge bok">V=✅</span><span class="badge bf">All features</span></span><span class="ex-count">35 names</span></div>
+      <div class="rule rule-n" style="margin-top:14px">
+        <div class="rule-name" style="color:var(--amber)">Important note</div>
+        <div class="rule-desc">When testing "Q=null → 7 names" — you must also specify V=✅. Otherwise the count of 7 will be wrong if V is also null.</div>
+      </div>`
+  },
+  {
+    tag: 'Step 6 — Helper tests',
+    title: 'Grammar logic → tested in isolation',
+    body: `
+      <p style="color:var(--muted)">Pure functions with no dependencies → no mocks required, test directly.</p>
+      <div class="rule rule-g">
+        <div class="rule-name">FormatCapacityTests</div>
+        <div class="rule-desc">
+          Format(1, 0) → <code>"for 1 Adult"</code><br>
+          Format(2, 0) → <code>"for 2 Adults"</code><br>
+          Format(2, 1) → <code>"for 2 Adults and 1 Child"</code><br>
+          Format(2, 2) → <code>"for 2 Adults and 2 Children"</code>
+        </div>
+      </div>
+      <div class="rule rule-t">
+        <div class="rule-name">FormatBedConfigurationTests</div>
+        <div class="rule-desc">
+          [King×1] → <code>"King"</code><br>
+          [Single×2] → <code>"Twin"</code><br>
+          [King×1, Single×2] → <code>"King Twin"</code>
+        </div>
+      </div>
+      <div class="rule rule-n" style="margin-top:14px">
+        <div class="rule-name" style="color:var(--purple)">Why separate?</div>
+        <div class="rule-desc">If FormatCapacity has a bug → the helper test fails immediately, no need to dig through service tests to find the cause.</div>
+      </div>`
+  },
+  {
+    tag: 'Step 7 — Summary',
+    title: 'Full list of all test cases',
+    body: `
+      <div class="rule rule-g">
+        <div class="rule-name">FormatCapacityTests — 4 cases</div>
+        <div class="rule-desc">
+          <div class="test-item"><div class="test-dot" style="background:var(--green)"></div><code>Format_SingleAdult_ShouldReturnSingular</code></div>
+          <div class="test-item"><div class="test-dot" style="background:var(--green)"></div><code>Format_MultipleAdults_ShouldAddPluralS</code></div>
+          <div class="test-item"><div class="test-dot" style="background:var(--green)"></div><code>Format_WithOneChild_ShouldUseChild</code></div>
+          <div class="test-item"><div class="test-dot" style="background:var(--green)"></div><code>Format_WithMultipleChildren_ShouldUseChildren</code></div>
+        </div>
+      </div>
+      <div class="rule rule-t">
+        <div class="rule-name">FormatBedConfigurationTests — 3 cases</div>
+        <div class="rule-desc">
+          <div class="test-item"><div class="test-dot" style="background:var(--teal)"></div><code>Format_SingleKing_ShouldReturnKing</code></div>
+          <div class="test-item"><div class="test-dot" style="background:var(--teal)"></div><code>Format_TwoSingles_ShouldReturnTwin</code></div>
+          <div class="test-item"><div class="test-dot" style="background:var(--teal)"></div><code>Format_MultipleBeds_ShouldCombineNames</code></div>
+        </div>
+      </div>
+      <div class="rule rule-q">
+        <div class="rule-name">SuggestRoomNameServiceTests — 6 cases</div>
+        <div class="rule-desc">
+          <div class="test-item"><div class="test-dot" style="background:var(--coral)"></div><code>InvalidRequest_ShouldReturnBadRequest</code></div>
+          <div class="test-item"><div class="test-dot" style="background:var(--purple)"></div><code>NoOptionals_ShouldReturn4Names</code></div>
+          <div class="test-item"><div class="test-dot" style="background:var(--purple)"></div><code>WithQualityOnly_ShouldReturn8Names</code></div>
+          <div class="test-item"><div class="test-dot" style="background:var(--purple)"></div><code>WithViewOnly_ShouldReturn7Names</code></div>
+          <div class="test-item"><div class="test-dot" style="background:var(--purple)"></div><code>WithQualityAndView_ShouldReturn14Names</code></div>
+          <div class="test-item"><div class="test-dot" style="background:var(--purple)"></div><code>AllFieldsProvided_ShouldReturn35Names</code></div>
+        </div>
+      </div>`
+  }
+];
+
+let current = 0;
+
+function render() {
+  const s = steps[current];
+  document.getElementById('panel').innerHTML = `
+    <div class="panel-header">
+      <div class="step-icon" style="${iconBgs[current]}">${current+1}</div>
+      <div class="panel-meta">
+        <div class="step-tag">${s.tag}</div>
+        <div class="step-title">${s.title}</div>
+      </div>
+    </div>
+    <div class="panel-body">${s.body}</div>
+  `;
+  document.getElementById('prog').textContent = `${current + 1} / ${steps.length}`;
+  document.getElementById('dots').innerHTML = steps.map((_, i) =>
+    `<div class="dot ${i === current ? 'active' : i < current ? 'done' : ''}" onclick="goto(${i})" title="Step ${i+1}"></div>`
+  ).join('');
+}
+
+function next() { if (current < steps.length - 1) { current++; render(); } }
+function prev() { if (current > 0) { current--; render(); } }
+function goto(i) { current = i; render(); }
+
+render();
+</script>
+</body>
+</html>
