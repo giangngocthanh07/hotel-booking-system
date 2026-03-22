@@ -1,0 +1,13 @@
+string adultPart  = adults >= 2 ? $"{adults} Adults" : $"{adults} Adult"
+string childPart  = string.Empty
+const string FOR  = "for"
+const string AND  = "and"
+
+if children == 1  → childPart = "1 Child"
+if children >= 2  → childPart = $"{children} Children"
+// children == 0  → childPart vẫn là string.Empty, không làm gì
+
+if childPart == string.Empty
+    → return $"{FOR} {adultPart}"
+else
+    → return $"{FOR} {adultPart} {AND} {childPart}"
