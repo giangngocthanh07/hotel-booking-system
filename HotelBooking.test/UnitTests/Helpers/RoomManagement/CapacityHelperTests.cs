@@ -11,40 +11,49 @@ public class CapacityHelperTests
     [InlineData(1, 3, "with 1 Adult and 3 Children")]
     [InlineData(2, 1, "with 2 Adults and 1 Child")]
     [InlineData(2, 2, "with 2 Adults and 2 Children")]
-    public void FormatCapacity_WhenAdultsArePresent_ShouldReturnCorrectFormat(int adults, int children, string expected)
+    public void FormatCapacity_WhenAdultsArePresent_ShouldReturnSuccessWithData(int adults, int children, string expectedData)
     {
         // Act
-        string result = CapacityHelper.FormatCapacity(adults, children);
+        var result = CapacityHelper.FormatCapacity(adults, children);
 
         // Assert
-        result.Should().Be(expected);
+        result.IsValid.Should().BeTrue();
+        result.StatusCode.Should().Be(StatusCodeResponse.Success);
+        result.Data.Should().Be(expectedData);
+        result.Message.Should().BeNullOrEmpty();
     }
 
     [Theory]
-    [InlineData(-1, 2)]
-    [InlineData(2, -1)]
-    public void FormatCapacity_WhenInputsAreInvalid_ShouldThrowArgumentOutOfRangeException(int adults, int children)
+    // Only Children
+    [InlineData(0, 1, "1 Child")]
+    [InlineData(0, 3, "3 Children")]
+    public void FormatCapacity_WhenOnlyChildren_ShouldReturnSuccessWithData(int adults, int children, string expectedData)
     {
         // Act
-        Action act = () => CapacityHelper.FormatCapacity(adults, children);
+        var result = CapacityHelper.FormatCapacity(adults, children);
 
         // Assert
-        act.Should().Throw<ArgumentOutOfRangeException>()
-           .WithMessage(MessageResponse.RoomManagement.ROOM_TYPE_CAPACITY_INVALID);
+        result.IsValid.Should().BeTrue();
+        result.StatusCode.Should().Be(StatusCodeResponse.Success);
+        result.Data.Should().Be(expectedData);
+        result.Message.Should().BeNullOrEmpty();
     }
 
-    [Fact]
-    public void FormatCapacity_WhenBothAreZero_ShouldThrowArgumentException()
+    [Theory]
+    // Invalid Cases
+    [InlineData(0, 0)]
+    [InlineData(-1, 0)]
+    [InlineData(0, -1)]
+    [InlineData(-5, -2)]
+    public void FormatCapacity_WhenInputsAreInvalid_ShouldReturnBadRequest(int adults, int children)
     {
-        // Arrange
-        int adults = 0;
-        int children = 0;
-
         // Act
-        Action act = () => CapacityHelper.FormatCapacity(adults, children);
+        var result = CapacityHelper.FormatCapacity(adults, children);
 
         // Assert
-        act.Should().Throw<ArgumentException>(MessageResponse.RoomManagement.ROOM_TYPE_CAPACITY_INVALID)
-           .WithMessage(MessageResponse.RoomManagement.ROOM_TYPE_CAPACITY_INVALID);
+        result.IsValid.Should().BeFalse();
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+        result.Data.Should().BeNull();
+        result.Message.Should().Be(MessageResponse.RoomManagement.ROOM_TYPE_CAPACITY_INVALID);
     }
 }

@@ -17,4 +17,18 @@ public class ValidationResult
         => new ValidationResult { IsValid = false, Message = message, StatusCode = statusCode };
 }
 
+public class ValidationResult<T> : ValidationResult
+{
+    // Data payload for successful validation
+    public T? Data { get; set; }
+
+    // Helper generate success result with data
+    public static ValidationResult<T> Success(T data)
+        => new ValidationResult<T> { IsValid = true, StatusCode = StatusCodeResponse.Success, Data = data };
+
+    // Override to return ValidationResult<T>
+    public static new ValidationResult<T> Fail(string message, string statusCode)
+        => new ValidationResult<T> { IsValid = false, Message = message, StatusCode = statusCode };
+}
+
 
