@@ -31,6 +31,12 @@ public class BedTypeConfigDTO
     public int Quantity { get; set; }
 }
 
+public class BedTypeNameDTO
+{
+    public string Name { get; set; } = string.Empty;
+    public int Quantity { get; set; }
+}
+
 public class RoomNameSuggestionRequest
 {
     // Input parameters for suggesting room names based on attributes

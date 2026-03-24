@@ -349,6 +349,7 @@ public static class MessageResponse
         public const string ROOM_TYPE_BED_TYPES_REQUIRED = "At least one bed type is required!";
         public const string ROOM_TYPE_BED_TYPE_ID_INVALID = "Bed type ID must be greater than 0!";
         public const string ROOM_TYPE_BED_TYPE_QUANTITY_INVALID = "Bed type quantity must be greater than 0!";
+        public const string ROOM_TYPE_BED_TYPE_NAME_EMPTY = "Bed type name must not be empty!";
         public const string ROOM_TYPE_NAME_ALREADY_EXISTS = "Room type name already exists!";
 
         // --- ROOM TYPE: NOT FOUND MESSAGES (Layer 2 - Ghost ID Check) ---
@@ -385,6 +386,7 @@ public static class MessageResponse
         public const string ROOM_NAME_SUGGESTION_QUALITY_NOT_FOUND = "Room quality not found!";
         public const string ROOM_NAME_SUGGESTION_ROOM_VIEW_NOT_FOUND = "Room view not found!";
         public const string ROOM_NAME_SUGGESTION_BED_TYPE_NOT_FOUND = "Bed type not found!";
+        public const string BED_CONFIGURATION_EMPTY = "Bed configuration is empty! Please provide at least one bed type with quantity.";
     }
 
     // Alias for easier access

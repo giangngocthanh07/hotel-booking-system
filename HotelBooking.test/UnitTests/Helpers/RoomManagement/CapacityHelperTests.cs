@@ -17,10 +17,7 @@ public class CapacityHelperTests
         var result = CapacityHelper.FormatCapacity(adults, children);
 
         // Assert
-        result.IsValid.Should().BeTrue();
-        result.StatusCode.Should().Be(StatusCodeResponse.Success);
-        result.Data.Should().Be(expectedData);
-        result.Message.Should().BeNullOrEmpty();
+        result.Should().Be(expectedData);
     }
 
     [Theory]
@@ -33,10 +30,7 @@ public class CapacityHelperTests
         var result = CapacityHelper.FormatCapacity(adults, children);
 
         // Assert
-        result.IsValid.Should().BeTrue();
-        result.StatusCode.Should().Be(StatusCodeResponse.Success);
-        result.Data.Should().Be(expectedData);
-        result.Message.Should().BeNullOrEmpty();
+        result.Should().Be(expectedData);
     }
 
     [Theory]
@@ -45,15 +39,12 @@ public class CapacityHelperTests
     [InlineData(-1, 0)]
     [InlineData(0, -1)]
     [InlineData(-5, -2)]
-    public void FormatCapacity_WhenInputsAreInvalid_ShouldReturnBadRequest(int adults, int children)
+    public void FormatCapacity_WhenInputsAreInvalid_ShouldReturnEmptyString(int adults, int children)
     {
         // Act
         var result = CapacityHelper.FormatCapacity(adults, children);
 
         // Assert
-        result.IsValid.Should().BeFalse();
-        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
-        result.Data.Should().BeNull();
-        result.Message.Should().Be(MessageResponse.RoomManagement.ROOM_TYPE_CAPACITY_INVALID);
+        result.Should().Be(string.Empty);
     }
 }
