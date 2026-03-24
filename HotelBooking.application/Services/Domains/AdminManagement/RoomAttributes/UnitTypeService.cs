@@ -8,6 +8,7 @@ public interface IUnitTypeService : IStandardManage<UnitTypeDTO, UnitTypeCreateD
     Task<ApiResponse<PagedManageResult<UnitTypeDTO>>> GetPagedListAsync(PagingRequest paging);
 
     Task<ApiResponse<bool>> UnitTypeExistsAsync(int id);
+    Task<ApiResponse<string>> GetUnitTypeNameByIdAsync(int id);
 }
 
 public class UnitTypeService : BaseManage<UnitType, IUnitTypeRepository, UnitTypeDTO, UnitTypeCreateDTO, UnitTypeUpdateDTO>, IUnitTypeService
@@ -87,6 +88,25 @@ public class UnitTypeService : BaseManage<UnitType, IUnitTypeRepository, UnitTyp
         catch (Exception)
         {
             return ResponseFactory.ServerError<bool>();
+        }
+    }
+
+    public async Task<ApiResponse<string>> GetUnitTypeNameByIdAsync(int id)
+    {
+        try
+        {
+            var unitType = await _repo.FirstOrDefaultAsync(x => x.Id == id && x.IsDeleted == false);
+
+            if (unitType == null)
+            {
+                return ResponseFactory.Failure<string>(StatusCodeResponse.NotFound, MessageResponse.Common.NOT_FOUND);
+            }
+
+            return ResponseFactory.Success(unitType.Name, MessageResponse.Common.GET_SUCCESSFULLY);
+        }
+        catch (Exception)
+        {
+            return ResponseFactory.ServerError<string>();
         }
     }
 

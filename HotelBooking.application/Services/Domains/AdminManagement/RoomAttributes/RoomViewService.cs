@@ -7,6 +7,7 @@ public interface IRoomViewService : IStandardManage<RoomViewDTO, RoomViewCreateD
 {
     Task<ApiResponse<PagedManageResult<RoomViewDTO>>> GetPagedListAsync(PagingRequest paging);
     Task<ApiResponse<bool>> RoomViewExistsAsync(int id);
+    Task<ApiResponse<string>> GetRoomViewNameByIdAsync(int id);
 }
 
 public class RoomViewService : BaseManage<RoomView, IRoomViewRepository, RoomViewDTO, RoomViewCreateDTO, RoomViewUpdateDTO>, IRoomViewService
@@ -97,6 +98,26 @@ public class RoomViewService : BaseManage<RoomView, IRoomViewRepository, RoomVie
             return ResponseFactory.ServerError<bool>();
         }
     }
+
+    public async Task<ApiResponse<string>> GetRoomViewNameByIdAsync(int id)
+    {
+        try
+        {
+            var roomView = await _repo.FirstOrDefaultAsync(x => x.Id == id && x.IsDeleted == false);
+
+            if (roomView == null)
+            {
+                return ResponseFactory.Failure<string>(StatusCodeResponse.NotFound, MessageResponse.Common.NOT_FOUND);
+            }
+
+            return ResponseFactory.Success(roomView.Name, MessageResponse.Common.GET_SUCCESSFULLY);
+        }
+        catch (Exception)
+        {
+            return ResponseFactory.ServerError<string>();
+        }
+    }
+
 
     // --- IMPLEMENTATION: GET PAGINATED LIST ---
     public async Task<ApiResponse<PagedManageResult<RoomViewDTO>>> GetPagedListAsync(PagingRequest paging)

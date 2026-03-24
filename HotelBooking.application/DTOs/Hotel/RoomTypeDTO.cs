@@ -60,3 +60,11 @@ public class RoomNameSuggestionRequest
     // "Double Room", "Twin Room", "King Room"
     public List<BedTypeConfigDTO> BedTypes { get; set; } = new();
 }
+
+public class RoomAttributeNamesDTO
+{
+    public string UnitTypeName { get; set; } = string.Empty;
+    public string? QualityName { get; set; }       // nullable  
+    public string? RoomViewName { get; set; }       // nullable
+    public List<BedTypeNameDTO> BedTypeNames { get; set; } = new();
+}

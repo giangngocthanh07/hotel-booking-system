@@ -9,6 +9,7 @@ public interface IRoomQualityService : ITypedManage<RoomQualityDTO, RoomQualityG
     Task<ApiResponse<PagedManageResult<RoomQualityDTO>>> GetRoomQualitiesByTypeAsync(int? typeId, PagingRequest paging);
 
     Task<ApiResponse<bool>> RoomQualityExistsAsync(int id);
+    Task<ApiResponse<string>> GetRoomQualityNameByIdAsync(int id);
 }
 
 public class RoomQualityService : BaseManage<RoomQuality, IRoomQualityRepository, RoomQualityDTO, RoomQualityCreateDTO, RoomQualityUpdateDTO>, IRoomQualityService
@@ -94,6 +95,24 @@ public class RoomQualityService : BaseManage<RoomQuality, IRoomQualityRepository
         catch (Exception)
         {
             return ResponseFactory.ServerError<bool>();
+        }
+    }
+
+    public async Task<ApiResponse<string>> GetRoomQualityNameByIdAsync(int id)
+    {
+        try
+        {
+            var entity = await _repo.GetByIdAsync(id);
+            if (entity == null || entity.IsDeleted == true)
+            {
+                return ResponseFactory.Failure<string>(StatusCodeResponse.NotFound, MessageResponse.Common.NOT_FOUND);
+            }
+
+            return ResponseFactory.Success(entity.Name, MessageResponse.Common.GET_SUCCESSFULLY);
+        }
+        catch (Exception)
+        {
+            return ResponseFactory.ServerError<string>();
         }
     }
 

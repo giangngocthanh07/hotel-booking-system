@@ -370,6 +370,7 @@ public static class MessageResponse
 
         // --- ROOM NAME SUGGESTION: VALIDATION MESSAGES ---
         public const string ROOM_NAME_SUGGESTION_REQUEST_NULL = "Room name suggestion request must not be null!";
+        public const string ROOM_NAME_SUGGESTION_UNIT_TYPE_REQUIRED = "Unit type is required for room name suggestion!";
         public const string ROOM_NAME_SUGGESTION_UNIT_TYPE_ID_INVALID = "Unit type ID must be greater than 0!";
         public const string ROOM_NAME_SUGGESTION_QUALITY_ID_INVALID = "Quality ID must be greater than 0!";
         public const string ROOM_NAME_SUGGESTION_ROOM_VIEW_ID_INVALID = "Room view ID must be greater than 0!";

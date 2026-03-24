@@ -8,6 +8,7 @@ public interface IBedTypeService : IStandardManage<BedTypeDTO, BedTypeCreateDTO,
 {
     Task<ApiResponse<PagedManageResult<BedTypeDTO>>> GetPagedListAsync(PagingRequest paging);
     Task<ApiResponse<bool>> BedTypeExistsAsync(int id);
+    Task<ApiResponse<string>> GetBedTypeNameByIdAsync(int id);
 }
 
 public class BedTypeService : BaseManage<BedType, IBedTypeRepository, BedTypeDTO, BedTypeCreateDTO, BedTypeUpdateDTO>, IBedTypeService
@@ -125,6 +126,25 @@ public class BedTypeService : BaseManage<BedType, IBedTypeRepository, BedTypeDTO
         catch (Exception)
         {
             return ResponseFactory.ServerError<List<BedTypeDTO>>();
+        }
+    }
+
+    public async Task<ApiResponse<string>> GetBedTypeNameByIdAsync(int id)
+    {
+        try
+        {
+            var bedType = await _repo.FirstOrDefaultAsync(x => x.Id == id && x.IsDeleted == false);
+
+            if (bedType == null)
+            {
+                return ResponseFactory.Failure<string>(StatusCodeResponse.NotFound, MessageResponse.Common.NOT_FOUND);
+            }
+
+            return ResponseFactory.Success(bedType.Name, MessageResponse.Common.GET_SUCCESSFULLY);
+        }
+        catch (Exception)
+        {
+            return ResponseFactory.ServerError<string>();
         }
     }
 
