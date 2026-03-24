@@ -60,7 +60,7 @@ public static class ValidatorServiceExtension
 
     public static void AddRoomManagementValidators(this IServiceCollection services)
     {
-        services.AddScoped<IValidator<RoomTypeCreateDTO>, RoomTypeValidator>();
+        services.AddScoped<IValidator<RoomTypeCreateDTO>, RoomTypeCreateValidator>();
         services.AddScoped<IValidator<RoomNameSuggestionRequest>, RoomNameSuggestionValidator>();
     }
 

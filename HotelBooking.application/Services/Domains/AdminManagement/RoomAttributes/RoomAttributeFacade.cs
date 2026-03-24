@@ -4,6 +4,11 @@ using HotelBooking.application.Helpers;
 
 public interface IRoomAttributeFacade
 {
+    //
+    IUnitTypeService UnitTypeService { get; }
+    IBedTypeService BedTypeService { get; }
+    IRoomViewService RoomViewService { get; }
+    IRoomQualityService RoomQualityService { get; }
 
     // --- METHOD: GET PAGED LIST BY ENUM ---
     Task<ApiResponse<PagedManageResult<RoomAttributeDTO>>> GetPagedByTypeAsync(
@@ -22,22 +27,18 @@ public interface IRoomAttributeFacade
 
 public class RoomAttributeFacade : IRoomAttributeFacade
 {
-    public IUnitTypeService UnitTypeService { get; private set; }
-    public IBedTypeService BedTypeService { get; private set; }
-    public IRoomViewService RoomViewService { get; private set; }
-    public IRoomQualityService RoomQualityService { get; private set; }
-    private readonly IBedTypeRepository _bedTypeRepo;
-
+    public IUnitTypeService UnitTypeService { get; }
+    public IBedTypeService BedTypeService { get; }
+    public IRoomViewService RoomViewService { get; }
+    public IRoomQualityService RoomQualityService { get; }
     private readonly IValidator<GetRoomAttributeRequest> _validator;
 
-    public RoomAttributeFacade(IUnitTypeService unitTypeService, IBedTypeService bedTypeService, IRoomViewService roomViewService, IRoomQualityService roomQualityService, IBedTypeRepository bedTypeRepo, IValidator<GetRoomAttributeRequest> validator)
+    public RoomAttributeFacade(IUnitTypeService unitTypeService, IBedTypeService bedTypeService, IRoomViewService roomViewService, IRoomQualityService roomQualityService, IValidator<GetRoomAttributeRequest> validator)
     {
         UnitTypeService = unitTypeService;
         BedTypeService = bedTypeService;
         RoomViewService = roomViewService;
         RoomQualityService = roomQualityService;
-        _bedTypeRepo = bedTypeRepo;
-
         _validator = validator;
     }
 

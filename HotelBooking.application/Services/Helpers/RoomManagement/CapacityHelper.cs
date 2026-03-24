@@ -13,7 +13,6 @@ public static class CapacityHelper
             return string.Empty;
         }
 
-        const string WITH = "with";
         const string AND = "and";
 
         // 2. Using Switch Expression to handle the Children string more elegantly
@@ -36,10 +35,10 @@ public static class CapacityHelper
         // 5. Merge Adults and Children parts
         if (string.IsNullOrEmpty(childPart))
         {
-            return $"{WITH} {adultPart}";
+            return adultPart;
         }
 
-        return $"{WITH} {adultPart} {AND} {childPart}";
+        return $"{adultPart} {AND} {childPart}";
     }
 
 }

@@ -16,8 +16,8 @@ public static class BedConfigurationHelper
 
         var bedDescriptions = bedTypes.Select(bedType =>
         {
-            string bedName = bedType.Name;
-            if (bedName == "Single")
+            string bedName = bedType.Name.Trim(); // Trim cho an toàn
+            if (bedName.Equals("Single", StringComparison.OrdinalIgnoreCase))
             {
                 return bedType.Quantity switch
                 {
@@ -38,6 +38,7 @@ public static class BedConfigurationHelper
             };
         });
 
-        return string.Join(" and ", bedDescriptions);
+        var validDescriptions = bedDescriptions.Where(d => !string.IsNullOrWhiteSpace(d));
+        return string.Join(" and ", validDescriptions);
     }
 }

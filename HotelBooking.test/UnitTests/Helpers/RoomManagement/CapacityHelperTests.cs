@@ -4,13 +4,13 @@ public class CapacityHelperTests
 {
     [Theory]
     // Only Adults
-    [InlineData(1, 0, "with 1 Adult")]
-    [InlineData(3, 0, "with 3 Adults")]
+    [InlineData(1, 0, "1 Adult")]
+    [InlineData(3, 0, "3 Adults")]
     // Children and Adults
-    [InlineData(1, 1, "with 1 Adult and 1 Child")]
-    [InlineData(1, 3, "with 1 Adult and 3 Children")]
-    [InlineData(2, 1, "with 2 Adults and 1 Child")]
-    [InlineData(2, 2, "with 2 Adults and 2 Children")]
+    [InlineData(1, 1, "1 Adult and 1 Child")]
+    [InlineData(1, 3, "1 Adult and 3 Children")]
+    [InlineData(2, 1, "2 Adults and 1 Child")]
+    [InlineData(2, 2, "2 Adults and 2 Children")]
     public void FormatCapacity_WhenAdultsArePresent_ShouldReturnSuccessWithData(int adults, int children, string expectedData)
     {
         // Act
