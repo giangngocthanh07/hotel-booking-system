@@ -103,9 +103,9 @@ public class RoomViewService : BaseManage<RoomView, IRoomViewRepository, RoomVie
     {
         try
         {
-            var roomView = await _repo.FirstOrDefaultAsync(x => x.Id == id && x.IsDeleted == false);
+            var roomView = await _repo.GetByIdAsync(id);
 
-            if (roomView == null)
+            if (roomView == null || roomView.IsDeleted == true)
             {
                 return ResponseFactory.Failure<string>(StatusCodeResponse.NotFound, MessageResponse.Common.NOT_FOUND);
             }

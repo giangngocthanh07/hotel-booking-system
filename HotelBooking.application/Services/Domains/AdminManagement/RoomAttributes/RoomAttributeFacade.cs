@@ -119,47 +119,78 @@ public class RoomAttributeFacade : IRoomAttributeFacade
 
     public async Task<RoomAttributeNamesDTO> GetRoomAttributeNamesAsync(RoomNameSuggestionRequest request)
     {
+        var resultDTO = new RoomAttributeNamesDTO
+        {
+            UnitTypeName = string.Empty,
+            QualityName = null,
+            RoomViewName = null,
+            BedTypeNames = new List<BedTypeNameDTO>()
+        };
+
+
         try
         {
-            var unitTypeNameTask = UnitTypeService.GetUnitTypeNameByIdAsync(request.UnitTypeId);
-            var roomQualityNameTask = request.QualityId.HasValue
-                ? RoomQualityService.GetRoomQualityNameByIdAsync(request.QualityId.Value)
-                : Task.FromResult(ResponseFactory.Failure<string>(StatusCodeResponse.NotFound, string.Empty));
-            var roomViewNameTask = request.RoomViewId.HasValue ? RoomViewService.GetRoomViewNameByIdAsync(request.RoomViewId.Value) : Task.FromResult(ResponseFactory.Failure<string>(StatusCodeResponse.NotFound, string.Empty));
+            // 1. UNIT TYPE
+            var unitResponse = await UnitTypeService.GetUnitTypeNameByIdAsync(request.UnitTypeId);
+            resultDTO.UnitTypeName = unitResponse?.Content ?? string.Empty;
 
-            var bedTypeTasks = request.BedTypes
-            .Select(b => BedTypeService.GetBedTypeNameByIdAsync(b.BedTypeId))
-            .ToList();
-
-
-            await Task.WhenAll(unitTypeNameTask, roomQualityNameTask, roomViewNameTask, Task.WhenAll(bedTypeTasks));
-
-            var bedTypeNames = bedTypeTasks
-            .Select((task, index) => new BedTypeNameDTO
+            // 2. ROOM QUALITY
+            if (request.QualityId.HasValue)
             {
-                Name = task.Result.Content ?? string.Empty,
-                Quantity = request.BedTypes[index].Quantity
-            })
-            .ToList();
+                try
+                {
+                    var qualityResponse = await RoomQualityService.GetRoomQualityNameByIdAsync(request.QualityId.Value);
+                    resultDTO.QualityName = qualityResponse?.Content;
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine(MessageResponse.Common.ERROR_IN_SERVER);
+                }
+            }
 
-            return new RoomAttributeNamesDTO
+            // 3. VIEW
+            if (request.RoomViewId.HasValue)
             {
-                UnitTypeName = unitTypeNameTask.Result.Content ?? string.Empty,
-                QualityName = roomQualityNameTask.Result?.Content,
-                RoomViewName = roomViewNameTask.Result?.Content,
-                BedTypeNames = bedTypeNames
-            };
+                try
+                {
+                    var viewResponse = await RoomViewService.GetRoomViewNameByIdAsync(request.RoomViewId.Value);
+                    resultDTO.RoomViewName = viewResponse?.Content;
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine(MessageResponse.Common.ERROR_IN_SERVER);
+                }
+            }
+
+            // 4. BED TYPES
+            if (request.BedTypes != null && request.BedTypes.Any())
+            {
+                foreach (var bed in request.BedTypes)
+                {
+                    try
+                    {
+                        var bedResponse = await BedTypeService.GetBedTypeNameByIdAsync(bed.BedTypeId);
+                        resultDTO.BedTypeNames.Add(new BedTypeNameDTO
+                        {
+                            Name = bedResponse?.Content ?? string.Empty,
+                            Quantity = bed.Quantity
+                        });
+                    }
+                    catch (Exception)
+                    {
+                        Console.WriteLine(MessageResponse.Common.ERROR_IN_SERVER);
+                    }
+                }
+            }
         }
         catch (Exception)
         {
-            return new RoomAttributeNamesDTO
-            {
-                UnitTypeName = string.Empty,
-                QualityName = string.Empty,
-                RoomViewName = string.Empty,
-                BedTypeNames = new List<BedTypeNameDTO>()
-            };
+            Console.WriteLine(MessageResponse.Common.ERROR_IN_SERVER);
         }
+
+
+
+        return resultDTO;
     }
 
     // --- HELPER: CONVERT CHILD RESULT TO PARENT RESULT ---

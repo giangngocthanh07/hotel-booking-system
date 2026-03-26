@@ -22,6 +22,7 @@ public static class MessageResponse
         public const string CHECK_EXISTED_SUCCESSFULLY = "Checked existence successfully!";
 
         // Status messages
+        public const string REQUEST_CANNOT_BE_NULL = "Request data must not be null!";
         public const string NOT_FOUND = "Not found!";
         public const string BAD_REQUEST = "Invalid request!";
         public const string EMPTY_LIST = "The list is empty!";
@@ -374,6 +375,7 @@ public static class MessageResponse
         public const string ROOM_NAME_SUGGESTION_UNIT_TYPE_ID_INVALID = "Unit type ID must be greater than 0!";
         public const string ROOM_NAME_SUGGESTION_QUALITY_ID_INVALID = "Quality ID must be greater than 0!";
         public const string ROOM_NAME_SUGGESTION_ROOM_VIEW_ID_INVALID = "Room view ID must be greater than 0!";
+        public const string ROOM_NAME_SUGGESTION_CAPACITY_REQUIRED = "Capacity information is required for room name suggestion!";
         public const string ROOM_NAME_SUGGESTION_ADULT_CAPACITY_INVALID = "Adult capacity must be greater than 0!";
         public const string ROOM_NAME_SUGGESTION_CHILDREN_CAPACITY_REQUIRED = "Children capacity is required!";
         public const string ROOM_NAME_SUGGESTION_MAX_EXTRA_BEDS_REQUIRED = "Max extra beds is required when extra bed is allowed!";

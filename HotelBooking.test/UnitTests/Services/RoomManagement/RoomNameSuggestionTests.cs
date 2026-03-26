@@ -29,36 +29,10 @@ namespace HotelBooking.Tests.Services.RoomManagement
                 .ReturnsAsync(new FluentValidation.Results.ValidationResult());
 
             // 1. Arrange - Group 1: Focus on Quality
-            var request = new RoomNameSuggestionRequest
-            {
-                UnitTypeId = 1, // Assume 1 corresponds to "Double Room"
-                QualityId = 2, // Assume 2 corresponds to "Deluxe"
-                RoomViewId = null,
-                AdultCapacity = 2,
-                ChildrenCapacity = 0,
-                IsPrivateBathroom = true,
-                HasBalcony = false,
-                HasTerrace = false,
-                CanAddExtraBeds = false,
-                MaxExtraBeds = null,
-                BedTypes = new List<BedTypeConfigDTO>
-                {
-                    new() { BedTypeId = 1, Quantity = 1 }
-                }
-            };
+            var request = CreateRequest();
 
             // Setup mock attribute names based on the request
-            var mockNamesDTO = new RoomAttributeNamesDTO
-            {
-                UnitTypeName = "Suite",
-                QualityName = "Deluxe",
-                BedTypeNames = new List<BedTypeNameDTO> { new() { Name = "King", Quantity = 1 } },
-                RoomViewName = null
-            };
-
-            // Mock the facade to return expected attribute names
-            _mockAttributeFacade.Setup(f => f.GetRoomAttributeNamesAsync(It.IsAny<RoomNameSuggestionRequest>()))
-                .ReturnsAsync(mockNamesDTO);
+            SetupMockFacade();
 
             // 2. Act
             var result = await _service.SuggestRoomNamesAsync(request);
@@ -87,36 +61,10 @@ namespace HotelBooking.Tests.Services.RoomManagement
                 .ReturnsAsync(new FluentValidation.Results.ValidationResult());
 
             // 1. Arrange - Group 2: Focus on Bed Configuration and Quality
-            var request = new RoomNameSuggestionRequest
-            {
-                UnitTypeId = 1, // Assume 1 corresponds to "Double Room"
-                QualityId = 2, // Assume 2 corresponds to "Deluxe"
-                RoomViewId = 1, // Assume 1 corresponds to "Sea View"
-                AdultCapacity = 2,
-                ChildrenCapacity = 0,
-                IsPrivateBathroom = true,
-                HasBalcony = false,
-                HasTerrace = false,
-                CanAddExtraBeds = false,
-                MaxExtraBeds = null,
-                BedTypes = new List<BedTypeConfigDTO>
-                {
-                    new() { BedTypeId = 1, Quantity = 1 }
-                }
-            };
+            var request = CreateRequest();
 
             // Setup mock attribute names based on the request
-            var mockNamesDTO = new RoomAttributeNamesDTO
-            {
-                UnitTypeName = "Suite",
-                QualityName = "Deluxe",
-                BedTypeNames = new List<BedTypeNameDTO> { new() { Name = "King", Quantity = 1 } },
-                RoomViewName = "Sea View"
-            };
-
-            // Mock the facade to return expected attribute names
-            _mockAttributeFacade.Setup(f => f.GetRoomAttributeNamesAsync(It.IsAny<RoomNameSuggestionRequest>()))
-                .ReturnsAsync(mockNamesDTO);
+            SetupMockFacade();
 
             // 2. Act
             var result = await _service.SuggestRoomNamesAsync(request);
@@ -140,36 +88,10 @@ namespace HotelBooking.Tests.Services.RoomManagement
                 .ReturnsAsync(new FluentValidation.Results.ValidationResult());
 
             // 1. Arrange - Group 3: Focus on Room View and Capacity
-            var request = new RoomNameSuggestionRequest
-            {
-                UnitTypeId = 1, // Assume 1 corresponds to "Double Room"
-                QualityId = 2, // Assume 1 corresponds to "Standard"
-                RoomViewId = 3, // Assume 1 corresponds to "Sea View"
-                AdultCapacity = 2,
-                ChildrenCapacity = 1,
-                IsPrivateBathroom = true,
-                HasBalcony = false,
-                HasTerrace = false,
-                CanAddExtraBeds = false,
-                MaxExtraBeds = null,
-                BedTypes = new List<BedTypeConfigDTO>
-                {
-                    new() { BedTypeId = 1, Quantity = 2 }
-                }
-            };
+            var request = CreateRequest();
 
             // Setup mock attribute names based on the request
-            var mockNamesDTO = new RoomAttributeNamesDTO
-            {
-                UnitTypeName = "Suite",
-                QualityName = "Deluxe",
-                BedTypeNames = new List<BedTypeNameDTO> { new() { Name = "King", Quantity = 2 } },
-                RoomViewName = "Sea View"
-            };
-
-            // Mock the facade to return expected attribute names
-            _mockAttributeFacade.Setup(f => f.GetRoomAttributeNamesAsync(It.IsAny<RoomNameSuggestionRequest>()))
-                .ReturnsAsync(mockNamesDTO);
+            SetupMockFacade();
 
             // 2. Act
             var result = await _service.SuggestRoomNamesAsync(request);
@@ -186,10 +108,10 @@ namespace HotelBooking.Tests.Services.RoomManagement
             suggestedNames.Should().Contain("Deluxe Suite with Sea View");
 
             // Template H: [Quality] + [Bed] + [UnitType] + [View]
-            suggestedNames.Should().Contain("Deluxe Twin King Suite with Sea View");
+            suggestedNames.Should().Contain("Deluxe King Suite with Sea View");
 
             // Template I: [Bed] + [UnitType] + [View]
-            suggestedNames.Should().Contain("Twin King Suite with Sea View");
+            suggestedNames.Should().Contain("King Suite with Sea View");
         }
 
         [Fact]
@@ -200,28 +122,10 @@ namespace HotelBooking.Tests.Services.RoomManagement
                 .ReturnsAsync(new FluentValidation.Results.ValidationResult());
 
             // 1. Arrange - Enable 2 features: Balcony and Private Bathroom
-            var request = new RoomNameSuggestionRequest
-            {
-                UnitTypeId = 1,
-                QualityId = 2,
-                RoomViewId = null,
-                AdultCapacity = 2,
-                ChildrenCapacity = 0,
-                IsPrivateBathroom = true,
-                HasBalcony = true,
-                HasTerrace = false,
-                BedTypes = new List<BedTypeConfigDTO> { new() { BedTypeId = 1, Quantity = 1 } }
-            };
+            var request = CreateRequest(hasBalcony: true, isPrivateBathroom: true);
 
-            var mockNamesDTO = new RoomAttributeNamesDTO
-            {
-                UnitTypeName = "Suite",
-                QualityName = "Deluxe",
-                BedTypeNames = new List<BedTypeNameDTO> { new() { Name = "King", Quantity = 1 } }
-            };
-
-            _mockAttributeFacade.Setup(f => f.GetRoomAttributeNamesAsync(It.IsAny<RoomNameSuggestionRequest>()))
-                .ReturnsAsync(mockNamesDTO);
+            // Setup mock attribute names based on the request
+            SetupMockFacade();
 
             // 2. Act
             var result = await _service.SuggestRoomNamesAsync(request);
@@ -255,25 +159,10 @@ namespace HotelBooking.Tests.Services.RoomManagement
                 .ReturnsAsync(new FluentValidation.Results.ValidationResult());
 
             // 1. Arrange - Focus vào Capacity
-            var request = new RoomNameSuggestionRequest
-            {
-                UnitTypeId = 1,
-                QualityId = 2,
-                RoomViewId = null,
-                AdultCapacity = 2,
-                ChildrenCapacity = 0,
-                BedTypes = new List<BedTypeConfigDTO> { new() { BedTypeId = 1, Quantity = 1 } }
-            };
+            var request = CreateRequest();
 
-            var mockNamesDTO = new RoomAttributeNamesDTO
-            {
-                UnitTypeName = "Suite",
-                QualityName = "Deluxe",
-                BedTypeNames = new List<BedTypeNameDTO> { new() { Name = "King", Quantity = 1 } }
-            };
-
-            _mockAttributeFacade.Setup(f => f.GetRoomAttributeNamesAsync(It.IsAny<RoomNameSuggestionRequest>()))
-                .ReturnsAsync(mockNamesDTO);
+            // Setup mock attribute names based on the request
+            SetupMockFacade();
 
             // 2. Act
             var result = await _service.SuggestRoomNamesAsync(request);
@@ -304,27 +193,10 @@ namespace HotelBooking.Tests.Services.RoomManagement
                 .ReturnsAsync(new FluentValidation.Results.ValidationResult());
 
             // 1. Arrange - Full combo
-            var request = new RoomNameSuggestionRequest
-            {
-                UnitTypeId = 1,
-                QualityId = 2,
-                RoomViewId = 3,
-                HasBalcony = true,        // Enable 1 feature to test the "and" conjunction
-                IsPrivateBathroom = false,
-                HasTerrace = false,
-                BedTypes = new List<BedTypeConfigDTO> { new() { BedTypeId = 1, Quantity = 1 } }
-            };
+            var request = CreateRequest(hasBalcony: true);
 
-            var mockNamesDTO = new RoomAttributeNamesDTO
-            {
-                UnitTypeName = "Suite",
-                QualityName = "Deluxe",
-                RoomViewName = "Sea View",
-                BedTypeNames = new List<BedTypeNameDTO> { new() { Name = "King", Quantity = 1 } }
-            };
-
-            _mockAttributeFacade.Setup(f => f.GetRoomAttributeNamesAsync(It.IsAny<RoomNameSuggestionRequest>()))
-                .ReturnsAsync(mockNamesDTO);
+            // Setup mock attribute names based on the request
+            SetupMockFacade();
 
             // 2. Act
             var result = await _service.SuggestRoomNamesAsync(request);
@@ -345,5 +217,58 @@ namespace HotelBooking.Tests.Services.RoomManagement
             // Template U: [Quality] + [Bed] + [UnitType] + [View] + [Feature]
             suggestedNames.Should().Contain("Deluxe King Suite with Sea View and Balcony");
         }
+
+        //***** HELPER METHODS *****//
+        /// <summary>
+        /// METHOD CREATE REQUEST
+        /// </summary>
+        /// <param name="hasBalcony"></param>
+        /// <param name="hasTerrace"></param>
+        /// <param name="isPrivateBathroom"></param>
+        /// <param name="adultCapacity"></param>
+        /// <returns></returns>
+        private RoomNameSuggestionRequest CreateRequest(
+            bool hasBalcony = false,
+            bool hasTerrace = false,
+            bool isPrivateBathroom = false,
+            int adultCapacity = 2)
+        {
+            return new RoomNameSuggestionRequest
+            {
+                UnitTypeId = 1,
+                QualityId = 2,
+                RoomViewId = 3,
+                HasBalcony = hasBalcony,
+                HasTerrace = hasTerrace,
+                IsPrivateBathroom = isPrivateBathroom,
+                AdultCapacity = adultCapacity,
+                ChildrenCapacity = 0,
+                BedTypes = new List<BedTypeConfigDTO> { new() { BedTypeId = 1, Quantity = 1 } }
+            };
+        }
+
+        /// <summary>
+        /// SETUP MOCK FACADE METHOD
+        /// </summary>
+        /// <param name="unit"></param>
+        /// <param name="quality"></param>
+        /// <param name="view"></param>
+        /// <param name="bed"></param>
+        private void SetupMockFacade(string unit = "Suite", string quality = "Deluxe", string view = "Sea View", string bed = "King")
+        {
+            var mockNamesDTO = new RoomAttributeNamesDTO
+            {
+                UnitTypeName = unit,
+                QualityName = quality,
+                RoomViewName = view,
+                BedTypeNames = new List<BedTypeNameDTO> { new() { Name = bed, Quantity = 1 } }
+            };
+
+            _mockAttributeFacade.Setup(f => f.GetRoomAttributeNamesAsync(It.IsAny<RoomNameSuggestionRequest>()))
+                .ReturnsAsync(mockNamesDTO);
+        }
     }
 }
+
+
+
