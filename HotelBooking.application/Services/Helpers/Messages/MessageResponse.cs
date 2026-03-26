@@ -332,6 +332,7 @@ public static class MessageResponse
     public static class RoomManagement
     {
         // --- ROOM TYPE: VALIDATION MESSAGES (Layer 1 - BadRequest) ---
+        public const string ROOM_TYPE_ALREADY_EXISTS = "Room type name already exists for this hotel!";
         public const string ROOM_TYPE_HOTEL_ID_INVALID = "Hotel ID must be greater than 0!";
         public const string ROOM_TYPE_NAME_EMPTY = "Room type name must not be empty!";
         public const string ROOM_TYPE_NAME_TOO_LONG = "Room type name must not exceed 100 characters!";

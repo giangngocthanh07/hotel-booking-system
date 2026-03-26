@@ -31,6 +31,14 @@ namespace HotelBooking.application.Services.Domains.RoomManagement
         }
         public async Task<ApiResponse<int>> CreateRoomTypeAsync(RoomTypeCreateDTO request)
         {
+            // 1. GUARD CLAUSE & VALIDATION
+            if (request == null)
+            {
+                return ResponseFactory.Failure<int>(
+                    StatusCodeResponse.BadRequest,
+                    MessageResponse.Common.REQUEST_CANNOT_BE_NULL);
+            }
+
             var validationResult = await _validator.ValidateAsync(request);
             if (validationResult.IsValid == false)
             {
@@ -43,6 +51,14 @@ namespace HotelBooking.application.Services.Domains.RoomManagement
                 return ResponseFactory.Failure<int>(StatusCodeResponse.NotFound, ghostIdValidation.Message);
             }
 
+            var normalizedRoomTypeName = request.Name.Trim().ToLower();
+
+            var existingRoomType = await _roomTypeRepo.AnyAsync(x => x.HotelId == request.HotelId && x.Name.ToLower() == normalizedRoomTypeName && x.IsDeleted == false);
+            if (existingRoomType)
+            {
+                return ResponseFactory.Failure<int>(StatusCodeResponse.Conflict, MessageResponse.RoomManagement.ROOM_TYPE_ALREADY_EXISTS);
+            }
+
             try
             {
                 await _dbu.BeginTransactionAsync();
@@ -50,7 +66,7 @@ namespace HotelBooking.application.Services.Domains.RoomManagement
                 var roomType = new RoomType
                 {
                     HotelId = request.HotelId,
-                    Name = request.Name,
+                    Name = request.Name.Trim(),
                     Description = request.Description,
                     IsDeleted = false,
                     PricePerNight = request.PricePerNight,
@@ -96,7 +112,7 @@ namespace HotelBooking.application.Services.Domains.RoomManagement
             catch (Exception)
             {
                 await _dbu.RollBackTransactionAsync();
-                return ResponseFactory.ServerError<int>();
+                return ResponseFactory.Failure<int>(StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
             }
         }
 

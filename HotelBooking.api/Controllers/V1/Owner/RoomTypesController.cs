@@ -11,11 +11,13 @@ namespace HotelBooking.API.Controllers
     public class RoomTypesController : ControllerBase
     {
         private readonly IRoomNameSuggestionService _suggestionService;
+        private readonly IRoomTypeService _roomTypeService;
 
         // Dependency Injection
-        public RoomTypesController(IRoomNameSuggestionService suggestionService)
+        public RoomTypesController(IRoomNameSuggestionService suggestionService, IRoomTypeService roomTypeService)
         {
             _suggestionService = suggestionService;
+            _roomTypeService = roomTypeService;
         }
 
         /// <summary>
@@ -32,6 +34,15 @@ namespace HotelBooking.API.Controllers
             // return Ok(ResponseFactory.Success(result));
 
             // 2. If your method (as in the test file) already returns ApiResponse<List<string>>:
+            return Ok(result);
+        }
+
+        [HttpPost("roomtype-create")]
+        public async Task<IActionResult> CreateRoomType([FromBody] RoomTypeCreateDTO request)
+        {
+            // Call the service layer to create a new room type
+            var result = await _roomTypeService.CreateRoomTypeAsync(request);
+
             return Ok(result);
         }
     }

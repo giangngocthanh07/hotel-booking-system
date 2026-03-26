@@ -20,6 +20,26 @@ namespace HotelBooking.Tests.Services.RoomManagement
         }
 
         [Fact]
+        public async Task SuggestRoomNamesAsync_WhenRequestIsNull_ShouldReturnBadRequest()
+        {
+            // 1. Arrange
+            RoomNameSuggestionRequest request = null!;
+
+            // 2. Act
+            var result = await _service.SuggestRoomNamesAsync(request);
+
+            // 3. Assert
+            result.Should().NotBeNull();
+            result.Message.Should().Be(MessageResponse.Common.REQUEST_CANNOT_BE_NULL);
+            result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+
+            _mockValidator.Verify(v => v.ValidateAsync(It.IsAny<RoomNameSuggestionRequest>(), default), Times.Never);
+            _mockUnitOfWork.Verify(u => u.BeginTransactionAsync(), Times.Never);
+
+            _mockAttributeFacade.Verify(f => f.GetRoomAttributeNamesAsync(It.IsAny<RoomNameSuggestionRequest>()), Times.Never);
+        }
+
+        [Fact]
         public async Task SuggestRoomNamesAsync_Group1_QualityFocus_ShouldReturnTemplatesABC()
         {
             // Mock validation to succeed

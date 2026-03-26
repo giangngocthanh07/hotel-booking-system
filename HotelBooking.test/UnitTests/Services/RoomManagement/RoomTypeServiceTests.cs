@@ -9,7 +9,7 @@ using FluentAssertions;
 
 namespace HotelBooking.Tests.Services.RoomManagement
 {
-    public class RoomTypeServiceTest : BaseServiceTest
+    public class RoomTypeServiceTests : BaseServiceTest
     {
         private readonly Mock<IHotelRepository> _mockHotelRepo;
         private readonly Mock<IRoomTypeRepository> _mockRoomTypeRepo;
@@ -18,7 +18,7 @@ namespace HotelBooking.Tests.Services.RoomManagement
         private readonly Mock<IValidator<RoomTypeCreateDTO>> _mockValidator;
         private readonly IRoomTypeService _service;
 
-        public RoomTypeServiceTest()
+        public RoomTypeServiceTests()
         {
             _mockHotelRepo = new Mock<IHotelRepository>();
             _mockRoomTypeRepo = new Mock<IRoomTypeRepository>();
@@ -75,6 +75,25 @@ namespace HotelBooking.Tests.Services.RoomManagement
             Verify_Saved(2); // Once for RoomType and once for BedConfigs
             _mockUnitOfWork.Verify(u => u.CommitTransactionAsync(), Times.Once);
             _mockUnitOfWork.Verify(u => u.RollBackTransactionAsync(), Times.Never);
+        }
+
+        [Fact]
+        public async Task CreateRoomTypeAsync_WhenRequestIsNull_ShouldReturnBadRequest()
+        {
+            // 1. Arrange
+            RoomTypeCreateDTO request = null!;
+
+            // 2. Act
+            var result = await _service.CreateRoomTypeAsync(request);
+
+            // 3. Assert
+            result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+            result.Message.Should().Be(MessageResponse.Common.REQUEST_CANNOT_BE_NULL);
+
+            // Make sure that validation and existence checks were never called
+            _mockValidator.Verify(v => v.ValidateAsync(It.IsAny<RoomTypeCreateDTO>(), default), Times.Never);
+            _mockUnitOfWork.Verify(u => u.BeginTransactionAsync(), Times.Never);
+            Verify_Repo_Never_AddAsync<IRoomTypeRepository, RoomType>(_mockRoomTypeRepo);
         }
 
         [Fact]
@@ -358,7 +377,8 @@ namespace HotelBooking.Tests.Services.RoomManagement
         bool unitTypeExists = true,
         bool qualityExists = true,
         bool roomViewExists = true,
-        bool bedTypeExists = true)
+        bool bedTypeExists = true,
+        bool roomTypeAlreadyExists = false)
         {
             _mockHotelRepo
                 .Setup(r => r.AnyAsync(It.IsAny<Expression<Func<Hotel, bool>>>()))
@@ -379,6 +399,10 @@ namespace HotelBooking.Tests.Services.RoomManagement
             _mockAttributeFacade
                 .Setup(f => f.IsBedTypeExistedAsync(It.IsAny<int>()))
                 .ReturnsAsync(bedTypeExists);
+
+            _mockRoomTypeRepo
+                .Setup(r => r.AnyAsync(It.IsAny<Expression<Func<RoomType, bool>>>()))
+                .ReturnsAsync(roomTypeAlreadyExists);
         }
     }
 }
