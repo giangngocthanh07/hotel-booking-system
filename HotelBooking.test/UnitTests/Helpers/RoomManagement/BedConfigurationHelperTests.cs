@@ -11,13 +11,11 @@ public class BedConfigurationHelperTests
         // Arrange
         var bedTypes = new List<BedTypeNameDTO>();
 
-
         // Act
         var result = BedConfigurationHelper.FormatBedConfiguration(bedTypes);
 
         // Assert
         result.Should().BeEmpty();
-
     }
 
     // Single Bed Tests

@@ -1,3 +1,4 @@
+using System.Data;
 using FluentValidation;
 using HotelBooking.application.DTOs.Hotel;
 
@@ -21,10 +22,13 @@ namespace HotelBooking.application.Validators.RoomManagement
                 .MaximumLength(500).WithMessage(MessageResponse.RoomManagement.ROOM_TYPE_DESCRIPTION_TOO_LONG);
 
             RuleFor(x => x.PricePerNight)
-                .GreaterThanOrEqualTo(0).WithMessage(MessageResponse.RoomManagement.ROOM_TYPE_PRICE_INVALID);
+                .GreaterThan(0).WithMessage(MessageResponse.RoomManagement.ROOM_TYPE_PRICE_INVALID);
 
             RuleFor(x => x.AdultCapacity)
                 .GreaterThan(0).WithMessage(MessageResponse.RoomManagement.ROOM_TYPE_ADULT_CAPACITY_INVALID);
+
+            RuleFor(x => x.ChildCapacity)
+                .GreaterThanOrEqualTo(0).WithMessage(MessageResponse.RoomManagement.ROOM_TYPE_CHILD_CAPACITY_INVALID);
 
             RuleFor(x => x.UnitTypeId)
                 .GreaterThan(0).WithMessage(MessageResponse.RoomManagement.ROOM_TYPE_UNIT_TYPE_ID_INVALID);

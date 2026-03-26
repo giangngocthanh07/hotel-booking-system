@@ -21,7 +21,6 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
             _mockRegisterCustomerValidator = new Mock<IValidator<RegisterCustomerDTO>>();
             _mockRegisterAdminValidator = new Mock<IValidator<RegisterAdminDTO>>();
 
-
             _service = new RegisterService(_mockUserRepo.Object, _mockUserRoleRepo.Object, _mockRegisterCustomerValidator.Object, _mockRegisterAdminValidator.Object, _mockUnitOfWork.Object);
         }
 

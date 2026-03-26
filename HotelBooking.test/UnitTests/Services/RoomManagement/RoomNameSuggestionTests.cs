@@ -1,8 +1,6 @@
-
 using FluentAssertions;
 using FluentValidation;
 using HotelBooking.application.DTOs.Hotel;
-using HotelBooking.application.Helpers;
 using HotelBooking.application.Services.Domains.RoomManagement;
 using Moq;
 
@@ -40,6 +38,9 @@ namespace HotelBooking.Tests.Services.RoomManagement
 
             // 3. Assert
             result.Should().NotBeNull();
+            result.Message.Should().Be(MessageResponse.Common.GET_SUCCESSFULLY);
+            result.StatusCode.Should().Be(StatusCodeResponse.Success);
+
             suggestedNames.Should().NotBeNullOrEmpty();
 
             // Template A: [UnitType]
@@ -72,6 +73,9 @@ namespace HotelBooking.Tests.Services.RoomManagement
 
             // 3. Assert
             result.Should().NotBeNull();
+            result.Message.Should().Be(MessageResponse.Common.GET_SUCCESSFULLY);
+            result.StatusCode.Should().Be(StatusCodeResponse.Success);
+
             suggestedNames.Should().NotBeNullOrEmpty();
 
             // Template D: [Quality] + [BedType] + [UnitType]
@@ -99,6 +103,9 @@ namespace HotelBooking.Tests.Services.RoomManagement
 
             // 3. Assert
             result.Should().NotBeNull();
+            result.Message.Should().Be(MessageResponse.Common.GET_SUCCESSFULLY);
+            result.StatusCode.Should().Be(StatusCodeResponse.Success);
+
             suggestedNames.Should().NotBeNullOrEmpty();
 
             // Template F: [UnitType] + [View]
@@ -133,6 +140,9 @@ namespace HotelBooking.Tests.Services.RoomManagement
 
             // 3. Assert
             result.Should().NotBeNull();
+            result.Message.Should().Be(MessageResponse.Common.GET_SUCCESSFULLY);
+            result.StatusCode.Should().Be(StatusCodeResponse.Success);
+
             suggestedNames.Should().NotBeNullOrEmpty();
 
             // --- Check Feature: Balcony ---
@@ -170,6 +180,9 @@ namespace HotelBooking.Tests.Services.RoomManagement
 
             // 3. Assert
             result.Should().NotBeNull();
+            result.Message.Should().Be(MessageResponse.Common.GET_SUCCESSFULLY);
+            result.StatusCode.Should().Be(StatusCodeResponse.Success);
+
             suggestedNames.Should().NotBeNullOrEmpty();
 
             // Template N: [UnitType] + [Capacity]
@@ -204,6 +217,8 @@ namespace HotelBooking.Tests.Services.RoomManagement
 
             // 3. Assert
             result.Should().NotBeNull();
+            result.Message.Should().Be(MessageResponse.Common.GET_SUCCESSFULLY);
+            result.StatusCode.Should().Be(StatusCodeResponse.Success);
 
             // Template R: [UnitType] + [View] + [Feature]
             suggestedNames.Should().Contain("Suite with Sea View and Balcony");

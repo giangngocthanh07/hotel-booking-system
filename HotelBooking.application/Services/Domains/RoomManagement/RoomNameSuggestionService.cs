@@ -168,7 +168,6 @@ namespace HotelBooking.application.Services.Domains.RoomManagement
             // ==========================================
 
 
-
             // Loop through each active feature to generate templates J, K, L, M
             foreach (var feature in activeFeatures)
             {
@@ -252,7 +251,7 @@ namespace HotelBooking.application.Services.Domains.RoomManagement
             // --- STEP 4: RETURN ---
             // Remove duplicates, whitespace, and return
             var finalSuggestions = suggestions.Select(s => s.Trim()).Distinct().ToList();
-            
+
             return ResponseFactory.Success(finalSuggestions, MessageResponse.Common.GET_SUCCESSFULLY);
         }
     }

@@ -1,4 +1,3 @@
-using System.Data;
 using FluentValidation;
 using HotelBooking.application.DTOs.Hotel;
 
@@ -22,9 +21,8 @@ public class RoomNameSuggestionValidator : AbstractValidator<RoomNameSuggestionR
         RuleFor(x => x.AdultCapacity)
             .GreaterThan(0).WithMessage(MessageResponse.RoomManagement.ROOM_NAME_SUGGESTION_ADULT_CAPACITY_INVALID);
 
-        // RuleFor(x => x.CanAddExtraBeds)
-        //     .NotNull().WithMessage(MessageResponse.RoomManagement.ROOM_NAME_SUGGESTION_CAN_ADD_EXTRA_BEDS_REQUIRED)
-        //     .When(x => x.CanAddExtraBeds == true);
+        RuleFor(x => x.ChildrenCapacity)
+        .GreaterThanOrEqualTo(0).WithMessage(MessageResponse.RoomManagement.ROOM_NAME_SUGGESTION_CHILDREN_CAPACITY_REQUIRED);
 
         When(x => x.CanAddExtraBeds == true, () =>
         {
@@ -49,7 +47,7 @@ public class RoomNameSuggestionValidator : AbstractValidator<RoomNameSuggestionR
 
             bed.RuleFor(b => b.Quantity)
                 .GreaterThan(0)
-                .WithMessage(MessageResponse.RoomManagement.ROOM_NAME_SUGGESTION_BED_TYPES_INVALID);
+                .WithMessage(MessageResponse.RoomManagement.ROOM_NAME_SUGGESTION_BED_TYPES_QUANTITY_INVALID);
         });
     }
 }

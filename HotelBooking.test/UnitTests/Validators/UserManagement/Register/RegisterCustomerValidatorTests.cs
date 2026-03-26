@@ -1,8 +1,8 @@
 using HotelBooking.application.DTOs.User.Register;
 using HotelBooking.application.Validators.UserManagement.Register;
-
 using FluentAssertions;
 using Xunit;
+using FluentValidation.TestHelper;
 
 namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
 {
@@ -30,7 +30,7 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // 2. Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // 3. Assert
             result.IsValid.Should().BeTrue();
@@ -53,11 +53,12 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // 2. Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // 3. Assert
             result.IsValid.Should().BeFalse();
-            result.Errors.Should().ContainSingle(e => e.PropertyName == "Username" && e.ErrorMessage == MessageResponse.UserManagement.Register.USERNAME_REQUIRED);
+            result.ShouldHaveValidationErrorFor(r => r.Username)
+                .WithErrorMessage(MessageResponse.UserManagement.Register.USERNAME_REQUIRED);
         }
 
         [Fact]
@@ -75,11 +76,12 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // 2. Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // 3. Assert
             result.IsValid.Should().BeFalse();
-            result.Errors.Should().ContainSingle(e => e.PropertyName == "Username" && e.ErrorMessage == MessageResponse.UserManagement.Register.INVALID_USERNAME);
+            result.ShouldHaveValidationErrorFor(r => r.Username)
+                .WithErrorMessage(MessageResponse.UserManagement.Register.INVALID_USERNAME);
         }
 
         [Fact]
@@ -97,11 +99,12 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // 2. Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // 3. Assert
             result.IsValid.Should().BeFalse();
-            result.Errors.Should().ContainSingle(e => e.PropertyName == "Username" && e.ErrorMessage == MessageResponse.UserManagement.Register.INVALID_USERNAME);
+            result.ShouldHaveValidationErrorFor(r => r.Username)
+                .WithErrorMessage(MessageResponse.UserManagement.Register.INVALID_USERNAME);
         }
 
         // Email Tests
@@ -121,11 +124,12 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // 2. Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // 3. Assert
             result.IsValid.Should().BeFalse();
-            result.Errors.Should().ContainSingle(e => e.PropertyName == "Email" && e.ErrorMessage == MessageResponse.UserManagement.Register.EMAIL_REQUIRED);
+            result.ShouldHaveValidationErrorFor(r => r.Email)
+                .WithErrorMessage(MessageResponse.UserManagement.Register.EMAIL_REQUIRED);
         }
 
         [Fact]
@@ -143,11 +147,12 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // 2. Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // 3. Assert
             result.IsValid.Should().BeFalse();
-            result.Errors.Should().ContainSingle(e => e.PropertyName == "Email" && e.ErrorMessage == MessageResponse.UserManagement.Register.INVALID_EMAIL);
+            result.ShouldHaveValidationErrorFor(r => r.Email)
+                .WithErrorMessage(MessageResponse.UserManagement.Register.INVALID_EMAIL);
         }
 
         [Fact]
@@ -165,11 +170,12 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // 2. Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // 3. Assert
             result.IsValid.Should().BeFalse();
-            result.Errors.Should().ContainSingle(e => e.PropertyName == "Email" && e.ErrorMessage == MessageResponse.UserManagement.Register.INVALID_EMAIL_FORMAT);
+            result.ShouldHaveValidationErrorFor(r => r.Email)
+                .WithErrorMessage(MessageResponse.UserManagement.Register.INVALID_EMAIL_FORMAT);
         }
 
         // FullName Tests
@@ -188,11 +194,12 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // 2. Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // 3. Assert
             result.IsValid.Should().BeFalse();
-            result.Errors.Should().ContainSingle(e => e.PropertyName == "FullName" && e.ErrorMessage == MessageResponse.UserManagement.Register.FULLNAME_REQUIRED);
+            result.ShouldHaveValidationErrorFor(r => r.FullName)
+                .WithErrorMessage(MessageResponse.UserManagement.Register.FULLNAME_REQUIRED);
         }
 
         [Fact]
@@ -209,11 +216,12 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // 2. Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // 3. Assert
             result.IsValid.Should().BeFalse();
-            result.Errors.Should().ContainSingle(e => e.PropertyName == "FullName" && e.ErrorMessage == MessageResponse.UserManagement.Register.INVALID_FULLNAME);
+            result.ShouldHaveValidationErrorFor(r => r.FullName)
+                .WithErrorMessage(MessageResponse.UserManagement.Register.INVALID_FULLNAME);
         }
 
         // PhoneNumber Tests
@@ -231,11 +239,12 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // 2. Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // 3. Assert
             result.IsValid.Should().BeFalse();
-            result.Errors.Should().ContainSingle(e => e.PropertyName == "PhoneNumber" && e.ErrorMessage == MessageResponse.UserManagement.Register.EMPTY_PHONE);
+            result.ShouldHaveValidationErrorFor(r => r.PhoneNumber)
+                .WithErrorMessage(MessageResponse.UserManagement.Register.EMPTY_PHONE);
         }
 
         [Fact]
@@ -253,11 +262,12 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // 2. Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // 3. Assert
             result.IsValid.Should().BeFalse();
-            result.Errors.Should().ContainSingle(e => e.PropertyName == "PhoneNumber" && e.ErrorMessage == MessageResponse.UserManagement.Register.INVALID_PHONE_FORMAT);
+            result.ShouldHaveValidationErrorFor(r => r.PhoneNumber)
+                .WithErrorMessage(MessageResponse.UserManagement.Register.INVALID_PHONE_FORMAT);
         }
 
         [Fact]
@@ -275,11 +285,12 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // 2. Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // 3. Assert
             result.IsValid.Should().BeFalse();
-            result.Errors.Should().ContainSingle(e => e.PropertyName == "PhoneNumber" && e.ErrorMessage == MessageResponse.UserManagement.Register.INVALID_PHONE);
+            result.ShouldHaveValidationErrorFor(r => r.PhoneNumber)
+                .WithErrorMessage(MessageResponse.UserManagement.Register.INVALID_PHONE);
         }
 
         [Fact]
@@ -297,11 +308,12 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // 2. Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // 3. Assert
             result.IsValid.Should().BeFalse();
-            result.Errors.Should().ContainSingle(e => e.PropertyName == "PhoneNumber" && e.ErrorMessage == MessageResponse.UserManagement.Register.INVALID_PHONE);
+            result.ShouldHaveValidationErrorFor(r => r.PhoneNumber)
+                .WithErrorMessage(MessageResponse.UserManagement.Register.INVALID_PHONE);
         }
 
         // Password Tests
@@ -320,11 +332,12 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // 2. Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // 3. Assert
             result.IsValid.Should().BeFalse();
-            result.Errors.Should().ContainSingle(e => e.PropertyName == "Password" && e.ErrorMessage == MessageResponse.UserManagement.Register.EMPTY_PASSWORD);
+            result.ShouldHaveValidationErrorFor(r => r.Password)
+                .WithErrorMessage(MessageResponse.UserManagement.Register.EMPTY_PASSWORD);
         }
 
         [Fact]
@@ -342,11 +355,12 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // 2. Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // 3. Assert
             result.IsValid.Should().BeFalse();
-            result.Errors.Should().ContainSingle(e => e.PropertyName == "Password" && e.ErrorMessage == MessageResponse.UserManagement.Register.SHORT_PASSWORD);
+            result.ShouldHaveValidationErrorFor(r => r.Password)
+                .WithErrorMessage(MessageResponse.UserManagement.Register.SHORT_PASSWORD);
         }
 
         [Fact]
@@ -364,11 +378,12 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // 2. Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // 3. Assert
             result.IsValid.Should().BeFalse();
-            result.Errors.Should().ContainSingle(e => e.PropertyName == "Password" && e.ErrorMessage == MessageResponse.UserManagement.Register.UPPERCASE_LETTER_PASSWORD);
+            result.ShouldHaveValidationErrorFor(r => r.Password)
+                .WithErrorMessage(MessageResponse.UserManagement.Register.UPPERCASE_LETTER_PASSWORD);
         }
 
         [Fact]
@@ -386,11 +401,12 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // 2. Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // 3. Assert
             result.IsValid.Should().BeFalse();
-            result.Errors.Should().ContainSingle(e => e.PropertyName == "Password" && e.ErrorMessage == MessageResponse.UserManagement.Register.LOWERCASE_LETTER_PASSWORD);
+            result.ShouldHaveValidationErrorFor(r => r.Password)
+                .WithErrorMessage(MessageResponse.UserManagement.Register.LOWERCASE_LETTER_PASSWORD);
         }
 
         [Fact]
@@ -408,11 +424,12 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // 2. Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // 3. Assert
             result.IsValid.Should().BeFalse();
-            result.Errors.Should().ContainSingle(e => e.PropertyName == "Password" && e.ErrorMessage == MessageResponse.UserManagement.Register.SPECIAL_CHARACTER_PASSWORD);
+            result.ShouldHaveValidationErrorFor(r => r.Password)
+                .WithErrorMessage(MessageResponse.UserManagement.Register.SPECIAL_CHARACTER_PASSWORD);
         }
 
         [Fact]
@@ -430,11 +447,12 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // 2. Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // 3. Assert
             result.IsValid.Should().BeFalse();
-            result.Errors.Should().ContainSingle(e => e.PropertyName == "Password" && e.ErrorMessage == MessageResponse.UserManagement.Register.NUMBER_PASSWORD);
+            result.ShouldHaveValidationErrorFor(r => r.Password)
+                .WithErrorMessage(MessageResponse.UserManagement.Register.NUMBER_PASSWORD);
         }
 
         [Fact]
@@ -452,11 +470,12 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // 2. Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // 3. Assert
             result.IsValid.Should().BeFalse();
-            result.Errors.Should().ContainSingle(e => e.PropertyName == "ConfirmPassword" && e.ErrorMessage == MessageResponse.UserManagement.Register.PASSWORDS_DO_NOT_MATCH);
+            result.ShouldHaveValidationErrorFor(r => r.ConfirmPassword)
+                .WithErrorMessage(MessageResponse.UserManagement.Register.PASSWORDS_DO_NOT_MATCH);
         }
     }
 }

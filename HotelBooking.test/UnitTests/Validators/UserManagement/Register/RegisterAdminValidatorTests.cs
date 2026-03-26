@@ -1,4 +1,5 @@
 using FluentAssertions;
+using FluentValidation.TestHelper;
 using HotelBooking.application.DTOs.User.Register;
 using HotelBooking.application.Validators.UserManagement.Register;
 
@@ -28,7 +29,7 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // 2. Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // 3. Assert
             result.IsValid.Should().BeTrue();
@@ -50,7 +51,7 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // 2. Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // 3. Assert
             result.IsValid.Should().BeFalse();
@@ -72,7 +73,7 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // Act
-            var result = _validator.Validate(model);
+            var result = _validator.TestValidate(model);
 
             // Assert
             result.IsValid.Should().BeFalse();
@@ -94,7 +95,7 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // 2. Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // 3. Assert
             result.IsValid.Should().BeFalse();
@@ -116,7 +117,7 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // Assert
             result.IsValid.Should().BeFalse();
@@ -138,7 +139,7 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // Assert
             result.IsValid.Should().BeFalse();
@@ -160,7 +161,7 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // Assert
             result.IsValid.Should().BeFalse();
@@ -182,7 +183,7 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // Assert 
             result.IsValid.Should().BeFalse();
@@ -204,7 +205,7 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // Assert
             result.IsValid.Should().BeFalse();
@@ -227,7 +228,7 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // Assert
             result.IsValid.Should().BeFalse();
@@ -249,7 +250,7 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // Assert
             result.IsValid.Should().BeFalse();
@@ -271,7 +272,7 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // Assert
             result.IsValid.Should().BeFalse();
@@ -293,7 +294,7 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // Assert
             result.IsValid.Should().BeFalse();
@@ -314,7 +315,7 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
                 ConfirmPassword = "ValidPass@123"
             };
             // Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // Assert
             result.IsValid.Should().BeFalse();
@@ -336,7 +337,7 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // Assert
             result.IsValid.Should().BeFalse();
@@ -358,7 +359,7 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // Assert
             result.IsValid.Should().BeFalse();
@@ -380,7 +381,7 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // Assert
             result.IsValid.Should().BeFalse();
@@ -402,7 +403,7 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // Assert
             result.IsValid.Should().BeFalse();
@@ -424,7 +425,7 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // Assert
             result.IsValid.Should().BeFalse();
@@ -446,7 +447,7 @@ namespace HotelBooking.test.UnitTests.Validators.UserManagement.Register
             };
 
             // Act
-            var result = _validator.Validate(request);
+            var result = _validator.TestValidate(request);
 
             // Assert
             result.IsValid.Should().BeFalse();

@@ -345,7 +345,7 @@ public static class MessageResponse
         public const string ROOM_TYPE_ROOM_VIEW_ID_INVALID = "Room view ID must be greater than 0!";
         public const string ROOM_TYPE_MAX_EXTRA_BEDS_INVALID = "Max extra beds must be greater than 0!";
         public const string ROOM_TYPE_MAX_EXTRA_BEDS_MUST_BE_NULL_OR_ZERO = "Max extra beds must be null or 0 when extra bed is not allowed!";
-        public const string ROOM_TYPE_AREA_INVALID = "Area must be greater than 0!";
+        public const string ROOM_TYPE_AREA_INVALID = "Area must not be negative!";
         public const string ROOM_TYPE_TOTAL_ROOMS_INVALID = "Total rooms must be greater than 0!";
         public const string ROOM_TYPE_BED_TYPES_REQUIRED = "At least one bed type is required!";
         public const string ROOM_TYPE_BED_TYPE_ID_INVALID = "Bed type ID must be greater than 0!";
@@ -383,6 +383,7 @@ public static class MessageResponse
         public const string ROOM_NAME_SUGGESTION_MAX_EXTRA_BEDS_MUST_BE_NULL_OR_ZERO = "Max extra beds must be null or 0 when extra bed is not allowed!";
         public const string ROOM_NAME_SUGGESTION_BED_TYPES_REQUIRED = "At least one bed type is required!";
         public const string ROOM_NAME_SUGGESTION_BED_TYPES_INVALID = "Each bed type must have a valid ID and quantity greater than 0!";
+        public const string ROOM_NAME_SUGGESTION_BED_TYPES_QUANTITY_INVALID = "Each bed type quantity must be greater than 0!";
 
         // --- ROOM NAME SUGGESTION: NOT FOUND MESSAGES ---
         public const string ROOM_NAME_SUGGESTION_UNIT_TYPE_NOT_FOUND = "Unit type not found!";
