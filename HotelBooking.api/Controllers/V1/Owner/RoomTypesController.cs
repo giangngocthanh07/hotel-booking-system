@@ -1,4 +1,5 @@
 using HotelBooking.application.DTOs.Hotel;
+using HotelBooking.application.Helpers;
 using HotelBooking.application.Services.Domains.RoomManagement;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
@@ -34,7 +35,7 @@ namespace HotelBooking.API.Controllers
             // return Ok(ResponseFactory.Success(result));
 
             // 2. If your method (as in the test file) already returns ApiResponse<List<string>>:
-            return Ok(result);
+            return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
         [HttpPost("roomtype-create")]
@@ -43,7 +44,7 @@ namespace HotelBooking.API.Controllers
             // Call the service layer to create a new room type
             var result = await _roomTypeService.CreateRoomTypeAsync(request);
 
-            return Ok(result);
+            return ApiResponseHandlerHelper.HandleResponse(result);
         }
     }
 }
