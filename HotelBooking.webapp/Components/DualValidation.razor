@@ -1,0 +1,19 @@
+@using System.Linq.Expressions
+
+@typeparam TValue
+
+@if (IsUpdate && UpdateExpression != null)
+{
+    <ValidationMessage For="@UpdateExpression" class="@CssClass" />
+}
+else if (!IsUpdate && CreateExpression != null)
+{
+    <ValidationMessage For="@CreateExpression" class="@CssClass" />
+}
+
+@code {
+    [Parameter] public bool IsUpdate { get; set; }
+    [Parameter] public Expression<Func<TValue>>? UpdateExpression { get; set; }
+    [Parameter] public Expression<Func<TValue>>? CreateExpression { get; set; }
+    [Parameter] public string CssClass { get; set; } = "val-msg-custom";
+}

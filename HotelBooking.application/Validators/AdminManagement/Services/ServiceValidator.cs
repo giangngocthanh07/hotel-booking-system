@@ -1,12 +1,12 @@
 // Common Validator for ServiceDTO base class
+using System.Linq.Expressions;
 using FluentValidation;
 
 namespace HotelBooking.application.Validators.AdminManagement.Services;
 
 public class ServiceValidator : AbstractValidator<ServiceDTO>
 {
-    // Assume minimum price is 10,000 VND
-    private const decimal minPrice = 10000;
+    public const decimal MIN_PRICE = 10000;
 
     public ServiceValidator()
     {
@@ -15,8 +15,8 @@ public class ServiceValidator : AbstractValidator<ServiceDTO>
             .MaximumLength(50).WithMessage(MessageResponse.AdminManagement.Service.LONG_NAME);
 
         RuleFor(x => x.Price)
-            .Must(p => p == 0 || p >= minPrice)
-            .WithMessage($"{MessageResponse.AdminManagement.Service.INVALID_AMOUNT} or minimum {minPrice:N0} VND!");
+            .Must(p => p == 0 || p >= MIN_PRICE)
+            .WithMessage($"{MessageResponse.AdminManagement.Service.INVALID_AMOUNT} or minimum {MIN_PRICE:N0} VND!");
 
         RuleFor(x => x.Description)
             .MaximumLength(500).WithMessage(MessageResponse.Validation.LONG_DESCRIPTION);
@@ -25,6 +25,88 @@ public class ServiceValidator : AbstractValidator<ServiceDTO>
             .NotEmpty().WithMessage(MessageResponse.Validation.TYPE_ID_REQUIRED);
     }
 }
+
+public static class ServiceValidationHelper
+{
+    public static void ApplyStandardRules<T>(AbstractValidator<T> validator,
+        Expression<Func<T, string>> unitSelector,
+        Expression<Func<T, decimal>> priceSelector)
+    {
+        validator.RuleFor(unitSelector)
+            .NotEmpty().WithMessage(MessageResponse.AdminManagement.Service.EMPTY_UNIT_NAME)
+            .MaximumLength(20).WithMessage(MessageResponse.AdminManagement.Service.LONG_UNIT);
+
+        validator.RuleFor(priceSelector)
+            .Must(p => p >= ServiceValidator.MIN_PRICE)
+            .WithMessage(MessageResponse.AdminManagement.Service.STANDARD_SERVICE_PRICE_GREATER_THAN_ZERO);
+    }
+
+    public static void ApplyAirportRules<T>(AbstractValidator<T> validator,
+        Expression<Func<T, int?>> maxPassengersSelector,
+        Expression<Func<T, int?>> maxLuggageSelector,
+        Func<T, bool> hasRoundTripSelector,
+        Func<T, bool> isRoundTripPaidSelector,
+        Expression<Func<T, decimal?>> roundTripPriceSelector,
+        Func<T, bool> hasNightFeeSelector,
+        Expression<Func<T, decimal?>> additionalFeeSelector,
+        Expression<Func<T, TimeOnly?>> startTimeSelector,
+        Expression<Func<T, TimeOnly?>> endTimeSelector)
+    {
+        validator.RuleFor(maxPassengersSelector)
+            .GreaterThan(0).When(x => maxPassengersSelector.Compile()(x).HasValue)
+            .WithMessage(MessageResponse.AdminManagement.Service.MIN_PASSENGERS)
+            .LessThanOrEqualTo(45).When(x => maxPassengersSelector.Compile()(x).HasValue)
+            .WithMessage(MessageResponse.AdminManagement.Service.MAX_PASSENGERS);
+
+        validator.RuleFor(maxLuggageSelector)
+            .GreaterThanOrEqualTo(0).When(x => maxLuggageSelector.Compile()(x).HasValue)
+            .WithMessage(MessageResponse.AdminManagement.Service.MIN_LUGGAGE)
+            .LessThanOrEqualTo(45).When(x => maxLuggageSelector.Compile()(x).HasValue)
+            .WithMessage(MessageResponse.AdminManagement.Service.MAX_LUGGAGE);
+
+        validator.RuleFor(roundTripPriceSelector)
+            .Must(p => p == 0 || p >= ServiceValidator.MIN_PRICE)
+            .When(x => hasRoundTripSelector(x) && isRoundTripPaidSelector(x))
+            .WithMessage($"{MessageResponse.AdminManagement.Service.INVALID_ROUND_TRIP_PRICE} or minimum {ServiceValidator.MIN_PRICE:N0} VND!");
+
+        validator.When(x => hasNightFeeSelector(x), () =>
+        {
+            validator.RuleFor(additionalFeeSelector).NotNull().Must(f => f == 0 || f >= ServiceValidator.MIN_PRICE)
+                .WithMessage($"{MessageResponse.AdminManagement.Service.DEFAULT_ADDITIONAL_FEE} {ServiceValidator.MIN_PRICE:N0} VND!");
+            validator.RuleFor(startTimeSelector).NotNull()
+                .WithMessage(MessageResponse.AdminManagement.Service.MISSING_ADDITIONAL_FEE_START_TIME);
+            validator.RuleFor(endTimeSelector).NotNull()
+                .WithMessage(MessageResponse.AdminManagement.Service.MISSING_ADDITIONAL_FEE_END_TIME);
+        });
+
+        validator.RuleFor(x => x).Custom((dto, context) =>
+        {
+            var hasNightFee = hasNightFeeSelector(dto);
+            var startTime = startTimeSelector.Compile()(dto);
+            var endTime = endTimeSelector.Compile()(dto);
+
+            if (hasNightFee && startTime.HasValue && endTime.HasValue)
+            {
+                var duration = endTime.Value - startTime.Value;
+                double totalHours = duration.TotalHours < 0 ? duration.TotalHours + 24 : duration.TotalHours;
+
+                if (totalHours > 12)
+                {
+                    var propName = ((System.Reflection.MemberInfo)((MemberExpression)endTimeSelector.Body).Member).Name;
+                    context.AddFailure(propName, MessageResponse.AdminManagement.Service.ADDITIONAL_FEE_TIME_EXCEEDS_LIMIT);
+                }
+
+                if (startTime == endTime)
+                {
+                    var propName = ((System.Reflection.MemberInfo)((MemberExpression)endTimeSelector.Body).Member).Name;
+                    context.AddFailure(propName, MessageResponse.AdminManagement.Service.INVALID_ADDITIONAL_FEE_START_END_TIME);
+                }
+            }
+        });
+    }
+}
+
+
 
 // =========================================================================
 // 1. VALIDATOR FOR CREATE (Parent Class & Polymorphic Coordination)
@@ -54,76 +136,27 @@ public class ServiceCreateValidator : AbstractValidator<ServiceCreateDTO>
 // --- CREATE: Standard Service ---
 public class ServiceStandardCreateValidator : AbstractValidator<ServiceStandardCreateDTO>
 {
-    private const decimal minPrice = 10000;
     public ServiceStandardCreateValidator()
     {
-        // 1. Specific Validation (Unit)
-        RuleFor(x => x.Unit)
-            .NotEmpty().WithMessage(MessageResponse.AdminManagement.Service.EMPTY_UNIT_NAME)
-            .MaximumLength(20).WithMessage(MessageResponse.AdminManagement.Service.LONG_UNIT);
-
-        RuleFor(x => x.Price)
-            .Must(p => p >= minPrice)
-            .WithMessage(MessageResponse.AdminManagement.Service.STANDARD_SERVICE_PRICE_GREATER_THAN_ZERO);
+        ServiceValidationHelper.ApplyStandardRules(this, x => x.Unit, x => x.Price);
     }
 }
 
 // --- CREATE: Airport Service ---
 public class ServiceAirportCreateValidator : AbstractValidator<ServiceAirportCreateDTO>
 {
-    private const decimal minPrice = 10000;
-
     public ServiceAirportCreateValidator()
     {
-        // Validate Capacity
-        RuleFor(x => x.MaxPassengers)
-            .GreaterThan(0).When(x => x.MaxPassengers.HasValue)
-            .WithMessage(MessageResponse.AdminManagement.Service.MIN_PASSENGERS)
-            .LessThanOrEqualTo(45).When(x => x.MaxPassengers.HasValue)
-            .WithMessage(MessageResponse.AdminManagement.Service.MAX_PASSENGERS);
-
-        RuleFor(x => x.MaxLuggage)
-            .GreaterThanOrEqualTo(0).When(x => x.MaxLuggage.HasValue)
-            .WithMessage(MessageResponse.AdminManagement.Service.MIN_LUGGAGE)
-            .LessThanOrEqualTo(45).When(x => x.MaxLuggage.HasValue)
-            .WithMessage(MessageResponse.AdminManagement.Service.MAX_LUGGAGE);
-
-        // Validate Round-trip (If applicable)
-        RuleFor(x => x.RoundTripPrice)
-            .Must(p => p == 0 || p >= minPrice)
-            .When(x => x.HasRoundTrip && x.IsRoundTripPaid)
-            .WithMessage($"{MessageResponse.AdminManagement.Service.INVALID_ROUND_TRIP_PRICE} or minimum {minPrice:N0} VND!");
-
-        // Validate Night Fee
-        When(x => x.HasNightFee, () =>
-        {
-            RuleFor(x => x.AdditionalFee).NotNull().Must(f => f == 0 || f >= minPrice)
-                .WithMessage($"{MessageResponse.AdminManagement.Service.DEFAULT_ADDITIONAL_FEE} {minPrice:N0} VND!");
-            RuleFor(x => x.AdditionalFeeStartTime).NotNull()
-                .WithMessage(MessageResponse.AdminManagement.Service.MISSING_ADDITIONAL_FEE_START_TIME);
-            RuleFor(x => x.AdditionalFeeEndTime).NotNull()
-                .WithMessage(MessageResponse.AdminManagement.Service.MISSING_ADDITIONAL_FEE_END_TIME);
-        });
-
-        // Custom Validation for Night Fee Time Range
-        RuleFor(x => x).Custom((dto, context) =>
-        {
-            if (dto.HasNightFee && dto.AdditionalFeeStartTime.HasValue && dto.AdditionalFeeEndTime.HasValue)
-            {
-                var duration = dto.AdditionalFeeEndTime.Value - dto.AdditionalFeeStartTime.Value;
-                double totalHours = duration.TotalHours < 0 ? duration.TotalHours + 24 : duration.TotalHours;
-
-                if (totalHours > 12)
-                {
-                    context.AddFailure("AdditionalFeeEndTime", MessageResponse.AdminManagement.Service.ADDITIONAL_FEE_TIME_EXCEEDS_LIMIT);
-                }
-
-                if (dto.AdditionalFeeStartTime == dto.AdditionalFeeEndTime)
-                {
-                    context.AddFailure("AdditionalFeeEndTime", MessageResponse.AdminManagement.Service.INVALID_ADDITIONAL_FEE_START_END_TIME);
-                }
-            }
-        });
+        ServiceValidationHelper.ApplyAirportRules(this,
+            x => x.MaxPassengers,
+            x => x.MaxLuggage,
+            x => x.HasRoundTrip,
+            x => x.IsRoundTripPaid,
+            x => x.RoundTripPrice,
+            x => x.HasNightFee,
+            x => x.AdditionalFee,
+            x => x.AdditionalFeeStartTime,
+            x => x.AdditionalFeeEndTime);
     }
 }
 
@@ -151,72 +184,26 @@ public class ServiceUpdateValidator : AbstractValidator<ServiceUpdateDTO>
 // --- UPDATE: Standard Service ---
 public class ServiceStandardUpdateValidator : AbstractValidator<ServiceStandardUpdateDTO>
 {
-    private const decimal minPrice = 10000;
-
     public ServiceStandardUpdateValidator()
     {
-        // Same logic as Create
-        RuleFor(x => x.Unit)
-            .NotEmpty().WithMessage(MessageResponse.AdminManagement.Service.EMPTY_UNIT_NAME)
-            .MaximumLength(20).WithMessage(MessageResponse.AdminManagement.Service.LONG_UNIT);
-
-        RuleFor(x => x.Price)
-            .Must(p => p >= minPrice)
-            .WithMessage(MessageResponse.AdminManagement.Service.STANDARD_SERVICE_PRICE_GREATER_THAN_ZERO);
+        ServiceValidationHelper.ApplyStandardRules(this, x => x.Unit, x => x.Price);
     }
 }
 
 // --- UPDATE: Airport Service ---
 public class ServiceAirportUpdateValidator : AbstractValidator<ServiceAirportUpdateDTO>
 {
-    private const decimal minPrice = 10000;
-
     public ServiceAirportUpdateValidator()
     {
-        RuleFor(x => x.MaxPassengers)
-            .GreaterThan(0).When(x => x.MaxPassengers.HasValue)
-            .WithMessage(MessageResponse.AdminManagement.Service.MIN_PASSENGERS)
-            .LessThanOrEqualTo(45).When(x => x.MaxPassengers.HasValue)
-            .WithMessage(MessageResponse.AdminManagement.Service.MAX_PASSENGERS);
-
-        RuleFor(x => x.MaxLuggage)
-            .GreaterThan(0).When(x => x.MaxLuggage.HasValue)
-            .WithMessage(MessageResponse.AdminManagement.Service.MIN_LUGGAGE)
-            .LessThanOrEqualTo(45).When(x => x.MaxLuggage.HasValue)
-            .WithMessage(MessageResponse.AdminManagement.Service.MAX_LUGGAGE);
-
-        RuleFor(x => x.RoundTripPrice)
-            .Must(p => p == 0 || p >= minPrice)
-            .When(x => x.HasRoundTrip && x.IsRoundTripPaid)
-            .WithMessage($"{MessageResponse.AdminManagement.Service.INVALID_ROUND_TRIP_PRICE} or minimum {minPrice:N0} VND!");
-
-        When(x => x.HasNightFee, () =>
-        {
-            RuleFor(x => x.AdditionalFee).NotNull().Must(f => f == 0 || f >= minPrice)
-                .WithMessage($"{MessageResponse.AdminManagement.Service.DEFAULT_ADDITIONAL_FEE} {minPrice:N0} VND!");
-            RuleFor(x => x.AdditionalFeeStartTime).NotNull()
-                .WithMessage(MessageResponse.AdminManagement.Service.MISSING_ADDITIONAL_FEE_START_TIME);
-            RuleFor(x => x.AdditionalFeeEndTime).NotNull()
-                .WithMessage(MessageResponse.AdminManagement.Service.MISSING_ADDITIONAL_FEE_END_TIME);
-        });
-
-        RuleFor(x => x).Custom((dto, context) =>
-        {
-            if (dto.HasNightFee && dto.AdditionalFeeStartTime.HasValue && dto.AdditionalFeeEndTime.HasValue)
-            {
-                var duration = dto.AdditionalFeeEndTime.Value - dto.AdditionalFeeStartTime.Value;
-                double totalHours = duration.TotalHours < 0 ? duration.TotalHours + 24 : duration.TotalHours;
-
-                if (totalHours > 12)
-                {
-                    context.AddFailure("AdditionalFeeEndTime", MessageResponse.AdminManagement.Service.ADDITIONAL_FEE_TIME_EXCEEDS_LIMIT);
-                }
-
-                if (dto.AdditionalFeeStartTime == dto.AdditionalFeeEndTime)
-                {
-                    context.AddFailure("AdditionalFeeEndTime", MessageResponse.AdminManagement.Service.INVALID_ADDITIONAL_FEE_START_END_TIME);
-                }
-            }
-        });
+        ServiceValidationHelper.ApplyAirportRules(this,
+            x => x.MaxPassengers,
+            x => x.MaxLuggage,
+            x => x.HasRoundTrip,
+            x => x.IsRoundTripPaid,
+            x => x.RoundTripPrice,
+            x => x.HasNightFee,
+            x => x.AdditionalFee,
+            x => x.AdditionalFeeStartTime,
+            x => x.AdditionalFeeEndTime);
     }
 }

@@ -3,12 +3,12 @@ using FluentValidation;
 namespace HotelBooking.application.Validators.AdminManagement.Policies;
 
 // =========================================================================
-// 1. PARENT VALIDATORS (Polymorphic coordination)
+// 1. COMMON VALIDATORS (Chỉ chứa rule cơ bản, KHÔNG chứa đa hình để tránh Loop)
 // =========================================================================
 
-public class PolicyCreateValidator : AbstractValidator<PolicyCreateDTO>
+public class CommonPolicyCreateValidator : AbstractValidator<PolicyCreateDTO>
 {
-    public PolicyCreateValidator()
+    public CommonPolicyCreateValidator()
     {
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage(MessageResponse.AdminManagement.Policy.EMPTY_NAME)
@@ -17,10 +17,34 @@ public class PolicyCreateValidator : AbstractValidator<PolicyCreateDTO>
         RuleFor(x => x.Description)
             .MaximumLength(500).WithMessage(MessageResponse.AdminManagement.Policy.LONG_DESCRIPTION);
 
-        RuleFor(x => x.TypeId)
-            .IsInEnum().WithMessage(MessageResponse.AdminManagement.Policy.INVALID_TYPE);
+    }
+}
 
-        // Automatically selects the corresponding child validator based on concrete type
+public class CommonPolicyUpdateValidator : AbstractValidator<PolicyUpdateDTO>
+{
+    public CommonPolicyUpdateValidator()
+    {
+        RuleFor(x => x.Name)
+            .NotEmpty().WithMessage(MessageResponse.AdminManagement.Policy.EMPTY_NAME)
+            .MaximumLength(50).WithMessage(MessageResponse.AdminManagement.Policy.LONG_NAME);
+
+        RuleFor(x => x.Description)
+            .MaximumLength(500).WithMessage(MessageResponse.AdminManagement.Policy.LONG_DESCRIPTION);
+    }
+}
+
+// =========================================================================
+// 2. PARENT VALIDATORS (Polymorphic coordination - Entry point cho Controller)
+// =========================================================================
+
+public class PolicyCreateValidator : AbstractValidator<PolicyCreateDTO>
+{
+    public PolicyCreateValidator()
+    {
+        // Kế thừa các rule cơ bản
+        Include(new CommonPolicyCreateValidator());
+
+        // Phân luồng validation theo kiểu dữ liệu con thực tế
         RuleFor(x => x).SetInheritanceValidator(v =>
         {
             v.Add(new CheckInOutPolicyCreateValidator());
@@ -35,14 +59,8 @@ public class PolicyUpdateValidator : AbstractValidator<PolicyUpdateDTO>
 {
     public PolicyUpdateValidator()
     {
-        RuleFor(x => x.Name)
-            .NotEmpty().WithMessage(MessageResponse.AdminManagement.Policy.EMPTY_NAME)
-            .MaximumLength(50).WithMessage(MessageResponse.AdminManagement.Policy.LONG_NAME);
+        Include(new CommonPolicyUpdateValidator());
 
-        RuleFor(x => x.Description)
-            .MaximumLength(500).WithMessage(MessageResponse.AdminManagement.Policy.LONG_DESCRIPTION);
-
-        // Automatically selects the corresponding child validator based on concrete type
         RuleFor(x => x).SetInheritanceValidator(v =>
         {
             v.Add(new CheckInOutPolicyUpdateValidator());
@@ -54,216 +72,200 @@ public class PolicyUpdateValidator : AbstractValidator<PolicyUpdateDTO>
 }
 
 // =========================================================================
-// 2. CHILD VALIDATORS — CREATE
+// 3. HELPER (Tối ưu hiệu năng, loại bỏ hoàn toàn .Compile())
 // =========================================================================
 
-/// <summary>
-/// Check-In/Out Policy (TypeId: 1002)
-/// Bug Fix #1: Removed redundant TypeId == CheckInOut check (SetInheritanceValidator already ensures this).
-/// Bug Fix #2: Moved .WithMessage() BEFORE .When() so the message is always bound to the rule.
-/// </summary>
+public static class PolicyValidationHelper
+{
+    public static void ApplyCheckInOutRules<T>(AbstractValidator<T> validator,
+        System.Linq.Expressions.Expression<Func<T, TimeOnly?>> checkInTimeSelector,
+        System.Linq.Expressions.Expression<Func<T, TimeOnly?>> checkOutTimeSelector,
+        System.Linq.Expressions.Expression<Func<T, decimal?>> earlyCheckInFeeSelector,
+        System.Linq.Expressions.Expression<Func<T, decimal?>> lateCheckOutFeeSelector)
+    {
+        validator.RuleFor(checkInTimeSelector)
+            .NotNull().WithMessage(MessageResponse.AdminManagement.Policy.EMPTY_CHECKIN_TIME);
+
+        validator.RuleFor(checkOutTimeSelector)
+            .NotNull().WithMessage(MessageResponse.AdminManagement.Policy.EMPTY_CHECKOUT_TIME);
+
+        validator.RuleFor(earlyCheckInFeeSelector)
+            .GreaterThanOrEqualTo(0)
+            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_EARLY_CHECKIN_FEE);
+
+        validator.RuleFor(lateCheckOutFeeSelector)
+            .GreaterThanOrEqualTo(0)
+            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_LATE_CHECKOUT_FEE);
+    }
+
+    public static void ApplyCancellationRules<T>(AbstractValidator<T> validator,
+        Func<T, bool> isRefundableSelector,
+        System.Linq.Expressions.Expression<Func<T, int?>> daysBeforeCheckInSelector,
+        System.Linq.Expressions.Expression<Func<T, double?>> refundPercentSelector)
+    {
+        validator.When(x => isRefundableSelector(x), () =>
+        {
+            validator.RuleFor(daysBeforeCheckInSelector)
+                .GreaterThanOrEqualTo(0)
+                .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_DAYS_BEFORE_CHECKIN);
+
+            validator.RuleFor(refundPercentSelector)
+                .InclusiveBetween(0, 100)
+                .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_REFUND_PERCENT);
+        });
+    }
+
+    public static void ApplyChildrenRules<T>(AbstractValidator<T> validator,
+        System.Linq.Expressions.Expression<Func<T, int?>> minAgeSelector,
+        System.Linq.Expressions.Expression<Func<T, int?>> maxAgeSelector,
+        Func<T, int?> minAgeFunc, // Dùng Func trực tiếp thay vì Expression.Compile()
+        System.Linq.Expressions.Expression<Func<T, decimal?>> extraBedFeeSelector)
+    {
+        validator.RuleFor(minAgeSelector)
+            .GreaterThanOrEqualTo(0)
+            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_MIN_AGE);
+
+        validator.RuleFor(maxAgeSelector)
+            .GreaterThanOrEqualTo(0)
+            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_MAX_AGE);
+
+        validator.RuleFor(maxAgeSelector)
+            .Must((model, maxAge) =>
+            {
+                var minAge = minAgeFunc(model);
+                if (!maxAge.HasValue || !minAge.HasValue) return true;
+                return maxAge.Value >= minAge.Value;
+            })
+            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_MAX_AGE);
+
+        validator.RuleFor(extraBedFeeSelector)
+            .GreaterThanOrEqualTo(0)
+            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_EXTRA_BED_FEE);
+    }
+
+    public static void ApplyPetRules<T>(AbstractValidator<T> validator,
+        Func<T, bool> isPetAllowedSelector,
+        System.Linq.Expressions.Expression<Func<T, decimal?>> petFeeSelector)
+    {
+        validator.When(x => isPetAllowedSelector(x), () =>
+        {
+            validator.RuleFor(petFeeSelector)
+                .GreaterThanOrEqualTo(0)
+                .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_PET_FEE);
+        });
+    }
+}
+
+// =========================================================================
+// 4. CHILD VALIDATORS — CREATE
+// =========================================================================
+
 public class CheckInOutPolicyCreateValidator : AbstractValidator<CheckInOutPolicyCreateDTO>
 {
     public CheckInOutPolicyCreateValidator()
     {
-        // Check-in and check-out times are required for this policy type
-        RuleFor(x => x.CheckInTime)
-            .NotNull().WithMessage(MessageResponse.AdminManagement.Policy.EMPTY_CHECKIN_TIME);
+        Include(new CommonPolicyCreateValidator()); // Gắn Common Rule, ngắt vòng lặp
 
-        RuleFor(x => x.CheckOutTime)
-            .NotNull().WithMessage(MessageResponse.AdminManagement.Policy.EMPTY_CHECKOUT_TIME);
-
-        // Bug Fix #2: .WithMessage() must come directly after the validator method, then .When()
-        RuleFor(x => x.EarlyCheckInFee)
-            .GreaterThanOrEqualTo(0)
-            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_EARLY_CHECKIN_FEE)
-            .When(x => x.EarlyCheckInFee.HasValue);
-
-        RuleFor(x => x.LateCheckOutFee)
-            .GreaterThanOrEqualTo(0)
-            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_LATE_CHECKOUT_FEE)
-            .When(x => x.LateCheckOutFee.HasValue);
+        PolicyValidationHelper.ApplyCheckInOutRules(this,
+            x => x.CheckInTime,
+            x => x.CheckOutTime,
+            x => x.EarlyCheckInFee,
+            x => x.LateCheckOutFee);
     }
 }
 
-/// <summary>
-/// Cancellation Policy (TypeId: 1003)
-/// Bug Fix #3: DaysBeforeCheckIn and RefundPercent are only relevant when IsRefundable = true.
-///             Without the When() guard, validation errors fire even for non-refundable policies.
-/// </summary>
 public class CancellationPolicyCreateValidator : AbstractValidator<CancellationPolicyCreateDTO>
 {
     public CancellationPolicyCreateValidator()
     {
-        // Bug Fix #3: Only validate refund-specific fields when the policy IS refundable
-        When(x => x.IsRefundable, () =>
-        {
-            RuleFor(x => x.DaysBeforeCheckIn)
-                .GreaterThanOrEqualTo(0)
-                .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_DAYS_BEFORE_CHECKIN)
-                .When(x => x.DaysBeforeCheckIn.HasValue);
+        Include(new CommonPolicyCreateValidator());
 
-            RuleFor(x => x.RefundPercent)
-                .InclusiveBetween(0, 100)
-                .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_REFUND_PERCENT)
-                .When(x => x.RefundPercent.HasValue);
-        });
+        PolicyValidationHelper.ApplyCancellationRules(this,
+            x => x.IsRefundable,
+            x => x.DaysBeforeCheckIn,
+            x => x.RefundPercent);
     }
 }
 
-/// <summary>
-/// Children Policy (TypeId: 1004)
-/// Bug Fix #4: Added base >= 0 check on MaxAge independently of MinAge presence.
-///             Cross-field check (MaxAge >= MinAge) only fires when both values are provided.
-/// </summary>
 public class ChildrenPolicyCreateValidator : AbstractValidator<ChildrenPolicyCreateDTO>
 {
     public ChildrenPolicyCreateValidator()
     {
-        RuleFor(x => x.MinAge)
-            .GreaterThanOrEqualTo(0)
-            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_MIN_AGE)
-            .When(x => x.MinAge.HasValue);
+        Include(new CommonPolicyCreateValidator());
 
-        // Bug Fix #4: Validate MaxAge >= 0 always (when provided), then cross-field only when both exist
-        RuleFor(x => x.MaxAge)
-            .GreaterThanOrEqualTo(0)
-            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_MAX_AGE)
-            .When(x => x.MaxAge.HasValue);
-
-        RuleFor(x => x.MaxAge)
-            .GreaterThanOrEqualTo(x => x.MinAge!.Value)
-            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_MAX_AGE)
-            .When(x => x.MaxAge.HasValue && x.MinAge.HasValue);
-
-        RuleFor(x => x.ExtraBedFee)
-            .GreaterThanOrEqualTo(0)
-            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_EXTRA_BED_FEE)
-            .When(x => x.ExtraBedFee.HasValue);
+        PolicyValidationHelper.ApplyChildrenRules(this,
+            x => x.MinAge,
+            x => x.MaxAge,
+            x => x.MinAge,
+            x => x.ExtraBedFee);
     }
 }
 
-/// <summary>
-/// Pet Policy (TypeId: 2002)
-/// Bug Fix #5: PetFee validation is only meaningful when IsPetAllowed = true.
-///             Without the guard, the validator fires even when pets are not allowed.
-/// </summary>
 public class PetPolicyCreateValidator : AbstractValidator<PetPolicyCreateDTO>
 {
     public PetPolicyCreateValidator()
     {
-        // Bug Fix #5: Only validate PetFee when pets are actually allowed
-        When(x => x.IsPetAllowed, () =>
-        {
-            RuleFor(x => x.PetFee)
-                .GreaterThanOrEqualTo(0)
-                .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_PET_FEE)
-                .When(x => x.PetFee.HasValue);
-        });
+        Include(new CommonPolicyCreateValidator());
+
+        PolicyValidationHelper.ApplyPetRules(this,
+            x => x.IsPetAllowed,
+            x => x.PetFee);
     }
 }
 
 // =========================================================================
-// 3. CHILD VALIDATORS — UPDATE (mirrors CREATE logic exactly)
+// 5. CHILD VALIDATORS — UPDATE
 // =========================================================================
 
-/// <summary>
-/// Check-In/Out Policy - UPDATE
-/// Bug Fix #2: Same .WithMessage() ordering fix as CREATE validator.
-/// </summary>
 public class CheckInOutPolicyUpdateValidator : AbstractValidator<CheckInOutPolicyUpdateDTO>
 {
     public CheckInOutPolicyUpdateValidator()
     {
-        RuleFor(x => x.CheckInTime)
-            .NotNull().WithMessage(MessageResponse.AdminManagement.Policy.EMPTY_CHECKIN_TIME);
+        Include(new CommonPolicyUpdateValidator()); // Gắn Common Rule, ngắt vòng lặp
 
-        RuleFor(x => x.CheckOutTime)
-            .NotNull().WithMessage(MessageResponse.AdminManagement.Policy.EMPTY_CHECKOUT_TIME);
-
-        // Bug Fix #2: .WithMessage() before .When()
-        RuleFor(x => x.EarlyCheckInFee)
-            .GreaterThanOrEqualTo(0)
-            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_EARLY_CHECKIN_FEE)
-            .When(x => x.EarlyCheckInFee.HasValue);
-
-        RuleFor(x => x.LateCheckOutFee)
-            .GreaterThanOrEqualTo(0)
-            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_LATE_CHECKOUT_FEE)
-            .When(x => x.LateCheckOutFee.HasValue);
+        PolicyValidationHelper.ApplyCheckInOutRules(this,
+            x => x.CheckInTime,
+            x => x.CheckOutTime,
+            x => x.EarlyCheckInFee,
+            x => x.LateCheckOutFee);
     }
 }
 
-/// <summary>
-/// Cancellation Policy - UPDATE
-/// Bug Fix #3: Same IsRefundable guard as CREATE validator.
-/// </summary>
 public class CancellationPolicyUpdateValidator : AbstractValidator<CancellationPolicyUpdateDTO>
 {
     public CancellationPolicyUpdateValidator()
     {
-        // Bug Fix #3: Only validate refund-specific fields when the policy IS refundable
-        When(x => x.IsRefundable, () =>
-        {
-            RuleFor(x => x.DaysBeforeCheckIn)
-                .GreaterThanOrEqualTo(0)
-                .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_DAYS_BEFORE_CHECKIN)
-                .When(x => x.DaysBeforeCheckIn.HasValue);
+        Include(new CommonPolicyUpdateValidator());
 
-            RuleFor(x => x.RefundPercent)
-                .InclusiveBetween(0, 100)
-                .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_REFUND_PERCENT)
-                .When(x => x.RefundPercent.HasValue);
-        });
+        PolicyValidationHelper.ApplyCancellationRules(this,
+            x => x.IsRefundable,
+            x => x.DaysBeforeCheckIn,
+            x => x.RefundPercent);
     }
 }
 
-/// <summary>
-/// Children Policy - UPDATE
-/// Bug Fix #4: Same base >= 0 + conditional cross-field check as CREATE validator.
-/// </summary>
 public class ChildrenPolicyUpdateValidator : AbstractValidator<ChildrenPolicyUpdateDTO>
 {
     public ChildrenPolicyUpdateValidator()
     {
-        RuleFor(x => x.MinAge)
-            .GreaterThanOrEqualTo(0)
-            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_MIN_AGE)
-            .When(x => x.MinAge.HasValue);
+        Include(new CommonPolicyUpdateValidator());
 
-        // Bug Fix #4: Validate MaxAge >= 0 always (when provided), then cross-field only when both exist
-        RuleFor(x => x.MaxAge)
-            .GreaterThanOrEqualTo(0)
-            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_MAX_AGE)
-            .When(x => x.MaxAge.HasValue);
-
-        RuleFor(x => x.MaxAge)
-            .GreaterThanOrEqualTo(x => x.MinAge!.Value)
-            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_MAX_AGE)
-            .When(x => x.MaxAge.HasValue && x.MinAge.HasValue);
-
-        RuleFor(x => x.ExtraBedFee)
-            .GreaterThanOrEqualTo(0)
-            .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_EXTRA_BED_FEE)
-            .When(x => x.ExtraBedFee.HasValue);
+        PolicyValidationHelper.ApplyChildrenRules(this,
+            x => x.MinAge,
+            x => x.MaxAge,
+            x => x.MinAge,
+            x => x.ExtraBedFee);
     }
 }
 
-/// <summary>
-/// Pet Policy - UPDATE
-/// Bug Fix #5: Same IsPetAllowed guard as CREATE validator.
-/// </summary>
 public class PetPolicyUpdateValidator : AbstractValidator<PetPolicyUpdateDTO>
 {
     public PetPolicyUpdateValidator()
     {
-        // Bug Fix #5: Only validate PetFee when pets are actually allowed
-        When(x => x.IsPetAllowed, () =>
-        {
-            RuleFor(x => x.PetFee)
-                .GreaterThanOrEqualTo(0)
-                .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_PET_FEE)
-                .When(x => x.PetFee.HasValue);
-        });
+        Include(new CommonPolicyUpdateValidator());
+
+        PolicyValidationHelper.ApplyPetRules(this,
+            x => x.IsPetAllowed,
+            x => x.PetFee);
     }
 }
