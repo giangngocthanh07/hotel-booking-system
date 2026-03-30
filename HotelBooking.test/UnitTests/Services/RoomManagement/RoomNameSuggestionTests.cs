@@ -40,6 +40,40 @@ namespace HotelBooking.Tests.Services.RoomManagement
         }
 
         [Fact]
+        public async Task SuggestRoomNamesAsync_InvalidRequest_ShouldReturnBadRequest()
+        {
+            // 1. Arrange
+            var request = CreateRequest();
+            request.UnitTypeId = 0; // Invalid UnitTypeId
+
+            // Mock validation failed result
+            var validationFailures = new List<FluentValidation.Results.ValidationFailure>
+            {
+                new FluentValidation.Results.ValidationFailure("UnitTypeId", MessageResponse.RoomManagement.ROOM_NAME_SUGGESTION_UNIT_TYPE_ID_INVALID)
+            };
+
+            // Mock validation to fail
+            _mockValidator.Setup(v => v.ValidateAsync(It.IsAny<RoomNameSuggestionRequest>(), default))
+                .ReturnsAsync(new FluentValidation.Results.ValidationResult(validationFailures));
+
+            // 2. Act
+            var result = await _service.SuggestRoomNamesAsync(request);
+
+            // 3. Assert
+            result.Should().NotBeNull();
+            result.Message.Should().Be(validationFailures.First().ErrorMessage);
+            result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+
+            _mockValidator.Verify(v => v.ValidateAsync(It.IsAny<RoomNameSuggestionRequest>(), default), Times.Once);
+
+            _mockAttributeFacade.Verify(f => f.GetRoomAttributeNamesAsync(It.IsAny<RoomNameSuggestionRequest>()), Times.Never);
+
+            _mockUnitOfWork.Verify(u => u.BeginTransactionAsync(), Times.Never);
+            _mockUnitOfWork.Verify(u => u.CommitTransactionAsync(), Times.Never);
+            _mockUnitOfWork.Verify(u => u.RollBackTransactionAsync(), Times.Never);
+        }
+
+        [Fact]
         public async Task SuggestRoomNamesAsync_Group1_QualityFocus_ShouldReturnTemplatesABC()
         {
             // Mock validation to succeed

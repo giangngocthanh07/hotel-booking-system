@@ -97,6 +97,40 @@ namespace HotelBooking.Tests.Services.RoomManagement
         }
 
         [Fact]
+        public async Task CreateRoomTypeAsync_InvalidRequest_ShouldReturnBadRequest()
+        {
+            // 1. Arrange
+            var validationFailures = new List<FluentValidation.Results.ValidationFailure>
+            {
+                new FluentValidation.Results.ValidationFailure("Name", MessageResponse.RoomManagement.ROOM_TYPE_NAME_EMPTY)
+            };
+            _mockValidator.Setup(v => v.ValidateAsync(It.IsAny<RoomTypeCreateDTO>(), default))
+                .ReturnsAsync(new FluentValidation.Results.ValidationResult(validationFailures));
+
+            var request = new RoomTypeCreateDTO
+            {
+                HotelId = 1,
+                Name = "", // Invalid name
+                UnitTypeId = 1,
+                BedTypes = new List<BedTypeConfigDTO> { new() { BedTypeId = 1, Quantity = 1 } }
+            };
+
+            // 2. Act
+            var result = await _service.CreateRoomTypeAsync(request);
+
+            // 3. Assert
+            result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+            result.Message.Should().Be(validationFailures.First().ErrorMessage);
+            result.Content.Should().Be(0); // Default value for int when creation fails
+
+            // Verify that validation was called but existence checks were not called
+            _mockValidator.Verify(v => v.ValidateAsync(It.IsAny<RoomTypeCreateDTO>(), default), Times.Once);
+
+            _mockUnitOfWork.Verify(u => u.BeginTransactionAsync(), Times.Never);
+            Verify_Repo_Never_AddAsync<IRoomTypeRepository, RoomType>(_mockRoomTypeRepo);
+        }
+
+        [Fact]
         public async Task CreateRoomTypeAsync_HotelNotFound_ShouldReturnNotFound()
         {
             // 1. Arrange
