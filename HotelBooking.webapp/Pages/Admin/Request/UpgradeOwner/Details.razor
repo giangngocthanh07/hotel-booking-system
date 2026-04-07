@@ -34,7 +34,7 @@
                 </div>
             </div>
 
-            @if (request != null && request.Status == "Pending")
+            @if (request != null && request.Status == RequestStatusConst.Pending)
             {
                 <div class="action-header-btns animate__animated animate__fadeInRight">
                     <button class="btn-glass-success me-2 shadow-sm force-gpu" @onclick="ShowApproveModal">

@@ -12,6 +12,7 @@ using HotelBooking.application.Validators.UserManagement.Register;
 using HotelBooking.application.Validators.UserManagement;
 using HotelBooking.application.DTOs.Hotel;
 using HotelBooking.application.Validators.RoomManagement;
+using HotelBooking.application.Validators.RequestManagement.Customer;
 
 public static class ValidatorServiceExtension
 {
@@ -20,6 +21,7 @@ public static class ValidatorServiceExtension
         services.AddUserValidators();
         services.AddAdminManagementValidators();
         services.AddRoomManagementValidators();
+        services.AddRequestManagementValidators();
         services.AddCommonValidators();
 
         return services;
@@ -30,7 +32,6 @@ public static class ValidatorServiceExtension
         services.AddScoped<IValidator<RegisterCustomerDTO>, RegisterCustomerValidator>();
         services.AddScoped<IValidator<RegisterAdminDTO>, RegisterAdminValidator>();
         services.AddScoped<IValidator<LoginUserDTO>, LoginValidator>();
-        services.AddScoped<IValidator<CreateUpgradeRequestDTO>, CreateUpgradeRequestValidator>();
     }
 
     private static void AddAdminManagementValidators(this IServiceCollection services)
@@ -62,6 +63,11 @@ public static class ValidatorServiceExtension
     {
         services.AddScoped<IValidator<RoomTypeCreateDTO>, RoomTypeCreateValidator>();
         services.AddScoped<IValidator<RoomNameSuggestionRequest>, RoomNameSuggestionValidator>();
+    }
+
+    public static void AddRequestManagementValidators(this IServiceCollection services)
+    {
+        services.AddScoped<IValidator<CreateUpgradeRequestDTO>, CreateUpgradeRequestValidator>();
     }
 
     private static void AddCommonValidators(this IServiceCollection services)

@@ -1,7 +1,7 @@
 using FluentValidation;
 using HotelBooking.application.DTOs.Request.UpgradeRequest;
 
-namespace HotelBooking.application.Validators.UserManagement;
+namespace HotelBooking.application.Validators.RequestManagement.Customer;
 
 /// <summary>
 /// Validator for create upgrade request
@@ -10,6 +10,8 @@ public class CreateUpgradeRequestValidator : AbstractValidator<CreateUpgradeRequ
 {
     public CreateUpgradeRequestValidator()
     {
+        RuleLevelCascadeMode = CascadeMode.Stop;
+
         // 1. Validate Address - Address is required and must not exceed 500 characters
         RuleFor(x => x.Address)
             .NotEmpty().WithMessage(MessageResponse.RequestManagement.UpgradeRequest.ADDRESS_REQUIRED)
@@ -21,3 +23,22 @@ public class CreateUpgradeRequestValidator : AbstractValidator<CreateUpgradeRequ
             .Matches(@"^\d{10}(\d{3})?$").WithMessage(MessageResponse.RequestManagement.UpgradeRequest.TAX_CODE_INVALID);
     }
 }
+
+// public interface ICustomerUpgradeRequestValidator
+// {
+//     IValidator<CreateUpgradeRequestDTO> CreateRequestValidator { get; }
+
+// }
+
+// public class CustomerUpgradeRequestValidator : ICustomerUpgradeRequestValidator
+// {
+//     private readonly IValidator<CreateUpgradeRequestDTO> _createRequestValidator;
+
+//     public CustomerUpgradeRequestValidator(IValidator<CreateUpgradeRequestDTO> createRequestValidator)
+//     {
+//         _createRequestValidator = createRequestValidator;
+//     }
+
+//     public IValidator<CreateUpgradeRequestDTO> CreateRequestValidator => _createRequestValidator;
+// }
+

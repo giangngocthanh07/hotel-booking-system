@@ -23,7 +23,7 @@ public class CustomerUpgradeRequestService : ICustomerUpgradeRequestService
 
     public CustomerUpgradeRequestService(
         IUpgradeRequestRepository upgradeRequestRepo,
-        IUserRepository userRepo, 
+        IUserRepository userRepo,
         IUserRoleRepository userRoleRepo,
         IUnitOfWork unitOfWork,
         IValidator<CreateUpgradeRequestDTO> createRequestValidator)
@@ -39,6 +39,12 @@ public class CustomerUpgradeRequestService : ICustomerUpgradeRequestService
     {
         try
         {
+            if (userId <= 0)
+                return ResponseFactory.Failure<UserForUpgradeDTO?>(
+                    StatusCodeResponse.BadRequest,
+                    MessageResponse.RequestManagement.UpgradeRequest.USERID_INVALID);
+
+            // Check if user exists
             var user = await _userRepo.GetByIdAsync(userId);
             if (user == null)
                 return ResponseFactory.Failure<UserForUpgradeDTO?>(
@@ -46,13 +52,10 @@ public class CustomerUpgradeRequestService : ICustomerUpgradeRequestService
                     MessageResponse.RequestManagement.UpgradeRequest.USER_NOT_FOUND);
 
             // Check for existing requests
-            var existingRequests = await _upgradeRequestRepo.GetAllAsync();
-            var userRequest = existingRequests?
-                .Where(r => r.UserId == userId)
-                .OrderByDescending(r => r.RequestedAt)
-                .FirstOrDefault();
+            var userRequests = await _upgradeRequestRepo.GetByUserIdAsync(userId);
+            var latestRequest = userRequests?.OrderByDescending(r => r.RequestedAt).FirstOrDefault();
 
-            var requestStatus = userRequest?.Status ?? RequestStatusConst.None;
+            var requestStatus = latestRequest?.Status ?? RequestStatusConst.None;
 
             var userForUpgradeDTO = new UserForUpgradeDTO
             {
@@ -86,6 +89,12 @@ public class CustomerUpgradeRequestService : ICustomerUpgradeRequestService
                     StatusCodeResponse.BadRequest,
                     validation.Errors.First().ErrorMessage);
             }
+
+            // Validate userId
+            if (userId <= 0)
+                return ResponseFactory.Failure<bool>(
+                    StatusCodeResponse.BadRequest,
+                    MessageResponse.RequestManagement.UpgradeRequest.USERID_INVALID);
 
             // Check if user exists
             var user = await _userRepo.GetByIdAsync(userId);
@@ -146,6 +155,19 @@ public class CustomerUpgradeRequestService : ICustomerUpgradeRequestService
     {
         try
         {
+            // Validate userId
+            if (userId <= 0)
+                return ResponseFactory.Failure<bool>(
+                    StatusCodeResponse.BadRequest,
+                    MessageResponse.RequestManagement.UpgradeRequest.USERID_INVALID);
+
+            // Check if user exists
+            var existingUser = await _userRepo.GetByIdAsync(userId);
+            if (existingUser == null)
+                return ResponseFactory.Failure<bool>(
+                    StatusCodeResponse.NotFound,
+                    MessageResponse.RequestManagement.UpgradeRequest.USER_NOT_FOUND);
+
             // Find user's pending request
             var pendingRequests = await _upgradeRequestRepo.GetPendingByIdAsync(userId);
             var request = pendingRequests.FirstOrDefault();
@@ -179,7 +201,23 @@ public class CustomerUpgradeRequestService : ICustomerUpgradeRequestService
     {
         try
         {
+            // Validate userId
+            if (userId <= 0)
+                return ResponseFactory.Failure<List<UpgradeRequestDTO>>(
+                    StatusCodeResponse.BadRequest,
+                    MessageResponse.RequestManagement.UpgradeRequest.USERID_INVALID);
+
+            var existingUser = await _userRepo.GetByIdAsync(userId);
+            if (existingUser == null)
+                return ResponseFactory.Failure<List<UpgradeRequestDTO>>(
+                    StatusCodeResponse.NotFound,
+                    MessageResponse.RequestManagement.UpgradeRequest.USER_NOT_FOUND);
+
             var requests = await _upgradeRequestRepo.GetByUserIdAsync(userId);
+
+            if (requests.Count() == 0)
+                return ResponseFactory.Success(new List<UpgradeRequestDTO>(), MessageResponse.RequestManagement.UpgradeRequest.NO_REQUESTS_FOUND);
+
 
             var dtos = requests.Select(r => new UpgradeRequestDTO
             {

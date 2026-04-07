@@ -10,7 +10,7 @@ public interface IUpgradeRequestRepository : IRepository<UpgradeRequest>
     Task<IEnumerable<UpgradeRequest>> GetAllPendingRequestsAsync();
 
     /// <summary>
-    /// Lấy danh sách Request có phân trang, Include User
+    /// Get paged list of upgrade requests with user information, with optional filtering
     /// </summary>
     Task<(List<UpgradeRequest> Items, int TotalCount)> GetPagedWithUserAsync(
         Expression<Func<UpgradeRequest, bool>>? filter,
@@ -18,20 +18,24 @@ public interface IUpgradeRequestRepository : IRepository<UpgradeRequest>
         int pageSize);
 
     /// <summary>
-    /// Lấy thống kê raw cho dashboard
+    /// Get statistics of requests by status and time periods
     /// </summary>
     Task<(int Total, int Pending, int Approved, int Rejected, int Cancelled, int Today, int ThisWeek, int ThisMonth)> GetStatsRawAsync();
 
     /// <summary>
-    /// Lấy requests gần đây
+    /// Get recent upgrade requests with user information, ordered by request date descending
     /// </summary>
     Task<List<UpgradeRequest>> GetRecentAsync(int count);
 
     /// <summary>
-    /// Lấy tất cả request của 1 user (bao gồm cả đã xử lý)
+    /// Get all upgrade requests for a specific user (including processed ones)
     /// </summary>
     Task<List<UpgradeRequest>> GetByUserIdAsync(int userId);
+
+    // Get distinct request statuses for filtering options
     Task<List<string>?> GetDistinctStatusesAsync();
+
+
 }
 
 public class UpgradeRequestRepository : Repository<UpgradeRequest>, IUpgradeRequestRepository

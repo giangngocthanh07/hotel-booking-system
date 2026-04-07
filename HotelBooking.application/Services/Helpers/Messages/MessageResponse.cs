@@ -274,6 +274,16 @@ public static class MessageResponse
         public static class UpgradeRequest
         {
             // Get User for Upgrade
+            public const string USERID_INVALID = "User ID must be greater than 0!";
+            public const string USERID_REQUIRED = "User ID is required!";
+            public const string USERNAME_REQUIRED = "Username must not be empty!";
+            public const string USERNAME_TOO_LONG = "Username must not exceed 50 characters!";
+            public const string FULLNAME_REQUIRED = "Full name must not be empty!";
+            public const string FULLNAME_TOO_LONG = "Full name must not exceed 100 characters!";
+            public const string EMAIL_REQUIRED = "Email must not be empty!";
+            public const string EMAIL_INVALID = "Email must be in the correct format!";
+            public const string PHONE_NUMBER_REQUIRED = "Phone number must not be empty!";
+            public const string PHONE_NUMBER_INVALID = "Phone number must be in the correct format!";
             public const string USER_INFO_RETRIEVED = "User information retrieved successfully!";
             public const string USER_NOT_FOUND = "User account not found!";
             public const string USER_ALREADY_OWNER = "Your account is already an owner account!";
@@ -290,6 +300,7 @@ public static class MessageResponse
 
             // Get All Requests
             public const string REQUESTS_RETRIEVED = "Request list retrieved successfully!";
+            public const string NO_REQUESTS_FOUND = "No requests found for this user!";
 
             // Get Request By ID
             public const string REQUEST_RETRIEVED = "Request retrieved successfully!";

@@ -7,6 +7,6 @@ public class CreateUpgradeRequestVM
     public string Address { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Tax code is required!")]
-    [StringLength(50, ErrorMessage = "Tax code cannot exceed 50 characters!")]
+    [StringLength(13, ErrorMessage = "Tax code cannot exceed 13 characters!")]
     public string TaxCode { get; set; } = string.Empty;
 }
