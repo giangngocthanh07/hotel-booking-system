@@ -32,7 +32,7 @@
         <div class="glass-filter-wrapper mb-4 shadow-sm">
             <UpgradeFilters SearchTerm="@searchTerm" SelectedStatus="@selectedStatus" PageSize="@pageSize"
                             StatusList="@statusList" SearchTermChanged="OnSearchTermChanged"
-                            SelectedStatusChanged="OnSelectedStatusChanged"                        PageSizeChanged="OnPageSizeChanged" OnApply="ApplyFilters"
+                            SelectedStatusChanged="OnSelectedStatusChanged" PageSizeChanged="OnPageSizeChanged" OnApply="ApplyFilters"
                             OnReset="ResetFilters" />
         </div>
 
@@ -45,55 +45,37 @@
             @* Integration of Pagination inside table area for a cleaner look *@
             <div class="glass-footer p-3 border-top bg-light-glass d-flex justify-content-center">
                 <Pagination CurrentPage="@currentPage" TotalPages="@totalPages" TotalCount="@totalCount"
-                            IsLoading="@isLoading"                        OnPageChange="GoToPage" />
+                            IsLoading="@isLoading" OnPageChange="GoToPage" />
             </div>
         </div>
     </div>
 
     @* --- Action Confirmation Modal (Glass Style) --- *@
-    <div class="modal fade" id="confirmModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content glass-modal force-gpu">
-                <div class="modal-header border-0 @modalHeaderClass text-white glass-modal-header shadow-sm">
-                    <h5 class="modal-title fw-bold">
-                        <i class="@modalIcon me-2"></i>@modalTitle
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    <ConfirmModal @ref="_confirmModal" Title="@modalTitle" Message="@modalMessage"
+                  ConfirmText="@(actionType == "approve" ? "Confirm Approve" : "Confirm Reject")"
+                  ConfirmIcon="@(actionType == "approve" ? "fa-check" : "fa-trash-can")"
+                  ConfirmButtonClass="@(actionType == "approve" ? "btn-success glass-btn-confirm text-white" : "btn-glass-confirm-danger")"
+                  IsProcessing="@isProcessing" OnConfirm="ConfirmAction">
+
+
+        @if (selectedRequest != null)
+        {
+            <div class="selected-request-info-box mt-3 text-start">
+                <div class="info-item">
+                    <span class="label">REQUEST ID</span>
+                    <span class="value text-primary">#@selectedRequest.RequestId</span>
                 </div>
-                <div class="modal-body p-4">
-                    <p class="text-dark fw-bold mb-3">@modalMessage</p>
-                    @if (selectedRequest != null)
-                    {
-                        <div class="selected-request-info-box">
-                            <div class="info-item">
-                                <span class="label">REQUEST ID</span>
-                                <span class="value text-primary">#@selectedRequest.RequestId</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="label">PARTNER NAME</span>
-                                <span class="value">@selectedRequest.FullName</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="label">USERNAME</span>
-                                <span class="value text-muted">@@@selectedRequest.UserName</span>
-                            </div>
-                        </div>
-                    }
+                <div class="info-item">
+                    <span class="label">PARTNER NAME</span>
+                    <span class="value">@selectedRequest.FullName</span>
                 </div>
-                <div class="modal-footer border-0 pb-4">
-                    <button type="button" class="btn-glass-cancel" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn @modalBtnClass glass-btn-confirm" @onclick="ConfirmAction"
-                            disabled="@isProcessing">
-                        @if (isProcessing)
-                        {
-                            <span class="spinner-border spinner-border-sm me-2"></span>
-                        }
-                        <span>Confirm Action</span>
-                    </button>
+                <div class="info-item">
+                    <span class="label">USERNAME</span>
+                    <span class="value text-muted">@@@selectedRequest.UserName</span>
                 </div>
             </div>
-        </div>
-    </div>
+        }
+    </ConfirmModal>
 
     <style>
         /* --- LAYOUT & THEME --- */
@@ -204,6 +186,10 @@
     </style>
 
 @code {
+    // Modal Reference
+    private ConfirmModal _confirmModal = default!;
+
+
     private CancellationTokenSource _cts = new();
     private List<UpgradeRequestVM> requests = new();
     private List<string> statusList = new() { "Pending", "Approved", "Rejected", "Cancelled" };
@@ -228,15 +214,15 @@
     private string actionType = "";
 
     private IEnumerable<UpgradeRequestVM> FilteredRequests => string.IsNullOrWhiteSpace(searchTerm)
-        ? requests
-        : requests.Where(r =>
-            r.RequestId.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-            (r.UserName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
-            (r.FullName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
-            (r.PhoneNumber?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
-            (r.TaxCode?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
-            (r.Email?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false)
-        );
+    ? requests
+    : requests.Where(r =>
+    r.RequestId.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+    (r.UserName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+    (r.FullName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+    (r.PhoneNumber?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+    (r.TaxCode?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+    (r.Email?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false)
+    );
 
     protected override async Task LoadDataAsync()
     {
@@ -260,7 +246,10 @@
                 stats = response.Content.UpgradeRequest;
         }
         catch (OperationCanceledException) { }
-        catch (Exception) { SnackbarHelper.Show(Snackbar, StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER); }
+        catch (Exception)
+        {
+            SnackbarHelper.Show(Snackbar, StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
+        }
     }
 
     private async Task LoadRequestsAsync()
@@ -280,7 +269,7 @@
             {
                 requests = new();
                 SnackbarHelper.Show(Snackbar, response.StatusCode ?? StatusCodeResponse.Error, response.Message ??
-MessageResponse.Common.ERROR_IN_SERVER);
+                MessageResponse.Common.ERROR_IN_SERVER);
             }
         }
         catch (OperationCanceledException) { }
@@ -336,30 +325,26 @@ MessageResponse.Common.ERROR_IN_SERVER);
     }
 
     private void ViewDetails(UpgradeRequestVM request) =>
-Navigation.NavigateTo($"/admin/requests/upgrade-owner/{request.RequestId}");
+    Navigation.NavigateTo($"/admin/requests/upgrade-owner/{request.RequestId}");
 
-    private async Task ShowApproveModal(UpgradeRequestVM request)
+    private void ShowApproveModal(UpgradeRequestVM request)
     {
         selectedRequest = request;
         modalTitle = "Confirm Approval";
         modalMessage = "Are you sure you want to APPROVE this request? The user will be upgraded to Owner role.";
-        modalHeaderClass = "bg-success";
-        modalBtnClass = "btn-success";
-        modalIcon = "fas fa-check-circle";
         actionType = "approve";
-        await JSRuntime.InvokeVoidAsync("eval", "new bootstrap.Modal(document.getElementById('confirmModal')).show()");
+
+        _confirmModal.Show();
     }
 
-    private async Task ShowRejectModal(UpgradeRequestVM request)
+    private void ShowRejectModal(UpgradeRequestVM request)
     {
         selectedRequest = request;
         modalTitle = "Confirm Rejection";
         modalMessage = "Are you sure you want to REJECT this request?";
-        modalHeaderClass = "bg-danger";
-        modalBtnClass = "btn-danger";
-        modalIcon = "fas fa-times-circle";
         actionType = "reject";
-        await JSRuntime.InvokeVoidAsync("eval", "new bootstrap.Modal(document.getElementById('confirmModal')).show()");
+
+        _confirmModal.Show();
     }
 
     private async Task ConfirmAction()
@@ -370,21 +355,23 @@ Navigation.NavigateTo($"/admin/requests/upgrade-owner/{request.RequestId}");
         try
         {
             var response = actionType == "approve"
-                ? await Service.ApproveUpgradeRequestAsync(selectedRequest.RequestId)
-                : await Service.RejectUpgradeRequestAsync(selectedRequest.RequestId);
-
-            SnackbarHelper.Show(Snackbar, response.StatusCode ?? StatusCodeResponse.Error, response.Message ??
-MessageResponse.Common.ERROR_IN_SERVER);
+            ? await Service.ApproveUpgradeRequestAsync(selectedRequest.RequestId)
+            : await Service.RejectUpgradeRequestAsync(selectedRequest.RequestId);
 
             if (response.StatusCode == StatusCodeResponse.Success)
             {
-                await JSRuntime.InvokeVoidAsync("eval", "bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide()");
-                await LoadStatsAsync();
-                await LoadRequestsAsync();
+                string successMsg = actionType == "approve" ? "Approved successfully!" : "Rejected successfully!";
+                SnackbarHelper.Show(Snackbar, response.StatusCode ?? StatusCodeResponse.Success, response.Message ?? successMsg);
+
+                _confirmModal.Hide();
+
+                currentPage = 1;
+
+                await LoadDataAsync();
             }
         }
         catch (OperationCanceledException) { }
-        catch (Exception ex) { SnackbarHelper.Show(Snackbar, StatusCodeResponse.Error, ex.Message); }
+        catch (Exception) { SnackbarHelper.Show(Snackbar, StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER); }
         finally { isProcessing = false; StateHasChanged(); }
     }
 }

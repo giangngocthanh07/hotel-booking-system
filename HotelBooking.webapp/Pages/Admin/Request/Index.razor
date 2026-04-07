@@ -1,6 +1,7 @@
 @* Filepath: HotelBooking.webapp\Pages\Admin\Request\RequestDashboard.razor *@
 @page "/admin/requests/requests-overview"
 @implements IDisposable
+@using HotelBooking.webapp.Helpers.Common
 @using HotelBooking.webapp.ViewModels
 @using System.Net.Http.Headers
 @using HotelBooking.webapp.ViewModels.Request
@@ -65,41 +66,22 @@
     </div>
 </div>
 
-@* --- DASHBOARD CONFIRMATION MODAL --- *@
-<div class="modal fade" id="confirmDashboardModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content glass-modal force-gpu">
-            <div class="modal-header border-0 @modalHeaderClass text-white glass-modal-header shadow-sm">
-                <h5 class="modal-title fw-bold">
-                    <i class="@modalIcon me-2"></i>@modalTitle
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4 text-center">
-                <div class="mb-3">
-                    <i class="@modalIcon fa-3x @modalTextClass opacity-25"></i>
-                </div>
-                <p class="text-dark fw-bold fs-5">@modalMessage</p>
-                @if (selectedRequestId > 0)
-                {
-                    <p class="text-muted small">Confirming action for request <strong>#@selectedRequestId</strong></p>
-                }
-            </div>
-            <div class="modal-footer border-0 pb-4 justify-content-center gap-2">
-                <button type="button" class="btn-glass-cancel px-4" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn @modalBtnClass px-4 shadow-sm fw-bold"
-                        @onclick="ConfirmDashboardAction" disabled="@isProcessingAction">
-                    @if (isProcessingAction)
-                    {
-                        <span class="spinner-border spinner-border-sm me-2"></span>
-                    }
-                    Confirm Action
-                </button>
-            </div>
+@* --- SHARED CONFIRMATION MODAL --- *@
+<ConfirmModal @ref="_confirmModal" Title="@modalTitle" Message="@modalMessage"
+              ConfirmText="@(actionType == "approve" ? "Confirm Approve" : "Confirm Reject")"
+              ConfirmIcon="@(actionType == "approve" ? "fa-check" : "fa-trash-can")"
+              ConfirmButtonClass="@(actionType == "approve" ? "btn-success glass-btn-confirm text-white" : "btn-glass-confirm-danger")"
+              IsProcessing="@isProcessingAction" OnConfirm="ConfirmDashboardAction">
+
+    @if (selectedRequestId > 0)
+    {
+        <div class="mt-3 p-2 rounded" style="background: rgba(0,0,0,0.03);">
+            <p class="text-muted small mb-0 text-center">
+                Confirming action for request <strong class="text-primary fs-6">#@selectedRequestId</strong>
+            </p>
         </div>
-    </div>
-</div>
+    }
+</ConfirmModal>
 
 <style>
     /* --- DASHBOARD SPECIFIC STYLES --- */
@@ -182,6 +164,9 @@
 </style>
 
 @code {
+    // Modal References
+    private ConfirmModal _confirmModal = default!;
+
     private HttpClient _httpClient = null!;
     private CancellationTokenSource _cts = new();
 
@@ -199,10 +184,6 @@
     private string actionType = "";
     private string modalTitle = "";
     private string modalMessage = "";
-    private string modalHeaderClass = "";
-    private string modalBtnClass = "";
-    private string modalTextClass = "";
-    private string modalIcon = "";
     private bool isProcessingAction = false;
 
     protected override async Task OnInitializedAsync()
@@ -229,7 +210,7 @@
                 if (apiResponse?.Content != null) stats = apiResponse.Content;
             }
         }
-        catch (Exception ex) { Console.WriteLine($"Error stats: {ex.Message}"); }
+        catch (Exception) { SnackbarHelper.Show(Snackbar, StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER); }
     }
 
     private async Task LoadPagedRequestsAsync()
@@ -251,6 +232,7 @@
                 }
             }
         }
+        catch (Exception) { SnackbarHelper.Show(Snackbar, StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER); }
         finally { isLoading = false; StateHasChanged(); }
     }
 
@@ -261,11 +243,8 @@
         actionType = "approve";
         modalTitle = "Approve Partner";
         modalMessage = "Confirm approval for this upgrade request?";
-        modalHeaderClass = "bg-success";
-        modalBtnClass = "btn-success";
-        modalTextClass = "text-success";
-        modalIcon = "fas fa-check-circle";
-        await JSRuntime.InvokeVoidAsync("eval", "new bootstrap.Modal(document.getElementById('confirmDashboardModal')).show()");
+        
+        _confirmModal.Show();
     }
 
     private async Task ShowRejectModal(int reqId)
@@ -274,17 +253,15 @@
         actionType = "reject";
         modalTitle = "Reject Request";
         modalMessage = "Are you sure you want to reject this application?";
-        modalHeaderClass = "bg-danger";
-        modalBtnClass = "btn-danger";
-        modalTextClass = "text-danger";
-        modalIcon = "fas fa-times-circle";
-        await JSRuntime.InvokeVoidAsync("eval", "new bootstrap.Modal(document.getElementById('confirmDashboardModal')).show()");
+        
+        _confirmModal.Show();
     }
 
     private async Task ConfirmDashboardAction()
     {
         if (isProcessingAction) return;
         isProcessingAction = true;
+        StateHasChanged();
         try
         {
             var url = actionType == "approve"
@@ -292,16 +269,19 @@
                 : $"v1/admin/upgrade-requests/{selectedRequestId}/reject";
 
             var response = await _httpClient.PostAsync(url, null);
-            await JSRuntime.InvokeVoidAsync("eval",
-"bootstrap.Modal.getInstance(document.getElementById('confirmDashboardModal')).hide()");
 
             if (response.IsSuccessStatusCode)
             {
-                Snackbar.Add("Request processed successfully!", Severity.Success);
+                _confirmModal.Hide();
+
+                string successMsg = actionType == "approve" ? MessageResponse.RequestManagement.UpgradeRequest.APPROVE_SUCCESS :
+MessageResponse.RequestManagement.UpgradeRequest.REJECT_SUCCESS;
+                Snackbar.Add(successMsg, Severity.Success);
                 await LoadStatsAsync();
                 await LoadPagedRequestsAsync();
             }
         }
+        catch (Exception) { SnackbarHelper.Show(Snackbar, StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER); }
         finally { isProcessingAction = false; }
     }
 

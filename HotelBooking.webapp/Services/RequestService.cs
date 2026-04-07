@@ -40,12 +40,12 @@ public interface IRequestService : ITokenService
     /// <summary>
     /// Approves a specific request - Generic.
     /// </summary>
-    Task<ApiResponse<T>> ApproveRequestAsync<T>(RequestType type, int id) where T : BaseRequestVM;
+    Task<ApiResponse<bool>> ApproveRequestAsync(RequestType type, int id);
 
     /// <summary>
     /// Rejects a specific request - Generic.
     /// </summary>
-    Task<ApiResponse<T>> RejectRequestAsync<T>(RequestType type, int id) where T : BaseRequestVM;
+    Task<ApiResponse<bool>> RejectRequestAsync(RequestType type, int id);
 
     // ==========================================
     // OVERVIEW / STATISTICS (Dashboard)
@@ -86,12 +86,12 @@ public interface IRequestService : ITokenService
     /// <summary>
     /// [Shortcut] Approves an Upgrade Owner request.
     /// </summary>
-    Task<ApiResponse<UpgradeRequestVM>> ApproveUpgradeRequestAsync(int id);
+    Task<ApiResponse<bool>> ApproveUpgradeRequestAsync(int id);
 
     /// <summary>
     /// [Shortcut] Rejects an Upgrade Owner request.
     /// </summary>
-    Task<ApiResponse<UpgradeRequestVM>> RejectUpgradeRequestAsync(int id);
+    Task<ApiResponse<bool>> RejectUpgradeRequestAsync(int id);
 }
 
 /// <summary>
@@ -145,16 +145,16 @@ public class RequestService : IRequestService
         return _http.GetApiAsync<T>(url);
     }
 
-    public Task<ApiResponse<T>> ApproveRequestAsync<T>(RequestType type, int id) where T : BaseRequestVM
+    public Task<ApiResponse<bool>> ApproveRequestAsync(RequestType type, int id)
     {
         var url = $"{BaseUrl}/{type.GetApiPath()}/{id}/approve";
-        return _http.PostApiAsync<T>(url);
+        return _http.PostApiAsync<bool>(url);
     }
 
-    public Task<ApiResponse<T>> RejectRequestAsync<T>(RequestType type, int id) where T : BaseRequestVM
+    public Task<ApiResponse<bool>> RejectRequestAsync(RequestType type, int id)
     {
         var url = $"{BaseUrl}/{type.GetApiPath()}/{id}/reject";
-        return _http.PostApiAsync<T>(url);
+        return _http.PostApiAsync<bool>(url);
     }
 
     // ==========================================
@@ -183,11 +183,11 @@ public class RequestService : IRequestService
     public Task<ApiResponse<UpgradeRequestVM>> GetUpgradeRequestByIdAsync(int id)
         => GetRequestByIdAsync<UpgradeRequestVM>(RequestType.UpgradeOwner, id);
 
-    public Task<ApiResponse<UpgradeRequestVM>> ApproveUpgradeRequestAsync(int id)
-        => ApproveRequestAsync<UpgradeRequestVM>(RequestType.UpgradeOwner, id);
+    public Task<ApiResponse<bool>> ApproveUpgradeRequestAsync(int id)
+        => ApproveRequestAsync(RequestType.UpgradeOwner, id);
 
-    public Task<ApiResponse<UpgradeRequestVM>> RejectUpgradeRequestAsync(int id)
-        => RejectRequestAsync<UpgradeRequestVM>(RequestType.UpgradeOwner, id);
+    public Task<ApiResponse<bool>> RejectUpgradeRequestAsync(int id)
+        => RejectRequestAsync(RequestType.UpgradeOwner, id);
 
     // ==========================================
     // PRIVATE HELPERS

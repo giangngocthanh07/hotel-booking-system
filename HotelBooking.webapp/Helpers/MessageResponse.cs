@@ -243,6 +243,8 @@ public static class MessageResponse
             public const string APPROVE_FAILED = "Failed to approve request!";
             public const string REJECT_SUCCESS = "Request rejected successfully!";
             public const string REJECT_FAILED = "Failed to reject request!";
+            public const string REQUEST_CREATED_SUCCESS = "Request created successfully!";
+            public const string REQUEST_CREATED_FAILED = "Failed to create request!";
         }
     }
 

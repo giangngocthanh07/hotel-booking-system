@@ -19,6 +19,7 @@
                 @* BODY *@
                 <div class="modal-body py-5 px-4 text-center">
                     <p class="fw-bold fs-5 text-dark mb-2">@Message</p>
+                    @ChildContent
                     <p class="text-muted small mb-0">
                         <i class="fa-solid fa-circle-info me-1 text-danger"></i> 
                         This action cannot be undone. Please confirm carefully.
@@ -30,8 +31,13 @@
                     <button type="button" class="btn-glass-cancel flex-grow-1" @onclick="Hide">
                         <i class="fa-solid fa-xmark me-2"></i>Cancel
                     </button>
-                    <button type="button" class="btn-glass-confirm-danger flex-grow-1 shadow-sm" @onclick="OnConfirmClicked">
-                        <i class="fa-solid fa-trash-can me-2"></i>Confirm Delete
+
+                    <button type="button" class="flex-grow-1 shadow-sm @ConfirmButtonClass" @onclick="OnConfirmClicked" disabled="@IsProcessing">
+                        @if (IsProcessing)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        <i class="fa-solid @ConfirmIcon me-2"></i>@ConfirmText
                     </button>
                 </div>
 
@@ -108,6 +114,13 @@
 </style>
 
 @code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string ConfirmText { get; set; } = "Confirm";
+    [Parameter] public string ConfirmIcon { get; set; } = "fa-check";
+    [Parameter] public string ConfirmButtonClass { get; set; } = "btn-glass-confirm-danger"; // Mặc định đỏ
+    [Parameter] public bool IsProcessing { get; set; } = false;
+
+    // Modal Control
     [Parameter] public string Title { get; set; } = "Confirm Delete";
     [Parameter] public string Message { get; set; } = "Are you sure you want to delete this item?";
     [Parameter] public EventCallback OnConfirm { get; set; }

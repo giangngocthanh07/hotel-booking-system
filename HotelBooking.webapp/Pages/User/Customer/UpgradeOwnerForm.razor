@@ -375,9 +375,9 @@ token);
             userInfo = await _httpClient.GetFromJsonAsync<ApiResponse<UserForUpgradeVM?>>("v1/upgrade-requests/my-info");
             if (userInfo?.Content != null)
             {
-                requestStatus = userInfo.Content.RequestStatus ?? "None";
-                isFormReadOnly = requestStatus == "Pending" || requestStatus == "Approved";
-                if (requestStatus == "Approved") NavigationManager.NavigateTo("/owner-dashboard");
+                requestStatus = userInfo.Content.RequestStatus ?? RequestStatusConst.None;
+                isFormReadOnly = requestStatus == RequestStatusConst.Pending || requestStatus == RequestStatusConst.Approved;
+                if (requestStatus == RequestStatusConst.Approved) NavigationManager.NavigateTo("/owner-dashboard");
             }
         }
         catch (Exception ex) { message = $"Error: {ex.Message}"; }
@@ -395,13 +395,13 @@ token);
 
             if (apiResp?.StatusCode == StatusCodeResponse.Success)
             {
-                requestStatus = "Pending";
+                requestStatus = RequestStatusConst.Pending;
                 isFormReadOnly = true;
-                Snackbar.Add("Request submitted successfully!", Severity.Success);
+                Snackbar.Add(MessageResponse.RequestManagement.UpgradeRequest.REQUEST_CREATED_SUCCESS, Severity.Success);
             }
-            else Snackbar.Add(apiResp?.Message ?? "Failed to submit.", Severity.Error);
+            else Snackbar.Add(apiResp?.Message ?? MessageResponse.Common.ERROR_IN_SERVER, Severity.Error);
         }
-        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
+        catch (Exception) { Snackbar.Add(MessageResponse.Common.ERROR_IN_SERVER, Severity.Error); }
     }
 
     private string GetStatusTheme(string status) => status switch

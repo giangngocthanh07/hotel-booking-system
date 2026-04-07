@@ -47,15 +47,15 @@
                         </td>
                         <td class="text-center">
                             <div class="action-btn-group">
-                                <button class="btn-circle-action view force-gpu" title="View Details" @onclick="() => OnView.InvokeAsync(request)">
+                                <button class="btn-circle-action view force-gpu" title="View Details" @onclick="() => HandleView(request)">
                                     <i class="fas fa-eye"></i>
                                 </button>
-                                @if (request.Status == "Pending")
+                                @if (request.Status == RequestStatusConst.Pending)
                                 {
-                                    <button class="btn-circle-action approve force-gpu" title="Approve Request" @onclick="() => OnApprove.InvokeAsync(request)">
+                                    <button class="btn-circle-action approve force-gpu" title="Approve Request" @onclick="() => HandleApprove(request)">
                                         <i class="fas fa-check"></i>
                                     </button>
-                                    <button class="btn-circle-action reject force-gpu" title="Reject Request" @onclick="() => OnReject.InvokeAsync(request)">
+                                    <button class="btn-circle-action reject force-gpu" title="Reject Request" @onclick="() => HandleReject(request)">
                                         <i class="fas fa-times"></i>
                                     </button>
                                 }
@@ -144,6 +144,10 @@
     [Parameter] public EventCallback<UpgradeRequestVM> OnView { get; set; }
     [Parameter] public EventCallback<UpgradeRequestVM> OnApprove { get; set; }
     [Parameter] public EventCallback<UpgradeRequestVM> OnReject { get; set; }
+
+    private async Task HandleView(UpgradeRequestVM request) => await OnView.InvokeAsync(request);
+    private async Task HandleApprove(UpgradeRequestVM request) => await OnApprove.InvokeAsync(request);
+    private async Task HandleReject(UpgradeRequestVM request) => await OnReject.InvokeAsync(request);
 
     private string GetStatusBadgeClass(string status) => status switch
     {

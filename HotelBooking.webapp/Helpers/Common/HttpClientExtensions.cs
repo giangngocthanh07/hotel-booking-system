@@ -26,7 +26,7 @@ public static class HttpClientExtensions
     }
 
     // --- 2. POST HELPERS ---
-    
+
     // a) With Body: Accepts TRequest (input) and returns TResponse (output)
     public static async Task<ApiResponse<TResponse>> PostApiAsync<TResponse, TRequest>(
         this HttpClient client,
@@ -54,7 +54,7 @@ public static class HttpClientExtensions
             var response = await client.PostAsync(url, null);
             return await HandleResponse<TResponse>(response);
         }
-        catch
+        catch (Exception)
         {
             return ResponseFactory.Failure<TResponse>(StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
         }
@@ -98,20 +98,29 @@ public static class HttpClientExtensions
         // Successful Response (2xx)
         if (response.IsSuccessStatusCode)
         {
-            var result = await response.Content.ReadFromJsonAsync<ApiResponse<T>>(_options);
-            return result ?? ResponseFactory.Failure<T>(StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
+            try
+            {
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<T>>(_options);
+                return result ?? ResponseFactory.Failure<T>(StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
+            }
+            catch
+            {
+                return ResponseFactory.Failure<T>(StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
+            }
         }
-
-        // Error Handling (400, 500, etc.)
-        // Attempt to extract the error message returned by the server
-        try
+        else
         {
-            var errorResult = await response.Content.ReadFromJsonAsync<ApiResponse<T>>(_options);
-            return errorResult ?? ResponseFactory.Failure<T>(StatusCodeResponse.Error, response.ReasonPhrase ?? MessageResponse.Common.ERROR_IN_SERVER);
-        }
-        catch
-        {
-            return ResponseFactory.Failure<T>(StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
+            // Error Handling (400, 500, etc.)
+            // Attempt to extract the error message returned by the server
+            try
+            {
+                var errorResult = await response.Content.ReadFromJsonAsync<ApiResponse<T>>(_options);
+                return errorResult ?? ResponseFactory.Failure<T>(StatusCodeResponse.Error, response.ReasonPhrase ?? MessageResponse.Common.ERROR_IN_SERVER);
+            }
+            catch
+            {
+                return ResponseFactory.Failure<T>(StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
+            }
         }
     }
 }
