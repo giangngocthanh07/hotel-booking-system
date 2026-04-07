@@ -44,14 +44,9 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
                     ThisMonth = rawStats.ThisMonth
                 };
 
-                // Hotel Approval stats (Future implementation)
-                // var hotelRawStats = await _hotelApprovalRepo.GetStatsRawAsync();
-                // var hotelStats = new RequestTypeStatsDTO { ... };
-
                 var stats = new RequestStatsDTO
                 {
                     UpgradeRequest = upgradeStats,
-                    // HotelApproval = hotelStats, // Placeholder for future use
                     TotalPending = upgradeStats.Pending, // Sum of all pending requests
                     TotalToday = upgradeStats.Today      // Sum of all requests today
                 };
@@ -76,21 +71,11 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
                 {
                     Id = r.Id,
                     Type = RequestType.UpgradeOwner.ToString(),
-                    TypeDisplay = RequestType.UpgradeOwner.GetDisplayName(),
+                    TypeDisplay = RequestType.UpgradeOwner.GetDisplayNameEn(),
                     RequesterName = r.User?.FullName ?? r.User?.UserName ?? "",
                     Status = r.Status ?? RequestStatusConst.Pending,
                     CreatedAt = r.RequestedAt
                 }));
-
-                // Get recent hotel approvals (Future implementation)
-                // var hotelApprovals = await _hotelApprovalRepo.GetRecentAsync(count);
-                // recentRequests.AddRange(hotelApprovals.Select(r => new RecentRequestDTO
-                // {
-                //     Id = r.Id,
-                //     Type = RequestType.HotelApproval.ToString(),
-                //     TypeDisplay = RequestType.HotelApproval.GetDisplayName(),
-                //     ...
-                // }));
 
                 // Sort by date and take top N
                 var result = recentRequests

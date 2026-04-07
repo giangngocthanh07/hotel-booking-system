@@ -1,0 +1,206 @@
+using HotelBooking.infrastructure.Models;
+using HotelBooking.application.Helpers;
+using FluentValidation;
+using HotelBooking.application.DTOs.Role;
+using HotelBooking.application.DTOs.Request.Base;
+using HotelBooking.application.DTOs.Request.UpgradeRequest;
+using HotelBooking.application.Services.Domains.RequestManagement.Base;
+
+namespace HotelBooking.application.Services.Domains.RequestManagement.Customer;
+
+public interface ICustomerUpgradeRequestService : IBaseCustomerRequestService<UpgradeRequestDTO, CreateUpgradeRequestDTO>
+{
+    Task<ApiResponse<UserForUpgradeDTO?>> GetUserForUpgradeAsync(int userId);
+}
+
+public class CustomerUpgradeRequestService : ICustomerUpgradeRequestService
+{
+    private readonly IUpgradeRequestRepository _upgradeRequestRepo;
+    private readonly IUserRepository _userRepo;
+    private readonly IUserRoleRepository _userRoleRepo;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IValidator<CreateUpgradeRequestDTO> _createRequestValidator;
+
+    public CustomerUpgradeRequestService(
+        IUpgradeRequestRepository upgradeRequestRepo,
+        IUserRepository userRepo, 
+        IUserRoleRepository userRoleRepo,
+        IUnitOfWork unitOfWork,
+        IValidator<CreateUpgradeRequestDTO> createRequestValidator)
+    {
+        _upgradeRequestRepo = upgradeRequestRepo;
+        _userRepo = userRepo;
+        _userRoleRepo = userRoleRepo;
+        _unitOfWork = unitOfWork;
+        _createRequestValidator = createRequestValidator;
+    }
+
+    public async Task<ApiResponse<UserForUpgradeDTO?>> GetUserForUpgradeAsync(int userId)
+    {
+        try
+        {
+            var user = await _userRepo.GetByIdAsync(userId);
+            if (user == null)
+                return ResponseFactory.Failure<UserForUpgradeDTO?>(
+                    StatusCodeResponse.NotFound,
+                    MessageResponse.RequestManagement.UpgradeRequest.USER_NOT_FOUND);
+
+            // Check for existing requests
+            var existingRequests = await _upgradeRequestRepo.GetAllAsync();
+            var userRequest = existingRequests?
+                .Where(r => r.UserId == userId)
+                .OrderByDescending(r => r.RequestedAt)
+                .FirstOrDefault();
+
+            var requestStatus = userRequest?.Status ?? RequestStatusConst.None;
+
+            var userForUpgradeDTO = new UserForUpgradeDTO
+            {
+                UserId = user.Id,
+                UserName = user.UserName,
+                FullName = user.FullName ?? "",
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                RequestStatus = requestStatus
+            };
+
+            return ResponseFactory.Success<UserForUpgradeDTO?>(
+                userForUpgradeDTO,
+                MessageResponse.RequestManagement.UpgradeRequest.USER_INFO_RETRIEVED);
+        }
+        catch (Exception)
+        {
+            return ResponseFactory.ServerError<UserForUpgradeDTO?>();
+        }
+    }
+
+    public async Task<ApiResponse<bool>> CreateRequestAsync(int userId, CreateUpgradeRequestDTO createDto)
+    {
+        try
+        {
+            // Validate input
+            var validation = await _createRequestValidator.ValidateAsync(createDto);
+            if (!validation.IsValid)
+            {
+                return ResponseFactory.Failure<bool>(
+                    StatusCodeResponse.BadRequest,
+                    validation.Errors.First().ErrorMessage);
+            }
+
+            // Check if user exists
+            var user = await _userRepo.GetByIdAsync(userId);
+            if (user == null)
+                return ResponseFactory.Failure<bool>(
+                    StatusCodeResponse.NotFound,
+                    MessageResponse.RequestManagement.UpgradeRequest.USER_NOT_FOUND);
+
+            // Check role via UserRoles table
+            var hasCustomerRole = await _userRoleRepo
+                .AnyAsync(ur => ur.UserId == userId && ur.RoleId == RoleTypeConstDTO.Customer);
+
+            if (!hasCustomerRole)
+                return ResponseFactory.Failure<bool>(
+                    StatusCodeResponse.Forbidden,
+                    MessageResponse.RequestManagement.UpgradeRequest.USER_NOT_CUSTOMER);
+
+            // Check if there's already a pending request for this user
+            var existingRequests = await _upgradeRequestRepo.GetPendingByIdAsync(userId);
+            if (existingRequests.Any())
+                return ResponseFactory.Failure<bool>(
+                    StatusCodeResponse.Conflict,
+                    MessageResponse.RequestManagement.UpgradeRequest.PENDING_REQUEST_EXISTS);
+
+            // Check if user is already a business
+            var hasBusinessRole = await _userRoleRepo
+                .AnyAsync(ur => ur.UserId == userId && ur.RoleId == RoleTypeConstDTO.Owner);
+
+            if (hasBusinessRole)
+                return ResponseFactory.Failure<bool>(
+                    StatusCodeResponse.Forbidden,
+                    MessageResponse.RequestManagement.UpgradeRequest.USER_ALREADY_OWNER);
+
+            // Create new upgrade request
+            var request = new UpgradeRequest
+            {
+                UserId = userId,
+                Address = createDto.Address,
+                TaxCode = createDto.TaxCode,
+                Status = RequestStatusConst.Pending,
+                RequestedAt = DateTime.Now
+            };
+
+            await _upgradeRequestRepo.AddAsync(request);
+            var saved = await _unitOfWork.SaveChangesAsync() > 0;
+
+            return saved
+                ? ResponseFactory.Success(true, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_CREATED_SUCCESS)
+                : ResponseFactory.Failure<bool>(StatusCodeResponse.Error, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_CREATE_FAILED);
+        }
+        catch (Exception)
+        {
+            return ResponseFactory.ServerError<bool>();
+        }
+    }
+
+    public async Task<ApiResponse<bool>> CancelRequestAsync(int userId)
+    {
+        try
+        {
+            // Find user's pending request
+            var pendingRequests = await _upgradeRequestRepo.GetPendingByIdAsync(userId);
+            var request = pendingRequests.FirstOrDefault();
+
+            if (request == null)
+                return ResponseFactory.Failure<bool>(
+                    StatusCodeResponse.NotFound,
+                    MessageResponse.RequestManagement.UpgradeRequest.REQUEST_NOT_FOUND);
+
+            // Update status to Cancelled
+            if (request.Status != RequestStatusConst.Pending)
+                return ResponseFactory.Failure<bool>(
+                    StatusCodeResponse.BadRequest,
+                    MessageResponse.RequestManagement.UpgradeRequest.REQUEST_STATUS_INVALID);
+
+            request.Status = RequestStatusConst.Cancelled;
+            await _upgradeRequestRepo.UpdateAsync(request);
+
+            var saved = await _unitOfWork.SaveChangesAsync() > 0;
+            return saved
+                ? ResponseFactory.Success(true, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_CANCELLED_SUCCESS)
+                : ResponseFactory.Failure<bool>(StatusCodeResponse.Error, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_CANCEL_FAILED);
+        }
+        catch (Exception)
+        {
+            return ResponseFactory.ServerError<bool>();
+        }
+    }
+
+    public async Task<ApiResponse<List<UpgradeRequestDTO>>> GetMyRequestsAsync(int userId)
+    {
+        try
+        {
+            var requests = await _upgradeRequestRepo.GetByUserIdAsync(userId);
+
+            var dtos = requests.Select(r => new UpgradeRequestDTO
+            {
+                RequestId = r.Id,
+                UserId = r.UserId,
+                UserName = r.User?.UserName ?? "",
+                FullName = r.User?.FullName ?? "",
+                Email = r.User?.Email ?? "",
+                PhoneNumber = r.User?.PhoneNumber ?? "",
+                Address = r.Address ?? "",
+                TaxCode = r.TaxCode ?? "",
+                Status = r.Status ?? RequestStatusConst.Pending,
+                RequestedAt = r.RequestedAt
+            }).OrderByDescending(r => r.RequestedAt).ToList();
+
+            return ResponseFactory.Success(dtos, MessageResponse.RequestManagement.UpgradeRequest.REQUESTS_RETRIEVED);
+        }
+        catch (Exception)
+        {
+            return ResponseFactory.ServerError<List<UpgradeRequestDTO>>();
+        }
+    }
+
+}

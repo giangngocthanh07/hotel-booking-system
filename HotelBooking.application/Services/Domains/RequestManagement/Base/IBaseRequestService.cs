@@ -2,29 +2,23 @@ using HotelBooking.application.DTOs.Request.Base;
 
 namespace HotelBooking.application.Services.Domains.RequestManagement.Base;
 
-/// <summary>
-/// Generic Base Interface cho tất cả Request Services.
-/// Định nghĩa các operations chung mà mọi loại request đều có.
-/// 
-/// Design Pattern: Template Method via Interface
-/// - Generic constraint đảm bảo type safety
-/// - Mỗi concrete service chỉ cần implement interface này
-/// - Dễ dàng mở rộng cho loại request mới
-/// </summary>
-/// <typeparam name="T">Loại DTO kế thừa từ BaseRequestDTO</typeparam>
-public interface IBaseRequestService<T> where T : BaseRequestDTO
-{
-    // ==========================================
-    // ADMIN OPERATIONS (Common cho tất cả)
-    // ==========================================
+// ==========================================
+// 1. ADMIN BASE INTERFACE
+// ==========================================
 
+/// <summary>
+/// Generic Base Interface for Admin Request Services.
+/// </summary>
+/// <typeparam name="T">DTOs that inherit from BaseRequestDTO</typeparam>
+public interface IBaseAdminRequestService<T> where T : BaseRequestDTO
+{
     /// <summary>
-    /// Lấy danh sách requests có phân trang
+    /// Get paged list of requests (Filter, Sort, Paging)
     /// </summary>
     Task<ApiResponse<PagedResult<T>>> GetPagedRequestsAsync(PagingRequest pagingRequest, string? status = null);
 
     /// <summary>
-    /// Lấy chi tiết request theo ID
+    /// Get request details by ID
     /// </summary>
     Task<ApiResponse<T>> GetByRequestIdAsync(int requestId);
 
@@ -39,27 +33,36 @@ public interface IBaseRequestService<T> where T : BaseRequestDTO
     Task<ApiResponse<bool>> RejectRequestAsync(int requestId, int adminId);
 
     /// <summary>
-    /// Lấy danh sách các status
+    /// Lấy danh sách các status để filter
     /// </summary>
     Task<ApiResponse<List<string>>> GetAllStatusesAsync();
 }
 
+// ==========================================
+// 2. CUSTOMER BASE INTERFACE
+// ==========================================
+
 /// <summary>
-/// Interface mở rộng cho các service có thêm operations riêng.
-/// Dùng khi cần thêm methods đặc thù cho từng loại request.
+/// Generic Base Interface for Customer Request Services.
 /// </summary>
-/// <typeparam name="T">Loại DTO</typeparam>
-/// <typeparam name="TCreate">Loại DTO để tạo mới</typeparam>
-public interface IRequestServiceWithCreate<T, TCreate> : IBaseRequestService<T>
+/// <typeparam name="T">DTO type</typeparam>
+/// <typeparam name="TCreate">DTO type for creating new</typeparam>
+public interface IBaseCustomerRequestService<T, TCreate>
     where T : BaseRequestDTO
+    where TCreate : class
 {
     /// <summary>
-    /// Tạo request mới
+    /// Create new request
     /// </summary>
     Task<ApiResponse<bool>> CreateRequestAsync(int userId, TCreate createDto);
 
     /// <summary>
-    /// Hủy request (nếu đang pending)
+    /// Cancel request (if pending)
     /// </summary>
-    Task<ApiResponse<bool>> CancelRequestAsync(int requestId);
+    Task<ApiResponse<bool>> CancelRequestAsync(int userId);
+
+    /// <summary>
+    /// Get all requests of a specific user
+    /// </summary>
+    Task<ApiResponse<List<T>>> GetMyRequestsAsync(int userId);
 }

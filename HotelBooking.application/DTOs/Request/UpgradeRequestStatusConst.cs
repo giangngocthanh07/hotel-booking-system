@@ -4,9 +4,9 @@ namespace HotelBooking.application.DTOs.Request;
 
 /// <summary>
 /// Status constants for Upgrade Request.
-/// [OBSOLETE] Use HotelBooking.webapp.ViewModels.Request.Base.RequestStatusConst instead.
+/// [OBSOLETE] Use HotelBooking.application.DTOs.Request.Base.RequestStatusConst instead.
 /// </summary>
-[Obsolete("Use HotelBooking.webapp.ViewModels.Request.Base.RequestStatusConst instead")]
+[Obsolete("Use HotelBooking.application.DTOs.Request.Base.RequestStatusConst instead")]
 public static class UpgradeRequestStatusConst
 {
     public const string Pending = RequestStatusConst.Pending;

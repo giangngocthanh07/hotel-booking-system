@@ -177,7 +177,7 @@ public abstract class BaseRequestDTO : IRequestDTO
     /// <summary>
     /// Request type display name
     /// </summary>
-    public string TypeDisplay => Type.GetDisplayName();
+    public string TypeDisplay => Type.GetDisplayNameEn();
 
     /// <summary>
     /// Check if it Can Approve

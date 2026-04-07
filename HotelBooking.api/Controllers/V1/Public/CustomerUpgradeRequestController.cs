@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using HotelBooking.application.DTOs.Request.UpgradeRequest;
-using HotelBooking.application.Services.Domains.RequestManagement;
+using HotelBooking.application.Services.Domains.RequestManagement.Customer;
 using HotelBooking.application.Helpers;
 
 namespace HotelBooking.api.Controllers.V1.Public
@@ -14,11 +14,11 @@ namespace HotelBooking.api.Controllers.V1.Public
     [ApiController]
     [Authorize(Roles = "Customer")]
     [Tags("Public - Upgrade Requests")]
-    public class UpgradeRequestController : ControllerBase
+    public class CustomerUpgradeRequestController : ControllerBase
     {
-        private readonly IUpgradeRequestService _upgradeRequestService;
+        private readonly ICustomerUpgradeRequestService _upgradeRequestService;
 
-        public UpgradeRequestController(IUpgradeRequestService upgradeRequestService)
+        public CustomerUpgradeRequestController(ICustomerUpgradeRequestService upgradeRequestService)
         {
             _upgradeRequestService = upgradeRequestService;
         }
@@ -62,7 +62,7 @@ namespace HotelBooking.api.Controllers.V1.Public
             var userId = GetUserId();
             if (userId == 0) return Unauthorized();
 
-            var response = await _upgradeRequestService.CreateRequestAsync(userId, request.Address, request.TaxCode);
+            var response = await _upgradeRequestService.CreateRequestAsync(userId, request);
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 

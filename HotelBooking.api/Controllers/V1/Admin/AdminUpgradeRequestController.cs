@@ -2,7 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using HotelBooking.application.Helpers;
-using HotelBooking.application.Services.Domains.RequestManagement;
+using HotelBooking.application.Services.Domains.RequestManagement.Admin;
 
 namespace HotelBooking.api.Controllers.V1.Admin
 {
@@ -13,11 +13,11 @@ namespace HotelBooking.api.Controllers.V1.Admin
     [ApiController]
     [Authorize(Roles = "Admin")]
     [Tags("Admin - Upgrade Requests")]
-    public class UpgradeRequestController : ControllerBase
+    public class AdminUpgradeRequestController : ControllerBase
     {
-        private readonly IUpgradeRequestService _upgradeRequestService;
+        private readonly IAdminUpgradeRequestService _upgradeRequestService;
 
-        public UpgradeRequestController(IUpgradeRequestService upgradeRequestService)
+        public AdminUpgradeRequestController(IAdminUpgradeRequestService upgradeRequestService)
         {
             _upgradeRequestService = upgradeRequestService;
         }
@@ -41,14 +41,6 @@ namespace HotelBooking.api.Controllers.V1.Admin
             var response = await _upgradeRequestService.GetPagedRequestsAsync(pagingRequest, status);
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
-
-        // [HttpGet("get-all-requests")]
-        // [Obsolete("Use GetPagedRequestsAsync instead for better performance")]
-        // public async Task<IActionResult> GetRequestsAsync([FromQuery] string? status)
-        // {
-        //     var response = await _upgradeRequestService.GetAllRequestAsync(status);
-        //     return ApiResponseHandlerHelper.HandleResponse(response);
-        // }
 
         /// <summary>
         /// Get request details by ID

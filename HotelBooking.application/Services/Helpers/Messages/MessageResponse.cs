@@ -276,6 +276,7 @@ public static class MessageResponse
             // Get User for Upgrade
             public const string USER_INFO_RETRIEVED = "User information retrieved successfully!";
             public const string USER_NOT_FOUND = "User account not found!";
+            public const string USER_ALREADY_OWNER = "Your account is already an owner account!";
 
             // Create Request
             public const string REQUEST_CREATED_SUCCESS = "Request created successfully!";
