@@ -1,4 +1,5 @@
 using HotelBooking.application.DTOs.Request.Base;
+using HotelBooking.application.DTOs.Request.UpgradeRequest;
 
 namespace HotelBooking.application.Services.Domains.RequestManagement.Base;
 
@@ -54,7 +55,7 @@ public interface IBaseCustomerRequestService<T, TCreate>
     /// <summary>
     /// Create new request
     /// </summary>
-    Task<ApiResponse<bool>> CreateRequestAsync(int userId, TCreate createDto);
+    Task<ApiResponse<T>> CreateRequestAsync(int userId, TCreate createDto);
 
     /// <summary>
     /// Cancel request (if pending)

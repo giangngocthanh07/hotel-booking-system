@@ -77,7 +77,7 @@ public class CustomerUpgradeRequestService : ICustomerUpgradeRequestService
         }
     }
 
-    public async Task<ApiResponse<bool>> CreateRequestAsync(int userId, CreateUpgradeRequestDTO createDto)
+    public async Task<ApiResponse<UpgradeRequestDTO>> CreateRequestAsync(int userId, CreateUpgradeRequestDTO createDto)
     {
         try
         {
@@ -85,21 +85,21 @@ public class CustomerUpgradeRequestService : ICustomerUpgradeRequestService
             var validation = await _createRequestValidator.ValidateAsync(createDto);
             if (!validation.IsValid)
             {
-                return ResponseFactory.Failure<bool>(
+                return ResponseFactory.Failure<UpgradeRequestDTO>(
                     StatusCodeResponse.BadRequest,
                     validation.Errors.First().ErrorMessage);
             }
 
             // Validate userId
             if (userId <= 0)
-                return ResponseFactory.Failure<bool>(
+                return ResponseFactory.Failure<UpgradeRequestDTO>(
                     StatusCodeResponse.BadRequest,
                     MessageResponse.RequestManagement.UpgradeRequest.USERID_INVALID);
 
             // Check if user exists
             var user = await _userRepo.GetByIdAsync(userId);
             if (user == null)
-                return ResponseFactory.Failure<bool>(
+                return ResponseFactory.Failure<UpgradeRequestDTO>(
                     StatusCodeResponse.NotFound,
                     MessageResponse.RequestManagement.UpgradeRequest.USER_NOT_FOUND);
 
@@ -108,25 +108,25 @@ public class CustomerUpgradeRequestService : ICustomerUpgradeRequestService
                 .AnyAsync(ur => ur.UserId == userId && ur.RoleId == RoleTypeConstDTO.Customer);
 
             if (!hasCustomerRole)
-                return ResponseFactory.Failure<bool>(
+                return ResponseFactory.Failure<UpgradeRequestDTO>(
                     StatusCodeResponse.Forbidden,
                     MessageResponse.RequestManagement.UpgradeRequest.USER_NOT_CUSTOMER);
-
-            // Check if there's already a pending request for this user
-            var existingRequests = await _upgradeRequestRepo.GetPendingByIdAsync(userId);
-            if (existingRequests.Any())
-                return ResponseFactory.Failure<bool>(
-                    StatusCodeResponse.Conflict,
-                    MessageResponse.RequestManagement.UpgradeRequest.PENDING_REQUEST_EXISTS);
 
             // Check if user is already a business
             var hasBusinessRole = await _userRoleRepo
                 .AnyAsync(ur => ur.UserId == userId && ur.RoleId == RoleTypeConstDTO.Owner);
 
             if (hasBusinessRole)
-                return ResponseFactory.Failure<bool>(
+                return ResponseFactory.Failure<UpgradeRequestDTO>(
                     StatusCodeResponse.Forbidden,
                     MessageResponse.RequestManagement.UpgradeRequest.USER_ALREADY_OWNER);
+
+            // Check if there's already a pending request for this user
+            var existingRequests = await _upgradeRequestRepo.GetPendingByIdAsync(userId);
+            if (existingRequests.Any())
+                return ResponseFactory.Failure<UpgradeRequestDTO>(
+                    StatusCodeResponse.Conflict,
+                    MessageResponse.RequestManagement.UpgradeRequest.PENDING_REQUEST_EXISTS);
 
             // Create new upgrade request
             var request = new UpgradeRequest
@@ -139,15 +139,26 @@ public class CustomerUpgradeRequestService : ICustomerUpgradeRequestService
             };
 
             await _upgradeRequestRepo.AddAsync(request);
-            var saved = await _unitOfWork.SaveChangesAsync() > 0;
+            await _unitOfWork.SaveChangesAsync();
 
-            return saved
-                ? ResponseFactory.Success(true, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_CREATED_SUCCESS)
-                : ResponseFactory.Failure<bool>(StatusCodeResponse.Error, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_CREATE_FAILED);
+            UpgradeRequestDTO saved = new UpgradeRequestDTO
+            {
+                UserId = request.UserId,
+                UserName = user.UserName,
+                FullName = user.FullName ?? "",
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                Address = request.Address,
+                TaxCode = request.TaxCode,
+                Status = request.Status,
+                RequestedAt = request.RequestedAt
+            };
+
+            return ResponseFactory.Success(saved, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_CREATED_SUCCESS);
         }
         catch (Exception)
         {
-            return ResponseFactory.ServerError<bool>();
+            return ResponseFactory.ServerError<UpgradeRequestDTO>();
         }
     }
 
