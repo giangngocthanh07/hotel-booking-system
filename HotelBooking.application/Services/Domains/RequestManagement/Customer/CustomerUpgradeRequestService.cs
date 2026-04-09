@@ -112,11 +112,11 @@ public class CustomerUpgradeRequestService : ICustomerUpgradeRequestService
                     StatusCodeResponse.Forbidden,
                     MessageResponse.RequestManagement.UpgradeRequest.USER_NOT_CUSTOMER);
 
-            // Check if user is already a business
-            var hasBusinessRole = await _userRoleRepo
+            // Check if user is already a Owner
+            var hasOwnerRole = await _userRoleRepo
                 .AnyAsync(ur => ur.UserId == userId && ur.RoleId == RoleTypeConstDTO.Owner);
 
-            if (hasBusinessRole)
+            if (hasOwnerRole)
                 return ResponseFactory.Failure<UpgradeRequestDTO>(
                     StatusCodeResponse.Forbidden,
                     MessageResponse.RequestManagement.UpgradeRequest.USER_ALREADY_OWNER);
@@ -185,6 +185,24 @@ public class CustomerUpgradeRequestService : ICustomerUpgradeRequestService
                     StatusCodeResponse.NotFound,
                     MessageResponse.RequestManagement.UpgradeRequest.USER_NOT_FOUND);
 
+            // Check role via UserRoles table
+            var hasCustomerRole = await _userRoleRepo
+                .AnyAsync(ur => ur.UserId == userId && ur.RoleId == RoleTypeConstDTO.Customer);
+
+            if (!hasCustomerRole)
+                return ResponseFactory.Failure<bool>(
+                    StatusCodeResponse.Forbidden,
+                    MessageResponse.RequestManagement.UpgradeRequest.USER_NOT_CUSTOMER);
+
+            // Check if user is already a Owner
+            var hasOwnerRole = await _userRoleRepo
+                .AnyAsync(ur => ur.UserId == userId && ur.RoleId == RoleTypeConstDTO.Owner);
+
+            if (hasOwnerRole)
+                return ResponseFactory.Failure<bool>(
+                    StatusCodeResponse.Forbidden,
+                    MessageResponse.RequestManagement.UpgradeRequest.USER_ALREADY_OWNER);
+
             // Find user's pending request
             var pendingRequests = await _upgradeRequestRepo.GetPendingByIdAsync(userId);
             var request = pendingRequests.FirstOrDefault();
@@ -193,12 +211,6 @@ public class CustomerUpgradeRequestService : ICustomerUpgradeRequestService
                 return ResponseFactory.Failure<bool>(
                     StatusCodeResponse.NotFound,
                     MessageResponse.RequestManagement.UpgradeRequest.REQUEST_NOT_FOUND);
-
-            // Update status to Cancelled
-            if (request.Status != RequestStatusConst.Pending)
-                return ResponseFactory.Failure<bool>(
-                    StatusCodeResponse.BadRequest,
-                    MessageResponse.RequestManagement.UpgradeRequest.REQUEST_STATUS_INVALID);
 
             request.Status = RequestStatusConst.Cancelled;
             await _upgradeRequestRepo.UpdateAsync(request);
