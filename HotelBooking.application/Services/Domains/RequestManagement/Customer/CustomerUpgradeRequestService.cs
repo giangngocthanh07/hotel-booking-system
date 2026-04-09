@@ -139,7 +139,13 @@ public class CustomerUpgradeRequestService : ICustomerUpgradeRequestService
             };
 
             await _upgradeRequestRepo.AddAsync(request);
-            await _unitOfWork.SaveChangesAsync();
+            var rowAffected = await _unitOfWork.SaveChangesAsync();
+
+            if (rowAffected <= 0)
+            {
+                return ResponseFactory.Failure<UpgradeRequestDTO>(
+                    StatusCodeResponse.Error, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_CREATE_FAILED);
+            }
 
             UpgradeRequestDTO saved = new UpgradeRequestDTO
             {

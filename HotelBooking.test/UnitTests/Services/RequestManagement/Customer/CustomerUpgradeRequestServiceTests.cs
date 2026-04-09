@@ -79,13 +79,13 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
                 TaxCode = "123456789"
             };
 
-            // Mock validation failure
+            // Validation failure
             var validationFailures = new List<FluentValidation.Results.ValidationFailure>
             {
                 new FluentValidation.Results.ValidationFailure("TaxCode", MessageResponse.RequestManagement.UpgradeRequest.TAX_CODE_INVALID)
             };
 
-
+            // Mock validation
             _mockCreateValidator.Setup(v => v.ValidateAsync(It.IsAny<CreateUpgradeRequestDTO>(), default))
                 .ReturnsAsync(new FluentValidation.Results.ValidationResult(validationFailures));
 
@@ -272,12 +272,275 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
 
             Verify_Repo_Never_AddAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo);
             Verify_Never_Saved();
-
         }
 
         [Fact]
         public async Task CreateRequest_SaveDbFails_ShouldReturnError()
         {
+            // 1. Arrange
+            int userId = 1;
+            var request = new CreateUpgradeRequestDTO
+            {
+                Address = "123 Main St",
+                TaxCode = "1234567890"
+            };
+
+            // Mock validation
+            MockValidationSuccess();
+
+            // Mock User
+            _mockUserRepo.Setup(u => u.GetByIdAsync(userId))
+                 .ReturnsAsync(new User());
+
+            // Mock UserRole is Customer but not is Owner
+            _mockUserRoleRepo.SetupSequence(ur => ur.AnyAsync(It.IsAny<Expression<Func<UserRole, bool>>>()))
+                     .ReturnsAsync(true)
+                     .ReturnsAsync(false);
+
+            // Mock pending request --> not in pending request
+            var pendingRequests = new List<UpgradeRequest>();
+
+            _mockUpgradeRequestRepo.Setup(r => r.GetPendingByIdAsync(userId)).ReturnsAsync(pendingRequests);
+
+            // Mock save DB fails at try - Logic Error - using If to check
+            _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(0);
+
+            // 2. Act
+            var result = await _service.CreateRequestAsync(userId, request);
+
+            // 3. Assert
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be(StatusCodeResponse.Error);
+            result.Message.Should().Be(MessageResponse.RequestManagement.UpgradeRequest.REQUEST_CREATE_FAILED);
+
+            Verify_Repo_AddAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo, 1);
+            Verify_Saved(1);
+        }
+
+        [Fact]
+        public async Task CreateRequest_SystemThrowsExceptionAtUserRepo_ShouldReturnServerError()
+        {
+            // 1. Arrange
+            int userId = 1;
+            var request = new CreateUpgradeRequestDTO
+            {
+                Address = "123 Main St",
+                TaxCode = "1234567890"
+            };
+
+            // Mock Validation
+            MockValidationSuccess();
+
+            // Mock User - Fail Fast --> No interact with DB
+            _mockUserRepo.Setup(u => u.GetByIdAsync(userId))
+                 .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+            // 2. Act
+            var result = await _service.CreateRequestAsync(userId, request);
+
+            // 3. Assert
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be(StatusCodeResponse.Error);
+            result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+            Verify_Repo_Never_AddAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo);
+            Verify_Never_Saved();
+        }
+
+        [Fact]
+        public async Task CreateRequest_SystemThrowsExceptionAtUserRoleRepoAtStart_ShouldReturnServerError()
+        {
+            // 1. Arrange
+            int userId = 1;
+            var request = new CreateUpgradeRequestDTO
+            {
+                Address = "123 Main St",
+                TaxCode = "1234567890"
+            };
+
+            // Mock validation
+            MockValidationSuccess();
+
+            // Mock User --> Found
+            _mockUserRepo.Setup(u => u.GetByIdAsync(userId))
+                 .ReturnsAsync(new User());
+
+            // Mock UserRole - Fail Fast
+            _mockUserRoleRepo.SetupSequence(ur => ur.AnyAsync(It.IsAny<Expression<Func<UserRole, bool>>>())).ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+            // 2. Act
+            var result = await _service.CreateRequestAsync(userId, request);
+
+            // 3. Assert
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be(StatusCodeResponse.Error);
+            result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+            Verify_Repo_Never_AddAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo);
+            Verify_Never_Saved();
+        }
+
+        [Fact]
+        public async Task CreateRequest_SystemThrowsExceptionAtUserRoleRepoAtEnd_ShouldReturnServerError()
+        {
+            // 1. Arrange
+            int userId = 1;
+            var request = new CreateUpgradeRequestDTO
+            {
+                Address = "123 Main St",
+                TaxCode = "1234567890"
+            };
+
+            // Mock validation
+            MockValidationSuccess();
+
+            // Mock User --> Found
+            _mockUserRepo.Setup(u => u.GetByIdAsync(userId))
+                 .ReturnsAsync(new User());
+
+            // Mock UserRole - Fail Fast: Is Customer --> Fail
+            _mockUserRoleRepo.SetupSequence(ur => ur.AnyAsync(It.IsAny<Expression<Func<UserRole, bool>>>()))
+                .ReturnsAsync(true)
+                .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+            // 2. Act
+            var result = await _service.CreateRequestAsync(userId, request);
+
+            // 3. Assert
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be(StatusCodeResponse.Error);
+            result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+            Verify_Repo_Never_AddAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo);
+            Verify_Never_Saved();
+        }
+
+        [Fact]
+        public async Task CreateRequest_SystemThrowsExceptionAtCheckingRequest_ShoudlReturnServerError()
+        {
+            // 1. Arrange
+            int userId = 1;
+            var request = new CreateUpgradeRequestDTO
+            {
+                Address = "123 Main St",
+                TaxCode = "1234567890"
+            };
+
+            // Mock validation
+            MockValidationSuccess();
+
+            // Mock User
+            _mockUserRepo.Setup(u => u.GetByIdAsync(userId))
+                 .ReturnsAsync(new User());
+
+            // Mock UserRole is Customer and not is Owner
+            _mockUserRoleRepo.SetupSequence(ur => ur.AnyAsync(It.IsAny<Expression<Func<UserRole, bool>>>()))
+                     .ReturnsAsync(true)
+                     .ReturnsAsync(false);
+
+            // Mock pending request --> Fail fast
+            _mockUpgradeRequestRepo.Setup(r => r.GetPendingByIdAsync(userId))
+                .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+            // 2. Act
+            var result = await _service.CreateRequestAsync(userId, request);
+
+            // 3. Assert
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be(StatusCodeResponse.Error);
+            result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+            Verify_Repo_Never_AddAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo);
+            Verify_Never_Saved();
+        }
+
+        [Fact]
+        public async Task CreateRequest_SystemThrowsExceptionAtAddAsync_ShouldReturnServerError()
+        {
+            // 1. Arrange
+            int userId = 1;
+            var request = new CreateUpgradeRequestDTO
+            {
+                Address = "123 Main St",
+                TaxCode = "1234567890"
+            };
+
+            // Mock validation 
+            MockValidationSuccess();
+
+            // Mock User
+            _mockUserRepo.Setup(u => u.GetByIdAsync(userId))
+                 .ReturnsAsync(new User());
+
+            // Mock UserRole is Customer and not is Owner
+            _mockUserRoleRepo.SetupSequence(ur => ur.AnyAsync(It.IsAny<Expression<Func<UserRole, bool>>>()))
+                     .ReturnsAsync(true)
+                     .ReturnsAsync(false);
+
+            // Mock pending request --> No pending request
+            var pendingRequests = new List<UpgradeRequest>();
+
+            _mockUpgradeRequestRepo.Setup(r => r.GetPendingByIdAsync(userId))
+            .ReturnsAsync(pendingRequests);
+
+            // Mock AddAsync --> Fail
+            _mockUpgradeRequestRepo.Setup(r => r.AddAsync(It.IsAny<UpgradeRequest>()))
+                .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+            // 2. Act
+            var result = await _service.CreateRequestAsync(userId, request);
+
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be(StatusCodeResponse.Error);
+            result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+            Verify_Repo_AddAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo, 1);
+            Verify_Never_Saved();
+        }
+
+        [Fact]
+        public async Task CreateRequest_SystemThrowsExceptionAtSaveDb_ShouldReturnServerError()
+        {
+            // 1. Arrange
+            int userId = 1;
+            var request = new CreateUpgradeRequestDTO
+            {
+                Address = "123 Main St",
+                TaxCode = "1234567890"
+            };
+
+            // Mock validation
+            MockValidationSuccess();
+
+            // Mock User
+            _mockUserRepo.Setup(u => u.GetByIdAsync(userId))
+                 .ReturnsAsync(new User());
+
+            // Mock UserRole is Customer and not is Owner
+            _mockUserRoleRepo.SetupSequence(ur => ur.AnyAsync(It.IsAny<Expression<Func<UserRole, bool>>>()))
+                     .ReturnsAsync(true)
+                     .ReturnsAsync(false);
+
+            // Mock pending request --> No pending request
+            var pendingRequests = new List<UpgradeRequest>();
+
+            _mockUpgradeRequestRepo.Setup(r => r.GetPendingByIdAsync(userId))
+            .ReturnsAsync(pendingRequests);
+
+            // Mock save DB fails at catch - dbu - SaveChangesAsync
+            _mockUnitOfWork.Setup(u => u.SaveChangesAsync())
+               .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+            // 2. Act
+            var result = await _service.CreateRequestAsync(userId, request);
+
+            // 3. Assert
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be(StatusCodeResponse.Error);
+            result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+            Verify_Repo_AddAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo, 1);
+            Verify_Saved(1);
         }
 
         private void MockValidationSuccess()
