@@ -31,13 +31,6 @@ The platform is designed for three distinct user roles:
 ### 🏨 Hotel Owner
 
 - **Property Management** — Add hotels, define room types, room units, bed configurations, and views.
-- **Media Uploads** — Upload hotel and room photos via Cloudinary integration.
-- **Configuration** — Attach amenities, services, and policies to your properties.
-- **Booking Dashboard** _(In Progress)_ — Track reservations and manage availability.
-
-### 🏨 Hotel Owner
-
-- **Property Management** — Add hotels, define room types, room units, bed configurations, and views.
 - **Hotel Creation Wizard** — Multi-step wizard: Basic Info → Photo Uploads → Amenities → Policies.
 - **Media Uploads** — Upload hotel and room photos via Cloudinary integration.
 - **Room Type Management** — Configure room types with attributes, bed configs, and capacity.
