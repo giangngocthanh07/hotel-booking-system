@@ -39,16 +39,17 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Admin
             try
             {
                 // 1. Validate pagination params
-                var validation = _pagingValidator.Validate(pagingRequest);
+                var validation = await _pagingValidator.ValidateAsync(pagingRequest, default);
+
                 if (!validation.IsValid)
                 {
                     return ResponseFactory.Failure<PagedResult<UpgradeRequestDTO>>(
                         StatusCodeResponse.BadRequest,
-                        validation.Errors.First().ErrorMessage);
+                        validation.Errors[0].ErrorMessage);
                 }
 
                 // 2. Build filter expression by status
-                Expression<Func<HotelBooking.infrastructure.Models.UpgradeRequest, bool>>? filter = null;
+                Expression<Func<UpgradeRequest, bool>>? filter = null;
                 if (!string.IsNullOrEmpty(status))
                 {
                     filter = r => r.Status == status;
@@ -94,6 +95,13 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Admin
         {
             try
             {
+                if (requestId <= 0)
+                {
+                    return ResponseFactory.Failure<UpgradeRequestDTO>(
+                        StatusCodeResponse.BadRequest,
+                        MessageResponse.RequestManagement.UpgradeRequest.REQUEST_ID_INVALID);
+                }
+
                 var request = await _upgradeRequestRepo.GetByIdWithUserAsync(requestId);
 
                 if (request == null)

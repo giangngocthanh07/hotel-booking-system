@@ -270,6 +270,11 @@ public static class MessageResponse
     // =====================================================
     public static class RequestManagement
     {
+        // Admin
+        public static class AdminUpgradeRequestService
+        {
+            public const string INVALID_STATUS = "Invalid status!";
+        }
         // Upgrade Request Messages
         public static class UpgradeRequest
         {

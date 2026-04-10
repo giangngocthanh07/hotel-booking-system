@@ -3,9 +3,11 @@ using System.Linq.Expressions;
 using FluentAssertions;
 using FluentValidation;
 using HotelBooking.application.DTOs.Request.Base;
+using HotelBooking.application.DTOs.Request.UpgradeRequest;
 using HotelBooking.application.DTOs.Role;
 using HotelBooking.application.Services.Domains.RequestManagement.Admin;
 using HotelBooking.infrastructure.Models;
+using Microsoft.IdentityModel.Tokens.Experimental;
 using Moq;
 
 namespace HotelBooking.test.UnitTests.Services.RequestManagement.Admin;
@@ -28,6 +30,373 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest
             _mockUnitOfWork.Object,
             _mockPagingValidator.Object);
     }
+
+    #region GET PAGED REQUESTS TESTS
+    [Fact]
+    public async Task GetPagedRequests_ValidRequest_ShouldReturnTrue()
+    {
+        // 1. Arrange
+        int pageIndex = 1;
+        int pageSize = 10;
+        var status = RequestStatusConst.Pending;
+
+        var pagingRequest = new PagingRequest
+        {
+            PageIndex = pageIndex,
+            PageSize = pageSize,
+        };
+
+        var mockUser = new User { Id = 5, UserName = "testuser", Email = "test@abc.com" };
+        var mockItems = new List<UpgradeRequest>
+    {
+        new UpgradeRequest { Id = 1, UserId = 5, Status = RequestStatusConst.Pending, User = mockUser, RequestedAt = DateTime.Now },
+        new UpgradeRequest { Id = 2, UserId = 5, Status = RequestStatusConst.Pending, User = mockUser, RequestedAt = DateTime.Now }
+    };
+
+        int mockTotalCount = 20;
+
+        // Mock paging validator success
+        MockPagingValidationSuccess();
+
+        // Mock GetPagedAsync success
+        _mockUpgradeRequestRepo.Setup(r => r.GetPagedWithUserAsync(
+            It.IsAny<Expression<Func<UpgradeRequest, bool>>>(),
+            pageIndex,
+            pageSize))
+        .ReturnsAsync((mockItems, mockTotalCount));
+
+        // 2. Act
+        var result = await _service.GetPagedRequestsAsync(pagingRequest, status);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.Message.Should().Be(MessageResponse.RequestManagement.UpgradeRequest.REQUESTS_RETRIEVED);
+
+        result.Content.Should().NotBeNull();
+        result.Content.TotalCount.Should().Be(mockTotalCount);
+        result.Content.PageIndex.Should().Be(pageIndex);
+        result.Content.PageSize.Should().Be(pageSize);
+
+        result.Content.Items.Should().NotBeNull();
+        result.Content.Items.Should().HaveCount(2);
+        result.Content.Items.First().RequestId.Should().Be(1);
+        result.Content.Items.First().UserName.Should().Be("testuser");
+        result.Content.Items.First().Email.Should().Be("test@abc.com");
+    }
+
+    [Fact]
+    public async Task GetPagedRequests_InvalidPageIndex_ShouldReturnBadRequest()
+    {
+        // 1. Arrange
+        int pageIndex = 0;
+        int pageSize = 10;
+        var status = RequestStatusConst.Pending;
+
+        var pagingRequest = new PagingRequest
+        {
+            PageIndex = pageIndex,
+            PageSize = pageSize,
+        };
+
+        // Mock InvalidValidation
+
+        var validationFailures = new List<FluentValidation.Results.ValidationFailure>
+            {
+                new FluentValidation.Results.ValidationFailure("PageIndex", MessageResponse.Pagination.INVALID_PAGE_INDEX),
+                new FluentValidation.Results.ValidationFailure("PageSize", MessageResponse.Pagination.INVALID_PAGE_SIZE)
+
+            };
+
+        _mockPagingValidator.Setup(v => v.ValidateAsync(It.IsAny<PagingRequest>(), default))
+            .ReturnsAsync(new FluentValidation.Results.ValidationResult(validationFailures));
+
+        // 2. Act
+        var result = await _service.GetPagedRequestsAsync(pagingRequest, status);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.Message.Should().Be(validationFailures.First().ErrorMessage);
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+
+        result.Content.Should().BeNull();
+
+        // Verify
+        _mockPagingValidator.Verify(v => v.ValidateAsync(It.IsAny<PagingRequest>(), default), Times.Once);
+        _mockUpgradeRequestRepo.Verify(r => r.GetPagedWithUserAsync(It.IsAny<Expression<Func<UpgradeRequest, bool>>>(), pageIndex, pageSize), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetPagedRequests_InvalidPageSize_ShouldReturnBadRequest()
+    {
+        // 1. Arrange
+        int pageIndex = 1;
+        int pageSize = 0;
+        var status = RequestStatusConst.Pending;
+
+        var pagingRequest = new PagingRequest
+        {
+            PageIndex = pageIndex,
+            PageSize = pageSize,
+        };
+
+        // Mock InvalidValidation
+        var validationFailures = new List<FluentValidation.Results.ValidationFailure>
+            {
+                new FluentValidation.Results.ValidationFailure("PageSize", MessageResponse.Pagination.INVALID_PAGE_SIZE)
+            };
+
+        _mockPagingValidator.Setup(v => v.ValidateAsync(It.IsAny<PagingRequest>(), default))
+            .ReturnsAsync(new FluentValidation.Results.ValidationResult(validationFailures));
+
+        // 2. Act
+        var result = await _service.GetPagedRequestsAsync(pagingRequest, status);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.Message.Should().Be(validationFailures.First().ErrorMessage);
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+
+        result.Content.Should().BeNull();
+
+        // Verify
+        _mockPagingValidator.Verify(v => v.ValidateAsync(It.IsAny<PagingRequest>(), default), Times.Once);
+        _mockUpgradeRequestRepo.Verify(r => r.GetPagedWithUserAsync(It.IsAny<Expression<Func<UpgradeRequest, bool>>>(), pageIndex, pageSize), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetPagedRequests_InvalidStatus_ShouldReturnBadRequest()
+    {
+        // 1. Arrange
+        int pageIndex = 1;
+        int pageSize = 10;
+        var status = "InvalidStatus";
+
+        var pagingRequest = new PagingRequest
+        {
+            PageIndex = pageIndex,
+            PageSize = pageSize,
+        };
+
+        // Mock InvalidValidation
+        var validationFailures = new List<FluentValidation.Results.ValidationFailure>
+            {
+                new FluentValidation.Results.ValidationFailure("Status", MessageResponse.RequestManagement.AdminUpgradeRequestService.INVALID_STATUS)
+            };
+
+        _mockPagingValidator.Setup(v => v.ValidateAsync(It.IsAny<PagingRequest>(), default))
+            .ReturnsAsync(new FluentValidation.Results.ValidationResult(validationFailures));
+
+        // 2. Act
+        var result = await _service.GetPagedRequestsAsync(pagingRequest, status);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.Message.Should().Be(validationFailures.First().ErrorMessage);
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+
+        result.Content.Should().BeNull();
+
+        // Verify
+        _mockPagingValidator.Verify(v => v.ValidateAsync(It.IsAny<PagingRequest>(), default), Times.Once);
+        _mockUpgradeRequestRepo.Verify(r => r.GetPagedWithUserAsync(It.IsAny<Expression<Func<UpgradeRequest, bool>>>(), pageIndex, pageSize), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetPagedRequests_SystemThrowsExceptionAtGetPagedAsync_ShouldReturnError()
+    {
+        // 1. Arrange
+        int pageIndex = 1;
+        int pageSize = 10;
+        var status = RequestStatusConst.Pending;
+
+        var pagingRequest = new PagingRequest
+        {
+            PageIndex = pageIndex,
+            PageSize = pageSize,
+        };
+
+        MockPagingValidationSuccess();
+
+        // Mock GetPagedAsync fail --> FAIL FAST
+        _mockUpgradeRequestRepo.Setup(r => r.GetPagedWithUserAsync(It.IsAny<Expression<Func<UpgradeRequest, bool>>>(), pageIndex, pageSize))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _service.GetPagedRequestsAsync(pagingRequest, status);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        result.Content.Should().BeNull();
+
+        // Verify
+        _mockPagingValidator.Verify(v => v.ValidateAsync(It.IsAny<PagingRequest>(), default), Times.Once);
+        _mockUpgradeRequestRepo.Verify(v => v.GetPagedWithUserAsync(It.IsAny<Expression<Func<UpgradeRequest, bool>>>(), pageIndex, pageSize), Times.Once);
+    }
+
+    #endregion
+
+    #region GET BY REQUEST ID TESTS
+
+    [Fact]
+    public async Task GetByRequestId_ValidRequest_ShouldReturnTrue()
+    {
+        // 1. Arrange
+        int requestId = 99;
+
+        // valid User
+        var validUser = new User
+        {
+            Id = 5,
+            UserName = "testuser"
+
+        };
+
+        // valid Request
+        var validRequest = new UpgradeRequest
+        {
+            Id = requestId,
+            UserId = 5,
+            Status = RequestStatusConst.Pending,
+            Address = "123 Default Street",
+            TaxCode = "1234567890",
+            User = validUser
+
+        };
+
+        var validRequestDTO = new UpgradeRequestDTO
+        {
+            RequestId = validRequest.Id,
+            UserId = validRequest.UserId,
+            UserName = validRequest.User.UserName,
+            FullName = validRequest.User.FullName ?? "",
+            Email = validRequest.User.Email ?? "",
+            PhoneNumber = validRequest.User.PhoneNumber ?? "",
+            Address = validRequest.Address ?? "",
+            TaxCode = validRequest.TaxCode ?? "",
+            Status = validRequest.Status ?? RequestStatusConst.Pending,
+            RequestedAt = validRequest.RequestedAt
+        };
+
+        _mockUpgradeRequestRepo.Setup(r => r.GetByIdWithUserAsync(requestId))
+            .ReturnsAsync(validRequest);
+
+        // 2. Act
+        var result = await _service.GetByRequestIdAsync(requestId);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Success);
+        result.Message.Should().Be(MessageResponse.RequestManagement.UpgradeRequest.REQUEST_RETRIEVED);
+
+        result.Content.Should().NotBeNull();
+        result.Content.Should().BeEquivalentTo(validRequestDTO);
+
+    }
+
+    [Fact]
+    public async Task GetByRequestId_InvalidRequestId_ShouldReturnBadRequest()
+    {
+        // 1. Arrange
+        int requestId = 0;
+
+        // 2. Act
+        var result = await _service.GetByRequestIdAsync(requestId);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+        result.Message.Should().Be(MessageResponse.RequestManagement.UpgradeRequest.REQUEST_ID_INVALID);
+
+        result.Content.Should().BeNull();
+
+        // Verify that no query interact with DB
+        _mockUpgradeRequestRepo.Verify(r => r.GetByIdWithUserAsync(requestId), Times.Never);
+
+    }
+
+    [Fact]
+    public async Task GetByRequestId_RequestNotFound_ShouldReturnNotFound()
+    {
+        // 1. Arrange
+        int requestId = 99;
+
+        // Mock NotFoundRequest
+        _mockUpgradeRequestRepo.Setup(r => r.GetByIdWithUserAsync(requestId))
+            .ReturnsAsync((UpgradeRequest)null!);
+
+        // 2. Act
+        var result = await _service.GetByRequestIdAsync(requestId);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.NotFound);
+        result.Message.Should().Be(MessageResponse.RequestManagement.UpgradeRequest.REQUEST_NOT_FOUND);
+
+        result.Content.Should().BeNull();
+
+        // Verify that GetByIdWithUserAsync is called once
+        _mockUpgradeRequestRepo.Verify(r => r.GetByIdWithUserAsync(requestId), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetByRequestId_UserNotFound_ShouldReturnNotFound()
+    {
+        // 1. Arrange
+        int requestId = 99;
+
+        var requestWithNoUser = new UpgradeRequest
+        {
+            Id = requestId,
+            UserId = 5,
+            Status = RequestStatusConst.Pending,
+            Address = "123 Default Street",
+            TaxCode = "1234567890",
+            User = null!
+        };
+
+        // Mock User Not Found
+        _mockUpgradeRequestRepo.Setup(r => r.GetByIdWithUserAsync(requestId))
+            .ReturnsAsync(requestWithNoUser);
+
+        // 2. Act
+        var result = await _service.GetByRequestIdAsync(requestId);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.NotFound);
+        result.Message.Should().Be(MessageResponse.RequestManagement.UpgradeRequest.USER_NOT_FOUND);
+
+        result.Content.Should().BeNull();
+
+        // Verify that GetByIdWithUserAsync is called once
+        _mockUpgradeRequestRepo.Verify(r => r.GetByIdWithUserAsync(requestId), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetByRequestId_SystemThrowsExceptionAtGetByRequestIdAsync_ShouldReturnError()
+    {
+        // 1. Arrange
+        int requestId = 99;
+
+        // Mock System Throws Exception
+        _mockUpgradeRequestRepo.Setup(r => r.GetByIdWithUserAsync(requestId))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _service.GetByRequestIdAsync(requestId);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        result.Content.Should().BeNull();
+    }
+
+    #endregion
 
     #region APPROVE REQUEST TESTS
     [Fact]
@@ -987,19 +1356,78 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest
 
     #endregion
 
-    // HELPERS
+    #region GET ALL STATUSES
+
+    [Fact]
+    public async Task GetAllStatuses_HappyPath_ShouldReturnTrue()
+    {
+        // 1. Arrange
+        List<string>? statuses = new List<string>();
+        statuses.Add(RequestStatusConst.Pending);
+        statuses.Add(RequestStatusConst.Approved);
+
+        // Mock GetStatuses success
+        _mockUpgradeRequestRepo.Setup(r => r.GetDistinctStatusesAsync())
+            .ReturnsAsync(statuses);
+
+        // 2. Act
+        var result = await _service.GetAllStatusesAsync();
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Success);
+        result.Message.Should().Be(MessageResponse.Common.GET_SUCCESSFULLY);
+
+        result.Content.Should().NotBeNull();
+        result.Content.Should().BeEquivalentTo(statuses);
+
+        // Verrify that GetDistinctStatusesAsync is called once
+        _mockUpgradeRequestRepo.Verify(r => r.GetDistinctStatusesAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetAllStatuses_SystemThrowsExceptionAtGetStatusesAsync_ShouldReturnError()
+    {
+        // 1. Arrange
+        // Mock Error at GetStatusesAsync
+        _mockUpgradeRequestRepo.Setup(r => r.GetDistinctStatusesAsync())
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _service.GetAllStatusesAsync();
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify that GetDistinctStatusesAsync is called once
+        _mockUpgradeRequestRepo.Verify(r => r.GetDistinctStatusesAsync(), Times.Once);
+
+    }
+
+    #endregion
+
+
+    #region HELPERS
+    private void MockPagingValidationSuccess()
+    {
+        _mockPagingValidator.Setup(v => v.ValidateAsync(It.IsAny<PagingRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new FluentValidation.Results.ValidationResult());
+    }
     private void MockGetByIdWithUserAsync(UpgradeRequest returnedRequest)
     {
         _mockUpgradeRequestRepo.Setup(r => r.GetByIdWithUserAsync(returnedRequest.Id))
             .ReturnsAsync(returnedRequest);
     }
-
     private void MockValidCustomerRole(int userId)
     {
         _mockUserRoleRepo.SetupSequence(ur => ur.AnyAsync(It.IsAny<Expression<Func<UserRole, bool>>>()))
             .ReturnsAsync(true)
             .ReturnsAsync(false);
     }
+
+    #endregion
 }
 
 

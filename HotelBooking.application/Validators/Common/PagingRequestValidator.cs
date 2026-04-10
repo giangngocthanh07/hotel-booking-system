@@ -1,3 +1,4 @@
+using System.Data;
 using FluentValidation;
 
 namespace HotelBooking.application.Validators.Common;
@@ -6,6 +7,8 @@ public class PagingRequestValidator : AbstractValidator<PagingRequest>
 {
     public PagingRequestValidator()
     {
+        RuleLevelCascadeMode = CascadeMode.Stop;
+
         // 1. PageIndex Validation
         RuleFor(x => x.PageIndex)
             .NotNull().WithMessage(MessageResponse.Pagination.MISSING_PAGE_INDEX)
