@@ -16,26 +16,20 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Admin
     public class AdminUpgradeRequestService : IAdminUpgradeRequestService
     {
         private readonly IUpgradeRequestRepository _upgradeRequestRepo;
-        private readonly IUserRepository _userRepo;
         private readonly IUserRoleRepository _userRoleRepo;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IValidator<PagingRequest> _pagingValidator;
-        private readonly IValidator<CreateUpgradeRequestDTO> _createRequestValidator;
 
         public AdminUpgradeRequestService(
             IUpgradeRequestRepository upgradeRequestRepo,
-            IUserRepository userRepo,
             IUserRoleRepository userRoleRepo,
             IUnitOfWork unitOfWork,
-            IValidator<PagingRequest> pagingValidator,
-            IValidator<CreateUpgradeRequestDTO> createRequestValidator)
+            IValidator<PagingRequest> pagingValidator)
         {
             _upgradeRequestRepo = upgradeRequestRepo;
-            _userRepo = userRepo;
             _userRoleRepo = userRoleRepo;
             _unitOfWork = unitOfWork;
             _pagingValidator = pagingValidator;
-            _createRequestValidator = createRequestValidator;
         }
 
         public async Task<ApiResponse<PagedResult<UpgradeRequestDTO>>> GetPagedRequestsAsync(
@@ -100,14 +94,15 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Admin
         {
             try
             {
-                var request = await _upgradeRequestRepo.GetByIdAsync(requestId);
+                var request = await _upgradeRequestRepo.GetByIdWithUserAsync(requestId);
+
                 if (request == null)
                     return ResponseFactory.Failure<UpgradeRequestDTO>(
                         StatusCodeResponse.NotFound,
                         MessageResponse.RequestManagement.UpgradeRequest.REQUEST_NOT_FOUND);
 
-                var user = await _userRepo.GetByIdAsync(request.UserId);
-                if (user == null)
+
+                if (request.User == null)
                     return ResponseFactory.Failure<UpgradeRequestDTO>(
                         StatusCodeResponse.NotFound,
                         MessageResponse.RequestManagement.UpgradeRequest.USER_NOT_FOUND);
@@ -115,11 +110,11 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Admin
                 var requestDTO = new UpgradeRequestDTO
                 {
                     RequestId = request.Id,
-                    UserId = user.Id,
-                    UserName = user.UserName,
-                    FullName = user.FullName ?? "",
-                    Email = user.Email ?? "",
-                    PhoneNumber = user.PhoneNumber ?? "",
+                    UserId = request.UserId,
+                    UserName = request.User.UserName,
+                    FullName = request.User.FullName ?? "",
+                    Email = request.User.Email ?? "",
+                    PhoneNumber = request.User.PhoneNumber ?? "",
                     Address = request.Address ?? "",
                     TaxCode = request.TaxCode ?? "",
                     Status = request.Status ?? RequestStatusConst.Pending,
@@ -138,43 +133,57 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Admin
         {
             try
             {
-                var request = await _upgradeRequestRepo.GetByIdAsync(requestId);
+                if (requestId <= 0)
+                {
+                    return ResponseFactory.Failure<bool>(StatusCodeResponse.BadRequest, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_ID_INVALID);
+                }
+
+                var request = await _upgradeRequestRepo.GetByIdWithUserAsync(requestId);
+
                 if (request == null || request.Status != RequestStatusConst.Pending)
                     return ResponseFactory.Failure<bool>(
                         StatusCodeResponse.BadRequest,
                         MessageResponse.RequestManagement.UpgradeRequest.REQUEST_STATUS_INVALID);
 
-                var user = await _userRepo.GetByIdAsync(request.UserId);
-                if (user == null)
+                if (request.User == null)
                     return ResponseFactory.Failure<bool>(
                         StatusCodeResponse.NotFound,
                         MessageResponse.RequestManagement.UpgradeRequest.USER_NOT_FOUND);
 
                 var hasCustomerRole = await _userRoleRepo.AnyAsync(
-                    ur => ur.UserId == user.Id && ur.RoleId == RoleTypeConstDTO.Customer);
+                    ur => ur.UserId == request.UserId && ur.RoleId == RoleTypeConstDTO.Customer);
+
                 if (!hasCustomerRole)
                     return ResponseFactory.Failure<bool>(
-                        StatusCodeResponse.BadRequest,
+                        StatusCodeResponse.Forbidden,
                         MessageResponse.RequestManagement.UpgradeRequest.USER_NOT_CUSTOMER);
+
+                // User already Owner --> Fail
+                var hasOwnerRole = await _userRoleRepo
+                .AnyAsync(ur => ur.UserId == request.UserId && ur.RoleId == RoleTypeConstDTO.Owner);
+
+                if (hasOwnerRole)
+                {
+                    return ResponseFactory.Failure<bool>(
+                        StatusCodeResponse.Forbidden,
+                        MessageResponse.RequestManagement.UpgradeRequest.USER_ALREADY_OWNER);
+                }
 
                 // Add Owner role to user
                 var ownerRole = new UserRole
                 {
-                    UserId = user.Id,
+                    UserId = request.UserId,
                     RoleId = RoleTypeConstDTO.Owner
                 };
                 await _userRoleRepo.AddAsync(ownerRole);
 
-                // Update request status
+                // Update request status and User data
                 request.Status = RequestStatusConst.Approved;
                 request.ApprovedAt = DateTime.Now;
                 request.ApprovedBy = adminId;
+                request.User.Address = request.Address;
+                request.User.TaxCode = request.TaxCode;
                 await _upgradeRequestRepo.UpdateAsync(request);
-
-                // Update User data
-                user.Address = request.Address;
-                user.TaxCode = request.TaxCode;
-                await _userRepo.UpdateAsync(user);
 
                 var saved = await _unitOfWork.SaveChangesAsync() > 0;
                 return saved
@@ -201,6 +210,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Admin
                 request.Status = RequestStatusConst.Rejected;
                 request.ApprovedAt = DateTime.Now;
                 request.ApprovedBy = adminId;
+
                 await _upgradeRequestRepo.UpdateAsync(request);
 
                 var saved = await _unitOfWork.SaveChangesAsync() > 0;

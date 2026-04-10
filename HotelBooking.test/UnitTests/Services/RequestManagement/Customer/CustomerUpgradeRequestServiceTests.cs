@@ -992,7 +992,7 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
             result.Message.Should().Be(MessageResponse.RequestManagement.UpgradeRequest.USER_NOT_FOUND);
 
             // Make sure that no query at userRoleRepo interact with DB
-            _mockUserRoleRepo.Verify(ur => ur.AnyAsync(It.IsAny<Expression<Func<UserRole, bool>>>()), Times.Never);
+            Verify_Repo_Never_AnyAsync<IUserRoleRepository, UserRole>(_mockUserRoleRepo);
         }
 
         [Fact]
@@ -1094,7 +1094,8 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
             result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
 
             // Make sure that userRole and upgradeRequest's queries no interact with DB
-            _mockUserRoleRepo.Verify(ur => ur.AnyAsync(It.IsAny<Expression<Func<UserRole, bool>>>()), Times.Never);
+            Verify_Repo_Never_AnyAsync<IUserRoleRepository, UserRole>(_mockUserRoleRepo);
+
             _mockUpgradeRequestRepo.Verify(r => r.GetByUserIdAsync(It.IsAny<int>()), Times.Never);
         }
 
@@ -1121,7 +1122,7 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
             result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
 
             // Make sure that userRole'query is called once only
-            _mockUserRoleRepo.Verify(ur => ur.AnyAsync(It.IsAny<Expression<Func<UserRole, bool>>>()), Times.Once);
+            Verify_Repo_AnyAsync<IUserRoleRepository, UserRole>(_mockUserRoleRepo, 1);
 
             // Make sure that upgradeRequest's query no interact with DB
             _mockUpgradeRequestRepo.Verify(r => r.GetByUserIdAsync(It.IsAny<int>()), Times.Never);
@@ -1151,7 +1152,7 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
             result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
 
             // Make sure that userRole'query is called twice
-            _mockUserRoleRepo.Verify(ur => ur.AnyAsync(It.IsAny<Expression<Func<UserRole, bool>>>()), Times.Exactly(2));
+            Verify_Repo_AnyAsync<IUserRoleRepository, UserRole>(_mockUserRoleRepo, 2);
 
             // Make sure that upgradeRequest's query not interact with DB
             _mockUpgradeRequestRepo.Verify(u => u.GetByUserIdAsync(It.IsAny<int>()), Times.Never);

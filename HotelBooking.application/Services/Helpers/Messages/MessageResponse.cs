@@ -307,6 +307,8 @@ public static class MessageResponse
             public const string REQUEST_NOT_FOUND = "Request not found!";
 
             // Approve Request
+            public const string REQUEST_ID_REQUIRED = "Request ID is required!";
+            public const string REQUEST_ID_INVALID = "Request ID must be greater than 0!";
             public const string REQUEST_APPROVED_SUCCESS = "Request approved successfully!";
             public const string REQUEST_APPROVE_FAILED = "Failed to approve request!";
             public const string REQUEST_STATUS_INVALID = "Request not found or not in pending status!";

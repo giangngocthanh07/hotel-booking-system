@@ -18,6 +18,11 @@ public interface IUpgradeRequestRepository : IRepository<UpgradeRequest>
         int pageSize);
 
     /// <summary>
+    /// Get upgrade request by ID with user information
+    /// </summary>
+    Task<UpgradeRequest?> GetByIdWithUserAsync(int id);
+
+    /// <summary>
     /// Get statistics of requests by status and time periods
     /// </summary>
     Task<(int Total, int Pending, int Approved, int Rejected, int Cancelled, int Today, int ThisWeek, int ThisMonth)> GetStatsRawAsync();
@@ -84,6 +89,11 @@ public class UpgradeRequestRepository : Repository<UpgradeRequest>, IUpgradeRequ
             .ToListAsync();
 
         return (items, totalCount);
+    }
+
+    public async Task<UpgradeRequest?> GetByIdWithUserAsync(int id)
+    {
+        return await _dbSet.AsNoTracking().Include(ur => ur.User).FirstOrDefaultAsync();
     }
 
     public async Task<(int Total, int Pending, int Approved, int Rejected, int Cancelled, int Today, int ThisWeek, int ThisMonth)> GetStatsRawAsync()

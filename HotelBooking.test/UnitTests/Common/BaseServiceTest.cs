@@ -118,5 +118,23 @@ public abstract class BaseServiceTest
         mockRepo.Verify(x => x.SingleOrDefaultAsync(It.IsAny<Expression<Func<TEntity, bool>>>()), Times.Never);
     }
 
+    // ==========================================
+    // 7. GENERIC HELPER: VERIFY AnyAsync CALLS
+    // ==========================================
+
+    protected void Verify_Repo_AnyAsync<TRepo, TEntity>(Mock<TRepo> mockRepo, int times = 1)
+        where TRepo : class, IRepository<TEntity>
+        where TEntity : class
+    {
+        mockRepo.Verify(x => x.AnyAsync(It.IsAny<Expression<Func<TEntity, bool>>>()), Times.Exactly(times));
+    }
+
+    protected void Verify_Repo_Never_AnyAsync<TRepo, TEntity>(Mock<TRepo> mockRepo)
+        where TRepo : class, IRepository<TEntity>
+        where TEntity : class
+    {
+        mockRepo.Verify(x => x.AnyAsync(It.IsAny<Expression<Func<TEntity, bool>>>()), Times.Never);
+    }
+
     #endregion
 }
