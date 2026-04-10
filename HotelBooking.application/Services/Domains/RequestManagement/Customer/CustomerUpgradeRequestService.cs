@@ -242,6 +242,24 @@ public class CustomerUpgradeRequestService : ICustomerUpgradeRequestService
                     StatusCodeResponse.NotFound,
                     MessageResponse.RequestManagement.UpgradeRequest.USER_NOT_FOUND);
 
+            // Check role via UserRoles table
+            var hasCustomerRole = await _userRoleRepo
+                .AnyAsync(ur => ur.UserId == userId && ur.RoleId == RoleTypeConstDTO.Customer);
+
+            if (!hasCustomerRole)
+                return ResponseFactory.Failure<List<UpgradeRequestDTO>>(
+                    StatusCodeResponse.Forbidden,
+                    MessageResponse.RequestManagement.UpgradeRequest.USER_NOT_CUSTOMER);
+
+            // Check if user is already a Owner
+            var hasOwnerRole = await _userRoleRepo
+                .AnyAsync(ur => ur.UserId == userId && ur.RoleId == RoleTypeConstDTO.Owner);
+
+            if (hasOwnerRole)
+                return ResponseFactory.Failure<List<UpgradeRequestDTO>>(
+                    StatusCodeResponse.Forbidden,
+                    MessageResponse.RequestManagement.UpgradeRequest.USER_ALREADY_OWNER);
+
             var requests = await _upgradeRequestRepo.GetByUserIdAsync(userId);
 
             if (requests.Count() == 0)
