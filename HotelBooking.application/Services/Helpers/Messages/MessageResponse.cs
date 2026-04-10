@@ -435,7 +435,7 @@ public static class MessageResponse
         public const string INVALID_PAGE_INDEX = "Page number must be greater than 0!";
         public const string MISSING_PAGE_SIZE = "Page size must not be empty!";
         public const string INVALID_PAGE_SIZE = "Page size must be greater than 0!";
-        public const string PAGE_SIZE_TOO_LARGE = "Maximum page size is 100 (DDoS protection)!";
+        public const string PAGE_SIZE_TOO_LARGE = "Maximum page size is 100!";
     }
 
     // =====================================================
