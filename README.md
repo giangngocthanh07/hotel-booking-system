@@ -35,10 +35,19 @@ The platform is designed for three distinct user roles:
 - **Configuration** — Attach amenities, services, and policies to your properties.
 - **Booking Dashboard** _(In Progress)_ — Track reservations and manage availability.
 
+### 🏨 Hotel Owner
+
+- **Property Management** — Add hotels, define room types, room units, bed configurations, and views.
+- **Hotel Creation Wizard** — Multi-step wizard: Basic Info → Photo Uploads → Amenities → Policies.
+- **Media Uploads** — Upload hotel and room photos via Cloudinary integration.
+- **Room Type Management** — Configure room types with attributes, bed configs, and capacity.
+- **Booking Dashboard** _(Planned)_ — Track reservations and manage availability.
+
 ### 🛠️ Administrator
 
-- **Global Settings** — Full CRUD on Amenities, Policies, Services, Bed Types, Room Qualities, and Unit Types.
-- **Upgrade Request Management** — Review, approve, or reject Owner upgrade requests with audit trail.
+- **Global Settings** — Full CRUD on Amenities, Policies, Services, Bed Types, Room Qualities, Unit Types, and Room Views.
+- **Upgrade Request Management** — Full list view, filtering, stats dashboard, and detail review to approve or reject Owner upgrade requests.
+- **Request Dashboard** — Real-time overview of recent requests and approval statistics.
 - **User & Role Management** — Manage user accounts and assign authorization roles.
 
 ---
@@ -61,10 +70,10 @@ HotelBooking.sln
 | Layer                                | Description                                                                                                                                                                                                            |
 | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 🌐 **`HotelBooking.api`**            | Exposes RESTful API endpoints under versioned routes (`v1/admin/`, `v1/customer/`, `v1/[public]`). Secured via JWT Bearer authentication. DI is configured via dedicated Extension classes to keep `Program.cs` clean. |
-| ⚙️ **`HotelBooking.application`**    | Core business logic organized by domain (`AdminManagement`, `HotelManagement`, `RequestManagement`, `Auth`, `UserManagement`, `Media`). Also contains FluentValidation rules, DTOs, and shared Helpers.                |
+| ⚙️ **`HotelBooking.application`**    | Core business logic organized by domain (`AdminManagement`, `HotelManagement`, `RequestManagement`, `RoomManagement`, `Auth`, `UserManagement`, `Media`). Also contains FluentValidation rules, DTOs, and shared Helpers. |
 | 🗄️ **`HotelBooking.infrastructure`** | Connects the app to external data sources. Contains the EF Core `HotelBookingDBContext`, all Repository implementations, and a `UnitOfWork` pattern. Also integrates with **Cloudinary** for media storage.            |
-| 💻 **`HotelBooking.webapp`**         | Blazor Server frontend divided into role-based layouts (`AdminLayout`, `OwnerLayout`, `MainLayout`). Communicates with the backend API via scoped HttpClient services.                                                 |
-| 🧪 **`HotelBooking.test`**           | xUnit-based Unit Tests and Integration Tests. Integration tests use a dedicated `appsettings.test.json` and connect to a real test database.                                                                           |
+| 💻 **`HotelBooking.webapp`**         | Blazor Server frontend divided into role-based layouts (`AdminLayout`, `OwnerLayout`, `AuthLayout`, `MainLayout`). Communicates with the backend API via scoped HttpClient services.                                    |
+| 🧪 **`HotelBooking.test`**           | xUnit-based Unit Tests covering Services, Validators, and Helpers per domain. Integration tests use a dedicated `appsettings.test.json` and connect to a real test database.                                           |
 
 > 📖 **Detailed structure documentation:**
 >
@@ -233,11 +242,18 @@ Contributions are welcome! Please follow the workflow below to keep the codebase
 
 Features currently planned or in progress:
 
-- [ ] **BookingManagement** — End-to-end booking flow: room selection, reservation, payment processing.
-- [ ] **Review System** — Customers can leave ratings and reviews after their stay.
-- [ ] **Owner Dashboard** — Revenue reports, occupancy statistics, and booking management.
-- [ ] **Customer Portal** — Booking history, saved hotels, and personal settings.
-- [ ] **Notification System** — In-app and email notifications for booking updates.
+| Status | Feature | Description |
+|--------|---------|-------------|
+| ✅ | **Admin Management** | Full CRUD for Amenities, Policies, Services, Bed Types, Room Qualities, Room Views, Unit Types |
+| ✅ | **Upgrade Request Flow** | Complete Admin review + Customer submission with detail pages, filters, and stats |
+| ✅ | **Hotel Creation Wizard** | Multi-step hotel creation (Basic Info, Photos, Amenities, Policies) |
+| ✅ | **Room Type Management** | Owner-side room type configuration |
+| ✅ | **Authentication** | JWT Login / Register flow with role-based access |
+| 🔄 | **BookingManagement** | End-to-end booking flow: room selection, reservation, payment processing |
+| 🔄 | **Review System** | Customers can leave ratings and reviews after their stay |
+| 🔄 | **Owner Dashboard** | Revenue reports, occupancy statistics, and booking management |
+| 🔄 | **Customer Portal** | Booking history, saved hotels, and personal settings |
+| 🔄 | **Notification System** | In-app and email notifications for booking updates |
 
 ---
 

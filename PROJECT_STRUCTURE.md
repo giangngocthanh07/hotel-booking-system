@@ -1,5 +1,9 @@
 # HotelBooking Project - Structure Organization
 
+_Last updated: 10-Apr-2026 | Version: 1.3_
+
+---
+
 ## 📁 Application Layer Structure
 
 ```
@@ -39,34 +43,44 @@ HotelBooking.application/
 │   │   ├── Media/
 │   │   │   └── PhotoService.cs (+ IPhotoService interface)
 │   │   │
-│   │   ├── RequestManagement/     # Upgrade and approval request management
-│   │   │   ├── Base/
-│   │   │   ├── RequestOverviewService.cs
-│   │   │   └── UpgradeRequestService.cs
+│   │   ├── RequestManagement/     # ⭐ Upgrade request management (split by role)
+│   │   │   ├── Admin/
+│   │   │   │   └── AdminUpgradeRequestService.cs (+ IAdminUpgradeRequestService)
+│   │   │   ├── Base/              # Shared request base types/abstractions
+│   │   │   ├── Customer/
+│   │   │   │   └── CustomerUpgradeRequestService.cs (+ ICustomerUpgradeRequestService)
+│   │   │   └── RequestOverviewService.cs (+ IRequestOverviewService)
+│   │   │
+│   │   ├── RoomManagement/        # ⭐ NEW - Room type and unit management
+│   │   │   ├── RoomNameSuggestionService.cs (+ IRoomNameSuggestionService)
+│   │   │   └── RoomTypeService.cs (+ IRoomTypeService)
 │   │   │
 │   │   └── UserManagement/
 │   │       └── UserService.cs (+ IUserService interface)
 │   │
-│   ├── Helpers/                   # Navigation, Validation, Response, FileHelper...
-│   │   ├── ApiResponseHandlerHelper.cs
-│   │   ├── BedTypeHelper.cs
-│   │   ├── FileHelper.cs
-│   │   ├── Hotel/
-│   │   ├── IImageHelper.cs
-│   │   ├── ManagementAdminHelper.cs
-│   │   ├── Messages/
-│   │   │   ├── AdminManagement/
-│   │   │   ├── Common/
-│   │   │   ├── UserManagement/
-│   │   │   ├── MessageRegister.cs
-│   │   │   ├── MessageResponse.cs
-│   │   │   └── README.md
-│   │   ├── PasswordHelper.cs
-│   │   ├── PolicyHelper.cs
-│   │   ├── Role/
-│   │   ├── ServiceHelper.cs
-│   │   ├── User/
-│   │   └── Validation.cs
+│   └── Helpers/                   # Shared utilities and response handlers
+│       ├── ApiResponseHandlerHelper.cs
+│       ├── BedTypeHelper.cs
+│       ├── FileHelper.cs
+│       ├── Hotel/
+│       ├── IImageHelper.cs
+│       ├── ManagementAdminHelper.cs
+│       ├── Messages/
+│       │   ├── AdminManagement/
+│       │   ├── Common/
+│       │   ├── UserManagement/
+│       │   ├── MessageRegister.cs
+│       │   ├── MessageResponse.cs
+│       │   └── README.md
+│       ├── PasswordHelper.cs
+│       ├── PolicyHelper.cs
+│       ├── Role/
+│       ├── RoomManagement/        # ⭐ NEW - Room-specific helpers
+│       │   ├── BedConfigurationHelper.cs
+│       │   └── CapacityHelper.cs
+│       ├── ServiceHelper.cs
+│       ├── User/
+│       └── ValidationHelper.cs    # (renamed from Validation.cs)
 │
 ├── Interfaces/                    # ⭐ Interfaces WITHOUT implementation logic
 │   └── ICrudManage.cs
@@ -81,8 +95,13 @@ HotelBooking.application/
     │   ├── GetRoomAttributeRequestValidator.cs
     │   ├── ManageMenuRequestValidator.cs
     │   └── PagingRequestValidator.cs
+    ├── RequestManagement/         # ⭐ NEW - Request validation rules
+    │   ├── Admin/
+    │   └── Customer/
+    ├── RoomManagement/            # ⭐ NEW - Room type validation rules
+    │   ├── RoomNameSuggestionValidator.cs
+    │   └── RoomTypeValidator.cs
     ├── UserManagement/
-    │   ├── CreateUpgradeRequestValidator.cs
     │   ├── Login/
     │   └── Register/
     └── README.md
@@ -111,26 +130,28 @@ HotelBooking.api/
 ├── Controllers/
 │   └── V1/                        # API Version 1
 │       ├── Admin/                 # Admin endpoints (Require Admin role)
-│       │   ├── AccountController.cs          (User/Owner accounts management)
-│       │   ├── ManagementController.cs       (Amenities, Policies, Services management)
-│       │   ├── RequestOverviewController.cs  (Requests statistics)
-│       │   ├── RoleController.cs             (Role management)
-│       │   └── UpgradeRequestController.cs   (Owner upgrade requests handling)
+│       │   ├── AccountController.cs              (User/Owner accounts management)
+│       │   ├── AdminUpgradeRequestController.cs  (Admin: review/approve/reject upgrade requests)
+│       │   ├── ManagementController.cs           (Amenities, Policies, Services management)
+│       │   ├── RequestOverviewController.cs      (Requests dashboard statistics)
+│       │   └── RoleController.cs                 (Role management)
 │       │
-│       ├── Customer/              # Customer endpoints
-│       │   └── (Empty - will contain APIs for specific Customer functionalities)
+│       ├── Customer/              # Customer-authenticated endpoints
+│       │   └── CustomerUpgradeRequestController.cs  (Customer: submit upgrade requests)
 │       │
-│       └── Public/                # Public endpoints (no auth/basic auth)
-│           ├── AuthenticationController.cs   (Login, Register transactions)
-│           ├── HotelController.cs            (Search, View hotel info)
-│           └── UpgradeRequestController.cs   (Create upgrade request from User)
+│       ├── Owner/                 # Owner-authenticated endpoints
+│       │   └── RoomTypesController.cs            (Room type management for hotel owners)
+│       │
+│       └── Public/                # Public endpoints (no auth required)
+│           ├── AuthenticationController.cs       (Login, Register)
+│           └── HotelController.cs                (Search, View hotel details)
 │
 ├── Middlewares/               # Custom middlewares (e.g., GlobalExceptionMiddleware)
 ├── Filters/                   # Swagger/API filters
-├── Extensions/                # Extension methods for DI, Setup
+├── Extensions/                # Extension methods for DI registration and setup
 ├── Properties/
 │   └── launchSettings.json
-├── appsettings.json               # Configuration
+├── appsettings.json               # Configuration (DB, JWT, Cloudinary)
 └── Program.cs                     # Startup config, DI registration
 ```
 
@@ -138,7 +159,14 @@ HotelBooking.api/
 
 - Admin endpoints: `api/v1/admin/[controller]`
 - Customer endpoints: `api/v1/customer/[controller]`
-- Public endpoints: `api/v1/[controller]` (or public)
+- Owner endpoints: `api/v1/owner/[controller]`
+- Public endpoints: `api/v1/[controller]`
+
+### **Key Changes since v1.2:**
+
+- `UpgradeRequestController.cs` (Admin) → renamed to **`AdminUpgradeRequestController.cs`** for clarity
+- `UpgradeRequestController.cs` (Public) → renamed to **`CustomerUpgradeRequestController.cs`**, moved to `Customer/`
+- Added **`Owner/`** folder with `RoomTypesController.cs` for hotel owner room management
 
 ---
 
@@ -156,27 +184,44 @@ All Controllers and Services have been divided according to Domain-Driven princi
 | **Searchability**          | Related code is in the same directory (DTOs, Services, Helpers)                |
 | **Clear Responsibilities** | Each domain has its own responsibility, reducing bloat in `Services/`          |
 | **Testable**               | Each service is independent, easier to mock                                    |
-| **API Clarity**            | Clear distinction between V1/Admin, V1/Customer, and V1/Public                 |
+| **API Clarity**            | Clear distinction between V1/Admin, V1/Customer, V1/Owner, and V1/Public      |
 | **No Confusion**           | Interfaces containing logic are placed with their services for easier tracking |
 
 ---
 
-## 📝 Next Steps (Planning)
+## 📝 Implementation Status
 
-### Domains to implement next:
+### ✅ Completed Domains:
 
-- **BookingManagement** - Booking process management, payment processing, review system (Pending implementation).
-- **Customer/Owner Management** - Specific functionalities for each user type (might be distributed into controllers within `V1/Customer` or `V1/Owner`).
+| Domain               | Services                                    | API Controllers                         | Status        |
+| -------------------- | ------------------------------------------- | --------------------------------------- | ------------- |
+| **AdminManagement**  | Amenity, Policy, Service, Role, BedType...  | ManagementController, RoleController    | ✅ Complete   |
+| **Auth**             | JwtAuthService                              | AuthenticationController                | ✅ Complete   |
+| **HotelManagement**  | HotelService                                | HotelController (Public)                | ✅ Complete   |
+| **Media**            | PhotoService (Cloudinary)                   | —                                       | ✅ Complete   |
+| **RequestManagement**| AdminUpgradeRequestService, CustomerUpgradeRequestService, RequestOverviewService | AdminUpgradeRequestController, CustomerUpgradeRequestController, RequestOverviewController | ✅ Complete |
+| **RoomManagement**   | RoomTypeService, RoomNameSuggestionService  | RoomTypesController (Owner)             | ✅ Complete   |
+| **UserManagement**   | UserService                                 | AccountController                       | ✅ Complete   |
+
+### 🔄 Pending Domains:
+
+- **BookingManagement** — End-to-end booking flow, payment processing, review system.
+- **Customer Portal** — Customer-specific functionalities (booking history, saved hotels).
 
 ---
 
 ## 🧹 Refactoring Status
 
-The structural transition has been completed for mostly all core modules:
+The structural transition has been completed for all core modules as of v1.3:
 
-- Entirely reorganized `Controllers` to `V1/Admin`, `V1/Customer`, `V1/Public`.
-- Deleted and restructured all `Features` classes in the Application layer into the `Domains/` directory (e.g., `AdminManagement/AmenityService.cs`).
-- Moved supporting logic into `Helpers/` and `Base/` folders.
-- DI now closely follows the architecture.
+- ✅ Entirely reorganized `Controllers` to `V1/Admin`, `V1/Customer`, `V1/Owner`, `V1/Public`
+- ✅ Deleted and restructured all `Features` classes into `Domains/` (e.g., `AdminManagement/AmenityService.cs`)
+- ✅ `RequestManagement` split into `Admin/` and `Customer/` sub-domains
+- ✅ New `RoomManagement` domain added with RoomType and RoomNameSuggestion services
+- ✅ New `RoomManagement` validators added (`RoomTypeValidator.cs`, `RoomNameSuggestionValidator.cs`)
+- ✅ New `RoomManagement/` helpers subfolder added under `Helpers/`
+- ✅ `Validation.cs` renamed to `ValidationHelper.cs` for consistency
+- ✅ Moved supporting logic into `Helpers/` and `Base/` folders
+- ✅ DI now closely follows the architecture
 
 ---
