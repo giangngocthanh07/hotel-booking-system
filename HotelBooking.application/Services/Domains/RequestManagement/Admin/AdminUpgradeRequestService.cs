@@ -200,6 +200,10 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Admin
         {
             try
             {
+                if (requestId <= 0)
+                {
+                    return ResponseFactory.Failure<bool>(StatusCodeResponse.BadRequest, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_ID_INVALID);
+                }
                 var request = await _upgradeRequestRepo.GetByIdAsync(requestId);
                 if (request == null || request.Status != RequestStatusConst.Pending)
                     return ResponseFactory.Failure<bool>(

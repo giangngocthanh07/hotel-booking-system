@@ -677,7 +677,315 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest
     }
     #endregion
 
-    
+    #region REJECT REQUEST TESTS
+    [Fact]
+    public async Task RejectRequest_ValidRequest_ShouldReturnTrue()
+    {
+        // 1. Arrange
+        int requestId = 99;
+        int adminId = 1;
+
+        var validUser = new User
+        {
+            Id = 5,
+            UserName = "testuser"
+        };
+
+        var validRequest = new UpgradeRequest
+        {
+            Id = requestId,
+            UserId = 5,
+            Status = RequestStatusConst.Pending,
+            Address = "123 Default Street",
+            TaxCode = "1234567890",
+            User = validUser
+        };
+
+        // Mock GetByIdAsync success
+        _mockUpgradeRequestRepo.Setup(r => r.GetByIdAsync(requestId))
+            .ReturnsAsync(validRequest);
+
+        // UpdateAsync automatically successs -> no need to mock
+
+        // Mock SaveChangesAsync success --> return 1
+        _mockUnitOfWork.Setup(dbu => dbu.SaveChangesAsync()).ReturnsAsync(1);
+
+        // 2. Act
+        var result = await _service.RejectRequestAsync(requestId, adminId);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Success);
+        result.Message.Should().Be(MessageResponse.RequestManagement.UpgradeRequest.REQUEST_REJECTED_SUCCESS);
+
+        // Verify
+        _mockUpgradeRequestRepo.Verify(r => r.GetByIdAsync(requestId), Times.Once);
+        _mockUpgradeRequestRepo.Verify(r => r.UpdateAsync(It.Is<UpgradeRequest>(req =>
+            req.Id == requestId &&
+            req.Status == RequestStatusConst.Rejected &&
+            req.ApprovedBy == adminId &&
+            req.ApprovedAt != null
+        )), Times.Once);
+
+        Verify_Saved(1);
+    }
+
+    [Fact]
+    public async Task RejectRequest_InvalidRequestId_ShouldReturnBadRequest()
+    {
+        // 1. Arrange
+        int requestId = 0;  // Invalid Request
+        int adminId = 1;
+
+        // 2. Act
+        var result = await _service.RejectRequestAsync(requestId, adminId);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+        result.Message.Should().Be(MessageResponse.RequestManagement.UpgradeRequest.REQUEST_ID_INVALID);
+
+        // Verify
+        _mockUpgradeRequestRepo.Verify(r => r.GetByIdAsync(requestId), Times.Never);
+        Verify_Repo_Never_UpdateAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task RejectRequest_RequestNotFound_ShouldReturnBadRequest()
+    {
+        // 1. Arrange
+        int requestId = 99;
+        int adminId = 1;
+
+        // Mock GetByIdAsync fail --> FAIL FAST
+        _mockUpgradeRequestRepo.Setup(r => r.GetByIdAsync(requestId))
+            .ReturnsAsync((UpgradeRequest)null!);
+
+        // 2. Act
+        var result = await _service.RejectRequestAsync(requestId, adminId);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+        result.Message.Should().Be(MessageResponse.RequestManagement.UpgradeRequest.REQUEST_STATUS_INVALID);
+
+        // Verify
+        _mockUpgradeRequestRepo.Verify(r => r.GetByIdAsync(requestId), Times.Once);
+        Verify_Repo_Never_UpdateAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task RejectRequest_InvalidRequestStatus_ShouldReturnBadRequest()
+    {
+        // 1. Arrange
+        int requestId = 99;
+        int adminId = 1;
+
+        var validUser = new User
+        {
+            Id = 5,
+            UserName = "testuser"
+        };
+
+        var invalidRequest = new UpgradeRequest
+        {
+            Id = requestId,
+            UserId = 5,
+            Status = RequestStatusConst.Approved,
+        };
+
+        // Mock InvalidRequestStatus
+        _mockUpgradeRequestRepo.Setup(r => r.GetByIdAsync(requestId))
+            .ReturnsAsync(invalidRequest);
+
+        // 2. Act
+        var result = await _service.RejectRequestAsync(requestId, adminId);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+        result.Message.Should().Be(MessageResponse.RequestManagement.UpgradeRequest.REQUEST_STATUS_INVALID);
+
+        // Verify
+        _mockUpgradeRequestRepo.Verify(r => r.GetByIdAsync(requestId), Times.Once);
+        Verify_Repo_Never_UpdateAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task RejectRequest_SaveDbFails_ShouldReturnError()
+    {
+        // 1. Arrange
+        int requestId = 99;
+        int adminId = 1;
+
+        var validUser = new User
+        {
+            Id = 5,
+            UserName = "testuser"
+
+        };
+
+        var validRequest = new UpgradeRequest
+        {
+            Id = requestId,
+            UserId = 5,
+            Status = RequestStatusConst.Pending,
+            Address = "123 Default Street",
+            TaxCode = "1234567890",
+            User = validUser
+        };
+
+        // Mock GetByIdAsync success
+        _mockUpgradeRequestRepo.Setup(r => r.GetByIdAsync(requestId))
+            .ReturnsAsync(validRequest);
+
+        // UpdateAsync is success --> no need to mock
+
+        // Mock SaveChanges fails at try --> return 0
+        _mockUnitOfWork.Setup(dbu => dbu.SaveChangesAsync())
+            .ReturnsAsync(0);
+
+        // 2. Act
+        var result = await _service.RejectRequestAsync(requestId, adminId);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.RequestManagement.UpgradeRequest.REQUEST_REJECT_FAILED);
+
+        // Verify
+        _mockUpgradeRequestRepo.Verify(r => r.GetByIdAsync(requestId), Times.Once);
+        Verify_Repo_UpdateAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo, 1);
+
+        Verify_Saved(1);
+    }
+
+    [Fact]
+    public async Task RejectRequest_SystemThrowsExceptionAtGetByIdAsyncFails_ShouldReturnServerError()
+    {
+        // 1. Arrange
+        int requestId = 99;
+        int adminId = 1;
+
+        // Mock fails at GetByIdAsync --> catch --> FAIL FAST
+        _mockUpgradeRequestRepo.Setup(r => r.GetByIdAsync(requestId))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _service.RejectRequestAsync(requestId, adminId);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        _mockUpgradeRequestRepo.Verify(r => r.GetByIdAsync(requestId), Times.Once);
+        Verify_Repo_Never_UpdateAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task RejectRequest_SystemThrowsExceptionAtUpdateAsyncFails_ShouldReturnServerError()
+    {
+        // 1. Arrange
+        int requestId = 99;
+        int adminId = 1;
+
+        // valid user
+        var validUser = new User
+        {
+            Id = 5,
+            UserName = "testuser"
+
+        };
+
+        // valid request
+        var validRequest = new UpgradeRequest
+        {
+            Id = requestId,
+            UserId = 5,
+            Status = RequestStatusConst.Pending,
+            Address = "123 Default Street",
+            TaxCode = "1234567890",
+            User = validUser
+        };
+
+        // Mock GetByIdAsync success
+        _mockUpgradeRequestRepo.Setup(r => r.GetByIdAsync(requestId))
+            .ReturnsAsync(validRequest);
+
+        // Mock UpdateAsync fail
+        _mockUpgradeRequestRepo.Setup(r => r.UpdateAsync(It.IsAny<UpgradeRequest>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _service.RejectRequestAsync(requestId, adminId);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        _mockUpgradeRequestRepo.Verify(r => r.GetByIdAsync(requestId), Times.Once);
+        Verify_Repo_UpdateAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo, 1);
+
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task RejectRequest_SystemThrowsExceptionAtSaveDbFails_ShouldReturnServerError()
+    {
+        // 1. Arrange
+        int requestId = 99;
+        int adminId = 1;
+
+        // valid user
+        var validUser = new User
+        {
+            Id = 5,
+            UserName = "testuser"
+
+        };
+
+        // valid request
+        var validRequest = new UpgradeRequest
+        {
+            Id = requestId,
+            UserId = 5,
+            Status = RequestStatusConst.Pending,
+            Address = "123 Default Street",
+            TaxCode = "1234567890",
+            User = validUser
+        };
+
+        // Mock GetByIdAsync success
+        _mockUpgradeRequestRepo.Setup(r => r.GetByIdAsync(requestId))
+            .ReturnsAsync(validRequest);
+
+        // UpdateAsync automatically success --> no need to mock
+
+        // Mock SaveChangesAsync fail
+        _mockUnitOfWork.Setup(dbu => dbu.SaveChangesAsync())
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _service.RejectRequestAsync(requestId, adminId);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        _mockUpgradeRequestRepo.Verify(r => r.GetByIdAsync(requestId), Times.Once);
+        Verify_Repo_UpdateAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo, 1);
+        Verify_Saved(1);
+
+    }
+
+    #endregion
 
     // HELPERS
     private void MockGetByIdWithUserAsync(UpgradeRequest returnedRequest)
