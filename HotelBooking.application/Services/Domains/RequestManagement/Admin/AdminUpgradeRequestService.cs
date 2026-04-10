@@ -48,12 +48,28 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Admin
                         validation.Errors[0].ErrorMessage);
                 }
 
-                // 2. Build filter expression by status
-                Expression<Func<UpgradeRequest, bool>>? filter = null;
                 if (!string.IsNullOrEmpty(status))
                 {
-                    filter = r => r.Status == status;
+                    var validStatuses = new HashSet<string>
+                    {
+                        RequestStatusConst.Pending,
+                        RequestStatusConst.Approved,
+                        RequestStatusConst.Rejected,
+                        RequestStatusConst.Cancelled,
+                        RequestStatusConst.None
+                    };
+
+                    if (!validStatuses.Contains(status))
+                    {
+                        return ResponseFactory.Failure<PagedResult<UpgradeRequestDTO>>(
+                        StatusCodeResponse.BadRequest,
+                        MessageResponse.RequestManagement.AdminUpgradeRequestService.INVALID_STATUS);
+                    }
                 }
+
+                // 2. Build filter expression by status
+                Expression<Func<UpgradeRequest, bool>>? filter = null;
+                filter = r => r.Status == status;
 
                 // 3. Call Repository with pagination
                 var (items, totalCount) = await _upgradeRequestRepo.GetPagedWithUserAsync(

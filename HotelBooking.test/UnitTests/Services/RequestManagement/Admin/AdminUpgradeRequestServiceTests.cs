@@ -178,20 +178,14 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest
         };
 
         // Mock InvalidValidation
-        var validationFailures = new List<FluentValidation.Results.ValidationFailure>
-            {
-                new FluentValidation.Results.ValidationFailure("Status", MessageResponse.RequestManagement.AdminUpgradeRequestService.INVALID_STATUS)
-            };
-
-        _mockPagingValidator.Setup(v => v.ValidateAsync(It.IsAny<PagingRequest>(), default))
-            .ReturnsAsync(new FluentValidation.Results.ValidationResult(validationFailures));
+        MockPagingValidationSuccess();
 
         // 2. Act
         var result = await _service.GetPagedRequestsAsync(pagingRequest, status);
 
         // 3. Assert
         result.Should().NotBeNull();
-        result.Message.Should().Be(validationFailures.First().ErrorMessage);
+        result.Message.Should().Be(MessageResponse.RequestManagement.AdminUpgradeRequestService.INVALID_STATUS);
         result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
 
         result.Content.Should().BeNull();
