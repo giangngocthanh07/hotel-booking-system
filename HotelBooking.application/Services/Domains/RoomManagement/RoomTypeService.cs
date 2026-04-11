@@ -8,7 +8,7 @@ namespace HotelBooking.application.Services.Domains.RoomManagement
 {
     public interface IRoomTypeService
     {
-        Task<ApiResponse<int>> CreateRoomTypeAsync(RoomTypeCreateDTO request);
+        Task<ApiResponse<RoomTypeResponseDTO>> CreateRoomTypeAsync(RoomTypeCreateDTO request);
     }
 
     public class RoomTypeService : IRoomTypeService
@@ -29,12 +29,12 @@ namespace HotelBooking.application.Services.Domains.RoomManagement
             _attributeFacade = attributeFacade;
             _dbu = dbu;
         }
-        public async Task<ApiResponse<int>> CreateRoomTypeAsync(RoomTypeCreateDTO request)
+        public async Task<ApiResponse<RoomTypeResponseDTO>> CreateRoomTypeAsync(RoomTypeCreateDTO request)
         {
             // 1. GUARD CLAUSE & VALIDATION
             if (request == null)
             {
-                return ResponseFactory.Failure<int>(
+                return ResponseFactory.Failure<RoomTypeResponseDTO>(
                     StatusCodeResponse.BadRequest,
                     MessageResponse.Common.REQUEST_CANNOT_BE_NULL);
             }
@@ -42,25 +42,27 @@ namespace HotelBooking.application.Services.Domains.RoomManagement
             var validationResult = await _validator.ValidateAsync(request);
             if (validationResult.IsValid == false)
             {
-                return ResponseFactory.Failure<int>(StatusCodeResponse.BadRequest, validationResult.Errors[0].ErrorMessage);
+                return ResponseFactory.Failure<RoomTypeResponseDTO>(StatusCodeResponse.BadRequest, validationResult.Errors[0].ErrorMessage);
             }
 
             var ghostIdValidation = await ValidateGhostIdsAsync(request);
             if (!ghostIdValidation.IsValid)
             {
-                return ResponseFactory.Failure<int>(StatusCodeResponse.NotFound, ghostIdValidation.Message);
-            }
-
-            var normalizedRoomTypeName = request.Name.Trim().ToLower();
-
-            var existingRoomType = await _roomTypeRepo.AnyAsync(x => x.HotelId == request.HotelId && x.Name.ToLower() == normalizedRoomTypeName && x.IsDeleted == false);
-            if (existingRoomType)
-            {
-                return ResponseFactory.Failure<int>(StatusCodeResponse.Conflict, MessageResponse.RoomManagement.ROOM_TYPE_ALREADY_EXISTS);
+                return ResponseFactory.Failure<RoomTypeResponseDTO>(StatusCodeResponse.NotFound, ghostIdValidation.Message);
             }
 
             try
             {
+                // 2. BUSINESS LOGIC
+                // a) Lower RoomTypeName
+                var normalizedRoomTypeName = request.Name.Trim().ToLower();
+
+                var existingRoomType = await _roomTypeRepo.AnyAsync(x => x.HotelId == request.HotelId && x.Name.ToLower() == normalizedRoomTypeName && x.IsDeleted == false);
+                if (existingRoomType)
+                {
+                    return ResponseFactory.Failure<RoomTypeResponseDTO>(StatusCodeResponse.Conflict, MessageResponse.RoomManagement.ROOM_TYPE_ALREADY_EXISTS);
+                }
+
                 await _dbu.BeginTransactionAsync();
 
                 var roomType = new RoomType
@@ -107,12 +109,40 @@ namespace HotelBooking.application.Services.Domains.RoomManagement
 
                 await _dbu.CommitTransactionAsync();
 
-                return ResponseFactory.Success(roomType.Id, MessageResponse.Common.CREATE_SUCCESSFULLY);
+                var additionalInfo = string.IsNullOrEmpty(roomType.Additional) ? new RoomTypeAdditionalData() : JsonSerializer.Deserialize<RoomTypeAdditionalData>(roomType.Additional);
+
+                RoomTypeResponseDTO dto = new RoomTypeResponseDTO
+                {
+                    Id = roomType.Id,
+                    HotelId = roomType.HotelId,
+                    Name = roomType.Name,
+                    Description = roomType.Description,
+                    IsDeleted = false,
+                    PricePerNight = roomType.PricePerNight,
+                    AdultCapacity = roomType.AdultCapacity,
+                    ChildCapacity = roomType.ChildCapacity,
+                    UnitTypeId = roomType.UnitTypeId,
+                    QualityId = roomType.QualityId,
+                    RoomViewId = roomType.RoomViewId,
+                    IsPrivateBathroom = roomType.IsPrivateBathroom,
+                    HasBalcony = roomType.HasBalcony,
+                    HasTerrace = roomType.HasTerrace,
+                    CanAddExtraBed = roomType.CanAddExtraBed,
+                    MaxExtraBeds = roomType.MaxExtraBeds,
+                    AreaSqm = roomType.AreaSqm,
+
+                    IsSmokingAllowed = additionalInfo?.IsSmokingAllowed ?? false,
+                    TotalRooms = additionalInfo?.TotalRooms ?? 0,
+                    BedTypes = additionalInfo?.BedTypes ?? new List<BedTypeConfigDTO>()
+
+                };
+
+                return ResponseFactory.Success(dto, MessageResponse.Common.CREATE_SUCCESSFULLY);
             }
             catch (Exception)
             {
                 await _dbu.RollBackTransactionAsync();
-                return ResponseFactory.Failure<int>(StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
+                return ResponseFactory.Failure<RoomTypeResponseDTO>(StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
             }
         }
 
@@ -159,8 +189,6 @@ namespace HotelBooking.application.Services.Domains.RoomManagement
                     return (false, MessageResponse.RoomManagement.ROOM_TYPE_BED_TYPE_NOT_FOUND);
                 }
             }
-
-
             return (true, string.Empty);
         }
     }

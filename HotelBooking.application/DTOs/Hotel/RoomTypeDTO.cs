@@ -17,7 +17,7 @@ public class RoomTypeCreateDTO
     public bool HasTerrace { get; set; } = false;
     public bool CanAddExtraBed { get; set; } = false;
     public int? MaxExtraBeds { get; set; }
-    public float? AreaSqm { get; set; } // in square meters
+    public double? AreaSqm { get; set; } // in square meters
     public bool? IsSmokingAllowed { get; set; } = false;
     public int TotalRooms { get; set; } = 1; // Total number of rooms of this type available in the hotel
 
@@ -61,10 +61,41 @@ public class RoomNameSuggestionRequest
     public List<BedTypeConfigDTO> BedTypes { get; set; } = new();
 }
 
+public class RoomTypeAdditionalData
+{
+    public List<BedTypeConfigDTO> BedTypes { get; set; } = new();
+    public bool IsSmokingAllowed { get; set; }
+    public int TotalRooms { get; set; }
+}
+
 public class RoomAttributeNamesDTO
 {
     public string UnitTypeName { get; set; } = string.Empty;
     public string? QualityName { get; set; }       // nullable  
     public string? RoomViewName { get; set; }       // nullable
     public List<BedTypeNameDTO> BedTypeNames { get; set; } = new();
+}
+
+public class RoomTypeResponseDTO
+{
+    public int Id { get; set; }
+    public int HotelId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public bool? IsDeleted { get; set; }
+    public decimal PricePerNight { get; set; }
+    public int AdultCapacity { get; set; }
+    public int ChildCapacity { get; set; }
+    public int UnitTypeId { get; set; }
+    public int? QualityId { get; set; }
+    public int? RoomViewId { get; set; }
+    public bool IsPrivateBathroom { get; set; }
+    public bool HasBalcony { get; set; }
+    public bool HasTerrace { get; set; }
+    public bool CanAddExtraBed { get; set; }
+    public int? MaxExtraBeds { get; set; }
+    public double? AreaSqm { get; set; } // in square meters
+    public bool? IsSmokingAllowed { get; set; }
+    public int TotalRooms { get; set; }
+    public List<BedTypeConfigDTO> BedTypes { get; set; } = new();
 }

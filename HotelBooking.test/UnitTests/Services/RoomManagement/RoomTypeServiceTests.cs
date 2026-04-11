@@ -64,9 +64,11 @@ namespace HotelBooking.Tests.Services.RoomManagement
             var actualResult = await _service.CreateRoomTypeAsync(request);
 
             // 3. Assert
+            actualResult.Should().NotBeNull();
             actualResult.StatusCode.Should().Be(StatusCodeResponse.Success);
             actualResult.Message.Should().Be(MessageResponse.Common.CREATE_SUCCESSFULLY);
-            actualResult.Content.Should().Be(0); // 
+            actualResult.Content.Should().BeEquivalentTo(request, options => options
+        .ExcludingMissingMembers());
 
             // Verify that validation, hotel existence check, and attribute existence checks were called
             _mockUnitOfWork.Verify(u => u.BeginTransactionAsync(), Times.Once);
@@ -89,6 +91,8 @@ namespace HotelBooking.Tests.Services.RoomManagement
             // 3. Assert
             result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
             result.Message.Should().Be(MessageResponse.Common.REQUEST_CANNOT_BE_NULL);
+            result.Content.Should().BeNull(); // Default value for class when creation fails
+
 
             // Make sure that validation and existence checks were never called
             _mockValidator.Verify(v => v.ValidateAsync(It.IsAny<RoomTypeCreateDTO>(), default), Times.Never);
@@ -121,7 +125,7 @@ namespace HotelBooking.Tests.Services.RoomManagement
             // 3. Assert
             result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
             result.Message.Should().Be(validationFailures.First().ErrorMessage);
-            result.Content.Should().Be(0); // Default value for int when creation fails
+            result.Content.Should().BeNull(); // Default value for class when creation fails
 
             // Verify that validation was called but existence checks were not called
             _mockValidator.Verify(v => v.ValidateAsync(It.IsAny<RoomTypeCreateDTO>(), default), Times.Once);
@@ -151,7 +155,7 @@ namespace HotelBooking.Tests.Services.RoomManagement
             // 3. Assert
             result.StatusCode.Should().Be(StatusCodeResponse.NotFound);
             result.Message.Should().Be(MessageResponse.RoomManagement.ROOM_TYPE_HOTEL_NOT_FOUND);
-            result.Content.Should().Be(0); // Default value for int when creation fails
+            result.Content.Should().BeNull(); // Default value for class when creation fails
 
             // Verify that validation and hotel existence check were called
             _mockUnitOfWork.Verify(u => u.BeginTransactionAsync(), Times.Never);
@@ -183,7 +187,7 @@ namespace HotelBooking.Tests.Services.RoomManagement
             // 3. Assert
             result.StatusCode.Should().Be(StatusCodeResponse.NotFound);
             result.Message.Should().Be(MessageResponse.RoomManagement.ROOM_TYPE_UNIT_TYPE_NOT_FOUND);
-            result.Content.Should().Be(0); // Default value for int when creation fails
+            result.Content.Should().BeNull(); // Default value for class when creation fails
 
             // Verify that validation, hotel existence check, and unit type existence check were called
             _mockUnitOfWork.Verify(u => u.BeginTransactionAsync(), Times.Never);
@@ -216,7 +220,7 @@ namespace HotelBooking.Tests.Services.RoomManagement
             // 3. Assert
             result.StatusCode.Should().Be(StatusCodeResponse.NotFound);
             result.Message.Should().Be(MessageResponse.RoomManagement.ROOM_TYPE_QUALITY_NOT_FOUND);
-            result.Content.Should().Be(0); // Default value for int when creation fails
+            result.Content.Should().BeNull(); // Default value for class when creation fails
 
             // Verify that validation, hotel existence check, unit type existence check, and quality existence check were called
             _mockUnitOfWork.Verify(u => u.BeginTransactionAsync(), Times.Never);
@@ -250,7 +254,7 @@ namespace HotelBooking.Tests.Services.RoomManagement
             // 3. Assert
             result.StatusCode.Should().Be(StatusCodeResponse.NotFound);
             result.Message.Should().Be(MessageResponse.RoomManagement.ROOM_TYPE_ROOM_VIEW_NOT_FOUND);
-            result.Content.Should().Be(0); // Default value for int when creation fails
+            result.Content.Should().BeNull(); // Default value for class when creation fails
 
             // Verify that validation, hotel existence check, unit type existence check, quality existence check, and room view existence check were called
             _mockUnitOfWork.Verify(u => u.BeginTransactionAsync(), Times.Never);
@@ -284,7 +288,7 @@ namespace HotelBooking.Tests.Services.RoomManagement
             // 3. Assert
             result.StatusCode.Should().Be(StatusCodeResponse.NotFound);
             result.Message.Should().Be(MessageResponse.RoomManagement.ROOM_TYPE_BED_TYPE_NOT_FOUND);
-            result.Content.Should().Be(0); // Default value for int when creation fails
+            result.Content.Should().BeNull(); // Default value for class when creation fails
 
             // Verify that validation, hotel existence check, unit type existence check, quality existence check, room view existence check, and bed type existence check were called
             _mockUnitOfWork.Verify(u => u.BeginTransactionAsync(), Times.Never);
@@ -296,7 +300,158 @@ namespace HotelBooking.Tests.Services.RoomManagement
         }
 
         [Fact]
-        public async Task CreateRoomTypeAsync_SaveRoomTypeFailed_ShouldRollbackAndReturnError()
+        public async Task CreateRoomTypeAsync_RoomTypeAlreadyExists_ShouldReturnConflict()
+        {
+            // 1. Arrange
+            MockValidationSuccess();
+            MockAllGhostIdsExist();
+
+            // Mock RoomTypeAlreadyExist
+            _mockRoomTypeRepo
+                .Setup(rt => rt.AnyAsync(It.IsAny<Expression<Func<RoomType, bool>>>()))
+                .ReturnsAsync(true);
+
+            // 2. Act
+            var result = await _service.CreateRoomTypeAsync(new RoomTypeCreateDTO
+            {
+                HotelId = 1,
+                Name = "Room Type Already Exists",
+                Description = "A test room type",
+                IsDeleted = false,
+                PricePerNight = 100,
+                AdultCapacity = 2,
+                ChildCapacity = 0,
+                QualityId = 1,
+                RoomViewId = 1,
+                IsPrivateBathroom = true,
+                HasBalcony = false,
+                HasTerrace = false,
+                CanAddExtraBed = false,
+                MaxExtraBeds = 0,
+                AreaSqm = 20,
+                IsSmokingAllowed = false,
+                TotalRooms = 1,
+                UnitTypeId = 1,
+                BedTypes = new List<BedTypeConfigDTO> { new() { BedTypeId = 1, Quantity = 1 } }
+            });
+
+            // 3. Assert
+            result.StatusCode.Should().Be(StatusCodeResponse.Conflict);
+            result.Message.Should().Be(MessageResponse.RoomManagement.ROOM_TYPE_ALREADY_EXISTS);
+            result.Content.Should().BeNull(); // Default value for class when creation fails)
+
+            // Verify
+            Verify_Repo_AnyAsync<IRoomTypeRepository, RoomType>(_mockRoomTypeRepo);
+            Verify_Repo_Never_AddAsync<IRoomTypeRepository, RoomType>(_mockRoomTypeRepo);
+            Verify_Never_Saved();
+        }
+
+        [Fact]
+        public async Task CreateRoomTypeAsync_SystemThrowExceptionAtAnyAsync_ShouldRollbackAndReturnError()
+        {
+            // 1. Arrange
+            MockValidationSuccess();
+            MockAllGhostIdsExist();
+
+            var request = new RoomTypeCreateDTO
+            {
+                HotelId = 1,
+                Name = "Test Room Type",
+                Description = "A test room type",
+                IsDeleted = false,
+                PricePerNight = 100,
+                AdultCapacity = 2,
+                ChildCapacity = 0,
+                QualityId = 1,
+                RoomViewId = 1,
+                IsPrivateBathroom = true,
+                HasBalcony = false,
+                HasTerrace = false,
+                CanAddExtraBed = false,
+                MaxExtraBeds = 0,
+                AreaSqm = 20,
+                IsSmokingAllowed = false,
+                TotalRooms = 1,
+                UnitTypeId = 1,
+                BedTypes = new List<BedTypeConfigDTO> { new() { BedTypeId = 1, Quantity = 1 } }
+            };
+
+            _mockRoomTypeRepo
+                .Setup(r => r.AnyAsync(It.IsAny<Expression<Func<RoomType, bool>>>()))
+                .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+
+            // 2. Act
+            var result = await _service.CreateRoomTypeAsync(request);
+
+            // 3. Assert
+            result.StatusCode.Should().Be(StatusCodeResponse.Error);
+            result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+            result.Content.Should().BeNull(); // Default value for class when creation fails
+
+            // Verify
+            Verify_Repo_AnyAsync<IRoomTypeRepository, RoomType>(_mockRoomTypeRepo);
+            Verify_Repo_Never_AddAsync<IRoomTypeRepository, RoomType>(_mockRoomTypeRepo);
+            Verify_Never_Saved();
+        }
+
+        [Fact]
+        public async Task CreateRoomTypeAsync_SystemThrowExceptionAtAddAsync_ShouldRollbackAndReturnError()
+        {
+            // 1. Arrange
+            // 1. Arrange
+            MockValidationSuccess();
+            MockAllGhostIdsExist();
+
+            var request = new RoomTypeCreateDTO
+            {
+                HotelId = 1,
+                Name = "Test Room Type",
+                Description = "A test room type",
+                IsDeleted = false,
+                PricePerNight = 100,
+                AdultCapacity = 2,
+                ChildCapacity = 0,
+                QualityId = 1,
+                RoomViewId = 1,
+                IsPrivateBathroom = true,
+                HasBalcony = false,
+                HasTerrace = false,
+                CanAddExtraBed = false,
+                MaxExtraBeds = 0,
+                AreaSqm = 20,
+                IsSmokingAllowed = false,
+                TotalRooms = 1,
+                UnitTypeId = 1,
+                BedTypes = new List<BedTypeConfigDTO> { new() { BedTypeId = 1, Quantity = 1 } }
+            };
+
+            // Mock not existing roomtype
+            _mockRoomTypeRepo
+                .Setup(r => r.AnyAsync(It.IsAny<Expression<Func<RoomType, bool>>>()))
+                .ReturnsAsync(false);
+
+            // Mock AddAsync fail --> FAIL FAST
+            _mockRoomTypeRepo
+                .Setup(r => r.AddAsync(It.IsAny<RoomType>()))
+                .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+            // 2. Act
+            var result = await _service.CreateRoomTypeAsync(request);
+
+            // 3. Assert
+            result.StatusCode.Should().Be(StatusCodeResponse.Error);
+            result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+            result.Content.Should().BeNull(); // Default value for class when creation fails
+
+            // Verify
+            Verify_Repo_AnyAsync<IRoomTypeRepository, RoomType>(_mockRoomTypeRepo);
+            Verify_Repo_AddAsync<IRoomTypeRepository, RoomType>(_mockRoomTypeRepo, 1);
+            Verify_Never_Saved();
+        }
+
+        [Fact]
+        public async Task CreateRoomTypeAsync_SystemThrowExceptionAtSaveChangesAsync_ShouldRollbackAndReturnError()
         {
             // 1. Arrange
             MockValidationSuccess();
@@ -335,11 +490,11 @@ namespace HotelBooking.Tests.Services.RoomManagement
             // 3. Assert
             result.StatusCode.Should().Be(StatusCodeResponse.Error);
             result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
-            result.Content.Should().Be(0); // Default value for int when creation fails
+            result.Content.Should().BeNull(); // Default value for class when creation fails
 
             // Verify that validation, hotel existence check, and attribute existence checks were called
             _mockUnitOfWork.Verify(u => u.BeginTransactionAsync(), Times.Once);
-            Verify_Repo_AddAsync<IRoomTypeRepository, RoomType>(_mockRoomTypeRepo);
+            Verify_Repo_AnyAsync<IRoomTypeRepository, RoomType>(_mockRoomTypeRepo);
             Verify_Repo_Never_AddAsync<IRoomTypeBedConfigRepository, RoomTypeBedConfig>(_mockBedConfigRepo);
             Verify_Saved(1); // Only attempted to save the RoomType before the exception
             _mockUnitOfWork.Verify(u => u.CommitTransactionAsync(), Times.Never);
@@ -347,7 +502,57 @@ namespace HotelBooking.Tests.Services.RoomManagement
         }
 
         [Fact]
-        public async Task CreateRoomTypeAsync_SaveBedConfigFailed_ShouldRollbackAndReturnError()
+        public async Task CreateRoomTypeAsync_SystemThrowExceptionAtAddAsyncBedConfig_ShouldRollbackAndReturnError()
+        {
+            // 1. Arrange
+            MockValidationSuccess();
+            MockAllGhostIdsExist();
+
+            var request = new RoomTypeCreateDTO
+            {
+                HotelId = 1,
+                Name = "Test Room Type",
+                Description = "A test room type",
+                IsDeleted = false,
+                PricePerNight = 100,
+                AdultCapacity = 2,
+                ChildCapacity = 0,
+                QualityId = 1,
+                RoomViewId = 1,
+                IsPrivateBathroom = true,
+                HasBalcony = false,
+                HasTerrace = false,
+                CanAddExtraBed = false,
+                MaxExtraBeds = 0,
+                AreaSqm = 20,
+                IsSmokingAllowed = false,
+                TotalRooms = 1,
+                UnitTypeId = 1,
+                BedTypes = new List<BedTypeConfigDTO> { new() { BedTypeId = 1, Quantity = 1 } }
+            };
+
+            // Mock AddAsync BedType fail --> FAIL FAST
+            _mockBedConfigRepo
+                .Setup(r => r.AddAsync(It.IsAny<RoomTypeBedConfig>()))
+                .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+            // 2. Act
+            var result = await _service.CreateRoomTypeAsync(request);
+
+            // 3. Assert
+            result.StatusCode.Should().Be(StatusCodeResponse.Error);
+            result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+            result.Content.Should().BeNull();
+
+            // Verify
+            Verify_Repo_AnyAsync<IRoomTypeRepository, RoomType>(_mockRoomTypeRepo);
+            Verify_Repo_AddAsync<IRoomTypeRepository, RoomType>(_mockRoomTypeRepo);
+            Verify_Saved(1); // Only attempted to save the RoomType before the exception
+            Verify_Repo_AddAsync<IRoomTypeBedConfigRepository, RoomTypeBedConfig>(_mockBedConfigRepo);
+        }
+
+        [Fact]
+        public async Task CreateRoomTypeAsync_SystemThrowExceptionAtSaveBedConfig_ShouldRollbackAndReturnError()
         {
             // 1. Arrange
             MockValidationSuccess();
@@ -387,10 +592,11 @@ namespace HotelBooking.Tests.Services.RoomManagement
             // 3. Assert
             result.StatusCode.Should().Be(StatusCodeResponse.Error);
             result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
-            result.Content.Should().Be(0); // Default value for int when creation fails
+            result.Content.Should().BeNull(); // Default value for class when creation fails
 
             // Verify that validation, hotel existence check, and attribute existence checks were called
             _mockUnitOfWork.Verify(u => u.BeginTransactionAsync(), Times.Once);
+            Verify_Repo_AnyAsync<IRoomTypeRepository, RoomType>(_mockRoomTypeRepo);
             Verify_Repo_AddAsync<IRoomTypeRepository, RoomType>(_mockRoomTypeRepo);
             Verify_Repo_AddAsync<IRoomTypeBedConfigRepository, RoomTypeBedConfig>(_mockBedConfigRepo, request.BedTypes.Count);
             Verify_Saved(2); // Attempted to save both RoomType and BedConfig before the exception
