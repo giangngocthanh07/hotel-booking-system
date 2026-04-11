@@ -13,7 +13,7 @@ namespace HotelBooking.api.Controllers.V1.Public
     [Route("api/v1/upgrade-requests")]
     [ApiController]
     [Authorize(Roles = "Customer")]
-    [Tags("Public - Upgrade Requests")]
+    [Tags("Customer - Upgrade Requests")]
     public class CustomerUpgradeRequestController : ControllerBase
     {
         private readonly ICustomerUpgradeRequestService _upgradeRequestService;

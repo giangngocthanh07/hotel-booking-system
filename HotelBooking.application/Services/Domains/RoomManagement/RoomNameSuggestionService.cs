@@ -50,6 +50,44 @@ namespace HotelBooking.application.Services.Domains.RoomManagement
                 );
             }
 
+            // 1b) BUSINESS LOGIC VALIDATION
+            var existingUnitType = await _attributeFacade.IsUnitTypeExistedAsync(request.UnitTypeId);
+            if (!existingUnitType)
+            {
+                return ResponseFactory.Failure<List<string>>(StatusCodeResponse.NotFound, MessageResponse.RoomManagement.ROOM_TYPE_UNIT_TYPE_NOT_FOUND);
+            }
+
+            if (request.BedTypes != null)
+            {
+                foreach (var bedType in request.BedTypes)
+                {
+                    var existingBedType = await _attributeFacade.IsBedTypeExistedAsync(bedType.BedTypeId);
+                    if (!existingBedType)
+                    {
+                        return ResponseFactory.Failure<List<string>>(StatusCodeResponse.NotFound, MessageResponse.RoomManagement.ROOM_TYPE_BED_TYPE_NOT_FOUND);
+                    }
+                }
+            }
+
+            if (request.QualityId.HasValue)
+            {
+                var existingQuality = await _attributeFacade.IsRoomQualityExistedAsync(request.QualityId.Value);
+                if (!existingQuality)
+                {
+                    return ResponseFactory.Failure<List<string>>(StatusCodeResponse.NotFound, MessageResponse.RoomManagement.ROOM_TYPE_QUALITY_NOT_FOUND);
+                }
+            }
+
+            if (request.RoomViewId.HasValue)
+            {
+                var existingView = await _attributeFacade.IsRoomViewExistedAsync(request.RoomViewId.Value);
+                if (!existingView)
+                {
+                    return ResponseFactory.Failure<List<string>>(StatusCodeResponse.NotFound, MessageResponse.RoomManagement.ROOM_TYPE_ROOM_VIEW_NOT_FOUND);
+                }
+
+            }
+
             // --- STEP 2: CALL FACADE ---
             // The facade will internally call the necessary services to get attribute names based on the request
             var names = await _attributeFacade.GetRoomAttributeNamesAsync(request);
@@ -82,7 +120,7 @@ namespace HotelBooking.application.Services.Domains.RoomManagement
             // ----- Nullable attributes should be treated as empty strings to avoid "null" appearing in suggestions ----- //
             string quality = names.QualityName ?? string.Empty; // e.g., "Deluxe"
             string view = names.RoomViewName ?? string.Empty; // e.g., "with Sea View"
-            // ------------------------------------------
+                                                              // ------------------------------------------
 
             // ----- CapacityHelper
             string capacityPart = CapacityHelper.FormatCapacity(request.AdultCapacity, request.ChildrenCapacity); // e.g., "2 Adults, 1 Child"

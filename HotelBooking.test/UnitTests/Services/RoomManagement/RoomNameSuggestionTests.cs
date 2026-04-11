@@ -34,6 +34,13 @@ namespace HotelBooking.Tests.Services.RoomManagement
             result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
 
             _mockValidator.Verify(v => v.ValidateAsync(It.IsAny<RoomNameSuggestionRequest>(), default), Times.Never);
+
+            _mockAttributeFacade.Verify(f => f.IsUnitTypeExistedAsync(It.IsAny<int>()), Times.Never);
+
+            _mockAttributeFacade.Verify(v => v.IsBedTypeExistedAsync(It.IsAny<int>()), Times.Never);
+            _mockAttributeFacade.Verify(v => v.IsRoomQualityExistedAsync(It.IsAny<int>()), Times.Never);
+            _mockAttributeFacade.Verify(v => v.IsRoomViewExistedAsync(It.IsAny<int>()), Times.Never);
+
             _mockUnitOfWork.Verify(u => u.BeginTransactionAsync(), Times.Never);
 
             _mockAttributeFacade.Verify(f => f.GetRoomAttributeNamesAsync(It.IsAny<RoomNameSuggestionRequest>()), Times.Never);
@@ -66,12 +73,180 @@ namespace HotelBooking.Tests.Services.RoomManagement
 
             _mockValidator.Verify(v => v.ValidateAsync(It.IsAny<RoomNameSuggestionRequest>(), default), Times.Once);
 
+            _mockAttributeFacade.Verify(f => f.IsUnitTypeExistedAsync(It.IsAny<int>()), Times.Never);
+
+            _mockAttributeFacade.Verify(v => v.IsBedTypeExistedAsync(It.IsAny<int>()), Times.Never);
+            _mockAttributeFacade.Verify(v => v.IsRoomQualityExistedAsync(It.IsAny<int>()), Times.Never);
+            _mockAttributeFacade.Verify(v => v.IsRoomViewExistedAsync(It.IsAny<int>()), Times.Never);
+
             _mockAttributeFacade.Verify(f => f.GetRoomAttributeNamesAsync(It.IsAny<RoomNameSuggestionRequest>()), Times.Never);
 
             _mockUnitOfWork.Verify(u => u.BeginTransactionAsync(), Times.Never);
             _mockUnitOfWork.Verify(u => u.CommitTransactionAsync(), Times.Never);
             _mockUnitOfWork.Verify(u => u.RollBackTransactionAsync(), Times.Never);
         }
+
+        [Fact]
+        public async Task SuggestRoomNamesAsync_UnitTypeNotFound_ShouldReturnNotFound()
+        {
+            // Mock validation to success
+            _mockValidator.Setup(v => v.ValidateAsync(It.IsAny<RoomNameSuggestionRequest>(), default))
+                .ReturnsAsync(new FluentValidation.Results.ValidationResult());
+
+            // 1. Arrange
+            var request = CreateRequest();
+
+            // Mock UnitType NotFound
+            _mockAttributeFacade.Setup(f => f.IsUnitTypeExistedAsync(It.IsAny<int>()))
+                .ReturnsAsync(false);
+
+            // 2. Act
+            var result = await _service.SuggestRoomNamesAsync(request);
+
+            // 3. Assert
+            result.Should().NotBeNull();
+            result.Message.Should().Be(MessageResponse.RoomManagement.ROOM_TYPE_UNIT_TYPE_NOT_FOUND);
+            result.StatusCode.Should().Be(StatusCodeResponse.NotFound);
+
+            // Verify
+            _mockValidator.Verify(v => v.ValidateAsync(It.IsAny<RoomNameSuggestionRequest>(), default), Times.Once);
+            _mockAttributeFacade.Verify(f => f.IsUnitTypeExistedAsync(It.IsAny<int>()), Times.Once);
+
+            _mockAttributeFacade.Verify(v => v.IsBedTypeExistedAsync(It.IsAny<int>()), Times.Never);
+            _mockAttributeFacade.Verify(v => v.IsRoomQualityExistedAsync(It.IsAny<int>()), Times.Never);
+            _mockAttributeFacade.Verify(v => v.IsRoomViewExistedAsync(It.IsAny<int>()), Times.Never);
+
+            _mockAttributeFacade.Verify(v => v.GetRoomAttributeNamesAsync(It.IsAny<RoomNameSuggestionRequest>()), Times.Never);
+
+        }
+
+        [Fact]
+        public async Task SuggestRoomNamesAsync_BedTypeNotFound_ShouldReturnNotFound()
+        {
+            // Mock validation input success
+            _mockValidator.Setup(v => v.ValidateAsync(It.IsAny<RoomNameSuggestionRequest>(), default))
+                .ReturnsAsync(new FluentValidation.Results.ValidationResult());
+
+            // 1. Arrange
+            var request = CreateRequest();
+
+            // Mock UnitTypeId is found
+            _mockAttributeFacade.Setup(f => f.IsUnitTypeExistedAsync(It.IsAny<int>()))
+                .ReturnsAsync(true);
+
+            // Mock BedType NotFound
+            _mockAttributeFacade.Setup(f => f.IsBedTypeExistedAsync(It.IsAny<int>()))
+                .ReturnsAsync(false);
+
+            // 2. Act
+            var result = await _service.SuggestRoomNamesAsync(request);
+
+            // 3. Assert
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be(StatusCodeResponse.NotFound);
+            result.Message.Should().Be(MessageResponse.RoomManagement.ROOM_TYPE_BED_TYPE_NOT_FOUND);
+
+            // Verify
+            _mockValidator.Verify(v => v.ValidateAsync(It.IsAny<RoomNameSuggestionRequest>(), default), Times.Once);
+            _mockAttributeFacade.Verify(f => f.IsUnitTypeExistedAsync(It.IsAny<int>()), Times.Once);
+
+            _mockAttributeFacade.Verify(f => f.IsBedTypeExistedAsync(It.IsAny<int>()), Times.Once);
+
+            _mockAttributeFacade.Verify(f => f.IsRoomQualityExistedAsync(It.IsAny<int>()), Times.Never);
+            _mockAttributeFacade.Verify(f => f.IsRoomViewExistedAsync(It.IsAny<int>()), Times.Never);
+
+            _mockAttributeFacade.Verify(f => f.GetRoomAttributeNamesAsync(It.IsAny<RoomNameSuggestionRequest>()), Times.Never);
+
+        }
+
+        [Fact]
+        public async Task SuggestRoomNamesAsync_QualityNotFound_ShouldReturnNotFound()
+        {
+            // Mock input validation to success
+            _mockValidator.Setup(v => v.ValidateAsync(It.IsAny<RoomNameSuggestionRequest>(), default))
+                .ReturnsAsync(new FluentValidation.Results.ValidationResult());
+
+            // 1. Arrange
+            var request = CreateRequest();
+
+            // Mock UnitTypeId is found
+            _mockAttributeFacade.Setup(f => f.IsUnitTypeExistedAsync(It.IsAny<int>()))
+                .ReturnsAsync(true);
+
+            // Mock BedTypeId is found
+            _mockAttributeFacade.Setup(f => f.IsBedTypeExistedAsync(It.IsAny<int>()))
+                .ReturnsAsync(true);
+
+            // Mock Quality NotFound
+            _mockAttributeFacade.Setup(f => f.IsRoomQualityExistedAsync(It.IsAny<int>()))
+                .ReturnsAsync(false);
+
+            // 2. Act
+            var result = await _service.SuggestRoomNamesAsync(request);
+
+            // 3. Assert
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be(StatusCodeResponse.NotFound);
+            result.Message.Should().Be(MessageResponse.RoomManagement.ROOM_TYPE_QUALITY_NOT_FOUND);
+
+            // Verify
+            _mockValidator.Verify(v => v.ValidateAsync(It.IsAny<RoomNameSuggestionRequest>(), default), Times.Once);
+
+            _mockAttributeFacade.Verify(f => f.IsUnitTypeExistedAsync(It.IsAny<int>()), Times.Once);
+            _mockAttributeFacade.Verify(f => f.IsBedTypeExistedAsync(It.IsAny<int>()), Times.Once);
+
+            _mockAttributeFacade.Verify(f => f.IsRoomQualityExistedAsync(It.IsAny<int>()), Times.Once);
+            _mockAttributeFacade.Verify(f => f.IsRoomViewExistedAsync(It.IsAny<int>()), Times.Never);
+
+            _mockAttributeFacade.Verify(f => f.GetRoomAttributeNamesAsync(It.IsAny<RoomNameSuggestionRequest>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task SuggestRoomNamesAsync_RoomViewNotFound_ShouldReturnNotFound()
+        {
+            // Mock input validation to success
+            _mockValidator.Setup(v => v.ValidateAsync(It.IsAny<RoomNameSuggestionRequest>(), default))
+                .ReturnsAsync(new FluentValidation.Results.ValidationResult());
+
+            // 1. Arrange
+            var request = CreateRequest();
+
+            // Mock UnitTypeId is found
+            _mockAttributeFacade.Setup(f => f.IsUnitTypeExistedAsync(It.IsAny<int>()))
+                .ReturnsAsync(true);
+
+            // Mock BedTypeId is found
+            _mockAttributeFacade.Setup(f => f.IsBedTypeExistedAsync(It.IsAny<int>()))
+                .ReturnsAsync(true);
+
+            // Mock RoomQuality is found
+            _mockAttributeFacade.Setup(f => f.IsRoomQualityExistedAsync(It.IsAny<int>()))
+                .ReturnsAsync(true);
+
+            // Mock RoomView NotFound
+            _mockAttributeFacade.Setup(f => f.IsRoomViewExistedAsync(It.IsAny<int>()))
+                .ReturnsAsync(false);
+
+            // 2. Act
+            var result = await _service.SuggestRoomNamesAsync(request);
+
+            // 3. Assert
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be(StatusCodeResponse.NotFound);
+            result.Message.Should().Be(MessageResponse.RoomManagement.ROOM_TYPE_ROOM_VIEW_NOT_FOUND);
+
+            // Verify
+            _mockValidator.Verify(v => v.ValidateAsync(It.IsAny<RoomNameSuggestionRequest>(), default), Times.Once);
+
+            _mockAttributeFacade.Verify(f => f.IsUnitTypeExistedAsync(It.IsAny<int>()), Times.Once);
+            _mockAttributeFacade.Verify(f => f.IsBedTypeExistedAsync(It.IsAny<int>()), Times.Once);
+            _mockAttributeFacade.Verify(f => f.IsRoomQualityExistedAsync(It.IsAny<int>()), Times.Once);
+
+            _mockAttributeFacade.Verify(f => f.IsRoomViewExistedAsync(It.IsAny<int>()), Times.Once);
+
+            _mockAttributeFacade.Verify(f => f.GetRoomAttributeNamesAsync(It.IsAny<RoomNameSuggestionRequest>()), Times.Never);
+        }
+
 
         [Fact]
         public async Task SuggestRoomNamesAsync_Group1_QualityFocus_ShouldReturnTemplatesABC()
@@ -82,6 +257,9 @@ namespace HotelBooking.Tests.Services.RoomManagement
 
             // 1. Arrange - Group 1: Focus on Quality
             var request = CreateRequest();
+
+            // Mock Business Logic Validation success
+            SetupMockBusinessLogicSuccess();
 
             // Setup mock attribute names based on the request
             SetupMockFacade();
@@ -118,6 +296,9 @@ namespace HotelBooking.Tests.Services.RoomManagement
             // 1. Arrange - Group 2: Focus on Bed Configuration and Quality
             var request = CreateRequest();
 
+            // Mock Business Logic Validation success
+            SetupMockBusinessLogicSuccess();
+
             // Setup mock attribute names based on the request
             SetupMockFacade();
 
@@ -147,6 +328,9 @@ namespace HotelBooking.Tests.Services.RoomManagement
 
             // 1. Arrange - Group 3: Focus on Room View and Capacity
             var request = CreateRequest();
+
+            // Mock Business Logic Validation success
+            SetupMockBusinessLogicSuccess();
 
             // Setup mock attribute names based on the request
             SetupMockFacade();
@@ -185,6 +369,9 @@ namespace HotelBooking.Tests.Services.RoomManagement
             // 1. Arrange - Enable 2 features: Balcony and Private Bathroom
             var request = CreateRequest(hasBalcony: true, isPrivateBathroom: true);
 
+            // Mock Business Logic Validation success
+            SetupMockBusinessLogicSuccess();
+
             // Setup mock attribute names based on the request
             SetupMockFacade();
 
@@ -222,8 +409,11 @@ namespace HotelBooking.Tests.Services.RoomManagement
             _mockValidator.Setup(v => v.ValidateAsync(It.IsAny<RoomNameSuggestionRequest>(), default))
                 .ReturnsAsync(new FluentValidation.Results.ValidationResult());
 
-            // 1. Arrange - Focus vào Capacity
+            // 1. Arrange - Focus in Capacity
             var request = CreateRequest();
+
+            // Mock Business Logic Validation success
+            SetupMockBusinessLogicSuccess();
 
             // Setup mock attribute names based on the request
             SetupMockFacade();
@@ -261,6 +451,9 @@ namespace HotelBooking.Tests.Services.RoomManagement
 
             // 1. Arrange - Full combo
             var request = CreateRequest(hasBalcony: true);
+
+            // Mock Business Logic Validation success
+            SetupMockBusinessLogicSuccess();
 
             // Setup mock attribute names based on the request
             SetupMockFacade();
@@ -336,6 +529,22 @@ namespace HotelBooking.Tests.Services.RoomManagement
             _mockAttributeFacade.Setup(f => f.GetRoomAttributeNamesAsync(It.IsAny<RoomNameSuggestionRequest>()))
                 .ReturnsAsync(mockNamesDTO);
         }
+
+        private void SetupMockBusinessLogicSuccess()
+        {
+            _mockAttributeFacade.Setup(f => f.IsUnitTypeExistedAsync(It.IsAny<int>()))
+                .ReturnsAsync(true);
+
+            _mockAttributeFacade.Setup(f => f.IsBedTypeExistedAsync(It.IsAny<int>()))
+                .ReturnsAsync(true);
+
+            _mockAttributeFacade.Setup(f => f.IsRoomQualityExistedAsync(It.IsAny<int>()))
+                .ReturnsAsync(true);
+
+            _mockAttributeFacade.Setup(f => f.IsRoomViewExistedAsync(It.IsAny<int>()))
+                .ReturnsAsync(true);
+        }
+
     }
 }
 

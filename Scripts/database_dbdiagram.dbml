@@ -1,0 +1,445 @@
+// ============================================================
+// HotelBooking Database Schema — dbdiagram.io (DBML format)
+// Generated: 11-Apr-2026
+// Project  : Hotel_Blazor (CyberSoft Final Project)
+// ============================================================
+
+// ─────────────────────────────────────────
+//  LOOKUP / REFERENCE TABLES
+// ─────────────────────────────────────────
+
+Table Countries {
+  Id          int           [pk, increment]
+  Name        nvarchar(100) [not null, unique]
+  Code        nvarchar(10)
+}
+
+Table Cities {
+  Id          int           [pk, increment]
+  Name        nvarchar(100) [not null]
+  CountryId   int           [not null, ref: > Countries.Id]
+
+  indexes {
+    Name                    [name: 'IX_Cities_Name']
+    (CountryId, Name)       [unique, name: 'UQ_Cities_CountryId_Name']
+  }
+}
+
+Table Roles {
+  Id          int           [pk, increment]
+  Name        nvarchar(50)  [not null, unique]
+  Description nvarchar(255)
+  IsDeleted   bit           [default: false]
+}
+
+// ─────────────────────────────────────────
+//  USERS & AUTH
+// ─────────────────────────────────────────
+
+Table Users {
+  Id            int           [pk, increment]
+  UserName      nvarchar(100) [not null, unique]
+  Email         nvarchar(255) [not null, unique]
+  PasswordHash  nvarchar(255) [not null]
+  FullName      nvarchar(150)
+  PhoneNumber   nvarchar(20)  [not null]
+  AvatarUrl     nvarchar(500)
+  DateOfBirth   date
+  Address       nvarchar(255)
+  TaxCode       nvarchar(50)
+  Additional    nvarchar(max)
+  IsActive      bit           [default: true]
+  IsDeleted     bit           [default: false]
+  CreatedAt     datetime      [default: `getdate()`]
+}
+
+Table UserRoles {
+  UserId      int       [not null, ref: > Users.Id]
+  RoleId      int       [not null, ref: > Roles.Id]
+  CreatedAt   datetime  [default: `getdate()`]
+
+  indexes {
+    (UserId, RoleId) [pk]
+  }
+}
+
+// ─────────────────────────────────────────
+//  UPGRADE REQUEST (Customer → Owner)
+// ─────────────────────────────────────────
+
+Table UpgradeRequests {
+  Id          int           [pk, increment]
+  UserId      int           [not null, ref: > Users.Id]
+  Status      nvarchar(20)  [not null]    // Pending | Approved | Rejected
+  RequestedAt datetime      [not null]
+  ApprovedAt  datetime
+  ApprovedBy  int           [ref: > Users.Id]
+  Address     nvarchar(255)
+  TaxCode     nvarchar(50)
+  Additional  nvarchar(max)
+
+  indexes {
+    Status      [name: 'IX_UpgradeRequests_Status']
+  }
+}
+
+// ─────────────────────────────────────────
+//  ADMIN CONFIGURATION — AMENITIES
+// ─────────────────────────────────────────
+
+Table AmenityTypes {
+  Id          int           [pk, increment]
+  Name        nvarchar(100) [not null]
+  Description nvarchar(255)
+  IsDeleted   bit           [default: false]
+}
+
+Table Amenities {
+  Id          int           [pk, increment]
+  Name        nvarchar(100) [not null, unique]
+  TypeId      int           [not null, ref: > AmenityTypes.Id]
+  IsDeleted   bit           [default: false]
+}
+
+// ─────────────────────────────────────────
+//  ADMIN CONFIGURATION — POLICIES
+// ─────────────────────────────────────────
+
+Table PolicyTypes {
+  Id          int          [pk, increment]
+  Name        nvarchar(50) [not null]
+  IsDeleted   bit          [default: false]
+}
+
+Table Policies {
+  Id          int           [pk, increment]
+  Name        nvarchar(150) [not null, unique]
+  TypeId      int           [not null, ref: > PolicyTypes.Id]
+  Value       nvarchar(max)
+  IsDeleted   bit           [default: false]
+}
+
+// ─────────────────────────────────────────
+//  ADMIN CONFIGURATION — SERVICES
+// ─────────────────────────────────────────
+
+Table ServiceTypes {
+  Id          int           [pk, increment]
+  Name        nvarchar(50)  [not null]
+  Description nvarchar(100)
+  IsDeleted   bit           [default: false]
+}
+
+Table Services {
+  Id          int            [pk, increment]
+  Name        nvarchar(100)  [not null, unique]
+  Description nvarchar(255)
+  Price       decimal(18,2)  [not null]
+  TypeId      int            [not null, ref: > ServiceTypes.Id]
+  IsDeleted   bit            [default: false]
+}
+
+// ─────────────────────────────────────────
+//  ADMIN CONFIGURATION — ROOM ATTRIBUTES
+// ─────────────────────────────────────────
+
+Table BedTypes {
+  Id              int           [pk, increment]
+  Name            nvarchar(100) [not null]
+  Description     nvarchar(100)
+  DefaultCapacity int           [default: 1]
+  IsDeleted       bit           [default: false]
+}
+
+Table RoomViews {
+  Id          int           [pk, increment]
+  Name        nvarchar(100) [not null]
+  Description nvarchar(100)
+  IsDeleted   bit           [default: false]
+}
+
+Table RoomQualityGroups {
+  Id          int           [pk, increment]
+  Name        nvarchar(100) [not null]
+  Description nvarchar(100)
+  SortOrder   int           [default: 0]
+  IsDeleted   bit           [default: false]
+}
+
+Table RoomQualities {
+  Id          int           [pk, increment]
+  Name        nvarchar(100) [not null]
+  Description nvarchar(100)
+  SortOrder   int           [default: 0]
+  TypeId      int           [not null, ref: > RoomQualityGroups.Id]
+  IsDeleted   bit           [default: false]
+}
+
+Table UnitTypes {
+  Id              int           [pk, increment]
+  Name            nvarchar(100) [not null]
+  Description     nvarchar(100)
+  IsEntirePlace   bit           [default: false]
+  IsDeleted       bit           [default: false]
+}
+
+// ─────────────────────────────────────────
+//  HOTELS
+// ─────────────────────────────────────────
+
+Table Hotels {
+  Id            int           [pk, increment]
+  Name          nvarchar(200) [not null]
+  Address       nvarchar(500) [not null]
+  Description   nvarchar(max)
+  CoverImageUrl nvarchar(500)
+  OwnerId       int           [not null, ref: > Users.Id]
+  CityId        int           [ref: > Cities.Id]
+  CountryId     int           [ref: > Countries.Id]
+  IsVerified    bit           [default: false]
+  Status        nvarchar(50)  [default: 'PendingVerification']
+  // Status: PendingVerification | Active | Suspended | Closed
+  Additional    nvarchar(max)
+  IsDeleted     bit           [default: false]
+  CreatedAt     datetime      [default: `getdate()`]
+
+  indexes {
+    OwnerId                         [name: 'IX_Hotels_OwnerId']
+    CityId                          [name: 'IX_Hotels_CityId']
+    CountryId                       [name: 'IX_Hotels_CountryId']
+    (CityId, IsVerified, Status)    [name: 'IX_Hotels_City_Verified_Status']
+  }
+}
+
+Table HotelImages {
+  Id        int           [pk, increment]
+  HotelId   int           [not null, ref: > Hotels.Id]
+  ImageUrl  nvarchar(500) [not null]
+  IsDeleted bit           [default: false]
+
+  indexes {
+    HotelId [name: 'IX_HotelImages_HotelId']
+  }
+}
+
+Table HotelAmenities {
+  HotelId     int       [not null, ref: > Hotels.Id]
+  AmenityId   int       [not null, ref: > Amenities.Id]
+  CreatedAt   datetime  [default: `getdate()`]
+
+  indexes {
+    (HotelId, AmenityId) [pk]
+    HotelId              [name: 'IX_HotelAmenities_HotelId']
+  }
+}
+
+Table HotelPolicies {
+  HotelId    int       [not null, ref: > Hotels.Id]
+  PolicyId   int       [not null, ref: > Policies.Id]
+  CreatedAt  datetime  [default: `getdate()`]
+
+  indexes {
+    (HotelId, PolicyId) [pk]
+    HotelId             [name: 'IX_HotelPolicies_HotelId']
+  }
+}
+
+// ─────────────────────────────────────────
+//  ROOM TYPES & ROOM UNITS
+// ─────────────────────────────────────────
+
+Table RoomTypes {
+  Id                  int            [pk, increment]
+  HotelId             int            [not null, ref: > Hotels.Id]
+  Name                nvarchar(100)  [not null]
+  Description         nvarchar(max)
+  PricePerNight       decimal(18,2)  [not null]
+  Capacity            int            [not null]
+  AdultCapacity       int            [not null]
+  ChildCapacity       int            [not null]
+  UnitTypeId          int            [not null, ref: > UnitTypes.Id]
+  QualityId           int            [ref: > RoomQualities.Id]
+  RoomViewId          int            [ref: > RoomViews.Id]
+  IsPrivateBathroom   bit            [default: true]
+  HasBalcony          bit            [not null]
+  HasTerrace          bit            [not null]
+  CanAddExtraBed      bit            [not null]
+  MaxExtraBeds        int            [default: 0]
+  AreaSqm             float
+  Additional          nvarchar(max)
+  IsDeleted           bit            [default: false]
+
+  indexes {
+    HotelId                               [name: 'IX_RoomTypes_HotelId']
+    (HotelId, AdultCapacity, ChildCapacity) [name: 'IX_RoomTypes_Hotel_Capacity']
+    (HotelId, Name)                       [unique, name: 'UQ_RoomTypes_Name_Hotel']
+  }
+}
+
+Table RoomTypeBedConfigs {
+  Id          int  [pk, increment]
+  RoomTypeId  int  [not null, ref: > RoomTypes.Id]
+  BedTypeId   int  [not null, ref: > BedTypes.Id]
+  Quantity    int  [default: 1]
+}
+
+Table RoomAmenities {
+  RoomTypeId  int       [not null, ref: > RoomTypes.Id]
+  AmenityId   int       [not null, ref: > Amenities.Id]
+  CreatedAt   datetime  [default: `getdate()`]
+
+  indexes {
+    (RoomTypeId, AmenityId) [pk]
+    RoomTypeId              [name: 'IX_RoomAmenities_RoomTypeId']
+  }
+}
+
+Table RoomImages {
+  Id          int           [pk, increment]
+  RoomTypeId  int           [not null, ref: > RoomTypes.Id]
+  ImageUrl    nvarchar(500) [not null]
+  IsDeleted   bit           [default: false]
+
+  indexes {
+    RoomTypeId [name: 'IX_RoomImages_RoomTypeId']
+  }
+}
+
+Table Rooms {
+  Id          int          [pk, increment]
+  RoomTypeId  int          [not null, ref: > RoomTypes.Id]
+  RoomNumber  nvarchar(50) [not null]
+  Status      nvarchar(50) [default: 'Available']
+  // Status: Available | Occupied | Maintenance | Cleaning
+  Additional  nvarchar(max)
+  IsDeleted   bit          [default: false]
+
+  indexes {
+    RoomTypeId                [name: 'IX_Rooms_RoomTypeId']
+    (RoomTypeId, IsDeleted)   [name: 'IX_Rooms_RoomType_IsDeleted']
+  }
+}
+
+// ─────────────────────────────────────────
+//  BOOKINGS
+// ─────────────────────────────────────────
+
+Table Bookings {
+  Id           int            [pk, increment]
+  CustomerId   int            [not null, ref: > Users.Id]
+  HotelId      int            [not null, ref: > Hotels.Id]
+  RoomTypeId   int            [not null, ref: > RoomTypes.Id]
+  CheckInDate  date           [not null]
+  CheckOutDate date           [not null]
+  TotalPrice   decimal(18,2)  [not null]
+  Status       nvarchar(50)   [default: 'PendingPayment']
+  // Status: PendingPayment | Confirmed | CheckedIn | CheckedOut | Cancelled | NoShow
+  Additional   nvarchar(max)
+  IsDeleted    bit            [default: false]
+  CreatedAt    datetime       [default: `getdate()`]
+
+  indexes {
+    CustomerId                              [name: 'IX_Bookings_CustomerId']
+    HotelId                                 [name: 'IX_Bookings_HotelId']
+    (Status, CheckInDate, CheckOutDate)     [name: 'IX_Bookings_Status_Date']
+  }
+}
+
+Table BookingRooms {
+  BookingId   int       [not null, ref: > Bookings.Id]
+  RoomId      int       [not null, ref: > Rooms.Id]
+  CreatedAt   datetime  [default: `getdate()`]
+
+  indexes {
+    (BookingId, RoomId) [pk]
+    BookingId           [name: 'IX_BookingRooms_BookingId']
+    RoomId              [name: 'IX_BookingRooms_RoomId']
+  }
+}
+
+Table BookingServices {
+  Id          int            [pk, increment]
+  BookingId   int            [not null, ref: > Bookings.Id]
+  ServiceId   int            [not null, ref: > Services.Id]
+  Quantity    int            [default: 0]
+  Price       decimal(18,2)  [not null]
+  IsPaid      bit            [default: false]
+  CreatedAt   datetime       [default: `getdate()`]
+}
+
+// ─────────────────────────────────────────
+//  PAYMENTS
+// ─────────────────────────────────────────
+
+Table Payments {
+  Id              int            [pk, increment]
+  BookingId       int            [not null, ref: > Bookings.Id]
+  Amount          decimal(18,2)  [not null]
+  PaymentMethod   nvarchar(50)   [not null]
+  TransactionId   nvarchar(100)  [not null]
+  Status          nvarchar(50)   [default: 'Pending']
+  // Status: Pending | Completed | Failed | Refunded
+  PaidAt          datetime
+  Additional      nvarchar(max)
+
+  indexes {
+    BookingId [name: 'IX_Payments_BookingId']
+  }
+}
+
+// ─────────────────────────────────────────
+//  REVIEWS
+// ─────────────────────────────────────────
+
+Table Reviews {
+  Id          int          [pk, increment]
+  HotelId     int          [not null, ref: > Hotels.Id]
+  CustomerId  int          [not null, ref: > Users.Id]
+  Rating      int          // 1–5
+  Comment     nvarchar(max)
+  Additional  nvarchar(max)
+  IsDeleted   bit          [default: false]
+  CreatedAt   datetime     [default: `getdate()`]
+
+  indexes {
+    HotelId    [name: 'IX_Reviews_HotelId']
+    CustomerId [name: 'IX_Reviews_CustomerId']
+  }
+}
+
+// ─────────────────────────────────────────
+//  MESSAGING & NOTIFICATIONS
+// ─────────────────────────────────────────
+
+Table Messages {
+  Id          int          [pk, increment]
+  SenderId    int          [not null, ref: > Users.Id]
+  ReceiverId  int          [not null, ref: > Users.Id]
+  HotelId     int          [ref: > Hotels.Id]
+  BookingId   int          [ref: > Bookings.Id]
+  Content     nvarchar(max) [not null]
+  SentAt      datetime     [default: `getdate()`]
+  IsRead      bit          [default: false]
+  IsDeleted   bit          [default: false]
+  Additional  nvarchar(max)
+
+  indexes {
+    SenderId   [name: 'IX_Messages_SenderId']
+    ReceiverId [name: 'IX_Messages_ReceiverId']
+    HotelId    [name: 'IX_Messages_HotelId']
+    BookingId  [name: 'IX_Messages_BookingId']
+  }
+}
+
+Table Notifications {
+  Id          int           [pk, increment]
+  UserId      int           [not null, ref: > Users.Id]
+  Message     nvarchar(255) [not null]
+  IsRead      bit           [default: false]
+  IsDeleted   bit           [default: false]
+  CreatedAt   datetime      [default: `getdate()`]
+
+  indexes {
+    UserId [name: 'IX_Notifications_UserId']
+  }
+}
