@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using FluentAssertions;
 using FluentValidation;
 using FluentValidation.Results;
@@ -57,6 +58,7 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
             actualResult.Content.FullName.Should().Be(request.FullName);
             actualResult.Content.Username.Should().Be(request.Username);
 
+            Verify_Repo_SingleOrDefaultAsync<IUserRepository, User>(_mockUserRepo);
             // Verify that AddAsync was called once to add the new user
             _mockUnitOfWork.Verify(x => x.BeginTransactionAsync(), Times.Once);
             Verify_Repo_AddAsync<IUserRepository, User>(_mockUserRepo);
@@ -97,6 +99,8 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
             result.Message.Should().Be(validationFailures.First().ErrorMessage);
             result.Content.Should().BeNull();
 
+            Verify_Repo_Never_SingleOrDefaultAsync<IUserRepository, User>(_mockUserRepo);
+
             _mockUnitOfWork.Verify(x => x.BeginTransactionAsync(), Times.Never);
             Verify_Repo_Never_AddAsync<IUserRepository, User>(_mockUserRepo);
             Verify_Repo_Never_AddAsync<IUserRoleRepository, UserRole>(_mockUserRoleRepo);
@@ -125,7 +129,7 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
                           .ReturnsAsync(new FluentValidation.Results.ValidationResult());
 
             // Mock user repository to return an existing user with the same username
-            MockRepo_Find_Returns<IUserRepository, User>(_mockUserRepo, new User
+            MockRepo_Find_Returns(_mockUserRepo, new User
             {
                 Id = 2,
                 UserName = request.Username,
@@ -147,6 +151,7 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
             actualResult.Message.Should().Be(MessageResponse.UserManagement.Register.USERNAME_EXIST);
             actualResult.Content.Should().BeNull();
 
+            Verify_Repo_SingleOrDefaultAsync<IUserRepository, User>(_mockUserRepo);
             // Verify that AddAsync was never called since registration should fail
             _mockUnitOfWork.Verify(x => x.BeginTransactionAsync(), Times.Never);
             Verify_Repo_Never_AddAsync<IUserRepository, User>(_mockUserRepo);
@@ -175,7 +180,7 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
                           .ReturnsAsync(new FluentValidation.Results.ValidationResult());
 
             // Mock user repository to return an existing user with the same email
-            MockRepo_Find_Returns<IUserRepository, User>(_mockUserRepo, new User
+            MockRepo_Find_Returns(_mockUserRepo, new User
             {
                 Id = 2,
                 UserName = "differentuser",
@@ -197,6 +202,7 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
             actualResult.Message.Should().Be(MessageResponse.UserManagement.Register.EMAIL_EXIST);
             actualResult.Content.Should().BeNull();
 
+            Verify_Repo_SingleOrDefaultAsync<IUserRepository, User>(_mockUserRepo);
             // Verify that AddAsync was never called since registration should fail
             _mockUnitOfWork.Verify(x => x.BeginTransactionAsync(), Times.Never);
             Verify_Repo_Never_AddAsync<IUserRepository, User>(_mockUserRepo);
@@ -207,7 +213,81 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
         }
 
         [Fact]
-        public async Task RegisterCustomer_SaveUserFailed_ShouldRollbackAndReturnError()
+        public async Task RegisterCustomer_SystemThrowException_AtFindUser_ShouldRollbackAndReturnError()
+        {
+            // 1. Arrange
+            var request = new RegisterCustomerDTO
+            {
+                Username = "newuser",
+                FullName = "New User",
+                Email = "new@gmail.com",
+                PhoneNumber = "0912345678",
+                Password = "NewPass@123",
+                ConfirmPassword = "NewPass@123"
+            };
+
+            // Mock validation to succeed
+            _mockRegisterCustomerValidator.Setup(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()))
+                          .ReturnsAsync(new FluentValidation.Results.ValidationResult());
+
+            // Mock Find User by SingleOrDefault fail --> FAIL FAST
+            _mockUserRepo.Setup(u => u.SingleOrDefaultAsync(It.IsAny<Expression<Func<User, bool>>>()))
+                .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+            // 2. Act
+            var result = await _service.RegisterCustomer(request);
+
+            // 3. Assert
+            result.StatusCode.Should().Be(StatusCodeResponse.Error);
+            result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+            result.Content.Should().BeNull();
+
+            // Verify steps
+            Verify_Repo_SingleOrDefaultAsync<IUserRepository, User>(_mockUserRepo);
+            Verify_Repo_Never_AddAsync<IUserRepository, User>(_mockUserRepo);
+            Verify_Repo_Never_AddAsync<IUserRoleRepository, UserRole>(_mockUserRoleRepo);
+            Verify_Never_Saved();
+        }
+
+        [Fact]
+        public async Task RegisterCustomer_SystemThrowException_AtAddUser_ShouldRollbackAndReturnError()
+        {
+            // 1. Arrange
+            var request = new RegisterCustomerDTO
+            {
+                Username = "newuser",
+                FullName = "New User",
+                Email = "new@gmail.com",
+                PhoneNumber = "0912345678",
+                Password = "NewPass@123",
+                ConfirmPassword = "NewPass@123"
+            };
+
+            // Mock validation to succeed
+            _mockRegisterCustomerValidator.Setup(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()))
+                          .ReturnsAsync(new FluentValidation.Results.ValidationResult());
+
+            // Mock AddAsync User fail --> FAIL FAST
+            _mockUserRepo.Setup(x => x.AddAsync(It.IsAny<User>()))
+                .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+            // 2. Act
+            var result = await _service.RegisterCustomer(request);
+
+            // 3. Assert
+            result.StatusCode.Should().Be(StatusCodeResponse.Error);
+            result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+            result.Content.Should().BeNull();
+
+            // Verify steps
+            Verify_Repo_SingleOrDefaultAsync<IUserRepository, User>(_mockUserRepo);
+            Verify_Repo_AddAsync<IUserRepository, User>(_mockUserRepo);
+            Verify_Repo_Never_AddAsync<IUserRoleRepository, UserRole>(_mockUserRoleRepo);
+            Verify_Never_Saved();
+        }
+
+        [Fact]
+        public async Task RegisterCustomer_SystemThrowException_AtSaveUser_ShouldRollbackAndReturnError()
         {
             // 1. Arrange
             var request = new RegisterCustomerDTO
@@ -239,6 +319,8 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
             actualResult.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
             actualResult.Content.Should().BeNull();
 
+            // Verify steps
+            Verify_Repo_SingleOrDefaultAsync<IUserRepository, User>(_mockUserRepo);
             // Verify that AddAsync was called once to add the new user
             _mockUnitOfWork.Verify(x => x.BeginTransactionAsync(), Times.Once);
             Verify_Repo_AddAsync<IUserRepository, User>(_mockUserRepo);
@@ -249,7 +331,43 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
         }
 
         [Fact]
-        public async Task RegisterCustomer_SaveUserRoleFailed_ShouldRollbackAndReturnError()
+        public async Task RegisterCustomer_SystemThrowException_AtAddUserRole_ShouldRollbackAndReturnError()
+        {
+            // 1. Arrange
+            var request = new RegisterCustomerDTO
+            {
+                Username = "testuser",
+                FullName = "Test User",
+                Email = "test@gmail.com",
+                PhoneNumber = "0912345678",
+                Password = "TestPass@123",
+                ConfirmPassword = "TestPass@123"
+            };
+
+            _mockRegisterCustomerValidator.Setup(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()))
+                            .ReturnsAsync(new FluentValidation.Results.ValidationResult());
+
+            // Mock AddAsync UserRole fail --> FAIL FAST
+            _mockUserRoleRepo.Setup(x => x.AddAsync(It.IsAny<UserRole>()))
+                .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+            // 2. Act
+            var result = await _service.RegisterCustomer(request);
+
+            // 3. Assert
+            result.Content.Should().BeNull();
+            result.StatusCode.Should().Be(StatusCodeResponse.Error);
+            result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+            // Verify steps
+            Verify_Repo_SingleOrDefaultAsync<IUserRepository, User>(_mockUserRepo);
+            Verify_Repo_AddAsync<IUserRepository, User>(_mockUserRepo);
+            Verify_Repo_AddAsync<IUserRoleRepository, UserRole>(_mockUserRoleRepo);
+            Verify_Saved(1);
+        }
+
+        [Fact]
+        public async Task RegisterCustomer_SystemThrowException_AtSaveUserRole_ShouldRollbackAndReturnError()
         {
             // 1. Arrange
             var request = new RegisterCustomerDTO
@@ -282,6 +400,8 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
             actualResult.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
             actualResult.Content.Should().BeNull();
 
+            // Verify steps
+            Verify_Repo_SingleOrDefaultAsync<IUserRepository, User>(_mockUserRepo);
             // Verify that AddAsync was called once to add the new user and once for user role
             _mockUnitOfWork.Verify(x => x.BeginTransactionAsync(), Times.Once);
             Verify_Repo_AddAsync<IUserRepository, User>(_mockUserRepo);
@@ -324,6 +444,7 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
             actualResult.Content.FullName.Should().Be(request.FullName);
             actualResult.Content.Username.Should().Be(request.Username);
 
+            Verify_Repo_SingleOrDefaultAsync<IUserRepository, User>(_mockUserRepo);
             // Verify that AddAsync was called once to add the new admin user
             _mockUnitOfWork.Verify(x => x.BeginTransactionAsync(), Times.Once);
             Verify_Repo_AddAsync<IUserRepository, User>(_mockUserRepo);
@@ -364,6 +485,7 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
             result.Message.Should().Be(validationFailures.First().ErrorMessage);
             result.Content.Should().BeNull();
 
+            Verify_Repo_Never_SingleOrDefaultAsync<IUserRepository, User>(_mockUserRepo);
             _mockUnitOfWork.Verify(x => x.BeginTransactionAsync(), Times.Never);
             Verify_Repo_Never_AddAsync<IUserRepository, User>(_mockUserRepo);
             Verify_Repo_Never_AddAsync<IUserRoleRepository, UserRole>(_mockUserRoleRepo);
@@ -391,7 +513,7 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
                           .ReturnsAsync(new FluentValidation.Results.ValidationResult());
 
             // Mock user repository to return an existing admin user
-            MockRepo_Find_Returns<IUserRepository, User>(_mockUserRepo, new User
+            MockRepo_Find_Returns(_mockUserRepo, new User
             {
                 Id = 2,
                 UserName = request.Username,
@@ -413,6 +535,7 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
             actualResult.Message.Should().Be(MessageResponse.UserManagement.Register.USERNAME_EXIST);
             actualResult.Content.Should().BeNull();
 
+            Verify_Repo_SingleOrDefaultAsync<IUserRepository, User>(_mockUserRepo);
             // Verify that AddAsync was never called since registration should fail
             _mockUnitOfWork.Verify(x => x.BeginTransactionAsync(), Times.Never);
             Verify_Repo_Never_AddAsync<IUserRepository, User>(_mockUserRepo);
@@ -442,7 +565,7 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
                           .ReturnsAsync(new FluentValidation.Results.ValidationResult());
 
             // Mock user repository to return an existing admin user
-            MockRepo_Find_Returns<IUserRepository, User>(_mockUserRepo, new User
+            MockRepo_Find_Returns(_mockUserRepo, new User
             {
                 Id = 2,
                 UserName = "differentuser",
@@ -464,6 +587,7 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
             actualResult.Message.Should().Be(MessageResponse.UserManagement.Register.EMAIL_EXIST);
             actualResult.Content.Should().BeNull();
 
+            Verify_Repo_SingleOrDefaultAsync<IUserRepository, User>(_mockUserRepo);
             // Verify that AddAsync was never called since registration should fail
             _mockUnitOfWork.Verify(x => x.BeginTransactionAsync(), Times.Never);
             Verify_Repo_Never_AddAsync<IUserRepository, User>(_mockUserRepo);
@@ -474,7 +598,82 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
         }
 
         [Fact]
-        public async Task RegisterAdmin_SaveUserFailed_ShouldRollbackAndReturnError()
+        public async Task RegisterAdmin_SystemThrowException_AtFindUser_ShouldRollbackAndReturnError()
+        {
+            // 1. Arrange
+            var request = new RegisterAdminDTO
+            {
+                Username = "testuser",
+                FullName = "Test User",
+                Email = "test@gmail.com",
+                PhoneNumber = "0912345678",
+                Password = "TestPass@123",
+                ConfirmPassword = "TestPass@123"
+            };
+
+            // Mock validation to succeed
+            _mockRegisterAdminValidator.Setup(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()))
+                          .ReturnsAsync(new FluentValidation.Results.ValidationResult());
+
+            // Mock Find User by SingleOrDefault fail --> FAIL FAST
+            _mockUserRepo.Setup(u => u.SingleOrDefaultAsync(It.IsAny<Expression<Func<User, bool>>>()))
+                .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+            // 2. Act
+            var result = await _service.RegisterAdmin(request);
+
+            // 3. Assert
+            result.StatusCode.Should().Be(StatusCodeResponse.Error);
+            result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+            result.Content.Should().BeNull();
+
+            // Verify steps
+            Verify_Repo_SingleOrDefaultAsync<IUserRepository, User>(_mockUserRepo);
+
+            Verify_Repo_Never_AddAsync<IUserRepository, User>(_mockUserRepo);
+            Verify_Repo_Never_AddAsync<IUserRoleRepository, UserRole>(_mockUserRoleRepo);
+            Verify_Never_Saved();
+        }
+
+        [Fact]
+        public async Task RegisterAdmin_SystemThrowException_AtAddUser_ShouldRollbackAndReturnError()
+        {
+            // 1. Arrange
+            var request = new RegisterAdminDTO
+            {
+                Username = "testuser",
+                FullName = "Test User",
+                Email = "test@gmail.com",
+                PhoneNumber = "0912345678",
+                Password = "TestPass@123",
+                ConfirmPassword = "TestPass@123"
+            };
+
+            // Mock validation to succeed
+            _mockRegisterAdminValidator.Setup(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()))
+                          .ReturnsAsync(new FluentValidation.Results.ValidationResult());
+
+            // Mock Add User async fail --> FAIL FAST
+            _mockUserRepo.Setup(x => x.AddAsync(It.IsAny<User>()))
+                .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+            // 2. Act
+            var result = await _service.RegisterAdmin(request);
+
+            // 3. Assert
+            result.StatusCode.Should().Be(StatusCodeResponse.Error);
+            result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+            result.Content.Should().BeNull();
+
+            // Verify
+            Verify_Repo_SingleOrDefaultAsync<IUserRepository, User>(_mockUserRepo);
+            Verify_Repo_AddAsync<IUserRepository, User>(_mockUserRepo);
+            Verify_Repo_Never_AddAsync<IUserRoleRepository, UserRole>(_mockUserRoleRepo);
+            Verify_Never_Saved();
+        }
+
+        [Fact]
+        public async Task RegisterAdmin_SystemThrowException_AtSaveUser_ShouldRollbackAndReturnError()
         {
             // 1. Arrange
             var request = new RegisterAdminDTO
@@ -506,6 +705,8 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
             actualResult.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
             actualResult.Content.Should().BeNull();
 
+            // Verify steps
+            Verify_Repo_SingleOrDefaultAsync<IUserRepository, User>(_mockUserRepo);
             // Verify that AddAsync was called once to add the new user
             _mockUnitOfWork.Verify(x => x.BeginTransactionAsync(), Times.Once);
             Verify_Repo_AddAsync<IUserRepository, User>(_mockUserRepo);
@@ -516,7 +717,44 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
         }
 
         [Fact]
-        public async Task RegisterAdmin_SaveUserRoleFailed_ShouldRollbackAndReturnError()
+        public async Task RegisterAdmin_SystemThrowException_AtAddUserRole_ShouldRollbackAndReturnError()
+        {
+            // 1. Arrange
+            var request = new RegisterAdminDTO
+            {
+                Username = "testuser",
+                FullName = "Test User",
+                Email = "test@gmail.com",
+                PhoneNumber = "0912345678",
+                Password = "TestPass@123",
+                ConfirmPassword = "TestPass@123"
+            };
+
+            // Mock validation to succeed
+            _mockRegisterAdminValidator.Setup(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()))
+                            .ReturnsAsync(new FluentValidation.Results.ValidationResult());
+
+            // Mock Add UserRole fail --> FAIL FAST
+            _mockUserRoleRepo.Setup(x => x.AddAsync(It.IsAny<UserRole>()))
+                .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+            // 2. Act
+            var result = await _service.RegisterAdmin(request);
+
+            // 3. Assert
+            result.StatusCode.Should().Be(StatusCodeResponse.Error);
+            result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+            result.Content.Should().BeNull();
+
+            // Verify
+            Verify_Repo_SingleOrDefaultAsync<IUserRepository, User>(_mockUserRepo);
+            Verify_Repo_AddAsync<IUserRepository, User>(_mockUserRepo);
+            Verify_Repo_AddAsync<IUserRoleRepository, UserRole>(_mockUserRoleRepo);
+            Verify_Saved(1);
+        }
+
+        [Fact]
+        public async Task RegisterAdmin_SystemThrowException_AtSaveUserRole_ShouldRollbackAndReturnError()
         {
             // 1. Arrange
             var request = new RegisterAdminDTO
@@ -549,6 +787,8 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
             actualResult.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
             actualResult.Content.Should().BeNull();
 
+            // Verrify steps
+            Verify_Repo_SingleOrDefaultAsync<IUserRepository, User>(_mockUserRepo);
             // Verify that AddAsync was called once to add the new user and once for user role
             _mockUnitOfWork.Verify(x => x.BeginTransactionAsync(), Times.Once);
             Verify_Repo_AddAsync<IUserRepository, User>(_mockUserRepo);

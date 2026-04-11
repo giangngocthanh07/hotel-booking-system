@@ -36,15 +36,16 @@ namespace HotelBooking.application.Services.Domains.UserManagement.Register
                 return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, validationResult.Errors.First().ErrorMessage);
             }
 
-            // 2. Check if the user already exists (by email or username)
-            var existingUser = await _userRepository.SingleOrDefaultAsync(u => u.Email == newCustomer.Email || u.UserName == newCustomer.Username);
-            if (existingUser != null)
-            {
-                return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.Conflict, existingUser.UserName == newCustomer.Username ? MessageResponse.UserManagement.Register.USERNAME_EXIST : MessageResponse.UserManagement.Register.EMAIL_EXIST);
-            }
-
             try
             {
+                // 2. Check if the user already exists (by email or username)
+                var existingUser = await _userRepository.SingleOrDefaultAsync(u => u.Email == newCustomer.Email || u.UserName == newCustomer.Username);
+                if (existingUser != null)
+                {
+                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.Conflict, existingUser.UserName == newCustomer.Username ? MessageResponse.UserManagement.Register.USERNAME_EXIST : MessageResponse.UserManagement.Register.EMAIL_EXIST);
+                }
+
+
                 await _dbu.BeginTransactionAsync();
 
                 User newUser = new User
@@ -99,16 +100,17 @@ namespace HotelBooking.application.Services.Domains.UserManagement.Register
                 return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, validationResult.Errors.First().ErrorMessage);
             }
 
-            // 2. Check if the user already exists (by email or username)
-            var existingUser = await _userRepository.SingleOrDefaultAsync(u => u.Email == newAdmin.Email || u.UserName == newAdmin.Username);
-            if (existingUser != null)
-            {
-                return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.Conflict, existingUser.UserName == newAdmin.Username ? MessageResponse.UserManagement.Register.USERNAME_EXIST : MessageResponse.UserManagement.Register.EMAIL_EXIST);
-            }
-
-            // 3. If validation passes and user doesn't exist, create new User and UserRole entries in a transaction
             try
             {
+                // 2. Check if the user already exists (by email or username)
+                var existingUser = await _userRepository.SingleOrDefaultAsync(u => u.Email == newAdmin.Email || u.UserName == newAdmin.Username);
+                if (existingUser != null)
+                {
+                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.Conflict, existingUser.UserName == newAdmin.Username ? MessageResponse.UserManagement.Register.USERNAME_EXIST : MessageResponse.UserManagement.Register.EMAIL_EXIST);
+                }
+
+                // 3. If validation passes and user doesn't exist, create new User and UserRole entries in a transaction
+
                 await _dbu.BeginTransactionAsync();
 
                 User newUser = new User
