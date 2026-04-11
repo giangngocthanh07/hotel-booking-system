@@ -10,6 +10,7 @@ public static class MessageResponse
     // =====================================================
     public static class Common
     {
+        public const string INVALID_ID = "Invalid ID!";
         // Basic CRUD messages
         public const string GET_SUCCESSFULLY = "Retrieved successfully!";
         public const string GET_FAILED = "Failed to retrieve!";

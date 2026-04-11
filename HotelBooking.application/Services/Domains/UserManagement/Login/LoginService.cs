@@ -14,17 +14,14 @@ namespace HotelBooking.application.Services.Domains.UserManagement.Login
     public class LoginService : ILoginService
     {
         private readonly IUserRepository _userRepository;
-        private readonly JwtAuthService _jwtAuthService;
+        private readonly IJwtAuthService _jwtAuthService;
         private readonly IValidator<LoginUserDTO> _loginValidator;
-        private readonly IUnitOfWork _dbu;
 
-        public LoginService(IUserRepository userRepository, JwtAuthService jwtAuthService, IValidator<LoginUserDTO> loginValidator, IUnitOfWork dbu)
+        public LoginService(IUserRepository userRepository, IJwtAuthService jwtAuthService, IValidator<LoginUserDTO> loginValidator)
         {
             _userRepository = userRepository;
             _jwtAuthService = jwtAuthService;
             _loginValidator = loginValidator;
-
-            _dbu = dbu;
         }
 
         public async Task<ApiResponse<LoginResponseDTO>> LoginUser(LoginUserDTO userLogin)

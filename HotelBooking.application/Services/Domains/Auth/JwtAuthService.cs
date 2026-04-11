@@ -7,7 +7,12 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace HotelBooking.application.Services.Domains.Auth;
 
-public class JwtAuthService
+public interface IJwtAuthService
+{
+    string GenerateToken(User userAfterVerifyPass);
+    (string UserName, List<string> Roles) DecodePayloadToken(string token);
+}
+public class JwtAuthService : IJwtAuthService
 {
     private readonly string? _key;
     private readonly string? _issuer;

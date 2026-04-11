@@ -1,12 +1,5 @@
 using HotelBooking.application.Helpers;
-using FluentValidation;
-using HotelBooking.infrastructure.Models;
-using System.Net.Mail;
-using HotelBooking.application.DTOs.Role;
 using HotelBooking.application.DTOs.User;
-using HotelBooking.application.DTOs.User.Register;
-using HotelBooking.application.DTOs.User.Login;
-using HotelBooking.application.Services.Domains.Auth;
 using HotelBooking.application.Services.Domains.UserManagement.Register;
 using HotelBooking.application.Services.Domains.UserManagement.Login;
 
@@ -41,6 +34,11 @@ namespace HotelBooking.application.Services.Domains.UserManagement
         {
             try
             {
+                if (id <= 0)
+                {
+                    return ResponseFactory.Failure<UserDetailDTO>(StatusCodeResponse.BadRequest, MessageResponse.Common.INVALID_ID);
+                }
+
                 var user = await _userRepository.GetByIdAsync(id);
                 if (user == null)
                 {
