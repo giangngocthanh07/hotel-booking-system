@@ -65,7 +65,7 @@ public class UnitTypeService : BaseManage<UnitType, IUnitTypeRepository, UnitTyp
         return ValidationResult.Success();
     }
 
-    protected override async Task<ValidationResult> ValidateUpdateLogicAsync(UnitTypeUpdateDTO dto, int id)
+    protected override async Task<ValidationResult> ValidateUpdateLogicAsync(UnitTypeUpdateDTO dto, int id, UnitType entity)
     {
         bool exists = await _repo.AnyAsync(x =>
             x.Name == dto.Name &&

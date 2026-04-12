@@ -78,16 +78,10 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
         }
 
         // Override Update Logic: Duplicate name check (excluding current ID)
-        protected override async Task<ValidationResult> ValidateUpdateLogicAsync(AmenityUpdateDTO dto, int id)
+        protected override async Task<ValidationResult> ValidateUpdateLogicAsync(AmenityUpdateDTO dto, int id, Amenity currentEntity)
         {
             {
-                // STEP 1: Fetch the original TypeId from DB (DTO doesn't carry it, and we don't trust user input)
-                // Use AsNoTracking since we only need to read TypeId
-                var currentEntity = await _repo.GetByIdAsync(id);
-
-                if (currentEntity == null) return ValidationResult.Success(); // Let the main Update handle the 404
-
-                // STEP 2: Check for duplicate name but only within the SAME original TypeId
+                // Check for duplicate name but only within the SAME original TypeId
                 bool isDuplicate = await _repo.AnyAsync(x =>
                     x.Name == dto.Name &&
                     x.TypeId == currentEntity.TypeId && // Fetched from DB, not from DTO

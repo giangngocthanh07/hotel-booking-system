@@ -76,16 +76,9 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
             return ValidationResult.Success();
         }
 
-        protected override async Task<ValidationResult> ValidateUpdateLogicAsync(PolicyUpdateDTO dto, int id)
+        protected override async Task<ValidationResult> ValidateUpdateLogicAsync(PolicyUpdateDTO dto, int id, Policy currentEntity)
         {
-            // 1. Fetch the original entity to retrieve TypeId (DTO does not include TypeId)
-            var currentEntity = await _repo.GetByIdAsync(id);
-            if (currentEntity == null || currentEntity.IsDeleted == true) return ValidationResult.Fail(
-                    MessageResponse.Common.NOT_FOUND,
-                    StatusCodeResponse.NotFound
-                ); // Let the main handler process the 404
-
-            // 2. Check for duplicate name (using TypeId from DB)
+            // Check for duplicate name (using TypeId from DB)
             bool exists = await _repo.AnyAsync(x =>
                 x.Name == dto.Name &&
                 x.TypeId == currentEntity.TypeId && // Use original TypeId

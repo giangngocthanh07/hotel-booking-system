@@ -203,6 +203,301 @@ public class AmenityServiceTests : BaseServiceTest
     #endregion
 
     #region UpdateAsync
+    [Fact]
+    public async Task UpdateAsync_ValidRequest_ReturnsSuccess()
+    {
+        // 1. Arrange
+        var amenityId = 1;
+        var updateDTO = new AmenityUpdateDTO
+        {
+            Name = "Amenity 1",
+            Description = "Description 1"
+        };
+
+        MockUpdate_EntityFound(new Amenity { Id = amenityId, Name = "Amenity 1", TypeId = 1, IsDeleted = false });
+        MockUpdateValidation_Success();
+        MockUpdate_BusinessLogic_DuplicateCheck(false);
+
+        // UpdateAsync and SaveChangesAsync automatically success
+
+        // 2. Act
+        var result = await _amenityService.UpdateAsync(amenityId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Success);
+        result.Message.Should().Be(MessageResponse.Common.UPDATE_SUCCESSFULLY);
+
+        // Verify
+        _mockAmenityRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<AmenityUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Once());
+        Verify_Repo_AnyAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
+        Verify_Repo_UpdateAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
+        Verify_Saved(1);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_InvalidId_ReturnsBadRequest()
+    {
+        // 1. Arrange
+        var amenityId = -1;
+        var updateDTO = new AmenityUpdateDTO
+        {
+            Name = "Amenity 1",
+            Description = "Description 1"
+        };
+
+        // 2. Act
+        var result = await _amenityService.UpdateAsync(amenityId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+        result.Message.Should().Be(MessageResponse.AdminManagement.Amenity.INVALID_ID);
+
+        // Verify
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<AmenityUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Never());
+        _mockAmenityRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Never());
+        Verify_Repo_Never_AnyAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
+        Verify_Repo_Never_UpdateAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_IdNotFound_ReturnsBadRequest()
+    {
+        // 1. Arrange
+        var amenityId = 99;
+        var updateDTO = new AmenityUpdateDTO
+        {
+            Name = "Amenity 1",
+            Description = "Description 1"
+        };
+
+        // Mock GetByIdAsync return null
+        _mockAmenityRepo.Setup(x => x.GetByIdAsync(It.IsAny<int>()))
+            .ReturnsAsync((Amenity)null!);
+
+        // 2. Act
+        var result = await _amenityService.UpdateAsync(amenityId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.NotFound);
+        result.Message.Should().Be(MessageResponse.Common.NOT_FOUND);
+
+        // Verify
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<AmenityUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Never());
+        _mockAmenityRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        Verify_Repo_Never_AnyAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
+        Verify_Repo_Never_UpdateAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_InvalidRequest_ReturnsBadRequest()
+    {
+        // 1. Arrange
+        var amenityId = 1;
+
+        // Mock GetByIdAsync is not null
+        MockUpdate_EntityFound(new Amenity { Id = amenityId, Name = "Amenity 1", TypeId = 1, IsDeleted = false });
+
+        var updateDTO = new AmenityUpdateDTO
+        {
+            Name = "",
+            Description = "Description 1"
+        };
+
+        var validationFailure = new List<ValidationFailure>
+        {
+            new ValidationFailure("Name", MessageResponse.AdminManagement.Amenity.EMPTY_NAME)
+        };
+
+        _mockUpdateValidator.Setup(x => x.ValidateAsync(It.IsAny<AmenityUpdateDTO>(), default))
+            .ReturnsAsync(new FluentValidation.Results.ValidationResult(validationFailure));
+
+        // 2. Act
+        var result = await _amenityService.UpdateAsync(amenityId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+        result.Message.Should().Be(validationFailure.First().ErrorMessage);
+
+        // Verify
+        _mockAmenityRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<AmenityUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Once());
+        Verify_Repo_Never_AnyAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
+        Verify_Repo_Never_UpdateAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtValidateUpdateLogicAsync_ReturnsServerError()
+    {
+        // 1. Arrange
+        var amenityId = 1;
+        var updateDTO = new AmenityUpdateDTO
+        {
+            Name = "Amenity 1",
+            Description = "Description 1"
+        };
+
+        MockUpdate_EntityFound(new Amenity { Id = amenityId, Name = "Amenity 1", IsDeleted = false, TypeId = 1 });
+        MockUpdateValidation_Success();
+
+        // Mock AnyAsync throw Exception
+        _mockAmenityRepo.Setup(x => x.AnyAsync(It.IsAny<Expression<Func<Amenity, bool>>>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _amenityService.UpdateAsync(amenityId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockAmenityRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<AmenityUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Once());
+        Verify_Repo_AnyAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
+
+        Verify_Repo_Never_UpdateAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtGetByIdAsync_ReturnsServerError()
+    {
+        // 1. Arrange
+        var amenityId = 1;
+        var updateDTO = new AmenityUpdateDTO { Name = "Amenity 1", Description = "Description 1" };
+
+        // Mock GetByIdAsync throw Exception
+        _mockAmenityRepo.Setup(x => x.GetByIdAsync(It.IsAny<int>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _amenityService.UpdateAsync(amenityId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockAmenityRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<AmenityUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Never);
+        Verify_Repo_Never_AnyAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
+        Verify_Repo_Never_UpdateAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtAnyAsync_ReturnsServerError()
+    {
+        // 1. Arrange
+        var amenityId = 1;
+        var updateDTO = new AmenityUpdateDTO
+        {
+            Name = "Amenity 1",
+            Description = "Description 1"
+        };
+
+        MockUpdate_EntityFound(new Amenity { Id = amenityId, Name = "Amenity 1", TypeId = 1, IsDeleted = false });
+
+        MockUpdateValidation_Success();
+
+        // Mock AnyAsync throw Exception
+        _mockAmenityRepo.Setup(x => x.AnyAsync(It.IsAny<Expression<Func<Amenity, bool>>>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _amenityService.UpdateAsync(amenityId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockAmenityRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<AmenityUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Once());
+        Verify_Repo_AnyAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
+        Verify_Repo_Never_UpdateAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtUpdateAsync_ReturnsServerError()
+    {
+        // 1. Arrange
+        var amenityId = 1;
+        var updateDTO = new AmenityUpdateDTO
+        {
+            Name = "Amenity 1",
+            Description = "Description 1"
+        };
+
+        MockUpdate_EntityFound(new Amenity { Id = amenityId, Name = "Amenity 1", IsDeleted = false, TypeId = 1 });
+        MockUpdateValidation_Success();
+        MockUpdate_BusinessLogic_DuplicateCheck(false);
+
+        _mockAmenityRepo.Setup(x => x.UpdateAsync(It.IsAny<Amenity>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _amenityService.UpdateAsync(amenityId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockAmenityRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<AmenityUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Once);
+        Verify_Repo_AnyAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
+        Verify_Repo_UpdateAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtSaveChangesAsync_ReturnsServerError()
+    {
+        // 1. Arrange
+        var amenityId = 1;
+        var updateDTO = new AmenityUpdateDTO
+        {
+            Name = "Amenity 1",
+            Description = "Description 1"
+        };
+
+        MockUpdate_EntityFound(new Amenity { Id = amenityId, Name = "Amenity 1", IsDeleted = false, TypeId = 1 });
+        MockUpdateValidation_Success();
+        MockUpdate_BusinessLogic_DuplicateCheck(false);
+
+        // Mock SaveChangesAsync throw Exception
+        _mockUnitOfWork.Setup(dbu => dbu.SaveChangesAsync())
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _amenityService.UpdateAsync(amenityId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockAmenityRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<AmenityUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Once());
+        Verify_Repo_AnyAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
+        Verify_Repo_UpdateAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
+        Verify_Saved(1);
+    }
     #endregion
 
     #region GetAmenitiesByTypeAsync
@@ -543,20 +838,20 @@ public class AmenityServiceTests : BaseServiceTest
             .ReturnsAsync(isDuplicate);
     }
 
-    private void MockUpdateValidationSuccess()
+    private void MockUpdate_EntityFound(Amenity entity)
+    {
+        _mockAmenityRepo.Setup(x => x.GetByIdAsync(entity.Id))
+            .ReturnsAsync(entity);
+    }
+
+    private void MockUpdateValidation_Success()
     {
         _mockUpdateValidator.Setup(x => x.ValidateAsync(It.IsAny<AmenityUpdateDTO>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new FluentValidation.Results.ValidationResult());
     }
 
-    private void MockUpdateLogicValidationSuccess(Amenity? existingAmenity = null, bool isDuplicate = false)
+    private void MockUpdate_BusinessLogic_DuplicateCheck(bool isDuplicate)
     {
-        var amenity = existingAmenity ?? new Amenity { Id = 1, Name = "Amenity 1", TypeId = 1, IsDeleted = false };
-
-        _mockAmenityRepo.Setup(x => x.GetByIdAsync(It.IsAny<int>()))
-            .ReturnsAsync(amenity);
-
-        // Duplicate
         _mockAmenityRepo.Setup(x => x.AnyAsync(It.IsAny<Expression<Func<Amenity, bool>>>()))
             .ReturnsAsync(isDuplicate);
     }

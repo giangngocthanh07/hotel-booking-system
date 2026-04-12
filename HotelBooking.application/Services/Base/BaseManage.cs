@@ -52,7 +52,7 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateDTO, TUpdateDTO> :
     }
 
     // Validate business logic for Update (e.g., check duplicate name excluding current ID)
-    protected virtual async Task<ValidationResult> ValidateUpdateLogicAsync(TUpdateDTO dto, int id)
+    protected virtual async Task<ValidationResult> ValidateUpdateLogicAsync(TUpdateDTO dto, int id, TEntity entity)
     {
         return await Task.FromResult(new ValidationResult()); // Valid by default
     }
@@ -137,6 +137,10 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateDTO, TUpdateDTO> :
     {
         try
         {
+            if (id <= 0)
+            {
+                return ResponseFactory.Failure<TDto>(StatusCodeResponse.BadRequest, MessageResponse.AdminManagement.Amenity.INVALID_ID);
+            }
             // A. Check existence
             var entity = await _repo.GetByIdAsync(id);
             if (entity == null)
@@ -162,7 +166,7 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateDTO, TUpdateDTO> :
             }
 
             // C. Business Logic
-            var logicResult = await ValidateUpdateLogicAsync(updateDto, id);
+            var logicResult = await ValidateUpdateLogicAsync(updateDto, id, entity);
             if (!logicResult.IsValid)
                 return ResponseFactory.Failure<TDto>(logicResult.StatusCode, logicResult.Message);
 

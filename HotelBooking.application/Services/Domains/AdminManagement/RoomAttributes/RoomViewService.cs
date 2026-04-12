@@ -53,7 +53,7 @@ public class RoomViewService : BaseManage<RoomView, IRoomViewRepository, RoomVie
         return ValidationResult.Success();
     }
 
-    protected override async Task<ValidationResult> ValidateUpdateLogicAsync(RoomViewUpdateDTO dto, int id)
+    protected override async Task<ValidationResult> ValidateUpdateLogicAsync(RoomViewUpdateDTO dto, int id, RoomView entity)
     {
         bool exists = await _repo.AnyAsync(x =>
             x.Name == dto.Name &&

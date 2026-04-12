@@ -66,12 +66,8 @@ public class RoomQualityService : BaseManage<RoomQuality, IRoomQualityRepository
         return ValidationResult.Success();
     }
 
-    protected override async Task<ValidationResult> ValidateUpdateLogicAsync(RoomQualityUpdateDTO dto, int id)
+    protected override async Task<ValidationResult> ValidateUpdateLogicAsync(RoomQualityUpdateDTO dto, int id, RoomQuality currentEntity)
     {
-        // Get original entity to know which group it belongs to
-        var currentEntity = await _repo.GetByIdAsync(id);
-        if (currentEntity == null) return ValidationResult.Success();
-
         // Check for duplicate name (Using original TypeId from DB)
         bool exists = await _repo.AnyAsync(x =>
             x.Name == dto.Name &&

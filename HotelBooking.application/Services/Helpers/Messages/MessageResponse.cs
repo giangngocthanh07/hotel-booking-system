@@ -64,6 +64,7 @@ public static class MessageResponse
         // Amenity Messages
         public static class Amenity
         {
+            public const string INVALID_ID = "Invalid ID!";
             public const string EMPTY_NAME = "Amenity name must not be empty!";
             public const string LONG_NAME = "Amenity name is too long (max 20 characters)!";
             public const string EMPTY_TYPE = "Amenity type must not be empty!";

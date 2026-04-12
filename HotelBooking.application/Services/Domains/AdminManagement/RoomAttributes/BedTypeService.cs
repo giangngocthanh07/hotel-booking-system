@@ -79,7 +79,7 @@ public class BedTypeService : BaseManage<BedType, IBedTypeRepository, BedTypeDTO
         return ValidationResult.Success();
     }
 
-    protected override async Task<ValidationResult> ValidateUpdateLogicAsync(BedTypeUpdateDTO dto, int id)
+    protected override async Task<ValidationResult> ValidateUpdateLogicAsync(BedTypeUpdateDTO dto, int id, BedType currentEntity)
     {
         // Check for duplicate name (Only within BedType group, excluding itself)
         bool isDuplicate = await _repo.AnyAsync(x =>

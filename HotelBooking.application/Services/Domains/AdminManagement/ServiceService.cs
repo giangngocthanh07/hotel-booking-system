@@ -91,24 +91,14 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
             return ValidationResult.Success();
         }
 
-        protected override async Task<ValidationResult> ValidateUpdateLogicAsync(ServiceUpdateDTO dto, int id)
+        protected override async Task<ValidationResult> ValidateUpdateLogicAsync(ServiceUpdateDTO dto, int id, Service currentEntity)
         {
             // UpdateDTO does not include TypeId -> must fetch from DB to determine scope for duplicate check
-            // 1. Fetch current entity from DB
-            var currentEntity = await _repo.GetByIdAsync(id);
-            // If entity is null or IsDeleted == true, return NotFound
-            if (currentEntity == null || currentEntity.IsDeleted == true)
-            {
-                return ValidationResult.Fail(
-                    MessageResponse.Common.NOT_FOUND,
-                    StatusCodeResponse.NotFound
-                );
-            }
 
-            // 2. Determine expected TypeId from the DTO type
+            // 1. Determine expected TypeId from the DTO type
             int? expectedTypeId = ServiceHelper.GetTypeIdFromUpdateDto(dto);
 
-            // 3. Cross-check: if the DB Service belongs to a different type than the calling endpoint (DTO)
+            // 2. Cross-check: if the DB Service belongs to a different type than the calling endpoint (DTO)
             if (expectedTypeId.HasValue && currentEntity.TypeId != expectedTypeId.Value)
             {
                 return ValidationResult.Fail(
