@@ -28,7 +28,7 @@
             <label class="glass-nav-label">
                 <i class="bi bi-tags-fill me-2"></i>Category
             </label>
-            @* Dùng biến --admin-cyan từ site.css *@
+            @* Uses --admin-cyan variable from site.css *@
             <select class="form-select glass-select-nav category-highlight" value="@CurrentTypeId"
                     @onchange="OnTypeChanged">
                 @foreach (var t in _types)
@@ -41,7 +41,7 @@
     else if (_isLoading)
     {
         <div class="text-center py-3">
-            @* Spinner dùng màu primary của hệ thống *@
+            @* System spinner using primary color *@
             <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
             <div class="small text-muted mt-1">Loading menu...</div>
         </div>
@@ -56,7 +56,7 @@
     .glass-nav-label {
         font-size: 0.75rem;
         font-weight: 800;
-        /* Sử dụng biến text-muted từ site.css */
+        /* Uses --text-muted variable from site.css */
         color: var(--text-muted);
         text-transform: uppercase;
         letter-spacing: 1px;
@@ -66,7 +66,7 @@
     }
 
     .glass-select-nav {
-        /* Sử dụng các biến Glassmorphism từ site.css */
+        /* Uses Glassmorphism variables from site.css */
         background: var(--glass-bg-deep) !important;
         border: 1.5px solid #cbd5e1 !important;
         border-radius: 14px !important;
@@ -78,7 +78,7 @@
     }
 
     .glass-select-nav:focus {
-        /* Dùng màu admin-blue từ site.css */
+        /* Uses admin-blue color from site.css */
         border-color: var(--admin-blue) !important;
         box-shadow: 0 0 0 4px rgba(0, 96, 230, 0.1) !important;
         background: #ffffff !important;
@@ -86,7 +86,7 @@
 
     .category-highlight {
         background: #fff !important;
-        /* Dùng màu admin-cyan làm viền nhấn cho Category */
+        /* Uses admin-cyan border highlight for Category */
         border-color: var(--admin-cyan) !important;
     }
 </style>

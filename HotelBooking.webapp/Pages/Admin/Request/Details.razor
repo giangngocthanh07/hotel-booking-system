@@ -70,7 +70,7 @@
                             <div class="col-md-6">
                                 <label class="custom-form-label">Verification Status</label>
                                 <div class="status-badge-container mt-1">
-                                    @* FIX: Sử dụng class badge-fixed-layout để căn chỉnh và đổi màu chữ *@
+                                    @* FIX: Use badge-fixed-layout class for alignment and text color *@
                                     <span
                                         class="status-pill-modern badge-fixed-layout @GetStatusBadgeClass(request.Status) force-gpu">
                                         <i class="@GetStatusIcon(request.Status) me-2"></i> @request.Status.ToUpper()

@@ -67,10 +67,9 @@ public static class MessageResponse
             public const string INVALID_ID = "Invalid ID!";
             public const string EMPTY_NAME = "Amenity name must not be empty!";
             public const string LONG_NAME = "Amenity name is too long (max 20 characters)!";
-            public const string EMPTY_TYPE = "Amenity type must not be empty!";
+            public const string EMPTY_TYPE_OR_GREATER_THAN_ZERO = "Amenity type must not be empty or less than 1!";
             public const string NAME_ALREADY_EXISTS = "Amenity name already exists!";
             public const string INVALID_TYPE = "Invalid amenity type!";
-            public const string GREATER_THAN_ZERO = "Value must be greater than 0!";
         }
 
         // Policy Messages

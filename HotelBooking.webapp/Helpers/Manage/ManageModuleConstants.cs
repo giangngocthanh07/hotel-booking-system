@@ -3,24 +3,24 @@ using HotelBooking.webapp.ViewModels.Admin;
 namespace HotelBooking.webapp.Helpers;
 
 /// <summary>
-/// Constants và helper methods cho Admin Management modules.
-/// Thay thế hardcode strings trong GlobalNavMenu.
+/// Constants and helper methods for Admin Management modules.
+/// Replaces hardcoded strings in GlobalNavMenu.
 /// </summary>
 public static class ManageModuleConstants
 {
     /// <summary>
-    /// Thông tin của từng module
+    /// Module information record
     /// </summary>
     public record ModuleInfo(
         ManageModuleEnum Module,
         string DisplayName,
         string Route,
         string Icon,
-        bool HasTypes // Có dropdown phân loại không?
+        bool HasTypes // Has type dropdown?
     );
 
     /// <summary>
-    /// Danh sách tất cả modules với thông tin chi tiết
+    /// Full list of all modules with details
     /// </summary>
     private static readonly List<ModuleInfo> _modules = new()
     {
@@ -34,18 +34,18 @@ public static class ManageModuleConstants
     };
 
     /// <summary>
-    /// Lấy tất cả modules
+    /// Get all modules
     /// </summary>
     public static IReadOnlyList<ModuleInfo> GetAll() => _modules;
 
     /// <summary>
-    /// Lấy thông tin module theo enum
+    /// Get module info by enum
     /// </summary>
     public static ModuleInfo? GetInfo(ManageModuleEnum module) 
         => _modules.FirstOrDefault(m => m.Module == module);
 
     /// <summary>
-    /// Lấy thông tin module theo tên string (case-insensitive)
+    /// Get module info by string name (case-insensitive)
     /// </summary>
     public static ModuleInfo? GetInfo(string moduleName)
     {
@@ -57,25 +57,25 @@ public static class ManageModuleConstants
     }
 
     /// <summary>
-    /// Lấy display name
+    /// Get display name
     /// </summary>
     public static string GetDisplayName(ManageModuleEnum module) 
         => GetInfo(module)?.DisplayName ?? module.ToString();
 
     /// <summary>
-    /// Lấy route URL
+    /// Get route URL
     /// </summary>
     public static string GetRoute(ManageModuleEnum module) 
         => GetInfo(module)?.Route ?? $"/admin/manage/{module.ToString().ToLower()}";
 
     /// <summary>
-    /// Lấy icon class
+    /// Get icon class
     /// </summary>
     public static string GetIcon(ManageModuleEnum module) 
         => GetInfo(module)?.Icon ?? "fa-solid fa-cog";
 
     /// <summary>
-    /// Kiểm tra module có dropdown Types không
+    /// Check if module has type dropdown
     /// </summary>
     public static bool HasTypes(ManageModuleEnum module) 
         => GetInfo(module)?.HasTypes ?? false;

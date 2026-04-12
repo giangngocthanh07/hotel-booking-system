@@ -5,6 +5,7 @@ using FluentValidation.Results;
 using HotelBooking.application.DTOs.Role;
 using HotelBooking.application.DTOs.User.Login;
 using HotelBooking.application.Helpers;
+using HotelBooking.application.Helpers.Infrastructure;
 using HotelBooking.application.Services.Domains.Auth;
 using HotelBooking.application.Services.Domains.UserManagement.Login;
 using HotelBooking.infrastructure.Models;
@@ -39,6 +40,13 @@ public class LoginServiceTests : BaseServiceTest
             Password = "ValidPass@123"
         };
 
+        _mockLoginValidator.Setup(v => v.Validate(input))
+        .Returns(new FluentValidation.Results.ValidationResult());
+
+        var mockToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.MockToken";
+        _mockJwtAuthService.Setup(j => j.GenerateToken(It.IsAny<User>()))
+            .Returns(mockToken);
+
         // Mock DB returning a user with roles
         var user = new User
         {
@@ -63,6 +71,7 @@ public class LoginServiceTests : BaseServiceTest
         result.StatusCode.Should().Be(StatusCodeResponse.Success);
         result.Message.Should().Be(MessageResponse.UserManagement.Login.SUCCESS);
         result.Content.Should().NotBeNull();
+        result.Content.AccessToken.Should().Be(mockToken);
     }
 
     [Fact]

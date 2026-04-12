@@ -262,7 +262,7 @@
     private string? errorMessage;
     private HttpClient? _httpClient;
     private bool rememberMe = false;
-    private bool isSubmitting = false; // Thêm trạng thái loading cho nút bấm
+    private bool isSubmitting = false; // Track loading state for the submit button
 
     protected override async Task OnInitializedAsync()
     {

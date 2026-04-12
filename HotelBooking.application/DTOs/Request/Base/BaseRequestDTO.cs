@@ -102,12 +102,12 @@ public static class RequestStatusConst
 public static class RequestTypeExtensions
 {
     /// <summary>
-    /// Get Vietnamese display name
+    /// Get display name
     /// </summary>
     public static string GetDisplayName(this RequestType type) => type switch
     {
-        RequestType.UpgradeOwner => "Nâng cấp Owner",
-        RequestType.HotelApproval => "Duyệt khách sạn",
+        RequestType.UpgradeOwner => "Upgrade to Owner",
+        RequestType.HotelApproval => "Hotel Approval",
         _ => type.ToString()
     };
 

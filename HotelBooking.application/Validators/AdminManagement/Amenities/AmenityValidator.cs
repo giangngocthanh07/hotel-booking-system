@@ -6,6 +6,8 @@ public class AmenityCreateValidator : AbstractValidator<AmenityCreateDTO>
 {
     public AmenityCreateValidator()
     {
+        RuleLevelCascadeMode = CascadeMode.Stop;
+
         // 1. Validate Name
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage(MessageResponse.AdminManagement.Amenity.EMPTY_NAME)
@@ -13,11 +15,11 @@ public class AmenityCreateValidator : AbstractValidator<AmenityCreateDTO>
 
         // 2a. Validate TypeId must not be empty (REQUIRED for creation)
         RuleFor(x => x.TypeId)
-            .NotEmpty().WithMessage(MessageResponse.AdminManagement.Amenity.EMPTY_TYPE);
+            .NotEmpty().WithMessage(MessageResponse.AdminManagement.Amenity.EMPTY_TYPE_OR_GREATER_THAN_ZERO);
 
         // 2b. Validate TypeId must be greater than 0
         RuleFor(x => x.TypeId)
-            .GreaterThan(0).WithMessage(MessageResponse.AdminManagement.Amenity.GREATER_THAN_ZERO);
+            .GreaterThan(0).WithMessage(MessageResponse.AdminManagement.Amenity.EMPTY_TYPE_OR_GREATER_THAN_ZERO);
 
         // 3. Validate TypeId validity (Check if it exists in the Enum)
         RuleFor(x => x.TypeId)

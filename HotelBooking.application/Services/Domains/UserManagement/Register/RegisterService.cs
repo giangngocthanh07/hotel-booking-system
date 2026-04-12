@@ -1,6 +1,7 @@
 using FluentValidation;
 using HotelBooking.application.DTOs.User.Register;
 using HotelBooking.application.Helpers;
+using HotelBooking.application.Helpers.Infrastructure;
 using HotelBooking.infrastructure.Models;
 
 namespace HotelBooking.application.Services.Domains.UserManagement.Register

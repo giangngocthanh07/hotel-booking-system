@@ -1,6 +1,7 @@
 using FluentValidation;
 using HotelBooking.application.DTOs.User.Login;
 using HotelBooking.application.Helpers;
+using HotelBooking.application.Helpers.Infrastructure;
 using HotelBooking.application.Services.Domains.Auth;
 using HotelBooking.application.Validators.UserManagement.Login;
 

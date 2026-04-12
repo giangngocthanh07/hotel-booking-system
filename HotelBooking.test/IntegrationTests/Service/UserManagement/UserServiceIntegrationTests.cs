@@ -6,7 +6,6 @@ using Microsoft.Extensions.Configuration;
 using HotelBooking.application.DTOs.User.Register;
 using HotelBooking.application.DTOs.User.Login;
 using HotelBooking.application.DTOs.Role;
-using HotelBooking.application.Services.Domains.UserManagement;
 
 using HotelBooking.infrastructure.Models;
 
@@ -17,23 +16,23 @@ using HotelBooking.application.Services.Domains.UserManagement.Login;
 namespace HotelBooking.Tests.Integration;
 
 /// <summary>
-/// INTEGRATION TEST cho UserService.
-/// 
-/// KHÁC BIỆT LỚN VỚI UNIT TEST:
+/// INTEGRATION TESTS for UserService.
+///
+/// KEY DIFFERENCES FROM UNIT TESTS:
 /// ┌─────────────────────┬──────────────────────────────────────┐
-/// │ Unit Test (cũ)      │ Integration Test (file này)          │
+/// │ Unit Test           │ Integration Test (this file)         │
 /// ├─────────────────────┼──────────────────────────────────────┤
-/// │ Mock Repository     │ Repository THẬT (UserRepository)     │
-/// │ Mock UnitOfWork     │ UnitOfWork THẬT                      │
-/// │ Không có DB         │ SQL Server Docker container THẬT     │
-/// │ Test logic service  │ Test cả logic + data layer + FK      │
+/// │ Mock Repository     │ Real Repository (UserRepository)     │
+/// │ Mock UnitOfWork     │ Real UnitOfWork                      │
+/// │ No DB               │ Real SQL Server Docker container     │
+/// │ Tests service logic │ Tests logic + data layer + FK        │
 /// └─────────────────────┴──────────────────────────────────────┘
 /// </summary>
 public class UserServiceIntegrationTest : IntegrationTestBase
 {
     /// <summary>
-    /// Tạo UserService THẬT (không mock gì cả).
-    /// Mỗi lần gọi sẽ tạo instance mới để đảm bảo clean state.
+    /// Creates a real UserService instance (no mocks).
+    /// Each call creates a new instance to ensure a clean state.
     /// </summary>
     protected override IServiceProvider BuildServiceProvider(
         HotelBookingDBContext dbContext,
@@ -59,14 +58,14 @@ public class UserServiceIntegrationTest : IntegrationTestBase
 
     #region RegisterCustomer Integration Tests
 
-    // ==========================================================
-    // TEST 1: ĐĂNG KÝ THÀNH CÔNG → VERIFY DATA THẬT TRONG DB
-    // ==========================================================
+    // ============================================================
+    // TEST 1: REGISTER SUCCESS → VERIFY REAL DATA IN DB
+    // ============================================================
     [Fact]
     public async Task RegisterCustomer_WhenValid_ShouldSaveToDatabase()
     {
         // 1. ARRANGE
-        await CleanupDataAsync(); // Xóa data cũ cho sạch
+        await CleanupDataAsync(); // Clear existing data for a clean state
         var service = GetRegisterService();
 
         var input = new RegisterCustomerDTO
@@ -78,43 +77,43 @@ public class UserServiceIntegrationTest : IntegrationTestBase
             PhoneNumber = "0901234567"
         };
 
-        // 2. ACT - Gọi service thật → ghi vào DB thật
+        // 2. ACT - Call the real service → writes to real DB
         var result = await service.RegisterCustomer(input);
 
-        // 3. ASSERT - Kiểm tra response
+        // 3. ASSERT - Verify the response
         result.StatusCode.Should().Be(StatusCodeResponse.Success);
         result.Content.Should().NotBeNull();
 
-        // ★ ĐIỂM KHÁC BIỆT LỚN SO VỚI UNIT TEST ★
-        // Ở đây ta query TRỰC TIẾP vào DB để verify data đã được lưu thật
+        // ★ KEY DIFFERENCE FROM UNIT TEST ★
+        // Here we query DIRECTLY into DB to verify data was truly persisted
         var savedUser = await _dbContext.Users
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.UserName == "integration_user");
 
-        savedUser.Should().NotBeNull("User phải được lưu vào DB thật");
+        savedUser.Should().NotBeNull("User must be saved to the real DB");
         savedUser!.Email.Should().Be("integration@gmail.com");
         savedUser.FullName.Should().Be("Integration Test User");
 
-        // Verify Role cũng đã được gán đúng
+        // Verify Role was correctly assigned
         var savedRole = await _dbContext.UserRoles
             .AsNoTracking()
             .FirstOrDefaultAsync(ur => ur.UserId == savedUser.Id);
 
-        savedRole.Should().NotBeNull("UserRole phải được tạo");
-        savedRole!.RoleId.Should().Be(RoleTypeConstDTO.Customer, "Phải gán role Customer");
+        savedRole.Should().NotBeNull("UserRole must be created");
+        savedRole!.RoleId.Should().Be(RoleTypeConstDTO.Customer, "Must be assigned Customer role");
     }
 
-    // ==========================================================
-    // TEST 2: ĐĂNG KÝ TRÙNG USERNAME → CONFLICT (DB thật check)
-    // ==========================================================
+    // ============================================================
+    // TEST 2: REGISTER DUPLICATE USERNAME → CONFLICT (real DB check)
+    // ============================================================
     [Fact]
     public async Task RegisterCustomer_WhenDuplicateUsername_ShouldReturnConflict()
     {
-        // 1. ARRANGE - Insert user trước vào DB thật
+        // 1. ARRANGE - Insert user first into real DB
         await CleanupDataAsync();
         var service = GetRegisterService();
 
-        // Tạo user đầu tiên thành công
+        // Register the first user successfully
         var firstUser = new RegisterCustomerDTO
         {
             Username = "trung_ten",
@@ -125,10 +124,10 @@ public class UserServiceIntegrationTest : IntegrationTestBase
         };
         await service.RegisterCustomer(firstUser);
 
-        // 2. ACT - Đăng ký user thứ 2 có CÙNG Username
+        // 2. ACT - Register a 2nd user with the SAME Username
         var duplicateUser = new RegisterCustomerDTO
         {
-            Username = "trung_ten",           // ← TRÙNG!
+            Username = "trung_ten",           // ← DUPLICATE!
             Email = "different@gmail.com",    // Email khác
             Password = "TestPass@123",
             FullName = "Duplicate User",
@@ -140,14 +139,14 @@ public class UserServiceIntegrationTest : IntegrationTestBase
         result.StatusCode.Should().Be(StatusCodeResponse.Conflict);
         result.Message.Should().Be(MessageResponse.UserManagement.Register.USERNAME_EXIST);
 
-        // ★ Verify DB thật: Chỉ có 1 user, không phải 2
+        // ★ Verify real DB: Only 1 user, not 2
         var userCount = await _dbContext.Users.CountAsync();
-        userCount.Should().Be(1, "Chỉ user đầu tiên được lưu, user trùng bị chặn");
+        userCount.Should().Be(1, "Only the first user is saved; the duplicate is blocked");
     }
 
-    // ==========================================================
-    // TEST 3: ĐĂNG KÝ TRÙNG EMAIL → CONFLICT (DB thật check)
-    // ==========================================================
+    // ============================================================
+    // TEST 3: REGISTER DUPLICATE EMAIL → CONFLICT (real DB check)
+    // ============================================================
     [Fact]
     public async Task RegisterCustomer_WhenDuplicateEmail_ShouldReturnConflict()
     {
@@ -165,11 +164,11 @@ public class UserServiceIntegrationTest : IntegrationTestBase
         };
         await service.RegisterCustomer(firstUser);
 
-        // 2. ACT - Đăng ký user thứ 2 có CÙNG Email
+        // 2. ACT - Register 2nd user with the SAME Email
         var duplicateUser = new RegisterCustomerDTO
         {
             Username = "user_two",                 // Username khác
-            Email = "trung_email@gmail.com",       // ← TRÙNG!
+            Email = "trung_email@gmail.com",       // ← DUPLICATE!
             Password = "TestPass@123",
             FullName = "Duplicate User",
             PhoneNumber = "0904444444"
@@ -180,7 +179,7 @@ public class UserServiceIntegrationTest : IntegrationTestBase
         result.StatusCode.Should().Be(StatusCodeResponse.Conflict);
         result.Message.Should().Be(MessageResponse.UserManagement.Register.EMAIL_EXIST);
 
-        // ★ Verify DB thật: Chỉ 1 user
+        // ★ Verify real DB: Only 1 user
         var userCount = await _dbContext.Users.CountAsync();
         userCount.Should().Be(1);
     }
@@ -189,13 +188,13 @@ public class UserServiceIntegrationTest : IntegrationTestBase
 
     #region LoginUser Integration Tests
 
-    // ==========================================================
-    // TEST 4: ĐĂNG NHẬP THÀNH CÔNG → NHẬN TOKEN THẬT
-    // ==========================================================
+    // ============================================================
+    // TEST 4: LOGIN SUCCESS → RECEIVE REAL TOKEN
+    // ============================================================
     [Fact]
     public async Task LoginUser_WhenValid_ShouldReturnToken()
     {
-        // 1. ARRANGE - Đăng ký user trước (tạo data thật trong DB)
+        // 1. ARRANGE - Register user first (create real data in DB)
         await CleanupDataAsync();
         var registerService = GetRegisterService();
         var loginService = GetLoginService();
@@ -210,7 +209,7 @@ public class UserServiceIntegrationTest : IntegrationTestBase
         };
         await registerService.RegisterCustomer(registerInput);
 
-        // 2. ACT - Login bằng username
+        // 2. ACT - Login by username
         var loginInput = new LoginUserDTO
         {
             UsernameOrEmail = "login_test_user",
@@ -222,19 +221,19 @@ public class UserServiceIntegrationTest : IntegrationTestBase
         result.StatusCode.Should().Be(StatusCodeResponse.Success);
         result.Content.Should().NotBeNull();
 
-        // ★ Verify token thật được tạo (không phải mock)
-        result.Content.AccessToken.Should().NotBeNullOrEmpty("JWT token phải được generate thật");
+        // ★ Verify a real token is generated (not a mock)
+        result.Content.AccessToken.Should().NotBeNullOrEmpty("JWT token must be genuinely generated");
         result.Content.FullName.Should().Be("Login Test User");
-        result.Content.Roles.Should().Contain("Customer", "User phải có role Customer");
+        result.Content.Roles.Should().Contain("Customer", "User must have Customer role");
     }
 
-    // ==========================================================
-    // TEST 5: ĐĂNG NHẬP SAI PASSWORD → FAIL
-    // ==========================================================
+    // ============================================================
+    // TEST 5: LOGIN WITH WRONG PASSWORD → FAIL
+    // ============================================================
     [Fact]
     public async Task LoginUser_WhenWrongPassword_ShouldFail()
     {
-        // 1. ARRANGE - Đăng ký user trước
+        // 1. ARRANGE - Register user first
         await CleanupDataAsync();
         var registerService = GetRegisterService();
         var loginService = GetLoginService();
@@ -249,11 +248,11 @@ public class UserServiceIntegrationTest : IntegrationTestBase
         };
         await registerService.RegisterCustomer(registerInput);
 
-        // 2. ACT - Login với password SAI
+        // 2. ACT - Login with WRONG password
         var loginInput = new LoginUserDTO
         {
             UsernameOrEmail = "wrong_pass_user",
-            Password = "WrongPassword@999"       // ← SAI!
+            Password = "WrongPassword@999"       // ← WRONG!
         };
         var result = await loginService.LoginUser(loginInput);
 

@@ -155,8 +155,8 @@
             </div>
 
             @* --- SHARED CONFIRMATION MODAL --- *@
-            <ConfirmModal @ref="_confirmModal" 
-                        Title="@modalTitle" 
+            <ConfirmModal @ref="_confirmModal"
+                        Title="@modalTitle"
                         Message="@modalMessage"
                         ConfirmText="@(actionType == "approve" ? "Confirm Approve" : "Confirm Reject")"
                         ConfirmIcon="@(actionType == "approve" ? "fa-check" : "fa-trash-can")"
@@ -164,7 +164,7 @@
                         IsProcessing="@isProcessing" 
                         OnConfirm="ConfirmAction">
                         
-                @* Nội dung bổ sung hiển thị ID *@
+                @* Additional content showing the target request ID *@
                 <div class="mt-3 p-2 rounded" style="background: rgba(0,0,0,0.03);">
                     <p class="text-muted small mb-0 text-center">
                         Target Request: <strong class="text-primary fs-6">#@RequestId</strong>
@@ -431,7 +431,7 @@
 
     private void GoBack() => NavigationManager.NavigateTo("/admin/requests/upgrade-owner");
 
-    private async Task ShowApproveModal()
+    private void ShowApproveModal()
     {
         modalTitle = "Approve Upgrade";
         modalMessage = "Are you sure you want to approve this request? The user will be immediately granted the Owner role.";
@@ -440,7 +440,7 @@
         _confirmModal.Show();
     }
 
-    private async Task ShowRejectModal()
+    private void ShowRejectModal()
     {
         modalTitle = "Reject Upgrade";
         modalMessage = "Are you sure you want to reject this request? This action cannot be undone.";

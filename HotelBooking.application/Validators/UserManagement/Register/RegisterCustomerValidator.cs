@@ -24,7 +24,7 @@ namespace HotelBooking.application.Validators.UserManagement.Register
 
             RuleFor(x => x.PhoneNumber)
                 .NotEmpty().WithMessage(MessageResponse.UserManagement.Register.EMPTY_PHONE)
-                .Matches("^[0-9]{10}$").WithMessage(MessageResponse.UserManagement.Register.INVALID_PHONE_FORMAT)
+                .Matches(@"^\d+$").WithMessage(MessageResponse.UserManagement.Register.INVALID_PHONE_FORMAT)
                 .Length(10).WithMessage(MessageResponse.UserManagement.Register.INVALID_PHONE);
 
             RuleFor(x => x.Password)

@@ -18,7 +18,7 @@ public static class SwaggerServiceExtension
                 Scheme = "Bearer",
                 BearerFormat = "JWT",
                 In = ParameterLocation.Header,
-                Description = "Nhập token: Bearer {token}"
+                Description = "Enter token: Bearer {token}"
             });
 
             options.AddSecurityRequirement(new OpenApiSecurityRequirement

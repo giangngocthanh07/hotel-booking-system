@@ -3,7 +3,7 @@ using FluentValidation;
 namespace HotelBooking.application.Validators.AdminManagement.Policies;
 
 // =========================================================================
-// 1. COMMON VALIDATORS (Chỉ chứa rule cơ bản, KHÔNG chứa đa hình để tránh Loop)
+// 1. COMMON VALIDATORS (Basic rules only, NO Polymorphism to avoid Loop)
 // =========================================================================
 
 public class CommonPolicyCreateValidator : AbstractValidator<PolicyCreateDTO>
@@ -34,17 +34,17 @@ public class CommonPolicyUpdateValidator : AbstractValidator<PolicyUpdateDTO>
 }
 
 // =========================================================================
-// 2. PARENT VALIDATORS (Polymorphic coordination - Entry point cho Controller)
+// 2. PARENT VALIDATORS (Polymorphic coordination - Entry point for Controller)
 // =========================================================================
 
 public class PolicyCreateValidator : AbstractValidator<PolicyCreateDTO>
 {
     public PolicyCreateValidator()
     {
-        // Kế thừa các rule cơ bản
+        // Inherit common base rules
         Include(new CommonPolicyCreateValidator());
 
-        // Phân luồng validation theo kiểu dữ liệu con thực tế
+        // Route validation based on actual subtype
         RuleFor(x => x).SetInheritanceValidator(v =>
         {
             v.Add(new CheckInOutPolicyCreateValidator());
@@ -72,7 +72,7 @@ public class PolicyUpdateValidator : AbstractValidator<PolicyUpdateDTO>
 }
 
 // =========================================================================
-// 3. HELPER (Tối ưu hiệu năng, loại bỏ hoàn toàn .Compile())
+// 3. HELPER (Performance optimized - eliminates .Compile() entirely)
 // =========================================================================
 
 public static class PolicyValidationHelper
@@ -106,10 +106,12 @@ public static class PolicyValidationHelper
         validator.When(x => isRefundableSelector(x), () =>
         {
             validator.RuleFor(daysBeforeCheckInSelector)
+                .NotNull().WithMessage(MessageResponse.AdminManagement.Policy.EMPTY_DAYS_BEFORE_CHECKIN)
                 .GreaterThanOrEqualTo(0)
                 .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_DAYS_BEFORE_CHECKIN);
 
             validator.RuleFor(refundPercentSelector)
+                .NotNull().WithMessage(MessageResponse.AdminManagement.Policy.EMPTY_REFUND_PERCENT)
                 .InclusiveBetween(0, 100)
                 .WithMessage(MessageResponse.AdminManagement.Policy.INVALID_REFUND_PERCENT);
         });
@@ -118,7 +120,7 @@ public static class PolicyValidationHelper
     public static void ApplyChildrenRules<T>(AbstractValidator<T> validator,
         System.Linq.Expressions.Expression<Func<T, int?>> minAgeSelector,
         System.Linq.Expressions.Expression<Func<T, int?>> maxAgeSelector,
-        Func<T, int?> minAgeFunc, // Dùng Func trực tiếp thay vì Expression.Compile()
+        Func<T, int?> minAgeFunc, // Use Func directly instead of Expression.Compile()
         System.Linq.Expressions.Expression<Func<T, decimal?>> extraBedFeeSelector)
     {
         validator.RuleFor(minAgeSelector)
@@ -164,7 +166,7 @@ public class CheckInOutPolicyCreateValidator : AbstractValidator<CheckInOutPolic
 {
     public CheckInOutPolicyCreateValidator()
     {
-        Include(new CommonPolicyCreateValidator()); // Gắn Common Rule, ngắt vòng lặp
+        Include(new CommonPolicyCreateValidator()); // Attach Common Rule, breaks inheritance loop
 
         PolicyValidationHelper.ApplyCheckInOutRules(this,
             x => x.CheckInTime,
@@ -221,7 +223,7 @@ public class CheckInOutPolicyUpdateValidator : AbstractValidator<CheckInOutPolic
 {
     public CheckInOutPolicyUpdateValidator()
     {
-        Include(new CommonPolicyUpdateValidator()); // Gắn Common Rule, ngắt vòng lặp
+        Include(new CommonPolicyUpdateValidator()); // Attach Common Rule, breaks inheritance loop
 
         PolicyValidationHelper.ApplyCheckInOutRules(this,
             x => x.CheckInTime,

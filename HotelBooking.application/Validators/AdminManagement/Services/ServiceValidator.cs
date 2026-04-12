@@ -173,6 +173,9 @@ public class ServiceUpdateValidator : AbstractValidator<ServiceUpdateDTO>
             .NotEmpty().WithMessage(MessageResponse.AdminManagement.Service.EMPTY_NAME)
             .MaximumLength(50).WithMessage(MessageResponse.AdminManagement.Service.LONG_NAME);
 
+        RuleFor(x => x.Description)
+            .MaximumLength(500).WithMessage(MessageResponse.Validation.LONG_DESCRIPTION);
+
         RuleFor(x => x).SetInheritanceValidator(v =>
         {
             v.Add(new ServiceStandardUpdateValidator());

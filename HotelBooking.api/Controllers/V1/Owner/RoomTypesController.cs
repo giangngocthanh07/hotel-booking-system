@@ -3,7 +3,7 @@ using HotelBooking.application.Helpers;
 using HotelBooking.application.Services.Domains.RoomManagement;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
-// Nhớ using các namespace chứa Service, DTO và ResponseFactory của bạn
+// Remember to import the namespaces containing Service, DTO, and ResponseFactory
 
 namespace HotelBooking.API.Controllers
 {

@@ -16,7 +16,7 @@ public static class BedConfigurationHelper
 
         var bedDescriptions = bedTypes.Select(bedType =>
         {
-            string bedName = bedType.Name.Trim(); // Trim cho an toàn
+            string bedName = bedType.Name.Trim(); // Trim for safety
             if (bedName.Equals("Single", StringComparison.OrdinalIgnoreCase))
             {
                 return bedType.Quantity switch

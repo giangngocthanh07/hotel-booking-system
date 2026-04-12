@@ -15,7 +15,7 @@ public class ImageHelper : IImageHelper
         _env = env;
     }
 
-    // Sinh tên file chuẩn hoá
+    // Generate a normalized file name
     public string GenerateFileName(string prefix, IFormFile file)
     {
         string safeName = Path.GetFileNameWithoutExtension(file.FileName)
@@ -28,13 +28,13 @@ public class ImageHelper : IImageHelper
         return $"{prefix}_{safeName}_{timestamp}{extension}";
     }
 
-    // Upload ảnh vào folder: uploads/userId/{userId}/hotelId/{hotelId}
+    // Upload image to folder: uploads/userId/{userId}/hotelId/{hotelId}
     public async Task<string> UploadAsync(IFormFile file, int userId, int hotelId, string prefix)
     {
         if (file == null || file.Length == 0)
             return string.Empty;
 
-        // Đường dẫn thư mục
+        // Folder path
         string folderPath = Path.Combine(
             _env.WebRootPath,
             "uploads",
@@ -45,7 +45,7 @@ public class ImageHelper : IImageHelper
         if (!Directory.Exists(folderPath))
             Directory.CreateDirectory(folderPath);
 
-        // Tên file
+        // File name
         string fileName = GenerateFileName(prefix, file);
         string filePath = Path.Combine(folderPath, fileName);
 
@@ -54,7 +54,7 @@ public class ImageHelper : IImageHelper
             await file.CopyToAsync(stream);
         }
 
-        // Trả về path tương đối để lưu DB
+        // Return relative path for DB storage
         string relativePath = Path.Combine("uploads", "userId", userId.ToString(), "hotelId", hotelId.ToString(), fileName)
                               .Replace("\\", "/");
 

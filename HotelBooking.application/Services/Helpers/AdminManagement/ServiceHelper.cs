@@ -153,7 +153,7 @@ public static class ServiceHelper
         }
         else
         {
-            // Xóa sạch như đã làm ở bước trước
+            // Clear all night surcharge fields (same as previous step)
             data.AdditionalFee = null;
             data.AdditionalFeeStartTime = null;
             data.AdditionalFeeEndTime = null;

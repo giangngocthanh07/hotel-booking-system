@@ -69,19 +69,19 @@ public class UpgradeRequestRepository : Repository<UpgradeRequest>, IUpgradeRequ
         int pageIndex,
         int pageSize)
     {
-        // 1. Query base với Include User
+        // 1. Base query with Include User
         var query = _dbSet.AsNoTracking().Include(ur => ur.User).AsQueryable();
 
-        // 2. Apply filter nếu có
+        // 2. Apply filter if provided
         if (filter != null)
         {
             query = query.Where(filter);
         }
 
-        // 3. Đếm tổng số bản ghi (trước khi phân trang)
+        // 3. Count total records (before pagination)
         int totalCount = await query.CountAsync();
 
-        // 4. Sắp xếp theo RequestedAt mới nhất + phân trang
+        // 4. Sort by most recent RequestedAt + paginate
         var items = await query
             .OrderByDescending(r => r.RequestedAt)
             .Skip((pageIndex - 1) * pageSize)

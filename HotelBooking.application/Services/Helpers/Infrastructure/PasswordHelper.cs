@@ -1,4 +1,4 @@
-namespace HotelBooking.application.Helpers;
+namespace HotelBooking.application.Helpers.Infrastructure;
 
 public static class PasswordHelper
 {

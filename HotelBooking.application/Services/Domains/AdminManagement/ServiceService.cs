@@ -43,7 +43,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
             entity.Description = updateDto.Description;
             entity.TypeId = entity.TypeId; // Preserve TypeId (do not allow type change)
 
-            // [LOGIC NGHIỆP VỤ GIÁ TIỀN]
+            // [PRICING BUSINESS LOGIC]
             entity.Price = updateDto.Price;
 
             if (updateDto is ServiceAirportUpdateDTO airDto)

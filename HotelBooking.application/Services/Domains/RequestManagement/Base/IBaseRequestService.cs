@@ -34,7 +34,7 @@ public interface IBaseAdminRequestService<T> where T : BaseRequestDTO
     Task<ApiResponse<bool>> RejectRequestAsync(int requestId, int adminId);
 
     /// <summary>
-    /// Lấy danh sách các status để filter
+    /// Get a list of all available statuses for filtering
     /// </summary>
     Task<ApiResponse<List<string>>> GetAllStatusesAsync();
 }

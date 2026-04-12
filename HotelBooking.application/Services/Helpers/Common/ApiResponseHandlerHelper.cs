@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace HotelBooking.application.Helpers
+namespace HotelBooking.application.Helpers.Common
 {
     public static class ApiResponseHandlerHelper
     {

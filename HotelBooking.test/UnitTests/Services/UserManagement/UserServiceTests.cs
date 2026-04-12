@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 // 1. Using DTOs and Services from Application layer
 using HotelBooking.application.DTOs.Role;
 using HotelBooking.application.Helpers;
+using HotelBooking.application.Helpers.Infrastructure;
 using HotelBooking.application.Services.Domains.UserManagement;
 
 // 2. Using Entities and Repo Interfaces from Infrastructure layer
