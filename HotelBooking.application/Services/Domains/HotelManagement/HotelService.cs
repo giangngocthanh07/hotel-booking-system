@@ -173,12 +173,13 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
 
         #region POST HOTEL (Basic Info + Amenities + Images)
         // =============== UPLOAD NEW HOTEL ================
-        [Obsolete]
         public async Task<ApiResponse<CreateHotelResponseDTO>> PostHotelAsync(CreateHotelDTO newHotel, int ownerId)
         {
+            await _dbu.BeginTransactionAsync();
+
             try
             {
-                // Step 1: Create Hotel entity first
+                // ================= STEP 1: CREATE HOTEL =================
                 var hotel = new Hotel
                 {
                     Name = newHotel.Name,
@@ -199,7 +200,7 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
 
                 int hotelId = hotel.Id;
 
-                // Step 2: Upload images
+                // ================= STEP 2: UPLOAD IMAGES =================
                 if (newHotel.CoverFile != null)
                 {
                     var coverUrl = await _photoService.UploadHotelCoverImageAsync(newHotel.CoverFile, ownerId, hotelId);
@@ -233,7 +234,7 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
                     }
                 }
 
-                // Step 3: Save Amenities
+                // ================= STEP 3: AMENITIES & POLICIES =================
                 foreach (var amenityId in newHotel.AmenityIds)
                 {
                     await _hotelAmenityRepository.AddAsync(new HotelAmenity
@@ -243,7 +244,6 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
                     });
                 }
 
-                // Step 4: Save Policies
                 if (newHotel.PolicyIds != null && newHotel.PolicyIds.Any())
                 {
                     foreach (var policyId in newHotel.PolicyIds)
@@ -257,14 +257,16 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
                     }
                 }
 
-                // Step 5: Update Hotel record + SaveChanges
+                // ================= STEP 4: FINAL UPDATE & COMMIT =================
                 await _hotelRepository.UpdateAsync(hotel);
                 await _dbu.SaveChangesAsync();
+
+                await _dbu.CommitTransactionAsync();
 
                 return new ApiResponse<CreateHotelResponseDTO>
                 {
                     StatusCode = StatusCodeResponse.Success,
-                    Message = MessageResponse.CREATE_SUCCESSFULLY,
+                    Message = MessageResponse.Common.CREATE_SUCCESSFULLY,
                     Content = new CreateHotelResponseDTO
                     {
                         HotelId = hotel.Id,
@@ -274,10 +276,12 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
             }
             catch (Exception)
             {
+                await _dbu.RollBackTransactionAsync();
+
                 return new ApiResponse<CreateHotelResponseDTO>
                 {
                     StatusCode = StatusCodeResponse.Error,
-                    Message = MessageResponse.ERROR_IN_SERVER,
+                    Message = MessageResponse.Common.ERROR_IN_SERVER,
                     Content = null
                 };
             }

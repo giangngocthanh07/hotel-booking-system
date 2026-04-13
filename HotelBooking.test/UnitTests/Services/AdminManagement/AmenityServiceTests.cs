@@ -6,7 +6,6 @@ using FluentValidation.Results;
 using HotelBooking.application.Services.Domains.AdminManagement;
 using HotelBooking.infrastructure.Models;
 using Moq;
-using Org.BouncyCastle.Asn1.Cms;
 
 namespace HotelBooking.test.UnitTests.Services.AdminManagement;
 
@@ -97,6 +96,34 @@ public class AmenityServiceTests : BaseServiceTest
         // Verify steps
         _mockCreateValidator.Verify(x => x.ValidateAsync(It.IsAny<AmenityCreateDTO>(), It.IsAny<CancellationToken>()), Times.Once());
         Verify_Repo_Never_AnyAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
+        Verify_Repo_Never_AddAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task CreateAsync_DuplicateName_ReturnsConflict()
+    {
+        // 1. Arrange
+        MockCreateValidationSuccess();
+        MockCreateLogicValidationSuccess(isDuplicate: true);
+
+        var createDto = new AmenityCreateDTO
+        {
+            Name = "Duplicate Amenity 1",
+            TypeId = 1,
+            Description = "Description 1"
+        };
+
+        // 2. Act
+        var result = await _amenityService.CreateAsync(createDto);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Conflict);
+        result.Message.Should().Be(MessageResponse.AdminManagement.Amenity.NAME_ALREADY_EXISTS);
+
+        // Verify steps
+        Verify_Repo_AnyAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
         Verify_Repo_Never_AddAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
         Verify_Never_Saved();
     }

@@ -18,6 +18,7 @@ public static class ApplicationServiceExtension
         services.AddScoped<JwtAuthService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IRoleService, RoleService>();
+        services.AddScoped<IJwtAuthService, JwtAuthService>();
 
         // Hotel & Business Services
         services.AddScoped<IHotelService, HotelService>();
