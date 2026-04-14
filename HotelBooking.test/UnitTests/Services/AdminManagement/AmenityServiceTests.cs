@@ -361,6 +361,31 @@ public class AmenityServiceTests : BaseServiceTest
     }
 
     [Fact]
+    public async Task UpdateAsync_DuplicateName_ReturnsConflict()
+    {
+        // 1. Arrange
+        var amenityId = 1;
+        var updateDTO = new AmenityUpdateDTO
+        {
+            Name = "Duplicate Amenity 1",
+            Description = "Description 1"
+        };
+
+        // 2. Act
+        var result = await _amenityService.UpdateAsync(amenityId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Conflict);
+        result.Message.Should().Be(MessageResponse.AdminManagement.Amenity.NAME_ALREADY_EXISTS);
+
+        // Verify steps
+        Verify_Repo_AnyAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
+        Verify_Repo_Never_AddAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
     public async Task UpdateAsync_SystemThrowException_AtValidateUpdateLogicAsync_ReturnsServerError()
     {
         // 1. Arrange

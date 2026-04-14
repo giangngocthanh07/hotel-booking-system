@@ -163,13 +163,66 @@ public class BedTypeServiceTests : BaseServiceTest
     [Fact]
     public async Task CreateAsync_SystemThrowException_AtAddAsync_ReturnsServerError()
     {
+        // 1. Arrange
+        MockCreateValidationSuccess();
+        MockCreateLogicValidationSuccess();
 
+        var createDTO = new BedTypeCreateDTO
+        {
+            Name = "Bed Type 1",
+            Description = "Description 1",
+            DefaultCapacity = 2
+        };
+
+        // Mock AddAsync throw exception
+        _mockBedTypeRepo.Setup(x => x.AddAsync(It.IsAny<BedType>())).ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _bedTypeService.CreateAsync(createDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify steps
+        _mockCreateValidator.Verify(x => x.ValidateAsync(It.IsAny<BedTypeCreateDTO>(), It.IsAny<CancellationToken>()), Times.Once);
+
+        Verify_Repo_AnyAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
+        Verify_Repo_AddAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
+        Verify_Never_Saved();
     }
 
     [Fact]
     public async Task CreateAsync_SystemThrowException_AtSaveChangesAsync_ReturnsServerError()
     {
+        // 1. Arrange
+        MockCreateValidationSuccess();
+        MockCreateLogicValidationSuccess();
 
+        var createDTO = new BedTypeCreateDTO
+        {
+            Name = "Bed Type 1",
+            Description = "Description 1",
+            DefaultCapacity = 2
+        };
+
+        // Mock SaveChangesAsync fail
+        _mockUnitOfWork.Setup(x => x.SaveChangesAsync()).ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _bedTypeService.CreateAsync(createDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockCreateValidator.Verify(x => x.ValidateAsync(It.IsAny<BedTypeCreateDTO>(), It.IsAny<CancellationToken>()), Times.Once);
+        Verify_Repo_AnyAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
+        Verify_Repo_AddAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
+        Verify_Saved(1);
     }
 
     #endregion
@@ -208,6 +261,34 @@ public class BedTypeServiceTests : BaseServiceTest
     }
 
     [Fact]
+    public async Task UpdateAsync_InvalidId_ReturnsBadRequest()
+    {
+        // 1. Arrange
+        var bedTypeId = -1;
+        var updateDTO = new BedTypeUpdateDTO
+        {
+            Name = "Updated Bed",
+            Description = "Description",
+            DefaultCapacity = 1
+        };
+
+        // 2. Act
+        var result = await _bedTypeService.UpdateAsync(bedTypeId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+        result.Message.Should().Be(MessageResponse.AdminManagement.RoomAttribute.BedType.INVALID_ID);
+
+        // Verify steps
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<BedTypeUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Never());
+        _mockBedTypeRepo.Verify(x => x.GetByIdAsync(bedTypeId), Times.Never());
+        Verify_Repo_Never_AnyAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
+        Verify_Repo_Never_UpdateAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
     public async Task UpdateAsync_IdNotFound_ReturnsNotFound()
     {
         // 1. Arrange
@@ -231,6 +312,214 @@ public class BedTypeServiceTests : BaseServiceTest
 
         Verify_Repo_Never_UpdateAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
         Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_InvalidaRequest_ReturnsBadRequest()
+    {
+        // 1. Arrange
+        var bedTypeId = 1;
+
+        // Mock GetByIdAsync is not null
+        MockUpdate_EntityFound(new BedType { Id = bedTypeId, Name = "Old Bed", IsDeleted = false });
+
+        // Mock validation failure
+        var updateDTO = new BedTypeUpdateDTO
+        {
+            Name = "",
+            Description = "Description",
+            DefaultCapacity = 1
+        };
+
+        var validationFailure = new List<ValidationFailure>
+        {
+            new ValidationFailure("Name", MessageResponse.AdminManagement.RoomAttribute.BedType.EMPTY_NAME)
+        };
+
+        _mockUpdateValidator.Setup(x => x.ValidateAsync(It.IsAny<BedTypeUpdateDTO>(), default))
+            .ReturnsAsync(new FluentValidation.Results.ValidationResult(validationFailure));
+
+        // 2. Act
+        var result = await _bedTypeService.UpdateAsync(bedTypeId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+        result.Message.Should().Be(validationFailure.First().ErrorMessage);
+
+        // Verify steps
+        _mockBedTypeRepo.Verify(x => x.GetByIdAsync(bedTypeId), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<BedTypeUpdateDTO>(), default), Times.Once());
+        Verify_Repo_Never_AnyAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
+        Verify_Repo_Never_UpdateAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
+        Verify_Never_Saved();
+    }
+    [Fact]
+    public async Task UpdateAsync_DuplicateName_ReturnsConflict()
+    {
+        // 1. Arrange
+        var bedTypeId = 1;
+        var updateDTO = new BedTypeUpdateDTO
+        {
+            Name = "Duplicate Bed",
+            Description = "Description",
+            DefaultCapacity = 1
+        };
+
+        // 2. Act
+        var result = await _bedTypeService.UpdateAsync(bedTypeId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Conflict);
+        result.Message.Should().Be(MessageResponse.AdminManagement.RoomAttribute.BedType.NAME_ALREADY_EXISTS);
+
+        // Verify steps
+        Verify_Repo_AnyAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
+        Verify_Repo_Never_AddAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtValidateUpdateLogicAsync_ReturnsServerError()
+    {
+        // 1. Arrange
+        var bedTypeId = 1;
+        var updateDTO = new BedTypeUpdateDTO
+        {
+            Name = "Bed Type 1",
+            Description = "Description 1",
+            DefaultCapacity = 2
+        };
+
+        // Mock AnyAsync throw exception
+        _mockBedTypeRepo.Setup(x => x.AnyAsync(It.IsAny<Expression<Func<BedType, bool>>>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _bedTypeService.UpdateAsync(bedTypeId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify steps
+        _mockBedTypeRepo.Verify(x => x.GetByIdAsync(bedTypeId), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<BedTypeUpdateDTO>(), default), Times.Once);
+        Verify_Repo_AnyAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
+
+        Verify_Repo_Never_UpdateAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
+        Verify_Never_Saved();
+    }
+    [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtUpdateAsync_ReturnsServerError()
+    {
+        // 1. Arrange
+        var bedTypeId = 1;
+        var updateDTO = new BedTypeUpdateDTO
+        {
+            Name = "Bed Type 1",
+            Description = "Description 1",
+            DefaultCapacity = 2
+        };
+
+        // Mock GetByIdAsync throw exception
+        _mockBedTypeRepo.Setup(x => x.GetByIdAsync(It.IsAny<int>())).ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _bedTypeService.UpdateAsync(bedTypeId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify steps
+        _mockBedTypeRepo.Verify(x => x.GetByIdAsync(bedTypeId), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<BedTypeUpdateDTO>(), default), Times.Once);
+        Verify_Repo_Never_AnyAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
+        Verify_Repo_Never_UpdateAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
+        Verify_Never_Saved();
+    }
+    [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtAnyAsync_ReturnsServerError()
+    {
+        // 1. Arrange
+        var bedTypeId = 1;
+        var updateDTO = new BedTypeUpdateDTO
+        {
+            Name = "Bed Type 1",
+            Description = "Description 1",
+            DefaultCapacity = 2
+        };
+
+        // Mock GetByIdAsync is not null
+        MockUpdate_EntityFound(new BedType { Id = bedTypeId, Name = "Old Bed", IsDeleted = false });
+
+        // Mock validation success
+        MockUpdateValidation_Success();
+
+        // Mock AnyAsync throw exception
+        _mockBedTypeRepo.Setup(x => x.AnyAsync(It.IsAny<Expression<Func<BedType, bool>>>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _bedTypeService.UpdateAsync(bedTypeId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify steps
+        _mockBedTypeRepo.Verify(x => x.GetByIdAsync(bedTypeId), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<BedTypeUpdateDTO>(), default), Times.Once);
+        Verify_Repo_AnyAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
+        Verify_Repo_Never_UpdateAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtSaveChangesAsync_ReturnsServerError()
+    {
+        // 1. Arrange
+        var bedTypeId = 1;
+        var updateDTO = new BedTypeUpdateDTO
+        {
+            Name = "Bed Type 1",
+            Description = "Description 1",
+            DefaultCapacity = 2
+        };
+
+        // Mock GetByIdAsync is not null
+        MockUpdate_EntityFound(new BedType { Id = bedTypeId, Name = "Bed Type 1", IsDeleted = false });
+
+        // Mock validation  
+        MockUpdateValidation_Success();
+
+        // Mock AnyAsync is not null
+        MockUpdate_BusinessLogic_DuplicateCheck(false);
+
+        // Mock SaveChangesAdync throw exception
+        _mockUnitOfWork.Setup(dbu => dbu.SaveChangesAsync())
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _bedTypeService.UpdateAsync(bedTypeId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockBedTypeRepo.Verify(x => x.GetByIdAsync(bedTypeId), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<BedTypeUpdateDTO>(), default), Times.Once);
+        Verify_Repo_AnyAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
+        Verify_Repo_UpdateAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
+        Verify_Saved(1);
+
     }
     #endregion
 

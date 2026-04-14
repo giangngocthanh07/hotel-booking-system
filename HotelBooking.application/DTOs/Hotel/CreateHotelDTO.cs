@@ -21,6 +21,7 @@ public class CreateHotelDTO
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 
+
 public class CreateHotelRequestDTO
 {
     // Basic information

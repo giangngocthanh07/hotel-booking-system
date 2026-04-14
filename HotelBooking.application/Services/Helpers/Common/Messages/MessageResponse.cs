@@ -137,6 +137,7 @@ public static class MessageResponse
             // BedType Messages
             public static class BedType
             {
+                public const string INVALID_ID = "Invalid ID!";
                 public const string NAME_ALREADY_EXISTS = "Bed type name already exists!";
                 public const string EMPTY_NAME = "Bed type name must not be empty!";
                 public const string LONG_NAME = "Bed type name is too long (max 20 characters)!";
