@@ -86,8 +86,61 @@ public class UnitTypeServiceTests : BaseServiceTest
         Verify_Repo_Never_AddAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
         Verify_Never_Saved();
     }
-    #endregion
+    [Fact]
+    public async Task CreateAsync_InvalidRequest_ReturnsBadRequest()
+    {
+        var createDto = new UnitTypeCreateDTO
+        {
+            Name = "",
+            Description = "Description"
+        };
+        var validationFailure = new List<ValidationFailure> { new ValidationFailure("Name", MessageResponse.AdminManagement.RoomAttribute.UnitType.EMPTY_NAME) };
+        _mockCreateValidator.Setup(x => x.ValidateAsync(It.IsAny<UnitTypeCreateDTO>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new FluentValidation.Results.ValidationResult(validationFailure));
+        var result = await _unitTypeService.CreateAsync(createDto);
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+        result.Message.Should().Be(validationFailure.First().ErrorMessage);
+        _mockCreateValidator.Verify(x => x.ValidateAsync(It.IsAny<UnitTypeCreateDTO>(), It.IsAny<CancellationToken>()), Times.Once());
+        Verify_Repo_Never_AddAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
+        Verify_Never_Saved();
+    }
 
+    [Fact]
+    public async Task CreateAsync_SystemThrowException_AtValidateCreateLogicAsync_ReturnsServerError()
+    {
+        MockCreateValidationSuccess();
+        var createDto = new UnitTypeCreateDTO { Name = "Test" };
+        _mockUnitTypeRepo.Setup(x => x.AnyAsync(It.IsAny<Expression<Func<UnitType, bool>>>())).ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+        var result = await _unitTypeService.CreateAsync(createDto);
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        Verify_Repo_Never_AddAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
+    }
+
+    [Fact]
+    public async Task CreateAsync_SystemThrowException_AtAddAsync_ReturnsServerError()
+    {
+        MockCreateValidationSuccess();
+        MockCreateLogicValidationSuccess();
+        var createDto = new UnitTypeCreateDTO { Name = "Test" };
+        _mockUnitTypeRepo.Setup(x => x.AddAsync(It.IsAny<UnitType>())).ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+        var result = await _unitTypeService.CreateAsync(createDto);
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task CreateAsync_SystemThrowException_AtSaveChangesAsync_ReturnsServerError()
+    {
+        MockCreateValidationSuccess();
+        MockCreateLogicValidationSuccess();
+        var createDto = new UnitTypeCreateDTO { Name = "Test" };
+        _mockUnitOfWork.Setup(x => x.SaveChangesAsync()).ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+        var result = await _unitTypeService.CreateAsync(createDto);
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        Verify_Repo_AddAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
+    }
+    #endregion
     #region UpdateAsync
     [Fact]
     public async Task UpdateAsync_ValidRequest_ReturnsSuccess()
@@ -142,8 +195,64 @@ public class UnitTypeServiceTests : BaseServiceTest
         Verify_Repo_Never_UpdateAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
         Verify_Never_Saved();
     }
-    #endregion
+    [Fact]
+    public async Task UpdateAsync_InvalidId_ReturnsBadRequest()
+    {
+        var result = await _unitTypeService.UpdateAsync(-1, new UnitTypeUpdateDTO());
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+        result.Message.Should().Be(MessageResponse.AdminManagement.RoomAttribute.UnitType.INVALID_ID);
+        Verify_Repo_Never_UpdateAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
+    }
 
+    [Fact]
+    public async Task UpdateAsync_InvalidRequest_ReturnsBadRequest()
+    {
+        var id = 1;
+        MockUpdate_EntityFound(new UnitType { Id = id, IsDeleted = false });
+        var validationFailure = new List<ValidationFailure> { new ValidationFailure("Name", "Error") };
+        _mockUpdateValidator.Setup(x => x.ValidateAsync(It.IsAny<UnitTypeUpdateDTO>(), default))
+            .ReturnsAsync(new FluentValidation.Results.ValidationResult(validationFailure));
+        var result = await _unitTypeService.UpdateAsync(id, new UnitTypeUpdateDTO());
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+        Verify_Repo_Never_UpdateAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_DuplicateName_ReturnsConflict()
+    {
+        var id = 1;
+        MockUpdate_EntityFound(new UnitType { Id = id, IsDeleted = false });
+        MockUpdateValidation_Success();
+        MockUpdate_BusinessLogic_DuplicateCheck(true);
+        var result = await _unitTypeService.UpdateAsync(id, new UnitTypeUpdateDTO());
+        result.StatusCode.Should().Be(StatusCodeResponse.Conflict);
+        result.Message.Should().Be(MessageResponse.AdminManagement.RoomAttribute.UnitType.NAME_ALREADY_EXISTS);
+        Verify_Repo_Never_UpdateAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtUpdateAsync_ReturnsServerError()
+    {
+        var id = 1;
+        _mockUnitTypeRepo.Setup(x => x.GetByIdAsync(id)).ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+        var result = await _unitTypeService.UpdateAsync(id, new UnitTypeUpdateDTO());
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        Verify_Repo_Never_UpdateAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtSaveChangesAsync_ReturnsServerError()
+    {
+        var id = 1;
+        MockUpdate_EntityFound(new UnitType { Id = id, IsDeleted = false });
+        MockUpdateValidation_Success();
+        MockUpdate_BusinessLogic_DuplicateCheck(false);
+        _mockUnitOfWork.Setup(dbu => dbu.SaveChangesAsync()).ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+        var result = await _unitTypeService.UpdateAsync(id, new UnitTypeUpdateDTO());
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+    }
+    #endregion
+    
     #region GetPagedListAsync
     [Fact]
     public async Task GetPagedListAsync_ValidPaging_ReturnsSuccess()

@@ -25,15 +25,17 @@ public partial class Hotel
 
     public bool? IsDeleted { get; set; }
 
-    public int? CityId { get; set; }
-
     public int? CountryId { get; set; }
 
     public string? Additional { get; set; }
 
-    public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+    public int PropertyTypeId { get; set; }
 
-    public virtual City? City { get; set; }
+    public int? ProvinceId { get; set; }
+
+    public int? WardId { get; set; }
+
+    public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 
     public virtual Country? Country { get; set; }
 
@@ -47,7 +49,13 @@ public partial class Hotel
 
     public virtual User Owner { get; set; } = null!;
 
+    public virtual PropertyType PropertyType { get; set; } = null!;
+
+    public virtual Province? Province { get; set; }
+
     public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
 
     public virtual ICollection<RoomType> RoomTypes { get; set; } = new List<RoomType>();
+
+    public virtual Ward? Ward { get; set; }
 }

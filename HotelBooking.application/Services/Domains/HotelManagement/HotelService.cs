@@ -191,7 +191,6 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
                     IsVerified = true,  // default true; verification flow can be added later
                     Status = "Active",
                     IsDeleted = false,
-                    CityId = newHotel.CityId,
                     CountryId = null
                 };
 

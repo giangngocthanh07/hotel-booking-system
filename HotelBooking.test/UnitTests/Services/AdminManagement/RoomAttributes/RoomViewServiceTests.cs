@@ -22,7 +22,7 @@ public class RoomViewServiceTests : BaseServiceTest
         _mockCreateValidator = new Mock<IValidator<RoomViewCreateDTO>>();
         _mockUpdateValidator = new Mock<IValidator<RoomViewUpdateDTO>>();
         _mockPagingValidator = new Mock<IValidator<PagingRequest>>();
-        
+
         _roomViewService = new RoomViewService(
             _mockRoomViewRepo.Object,
             _mockUnitOfWork.Object,
@@ -86,8 +86,62 @@ public class RoomViewServiceTests : BaseServiceTest
         Verify_Repo_Never_AddAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
         Verify_Never_Saved();
     }
-    #endregion
+    [Fact]
+    public async Task CreateAsync_InvalidRequest_ReturnsBadRequest()
+    {
+        var createDto = new RoomViewCreateDTO
+        {
+            Name = "",
+            Description = "Description"
+        };
+        var validationFailure = new List<ValidationFailure> { new ValidationFailure("Name", MessageResponse.AdminManagement.RoomAttribute.RoomView.EMPTY_NAME) };
+        _mockCreateValidator.Setup(x => x.ValidateAsync(It.IsAny<RoomViewCreateDTO>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new FluentValidation.Results.ValidationResult(validationFailure));
+        var result = await _roomViewService.CreateAsync(createDto);
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+        result.Message.Should().Be(validationFailure.First().ErrorMessage);
+        _mockCreateValidator.Verify(x => x.ValidateAsync(It.IsAny<RoomViewCreateDTO>(), It.IsAny<CancellationToken>()), Times.Once());
+        Verify_Repo_Never_AddAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
+        Verify_Never_Saved();
+    }
 
+    [Fact]
+    public async Task CreateAsync_SystemThrowException_AtValidateCreateLogicAsync_ReturnsServerError()
+    {
+        MockCreateValidationSuccess();
+        var createDto = new RoomViewCreateDTO { Name = "Test" };
+        _mockRoomViewRepo.Setup(x => x.AnyAsync(It.IsAny<Expression<Func<RoomView, bool>>>())).ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+        var result = await _roomViewService.CreateAsync(createDto);
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        Verify_Repo_Never_AddAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
+    }
+
+    [Fact]
+    public async Task CreateAsync_SystemThrowException_AtAddAsync_ReturnsServerError()
+    {
+        MockCreateValidationSuccess();
+        MockCreateLogicValidationSuccess();
+        var createDto = new RoomViewCreateDTO { Name = "Test" };
+        _mockRoomViewRepo.Setup(x => x.AddAsync(It.IsAny<RoomView>())).ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+        var result = await _roomViewService.CreateAsync(createDto);
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task CreateAsync_SystemThrowException_AtSaveChangesAsync_ReturnsServerError()
+    {
+        MockCreateValidationSuccess();
+        MockCreateLogicValidationSuccess();
+        var createDto = new RoomViewCreateDTO { Name = "Test" };
+        _mockUnitOfWork.Setup(x => x.SaveChangesAsync()).ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+        var result = await _roomViewService.CreateAsync(createDto);
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        Verify_Repo_AddAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
+    }
+    #endregion
+    
     #region UpdateAsync
     [Fact]
     public async Task UpdateAsync_ValidRequest_ReturnsSuccess()
@@ -141,6 +195,62 @@ public class RoomViewServiceTests : BaseServiceTest
 
         Verify_Repo_Never_UpdateAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
         Verify_Never_Saved();
+    }
+    [Fact]
+    public async Task UpdateAsync_InvalidId_ReturnsBadRequest()
+    {
+        var result = await _roomViewService.UpdateAsync(-1, new RoomViewUpdateDTO());
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+        result.Message.Should().Be(MessageResponse.AdminManagement.RoomAttribute.RoomView.INVALID_ID);
+        Verify_Repo_Never_UpdateAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_InvalidRequest_ReturnsBadRequest()
+    {
+        var id = 1;
+        MockUpdate_EntityFound(new RoomView { Id = id, IsDeleted = false });
+        var validationFailure = new List<ValidationFailure> { new ValidationFailure("Name", "Error") };
+        _mockUpdateValidator.Setup(x => x.ValidateAsync(It.IsAny<RoomViewUpdateDTO>(), default))
+            .ReturnsAsync(new FluentValidation.Results.ValidationResult(validationFailure));
+        var result = await _roomViewService.UpdateAsync(id, new RoomViewUpdateDTO());
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+        Verify_Repo_Never_UpdateAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_DuplicateName_ReturnsConflict()
+    {
+        var id = 1;
+        MockUpdate_EntityFound(new RoomView { Id = id, IsDeleted = false });
+        MockUpdateValidation_Success();
+        MockUpdate_BusinessLogic_DuplicateCheck(true);
+        var result = await _roomViewService.UpdateAsync(id, new RoomViewUpdateDTO());
+        result.StatusCode.Should().Be(StatusCodeResponse.Conflict);
+        result.Message.Should().Be(MessageResponse.AdminManagement.RoomAttribute.RoomView.NAME_ALREADY_EXISTS);
+        Verify_Repo_Never_UpdateAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtUpdateAsync_ReturnsServerError()
+    {
+        var id = 1;
+        _mockRoomViewRepo.Setup(x => x.GetByIdAsync(id)).ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+        var result = await _roomViewService.UpdateAsync(id, new RoomViewUpdateDTO());
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        Verify_Repo_Never_UpdateAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtSaveChangesAsync_ReturnsServerError()
+    {
+        var id = 1;
+        MockUpdate_EntityFound(new RoomView { Id = id, IsDeleted = false });
+        MockUpdateValidation_Success();
+        MockUpdate_BusinessLogic_DuplicateCheck(false);
+        _mockUnitOfWork.Setup(dbu => dbu.SaveChangesAsync()).ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+        var result = await _roomViewService.UpdateAsync(id, new RoomViewUpdateDTO());
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
     }
     #endregion
 

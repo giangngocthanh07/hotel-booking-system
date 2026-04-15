@@ -27,8 +27,6 @@ public partial class HotelBookingDBContext : DbContext
 
     public virtual DbSet<BookingService> BookingServices { get; set; }
 
-    public virtual DbSet<City> Cities { get; set; }
-
     public virtual DbSet<Country> Countries { get; set; }
 
     public virtual DbSet<Hotel> Hotels { get; set; }
@@ -48,6 +46,10 @@ public partial class HotelBookingDBContext : DbContext
     public virtual DbSet<Policy> Policies { get; set; }
 
     public virtual DbSet<PolicyType> PolicyTypes { get; set; }
+
+    public virtual DbSet<PropertyType> PropertyTypes { get; set; }
+
+    public virtual DbSet<Province> Provinces { get; set; }
 
     public virtual DbSet<Review> Reviews { get; set; }
 
@@ -80,6 +82,8 @@ public partial class HotelBookingDBContext : DbContext
     public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<UserRole> UserRoles { get; set; }
+
+    public virtual DbSet<Ward> Wards { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer("Name=connectionStringHotelBooking");
@@ -200,21 +204,6 @@ public partial class HotelBookingDBContext : DbContext
                 .HasConstraintName("FK_BookingServices_Services");
         });
 
-        modelBuilder.Entity<City>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__Cities__3214EC07C04DB18F");
-
-            entity.HasIndex(e => e.Name, "IX_Cities_Name");
-
-            entity.HasIndex(e => new { e.CountryId, e.Name }, "UQ_Cities_CountryId_Name").IsUnique();
-
-            entity.Property(e => e.Name).HasMaxLength(100);
-
-            entity.HasOne(d => d.Country).WithMany(p => p.Cities)
-                .HasForeignKey(d => d.CountryId)
-                .HasConstraintName("FK__Cities__CountryI__19DFD96B");
-        });
-
         modelBuilder.Entity<Country>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Countrie__3214EC07A22038DC");
@@ -231,13 +220,13 @@ public partial class HotelBookingDBContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK__Hotels__3214EC07A121216E");
 
-            entity.HasIndex(e => e.CityId, "IX_Hotels_CityId");
-
-            entity.HasIndex(e => new { e.CityId, e.IsVerified, e.Status }, "IX_Hotels_City_Verified_Status");
-
             entity.HasIndex(e => e.CountryId, "IX_Hotels_CountryId");
 
             entity.HasIndex(e => e.OwnerId, "IX_Hotels_OwnerId");
+
+            entity.HasIndex(e => e.ProvinceId, "IX_Hotels_ProvinceId");
+
+            entity.HasIndex(e => e.WardId, "IX_Hotels_WardId");
 
             entity.Property(e => e.Address).HasMaxLength(500);
             entity.Property(e => e.CoverImageUrl).HasMaxLength(500);
@@ -247,13 +236,10 @@ public partial class HotelBookingDBContext : DbContext
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.IsVerified).HasDefaultValue(false);
             entity.Property(e => e.Name).HasMaxLength(200);
+            entity.Property(e => e.PropertyTypeId).HasDefaultValue(1);
             entity.Property(e => e.Status)
                 .HasMaxLength(50)
                 .HasDefaultValue("PendingVerification");
-
-            entity.HasOne(d => d.City).WithMany(p => p.Hotels)
-                .HasForeignKey(d => d.CityId)
-                .HasConstraintName("FK__Hotels__CityId__1AD3FDA4");
 
             entity.HasOne(d => d.Country).WithMany(p => p.Hotels)
                 .HasForeignKey(d => d.CountryId)
@@ -263,6 +249,19 @@ public partial class HotelBookingDBContext : DbContext
                 .HasForeignKey(d => d.OwnerId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Hotels_Owner");
+
+            entity.HasOne(d => d.PropertyType).WithMany(p => p.Hotels)
+                .HasForeignKey(d => d.PropertyTypeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Hotels_PropertyTypes");
+
+            entity.HasOne(d => d.Province).WithMany(p => p.Hotels)
+                .HasForeignKey(d => d.ProvinceId)
+                .HasConstraintName("FK_Hotels_Provinces");
+
+            entity.HasOne(d => d.Ward).WithMany(p => p.Hotels)
+                .HasForeignKey(d => d.WardId)
+                .HasConstraintName("FK_Hotels_Wards");
         });
 
         modelBuilder.Entity<HotelAmenity>(entity =>
@@ -412,6 +411,24 @@ public partial class HotelBookingDBContext : DbContext
 
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.Name).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<PropertyType>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Property__3214EC07A8E6883C");
+
+            entity.Property(e => e.Description).HasMaxLength(255);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.Name).HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<Province>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Province__3214EC07C1C8A9A7");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Name).HasMaxLength(100);
+            entity.Property(e => e.Type).HasMaxLength(50);
         });
 
         modelBuilder.Entity<Review>(entity =>
@@ -682,6 +699,21 @@ public partial class HotelBookingDBContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.UserRoles)
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("FK_UserRoles_Users");
+        });
+
+        modelBuilder.Entity<Ward>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Wards__3214EC075EA8DF83");
+
+            entity.HasIndex(e => e.ProvinceId, "IX_Wards_ProvinceId");
+
+            entity.Property(e => e.Name).HasMaxLength(100);
+            entity.Property(e => e.Type).HasMaxLength(50);
+
+            entity.HasOne(d => d.Province).WithMany(p => p.Wards)
+                .HasForeignKey(d => d.ProvinceId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Wards_Provinces");
         });
 
         OnModelCreatingPartial(modelBuilder);

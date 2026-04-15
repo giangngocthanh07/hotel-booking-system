@@ -75,6 +75,7 @@ public static class MessageResponse
         // Policy Messages
         public static class Policy
         {
+            public const string INVALID_ID = "Invalid ID!";
             public const string EMPTY_NAME = "Policy name is required!";
             public const string LONG_NAME = "Policy name is too long (max 50 characters)!";
             public const string EMPTY_TYPE = "Policy type is required!";
@@ -108,6 +109,7 @@ public static class MessageResponse
         // Service Messages
         public static class Service
         {
+            public const string INVALID_ID = "Invalid ID!";
             public const string NAME_ALREADY_EXISTS = "Service name already exists!";
             public const string LONG_NAME = "Service name is too long (max 50 characters)!";
             public const string EMPTY_NAME = "Service name must not be empty!";
@@ -149,6 +151,7 @@ public static class MessageResponse
             // RoomView Messages
             public static class RoomView
             {
+                public const string INVALID_ID = "Invalid ID!";
                 public const string NAME_ALREADY_EXISTS = "Room view name already exists!";
                 public const string EMPTY_NAME = "Room view name must not be empty!";
                 public const string LONG_NAME = "Room view name is too long (max 20 characters)!";
@@ -157,6 +160,7 @@ public static class MessageResponse
             // RoomQuality Messages
             public static class RoomQuality
             {
+                public const string INVALID_ID = "Invalid ID!";
                 public const string NAME_ALREADY_EXISTS = "Room quality name already exists!";
                 public const string EMPTY_NAME = "Room quality name must not be empty!";
                 public const string LONG_NAME = "Room quality name is too long (max 20 characters)!";
@@ -166,6 +170,7 @@ public static class MessageResponse
             // UnitType Messages
             public static class UnitType
             {
+                public const string INVALID_ID = "Invalid ID!";
                 public const string NAME_ALREADY_EXISTS = "Room type name already exists!";
                 public const string EMPTY_NAME = "Room type name must not be empty!";
                 public const string LONG_NAME = "Room type name is too long (max 20 characters)!";
