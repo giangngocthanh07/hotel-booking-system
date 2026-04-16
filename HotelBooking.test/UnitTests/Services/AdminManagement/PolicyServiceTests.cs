@@ -24,7 +24,7 @@ public class PolicyServiceTests : BaseServiceTest
         _mockCreateValidator = new Mock<IValidator<PolicyCreateDTO>>();
         _mockUpdateValidator = new Mock<IValidator<PolicyUpdateDTO>>();
         _mockPagingValidator = new Mock<IValidator<PagingRequest>>();
-        
+
         _policyService = new PolicyService(
             _mockPolicyRepo.Object,
             _mockUnitOfWork.Object,
@@ -99,8 +99,10 @@ public class PolicyServiceTests : BaseServiceTest
             Name = ""
         };
         var validationFailure = new List<ValidationFailure> { new ValidationFailure("Name", MessageResponse.AdminManagement.Policy.EMPTY_NAME) };
+
         _mockCreateValidator.Setup(x => x.ValidateAsync(It.IsAny<CheckInOutPolicyCreateDTO>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new FluentValidation.Results.ValidationResult(validationFailure));
+
         var result = await _policyService.CreateAsync(createDto);
         result.Should().NotBeNull();
         result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
@@ -145,13 +147,16 @@ public class PolicyServiceTests : BaseServiceTest
         Verify_Repo_AddAsync<IPolicyRepository, Policy>(_mockPolicyRepo);
     }
     #endregion
-    
+
     #region UpdateAsync
     [Fact]
     public async Task UpdateAsync_ValidRequest_ReturnsSuccess()
     {
         // 1. Arrange
         var policyId = 1;
+
+        var correctTypeId = 1002;
+
         var updateDTO = new CheckInOutPolicyUpdateDTO
         {
             Name = "Updated Policy",
@@ -160,7 +165,7 @@ public class PolicyServiceTests : BaseServiceTest
             CheckOutTime = new TimeOnly(12, 0)
         };
 
-        MockUpdate_EntityFound(new Policy { Id = policyId, Name = "Old Policy", TypeId = 1, IsDeleted = false });
+        MockUpdate_EntityFound(new Policy { Id = policyId, Name = "Old Policy", TypeId = correctTypeId, IsDeleted = false });
         MockUpdateValidation_Success();
         MockUpdate_BusinessLogic_DuplicateCheck(false);
 
@@ -278,28 +283,162 @@ public class PolicyServiceTests : BaseServiceTest
     }
 
     [Fact]
-    public async Task UpdateAsync_SystemThrowException_AtUpdateAsync_ReturnsServerError()
+    public async Task UpdateAsync_SystemThrowException_AtGetByIdAsync_ReturnsServerError()
     {
-        var id = 1;
-        _mockPolicyRepo.Setup(x => x.GetByIdAsync(id)).ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
-        var result = await _policyService.UpdateAsync(id, new CheckInOutPolicyUpdateDTO());
+        // 1. Arrange
+        var policyId = 1;
+        var updateDTO = new CheckInOutPolicyUpdateDTO { Name = "Policy 1", Description = "Description" };
+
+        // Mock GetByIdAsync throw Exception
+        _mockPolicyRepo.Setup(x => x.GetByIdAsync(It.IsAny<int>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _policyService.UpdateAsync(policyId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockPolicyRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<PolicyUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Never());
+        Verify_Repo_Never_AnyAsync<IPolicyRepository, Policy>(_mockPolicyRepo);
         Verify_Repo_Never_UpdateAsync<IPolicyRepository, Policy>(_mockPolicyRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtValidateUpdateLogicAsync_ReturnsServerError()
+    {
+        // 1. Arrange
+        var policyId = 1;
+        var updateDTO = new CheckInOutPolicyUpdateDTO { Name = "Policy 1", Description = "Description" };
+
+        MockUpdate_EntityFound(new Policy { Id = policyId, Name = "Old Policy", TypeId = 1, IsDeleted = false });
+        MockUpdateValidation_Success();
+
+        // Mock AnyAsync throw Exception
+        _mockPolicyRepo.Setup(x => x.AnyAsync(It.IsAny<Expression<Func<Policy, bool>>>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _policyService.UpdateAsync(policyId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockPolicyRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<PolicyUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Once());
+        Verify_Repo_AnyAsync<IPolicyRepository, Policy>(_mockPolicyRepo);
+        Verify_Repo_Never_UpdateAsync<IPolicyRepository, Policy>(_mockPolicyRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtAnyAsync_ReturnsServerError()
+    {
+        // 1. Arrange
+        var policyId = 1;
+        var updateDTO = new CheckInOutPolicyUpdateDTO { Name = "Policy 1", Description = "Description" };
+
+        MockUpdate_EntityFound(new Policy { Id = policyId, Name = "Old Policy", TypeId = 1, IsDeleted = false });
+        MockUpdateValidation_Success();
+
+        // Mock AnyAsync throw Exception
+        _mockPolicyRepo.Setup(x => x.AnyAsync(It.IsAny<Expression<Func<Policy, bool>>>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _policyService.UpdateAsync(policyId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockPolicyRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<PolicyUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Once());
+        Verify_Repo_AnyAsync<IPolicyRepository, Policy>(_mockPolicyRepo);
+        Verify_Repo_Never_UpdateAsync<IPolicyRepository, Policy>(_mockPolicyRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtUpdateRepositoryAsync_ReturnsServerError()
+    {
+        // 1. Arrange
+        var policyId = 1;
+        var correctTypeId = 1002;
+
+        var updateDTO = new CheckInOutPolicyUpdateDTO { Name = "Policy 1", Description = "Description" };
+
+        MockUpdate_EntityFound(new Policy { Id = policyId, Name = "Old Policy", TypeId = correctTypeId, IsDeleted = false });
+        MockUpdate_BusinessLogic_DuplicateCheck(false);
+
+        // Setup validator to accept any PolicyUpdateDTO (base class)
+        _mockUpdateValidator.Setup(x => x.ValidateAsync(It.IsAny<PolicyUpdateDTO>(), default))
+            .ReturnsAsync(new FluentValidation.Results.ValidationResult());
+
+        // Mock repo UpdateAsync throw Exception
+        _mockPolicyRepo.Setup(x => x.UpdateAsync(It.IsAny<Policy>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _policyService.UpdateAsync(policyId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockPolicyRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        Verify_Repo_AnyAsync<IPolicyRepository, Policy>(_mockPolicyRepo);
+        Verify_Repo_UpdateAsync<IPolicyRepository, Policy>(_mockPolicyRepo);
+        Verify_Never_Saved();
     }
 
     [Fact]
     public async Task UpdateAsync_SystemThrowException_AtSaveChangesAsync_ReturnsServerError()
     {
-        var id = 1;
-        MockUpdate_EntityFound(new Policy { Id = id, IsDeleted = false });
-        MockUpdateValidation_Success();
+        // 1. Arrange
+        var policyId = 1;
+        var correctTypeId = 1002;
+        var updateDTO = new CheckInOutPolicyUpdateDTO { Name = "Policy 1", Description = "Description" };
+
+        MockUpdate_EntityFound(new Policy { Id = policyId, Name = "Policy 1", TypeId = correctTypeId, IsDeleted = false });
         MockUpdate_BusinessLogic_DuplicateCheck(false);
-        _mockUnitOfWork.Setup(dbu => dbu.SaveChangesAsync()).ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
-        var result = await _policyService.UpdateAsync(id, new CheckInOutPolicyUpdateDTO());
+
+        // Setup validator to accept any PolicyUpdateDTO (base class)
+        _mockUpdateValidator.Setup(x => x.ValidateAsync(It.IsAny<PolicyUpdateDTO>(), default))
+            .ReturnsAsync(new FluentValidation.Results.ValidationResult());
+
+        // Mock SaveChangesAsync throw Exception
+        _mockUnitOfWork.Setup(dbu => dbu.SaveChangesAsync())
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _policyService.UpdateAsync(policyId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockPolicyRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        Verify_Repo_AnyAsync<IPolicyRepository, Policy>(_mockPolicyRepo);
+        Verify_Repo_UpdateAsync<IPolicyRepository, Policy>(_mockPolicyRepo);
+        Verify_Saved(1);
     }
     #endregion
-    
+
     #region GetPoliciesByTypeAsync
     [Fact]
     public async Task GetPoliciesByTypeAsync_ValidTypeId_ReturnsSuccess()
@@ -362,7 +501,7 @@ public class PolicyServiceTests : BaseServiceTest
     private void MockCreateValidationSuccess()
     {
         _mockCreateValidator.Setup(x => x.ValidateAsync(It.IsAny<PolicyCreateDTO>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.FromResult(new FluentValidation.Results.ValidationResult()));
+            .ReturnsAsync(new FluentValidation.Results.ValidationResult());
     }
 
     private void MockCreateLogicValidationSuccess(bool isDuplicate = false)
@@ -380,7 +519,7 @@ public class PolicyServiceTests : BaseServiceTest
     private void MockUpdateValidation_Success()
     {
         _mockUpdateValidator.Setup(x => x.ValidateAsync(It.IsAny<PolicyUpdateDTO>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.FromResult(new FluentValidation.Results.ValidationResult()));
+        .ReturnsAsync(new FluentValidation.Results.ValidationResult());
     }
 
     private void MockUpdate_BusinessLogic_DuplicateCheck(bool isDuplicate)

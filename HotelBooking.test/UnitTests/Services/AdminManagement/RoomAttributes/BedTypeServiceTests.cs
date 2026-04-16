@@ -315,7 +315,7 @@ public class BedTypeServiceTests : BaseServiceTest
     }
 
     [Fact]
-    public async Task UpdateAsync_InvalidaRequest_ReturnsBadRequest()
+    public async Task UpdateAsync_InvalidRequest_ReturnsBadRequest()
     {
         // 1. Arrange
         var bedTypeId = 1;
@@ -392,6 +392,12 @@ public class BedTypeServiceTests : BaseServiceTest
             DefaultCapacity = 2
         };
 
+        // Mock GetByIdAsync is not null
+        MockUpdate_EntityFound(new BedType { Id = bedTypeId, Name = "Old Bed", IsDeleted = false });
+
+        // Mock validation success
+        MockUpdateValidation_Success();
+
         // Mock AnyAsync throw exception
         _mockBedTypeRepo.Setup(x => x.AnyAsync(It.IsAny<Expression<Func<BedType, bool>>>()))
             .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
@@ -408,12 +414,11 @@ public class BedTypeServiceTests : BaseServiceTest
         _mockBedTypeRepo.Verify(x => x.GetByIdAsync(bedTypeId), Times.Once());
         _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<BedTypeUpdateDTO>(), default), Times.Once);
         Verify_Repo_AnyAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
-
         Verify_Repo_Never_UpdateAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
         Verify_Never_Saved();
     }
     [Fact]
-    public async Task UpdateAsync_SystemThrowException_AtUpdateAsync_ReturnsServerError()
+    public async Task UpdateAsync_SystemThrowException_AtUpdateRepositoryAsync_ReturnsServerError()
     {
         // 1. Arrange
         var bedTypeId = 1;
@@ -424,8 +429,13 @@ public class BedTypeServiceTests : BaseServiceTest
             DefaultCapacity = 2
         };
 
-        // Mock GetByIdAsync throw exception
-        _mockBedTypeRepo.Setup(x => x.GetByIdAsync(It.IsAny<int>())).ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+        MockUpdate_EntityFound(new BedType { Id = bedTypeId, Name = "Old Bed", IsDeleted = false });
+        MockUpdateValidation_Success();
+        MockUpdate_BusinessLogic_DuplicateCheck(false);
+
+        // Mock UpdateAsync throw Exception
+        _mockBedTypeRepo.Setup(x => x.UpdateAsync(It.IsAny<BedType>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
 
         // 2. Act
         var result = await _bedTypeService.UpdateAsync(bedTypeId, updateDTO);
@@ -438,10 +448,43 @@ public class BedTypeServiceTests : BaseServiceTest
         // Verify steps
         _mockBedTypeRepo.Verify(x => x.GetByIdAsync(bedTypeId), Times.Once());
         _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<BedTypeUpdateDTO>(), default), Times.Once);
+        Verify_Repo_AnyAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
+        Verify_Repo_UpdateAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtGetByIdAsync_ReturnsServerError()
+    {
+        // 1. Arrange
+        var bedTypeId = 1;
+        var updateDTO = new BedTypeUpdateDTO
+        {
+            Name = "Bed Type 1",
+            Description = "Description 1",
+            DefaultCapacity = 2
+        };
+
+        // Mock GetByIdAsync throw exception
+        _mockBedTypeRepo.Setup(x => x.GetByIdAsync(It.IsAny<int>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _bedTypeService.UpdateAsync(bedTypeId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify steps
+        _mockBedTypeRepo.Verify(x => x.GetByIdAsync(bedTypeId), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<BedTypeUpdateDTO>(), default), Times.Never);
         Verify_Repo_Never_AnyAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
         Verify_Repo_Never_UpdateAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
         Verify_Never_Saved();
     }
+
     [Fact]
     public async Task UpdateAsync_SystemThrowException_AtAnyAsync_ReturnsServerError()
     {
@@ -553,6 +596,89 @@ public class BedTypeServiceTests : BaseServiceTest
         result.StatusCode.Should().Be(StatusCodeResponse.Success);
         result.Content.Should().NotBeNull();
         result.Content!.TotalCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task GetPagedListAsync_InvalidPageIndex_ReturnsBadRequest()
+    {
+        // 1. Arrange
+        var paging = new PagingRequest { PageIndex = -1, PageSize = 10 };
+
+        var validationFailure = new List<ValidationFailure>
+        {
+            new ValidationFailure("PageIndex", MessageResponse.Pagination.INVALID_PAGE_INDEX)
+        };
+        _mockPagingValidator.Setup(x => x.ValidateAsync(paging, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new FluentValidation.Results.ValidationResult(validationFailure));
+
+        // 2. Act
+        var result = await _bedTypeService.GetPagedListAsync(paging);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+        result.Message.Should().Be(MessageResponse.Pagination.INVALID_PAGE_INDEX);
+
+        // Verify
+        _mockBedTypeRepo.Verify(x => x.GetPagedAsync(
+            It.IsAny<Expression<Func<BedType, bool>>>(),
+            It.IsAny<int>(),
+            It.IsAny<int>(),
+            It.IsAny<Func<IQueryable<BedType>, IOrderedQueryable<BedType>>>()), Times.Never());
+    }
+
+    [Fact]
+    public async Task GetPagedListAsync_InvalidPageSize_ReturnsBadRequest()
+    {
+        // 1. Arrange
+        var paging = new PagingRequest { PageIndex = 1, PageSize = -1 };
+
+        var validationFailure = new List<ValidationFailure>
+        {
+            new ValidationFailure("PageSize", MessageResponse.Pagination.INVALID_PAGE_SIZE)
+        };
+        _mockPagingValidator.Setup(x => x.ValidateAsync(paging, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new FluentValidation.Results.ValidationResult(validationFailure));
+
+        // 2. Act
+        var result = await _bedTypeService.GetPagedListAsync(paging);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+        result.Message.Should().Be(MessageResponse.Pagination.INVALID_PAGE_SIZE);
+
+        // Verify
+        _mockBedTypeRepo.Verify(x => x.GetPagedAsync(
+            It.IsAny<Expression<Func<BedType, bool>>>(),
+            It.IsAny<int>(),
+            It.IsAny<int>(),
+            It.IsAny<Func<IQueryable<BedType>, IOrderedQueryable<BedType>>>()), Times.Never());
+    }
+
+    [Fact]
+    public async Task GetPagedListAsync_SystemThrowException_AtGetPagedAsync_ReturnsServerError()
+    {
+        // 1. Arrange
+        var paging = new PagingRequest { PageIndex = 1, PageSize = 10 };
+
+        _mockPagingValidator.Setup(x => x.ValidateAsync(paging, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new FluentValidation.Results.ValidationResult());
+
+        _mockBedTypeRepo.Setup(x => x.GetPagedAsync(
+            It.IsAny<Expression<Func<BedType, bool>>>(),
+            It.IsAny<int>(),
+            It.IsAny<int>(),
+            It.IsAny<Func<IQueryable<BedType>, IOrderedQueryable<BedType>>>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _bedTypeService.GetPagedListAsync(paging);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
     }
     #endregion
 

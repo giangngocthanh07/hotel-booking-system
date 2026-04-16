@@ -242,15 +242,148 @@ public class RoomViewServiceTests : BaseServiceTest
     }
 
     [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtGetByIdAsync_ReturnsServerError()
+    {
+        // 1. Arrange
+        var roomViewId = 1;
+        var updateDTO = new RoomViewUpdateDTO { Name = "City View", Description = "Description" };
+
+        // Mock GetByIdAsync throw Exception
+        _mockRoomViewRepo.Setup(x => x.GetByIdAsync(It.IsAny<int>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _roomViewService.UpdateAsync(roomViewId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockRoomViewRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<RoomViewUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Never());
+        Verify_Repo_Never_AnyAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
+        Verify_Repo_Never_UpdateAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtValidateUpdateLogicAsync_ReturnsServerError()
+    {
+        // 1. Arrange
+        var roomViewId = 1;
+        var updateDTO = new RoomViewUpdateDTO { Name = "City View", Description = "Description" };
+
+        MockUpdate_EntityFound(new RoomView { Id = roomViewId, Name = "Old City View", IsDeleted = false });
+        MockUpdateValidation_Success();
+
+        // Mock AnyAsync throw Exception
+        _mockRoomViewRepo.Setup(x => x.AnyAsync(It.IsAny<Expression<Func<RoomView, bool>>>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _roomViewService.UpdateAsync(roomViewId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockRoomViewRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<RoomViewUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Once());
+        Verify_Repo_AnyAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
+        Verify_Repo_Never_UpdateAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtAnyAsync_ReturnsServerError()
+    {
+        // 1. Arrange
+        var roomViewId = 1;
+        var updateDTO = new RoomViewUpdateDTO { Name = "City View", Description = "Description" };
+
+        MockUpdate_EntityFound(new RoomView { Id = roomViewId, Name = "Old City View", IsDeleted = false });
+        MockUpdateValidation_Success();
+
+        // Mock AnyAsync throw Exception
+        _mockRoomViewRepo.Setup(x => x.AnyAsync(It.IsAny<Expression<Func<RoomView, bool>>>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _roomViewService.UpdateAsync(roomViewId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockRoomViewRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<RoomViewUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Once());
+        Verify_Repo_AnyAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
+        Verify_Repo_Never_UpdateAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtUpdateRepositoryAsync_ReturnsServerError()
+    {
+        // 1. Arrange
+        var roomViewId = 1;
+        var updateDTO = new RoomViewUpdateDTO { Name = "City View", Description = "Description" };
+
+        MockUpdate_EntityFound(new RoomView { Id = roomViewId, Name = "Old City View", IsDeleted = false });
+        MockUpdateValidation_Success();
+        MockUpdate_BusinessLogic_DuplicateCheck(false);
+
+        // Mock UpdateAsync throw Exception
+        _mockRoomViewRepo.Setup(x => x.UpdateAsync(It.IsAny<RoomView>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _roomViewService.UpdateAsync(roomViewId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockRoomViewRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<RoomViewUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Once());
+        Verify_Repo_AnyAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
+        Verify_Repo_UpdateAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
     public async Task UpdateAsync_SystemThrowException_AtSaveChangesAsync_ReturnsServerError()
     {
         var id = 1;
         MockUpdate_EntityFound(new RoomView { Id = id, IsDeleted = false });
         MockUpdateValidation_Success();
         MockUpdate_BusinessLogic_DuplicateCheck(false);
-        _mockUnitOfWork.Setup(dbu => dbu.SaveChangesAsync()).ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // Mock SaveChangesAsync throw Exception
+        _mockUnitOfWork.Setup(dbu => dbu.SaveChangesAsync())
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
         var result = await _roomViewService.UpdateAsync(id, new RoomViewUpdateDTO());
+
+        // Assert
+        result.Should().NotBeNull();
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockRoomViewRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<RoomViewUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Once());
+        Verify_Repo_AnyAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
+        Verify_Repo_UpdateAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
+        Verify_Saved(1);
     }
     #endregion
 
@@ -284,6 +417,89 @@ public class RoomViewServiceTests : BaseServiceTest
         result.StatusCode.Should().Be(StatusCodeResponse.Success);
         result.Content.Should().NotBeNull();
         result.Content!.TotalCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task GetPagedListAsync_InvalidPageIndex_ReturnsBadRequest()
+    {
+        // 1. Arrange
+        var paging = new PagingRequest { PageIndex = -1, PageSize = 10 };
+
+        var validationFailure = new List<ValidationFailure>
+        {
+            new ValidationFailure("PageIndex", MessageResponse.Pagination.INVALID_PAGE_INDEX)
+        };
+        _mockPagingValidator.Setup(x => x.ValidateAsync(paging, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new FluentValidation.Results.ValidationResult(validationFailure));
+
+        // 2. Act
+        var result = await _roomViewService.GetPagedListAsync(paging);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+        result.Message.Should().Be(MessageResponse.Pagination.INVALID_PAGE_INDEX);
+
+        // Verify
+        _mockRoomViewRepo.Verify(x => x.GetPagedAsync(
+            It.IsAny<Expression<Func<RoomView, bool>>>(),
+            It.IsAny<int>(),
+            It.IsAny<int>(),
+            It.IsAny<Func<IQueryable<RoomView>, IOrderedQueryable<RoomView>>>()), Times.Never());
+    }
+
+    [Fact]
+    public async Task GetPagedListAsync_InvalidPageSize_ReturnsBadRequest()
+    {
+        // 1. Arrange
+        var paging = new PagingRequest { PageIndex = 1, PageSize = -1 };
+
+        var validationFailure = new List<ValidationFailure>
+        {
+            new ValidationFailure("PageSize", MessageResponse.Pagination.INVALID_PAGE_SIZE)
+        };
+        _mockPagingValidator.Setup(x => x.ValidateAsync(paging, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new FluentValidation.Results.ValidationResult(validationFailure));
+
+        // 2. Act
+        var result = await _roomViewService.GetPagedListAsync(paging);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+        result.Message.Should().Be(MessageResponse.Pagination.INVALID_PAGE_SIZE);
+
+        // Verify
+        _mockRoomViewRepo.Verify(x => x.GetPagedAsync(
+            It.IsAny<Expression<Func<RoomView, bool>>>(),
+            It.IsAny<int>(),
+            It.IsAny<int>(),
+            It.IsAny<Func<IQueryable<RoomView>, IOrderedQueryable<RoomView>>>()), Times.Never());
+    }
+
+    [Fact]
+    public async Task GetPagedListAsync_SystemThrowException_AtGetPagedAsync_ReturnsServerError()
+    {
+        // 1. Arrange
+        var paging = new PagingRequest { PageIndex = 1, PageSize = 10 };
+
+        _mockPagingValidator.Setup(x => x.ValidateAsync(paging, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new FluentValidation.Results.ValidationResult());
+
+        _mockRoomViewRepo.Setup(x => x.GetPagedAsync(
+            It.IsAny<Expression<Func<RoomView, bool>>>(),
+            It.IsAny<int>(),
+            It.IsAny<int>(),
+            It.IsAny<Func<IQueryable<RoomView>, IOrderedQueryable<RoomView>>>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _roomViewService.GetPagedListAsync(paging);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
     }
     #endregion
 

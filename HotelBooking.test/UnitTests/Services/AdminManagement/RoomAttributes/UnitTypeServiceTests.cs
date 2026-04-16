@@ -195,14 +195,6 @@ public class UnitTypeServiceTests : BaseServiceTest
         Verify_Repo_Never_UpdateAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
         Verify_Never_Saved();
     }
-    [Fact]
-    public async Task UpdateAsync_InvalidId_ReturnsBadRequest()
-    {
-        var result = await _unitTypeService.UpdateAsync(-1, new UnitTypeUpdateDTO());
-        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
-        result.Message.Should().Be(MessageResponse.AdminManagement.RoomAttribute.UnitType.INVALID_ID);
-        Verify_Repo_Never_UpdateAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
-    }
 
     [Fact]
     public async Task UpdateAsync_InvalidRequest_ReturnsBadRequest()
@@ -231,25 +223,152 @@ public class UnitTypeServiceTests : BaseServiceTest
     }
 
     [Fact]
-    public async Task UpdateAsync_SystemThrowException_AtUpdateAsync_ReturnsServerError()
+    public async Task UpdateAsync_SystemThrowException_AtGetByIdAsync_ReturnsServerError()
     {
-        var id = 1;
-        _mockUnitTypeRepo.Setup(x => x.GetByIdAsync(id)).ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
-        var result = await _unitTypeService.UpdateAsync(id, new UnitTypeUpdateDTO());
+        // 1. Arrange
+        var unitTypeId = 1;
+        var updateDTO = new UnitTypeUpdateDTO { Name = "Square Meters", Description = "Description" };
+
+        // Mock GetByIdAsync throw Exception
+        _mockUnitTypeRepo.Setup(x => x.GetByIdAsync(It.IsAny<int>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _unitTypeService.UpdateAsync(unitTypeId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockUnitTypeRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<UnitTypeUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Never());
+        Verify_Repo_Never_AnyAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
         Verify_Repo_Never_UpdateAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtValidateUpdateLogicAsync_ReturnsServerError()
+    {
+        // 1. Arrange
+        var unitTypeId = 1;
+        var updateDTO = new UnitTypeUpdateDTO { Name = "Square Meters", Description = "Description" };
+
+        MockUpdate_EntityFound(new UnitType { Id = unitTypeId, Name = "Old Square Meters", IsDeleted = false });
+        MockUpdateValidation_Success();
+
+        // Mock AnyAsync throw Exception
+        _mockUnitTypeRepo.Setup(x => x.AnyAsync(It.IsAny<Expression<Func<UnitType, bool>>>())) 
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _unitTypeService.UpdateAsync(unitTypeId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockUnitTypeRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<UnitTypeUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Once());
+        Verify_Repo_AnyAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
+        Verify_Repo_Never_UpdateAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtAnyAsync_ReturnsServerError()
+    {
+        // 1. Arrange
+        var unitTypeId = 1;
+        var updateDTO = new UnitTypeUpdateDTO { Name = "Square Meters", Description = "Description" };
+
+        MockUpdate_EntityFound(new UnitType { Id = unitTypeId, Name = "Old Square Meters", IsDeleted = false });
+        MockUpdateValidation_Success();
+
+        // Mock AnyAsync throw Exception
+        _mockUnitTypeRepo.Setup(x => x.AnyAsync(It.IsAny<Expression<Func<UnitType, bool>>>())) 
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _unitTypeService.UpdateAsync(unitTypeId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockUnitTypeRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<UnitTypeUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Once());
+        Verify_Repo_AnyAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
+        Verify_Repo_Never_UpdateAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtUpdateRepositoryAsync_ReturnsServerError()
+    {
+        // 1. Arrange
+        var unitTypeId = 1;
+        var updateDTO = new UnitTypeUpdateDTO { Name = "Square Meters", Description = "Description" };
+
+        MockUpdate_EntityFound(new UnitType { Id = unitTypeId, Name = "Old Square Meters", IsDeleted = false });
+        MockUpdateValidation_Success();
+        MockUpdate_BusinessLogic_DuplicateCheck(false);
+
+        // Mock UpdateAsync throw Exception
+        _mockUnitTypeRepo.Setup(x => x.UpdateAsync(It.IsAny<UnitType>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _unitTypeService.UpdateAsync(unitTypeId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockUnitTypeRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<UnitTypeUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Once());
+        Verify_Repo_AnyAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
+        Verify_Repo_UpdateAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
+        Verify_Never_Saved();
     }
 
     [Fact]
     public async Task UpdateAsync_SystemThrowException_AtSaveChangesAsync_ReturnsServerError()
     {
-        var id = 1;
-        MockUpdate_EntityFound(new UnitType { Id = id, IsDeleted = false });
+        // 1. Arrange
+        var unitTypeId = 1;
+        var updateDTO = new UnitTypeUpdateDTO { Name = "Square Meters", Description = "Description" };
+
+        MockUpdate_EntityFound(new UnitType { Id = unitTypeId, Name = "Square Meters", IsDeleted = false });
         MockUpdateValidation_Success();
         MockUpdate_BusinessLogic_DuplicateCheck(false);
-        _mockUnitOfWork.Setup(dbu => dbu.SaveChangesAsync()).ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
-        var result = await _unitTypeService.UpdateAsync(id, new UnitTypeUpdateDTO());
+
+        // Mock SaveChangesAsync throw Exception
+        _mockUnitOfWork.Setup(dbu => dbu.SaveChangesAsync())
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _unitTypeService.UpdateAsync(unitTypeId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockUnitTypeRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<UnitTypeUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Once());
+        Verify_Repo_AnyAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
+        Verify_Repo_UpdateAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
+        Verify_Saved(1);
     }
     #endregion
     
@@ -283,6 +402,89 @@ public class UnitTypeServiceTests : BaseServiceTest
         result.StatusCode.Should().Be(StatusCodeResponse.Success);
         result.Content.Should().NotBeNull();
         result.Content!.TotalCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task GetPagedListAsync_InvalidPageIndex_ReturnsBadRequest()
+    {
+        // 1. Arrange
+        var paging = new PagingRequest { PageIndex = -1, PageSize = 10 };
+
+        var validationFailure = new List<ValidationFailure>
+        {
+            new ValidationFailure("PageIndex", MessageResponse.Pagination.INVALID_PAGE_INDEX)
+        };
+        _mockPagingValidator.Setup(x => x.ValidateAsync(paging, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new FluentValidation.Results.ValidationResult(validationFailure));
+
+        // 2. Act
+        var result = await _unitTypeService.GetPagedListAsync(paging);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+        result.Message.Should().Be(MessageResponse.Pagination.INVALID_PAGE_INDEX);
+
+        // Verify
+        _mockUnitTypeRepo.Verify(x => x.GetPagedAsync(
+            It.IsAny<Expression<Func<UnitType, bool>>>(),
+            It.IsAny<int>(),
+            It.IsAny<int>(),
+            It.IsAny<Func<IQueryable<UnitType>, IOrderedQueryable<UnitType>>>()), Times.Never());
+    }
+
+    [Fact]
+    public async Task GetPagedListAsync_InvalidPageSize_ReturnsBadRequest()
+    {
+        // 1. Arrange
+        var paging = new PagingRequest { PageIndex = 1, PageSize = -1 };
+
+        var validationFailure = new List<ValidationFailure>
+        {
+            new ValidationFailure("PageSize", MessageResponse.Pagination.INVALID_PAGE_SIZE)
+        };
+        _mockPagingValidator.Setup(x => x.ValidateAsync(paging, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new FluentValidation.Results.ValidationResult(validationFailure));
+
+        // 2. Act
+        var result = await _unitTypeService.GetPagedListAsync(paging);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+        result.Message.Should().Be(MessageResponse.Pagination.INVALID_PAGE_SIZE);
+
+        // Verify
+        _mockUnitTypeRepo.Verify(x => x.GetPagedAsync(
+            It.IsAny<Expression<Func<UnitType, bool>>>(),
+            It.IsAny<int>(),
+            It.IsAny<int>(),
+            It.IsAny<Func<IQueryable<UnitType>, IOrderedQueryable<UnitType>>>()), Times.Never());
+    }
+
+    [Fact]
+    public async Task GetPagedListAsync_SystemThrowException_AtGetPagedAsync_ReturnsServerError()
+    {
+        // 1. Arrange
+        var paging = new PagingRequest { PageIndex = 1, PageSize = 10 };
+
+        _mockPagingValidator.Setup(x => x.ValidateAsync(paging, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new FluentValidation.Results.ValidationResult());
+
+        _mockUnitTypeRepo.Setup(x => x.GetPagedAsync(
+            It.IsAny<Expression<Func<UnitType, bool>>>(),
+            It.IsAny<int>(),
+            It.IsAny<int>(),
+            It.IsAny<Func<IQueryable<UnitType>, IOrderedQueryable<UnitType>>>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _unitTypeService.GetPagedListAsync(paging);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
     }
     #endregion
 

@@ -278,25 +278,152 @@ public class ServiceServiceTests : BaseServiceTest
     }
 
     [Fact]
-    public async Task UpdateAsync_SystemThrowException_AtUpdateAsync_ReturnsServerError()
+    public async Task UpdateAsync_SystemThrowException_AtGetByIdAsync_ReturnsServerError()
     {
-        var id = 1;
-        _mockServiceRepo.Setup(x => x.GetByIdAsync(id)).ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
-        var result = await _serviceService.UpdateAsync(id, new ServiceStandardUpdateDTO());
+        // 1. Arrange
+        var serviceId = 1;
+        var updateDTO = new ServiceStandardUpdateDTO { Name = "Service 1", Description = "Description" };
+
+        // Mock GetByIdAsync throw Exception
+        _mockServiceRepo.Setup(x => x.GetByIdAsync(It.IsAny<int>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _serviceService.UpdateAsync(serviceId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockServiceRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<ServiceUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Never());
+        Verify_Repo_Never_AnyAsync<IServiceRepository, Service>(_mockServiceRepo);
         Verify_Repo_Never_UpdateAsync<IServiceRepository, Service>(_mockServiceRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtValidateUpdateLogicAsync_ReturnsServerError()
+    {
+        // 1. Arrange
+        var serviceId = 1;
+        var updateDTO = new ServiceStandardUpdateDTO { Name = "Service 1", Description = "Description" };
+
+        MockUpdate_EntityFound(new Service { Id = serviceId, Name = "Old Service", TypeId = 1, IsDeleted = false });
+        MockUpdateValidation_Success();
+
+        // Mock AnyAsync throw Exception
+        _mockServiceRepo.Setup(x => x.AnyAsync(It.IsAny<Expression<Func<Service, bool>>>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _serviceService.UpdateAsync(serviceId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockServiceRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<ServiceUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Once());
+        Verify_Repo_AnyAsync<IServiceRepository, Service>(_mockServiceRepo);
+        Verify_Repo_Never_UpdateAsync<IServiceRepository, Service>(_mockServiceRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtAnyAsync_ReturnsServerError()
+    {
+        // 1. Arrange
+        var serviceId = 1;
+        var updateDTO = new ServiceStandardUpdateDTO { Name = "Service 1", Description = "Description" };
+
+        MockUpdate_EntityFound(new Service { Id = serviceId, Name = "Old Service", TypeId = 1, IsDeleted = false });
+        MockUpdateValidation_Success();
+
+        // Mock AnyAsync throw Exception
+        _mockServiceRepo.Setup(x => x.AnyAsync(It.IsAny<Expression<Func<Service, bool>>>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _serviceService.UpdateAsync(serviceId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockServiceRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<ServiceUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Once());
+        Verify_Repo_AnyAsync<IServiceRepository, Service>(_mockServiceRepo);
+        Verify_Repo_Never_UpdateAsync<IServiceRepository, Service>(_mockServiceRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtUpdateRepositoryAsync_ReturnsServerError()
+    {
+        // 1. Arrange
+        var serviceId = 1;
+        var updateDTO = new ServiceStandardUpdateDTO { Name = "Service 1", Description = "Description" };
+
+        MockUpdate_EntityFound(new Service { Id = serviceId, Name = "Old Service", TypeId = 1, IsDeleted = false });
+        MockUpdateValidation_Success();
+        MockUpdate_BusinessLogic_DuplicateCheck(false);
+
+        // Mock UpdateAsync throw Exception
+        _mockServiceRepo.Setup(x => x.UpdateAsync(It.IsAny<Service>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _serviceService.UpdateAsync(serviceId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockServiceRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<ServiceUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Once());
+        Verify_Repo_AnyAsync<IServiceRepository, Service>(_mockServiceRepo);
+        Verify_Repo_UpdateAsync<IServiceRepository, Service>(_mockServiceRepo);
+        Verify_Never_Saved();
     }
 
     [Fact]
     public async Task UpdateAsync_SystemThrowException_AtSaveChangesAsync_ReturnsServerError()
     {
-        var id = 1;
-        MockUpdate_EntityFound(new Service { Id = id, IsDeleted = false });
+        // 1. Arrange
+        var serviceId = 1;
+        var updateDTO = new ServiceStandardUpdateDTO { Name = "Service 1", Description = "Description" };
+
+        MockUpdate_EntityFound(new Service { Id = serviceId, Name = "Service 1", TypeId = 1, IsDeleted = false });
         MockUpdateValidation_Success();
         MockUpdate_BusinessLogic_DuplicateCheck(false);
-        _mockUnitOfWork.Setup(dbu => dbu.SaveChangesAsync()).ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
-        var result = await _serviceService.UpdateAsync(id, new ServiceStandardUpdateDTO());
+
+        // Mock SaveChangesAsync throw Exception
+        _mockUnitOfWork.Setup(dbu => dbu.SaveChangesAsync())
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _serviceService.UpdateAsync(serviceId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockServiceRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<ServiceUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Once());
+        Verify_Repo_AnyAsync<IServiceRepository, Service>(_mockServiceRepo);
+        Verify_Repo_UpdateAsync<IServiceRepository, Service>(_mockServiceRepo);
+        Verify_Saved(1);
     }
     #endregion
     

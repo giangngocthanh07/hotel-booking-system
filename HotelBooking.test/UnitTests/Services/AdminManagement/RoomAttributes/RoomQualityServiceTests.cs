@@ -201,58 +201,219 @@ public class RoomQualityServiceTests : BaseServiceTest
     [Fact]
     public async Task UpdateAsync_InvalidId_ReturnsBadRequest()
     {
+        // 1. Arrange & Act
         var result = await _roomQualityService.UpdateAsync(-1, new RoomQualityUpdateDTO());
+
+        // 3. Assert
+        result.Should().NotBeNull();
         result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
         result.Message.Should().Be(MessageResponse.AdminManagement.RoomAttribute.RoomQuality.INVALID_ID);
+
+        // Verify
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<RoomQualityUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Never());
+        _mockRoomQualityRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Never());
+        Verify_Repo_Never_AnyAsync<IRoomQualityRepository, RoomQuality>(_mockRoomQualityRepo);
         Verify_Repo_Never_UpdateAsync<IRoomQualityRepository, RoomQuality>(_mockRoomQualityRepo);
+        Verify_Never_Saved();
     }
 
     [Fact]
     public async Task UpdateAsync_InvalidRequest_ReturnsBadRequest()
     {
-        var id = 1;
-        MockUpdate_EntityFound(new RoomQuality { Id = id, IsDeleted = false });
-        var validationFailure = new List<ValidationFailure> { new ValidationFailure("Name", "Error") };
+        // 1. Arrange
+        var roomQualityId = 1;
+        MockUpdate_EntityFound(new RoomQuality { Id = roomQualityId, Name = "Standard", IsDeleted = false, TypeId = 1 });
+
+        var updateDTO = new RoomQualityUpdateDTO { Name = "", Description = "Description", SortOrder = 1 };
+        var validationFailure = new List<ValidationFailure>
+        {
+            new ValidationFailure("Name", MessageResponse.AdminManagement.RoomAttribute.RoomQuality.EMPTY_NAME)
+        };
         _mockUpdateValidator.Setup(x => x.ValidateAsync(It.IsAny<RoomQualityUpdateDTO>(), default))
             .ReturnsAsync(new FluentValidation.Results.ValidationResult(validationFailure));
-        var result = await _roomQualityService.UpdateAsync(id, new RoomQualityUpdateDTO());
+
+        // 2. Act
+        var result = await _roomQualityService.UpdateAsync(roomQualityId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
         result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+        result.Message.Should().Be(validationFailure.First().ErrorMessage);
+
+        // Verify
+        _mockRoomQualityRepo.Verify(x => x.GetByIdAsync(roomQualityId), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<RoomQualityUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Once());
+        Verify_Repo_Never_AnyAsync<IRoomQualityRepository, RoomQuality>(_mockRoomQualityRepo);
         Verify_Repo_Never_UpdateAsync<IRoomQualityRepository, RoomQuality>(_mockRoomQualityRepo);
+        Verify_Never_Saved();
     }
 
     [Fact]
     public async Task UpdateAsync_DuplicateName_ReturnsConflict()
     {
-        var id = 1;
-        MockUpdate_EntityFound(new RoomQuality { Id = id, IsDeleted = false });
+        // 1. Arrange
+        var roomQualityId = 1;
+        var updateDTO = new RoomQualityUpdateDTO { Name = "Duplicate Standard", Description = "Description", SortOrder = 1 };
+
+        MockUpdate_EntityFound(new RoomQuality { Id = roomQualityId, Name = "Standard", IsDeleted = false, TypeId = 1 });
         MockUpdateValidation_Success();
         MockUpdate_BusinessLogic_DuplicateCheck(true);
-        var result = await _roomQualityService.UpdateAsync(id, new RoomQualityUpdateDTO());
+
+        // 2. Act
+        var result = await _roomQualityService.UpdateAsync(roomQualityId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
         result.StatusCode.Should().Be(StatusCodeResponse.Conflict);
         result.Message.Should().Be(MessageResponse.AdminManagement.RoomAttribute.RoomQuality.NAME_ALREADY_EXISTS);
+
+        Verify_Repo_AnyAsync<IRoomQualityRepository, RoomQuality>(_mockRoomQualityRepo);
         Verify_Repo_Never_UpdateAsync<IRoomQualityRepository, RoomQuality>(_mockRoomQualityRepo);
+        Verify_Never_Saved();
     }
 
     [Fact]
-    public async Task UpdateAsync_SystemThrowException_AtUpdateAsync_ReturnsServerError()
+    public async Task UpdateAsync_SystemThrowException_AtGetByIdAsync_ReturnsServerError()
     {
-        var id = 1;
-        _mockRoomQualityRepo.Setup(x => x.GetByIdAsync(id)).ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
-        var result = await _roomQualityService.UpdateAsync(id, new RoomQualityUpdateDTO());
+        // 1. Arrange
+        var roomQualityId = 1;
+        var updateDTO = new RoomQualityUpdateDTO { Name = "Standard", Description = "Description", SortOrder = 1 };
+
+        _mockRoomQualityRepo.Setup(x => x.GetByIdAsync(It.IsAny<int>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _roomQualityService.UpdateAsync(roomQualityId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockRoomQualityRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<RoomQualityUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Never());
+        Verify_Repo_Never_AnyAsync<IRoomQualityRepository, RoomQuality>(_mockRoomQualityRepo);
         Verify_Repo_Never_UpdateAsync<IRoomQualityRepository, RoomQuality>(_mockRoomQualityRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtValidateUpdateLogicAsync_ReturnsServerError()
+    {
+        // 1. Arrange
+        var roomQualityId = 1;
+        var updateDTO = new RoomQualityUpdateDTO { Name = "Standard", Description = "Description", SortOrder = 1 };
+
+        MockUpdate_EntityFound(new RoomQuality { Id = roomQualityId, Name = "Old Standard", IsDeleted = false, TypeId = 1 });
+        MockUpdateValidation_Success();
+
+        _mockRoomQualityRepo.Setup(x => x.AnyAsync(It.IsAny<Expression<Func<RoomQuality, bool>>>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _roomQualityService.UpdateAsync(roomQualityId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockRoomQualityRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<RoomQualityUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Once());
+        Verify_Repo_AnyAsync<IRoomQualityRepository, RoomQuality>(_mockRoomQualityRepo);
+        Verify_Repo_Never_UpdateAsync<IRoomQualityRepository, RoomQuality>(_mockRoomQualityRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtAnyAsync_ReturnsServerError()
+    {
+        // 1. Arrange
+        var roomQualityId = 1;
+        var updateDTO = new RoomQualityUpdateDTO { Name = "Standard", Description = "Description", SortOrder = 1 };
+
+        MockUpdate_EntityFound(new RoomQuality { Id = roomQualityId, Name = "Old Standard", IsDeleted = false, TypeId = 1 });
+        MockUpdateValidation_Success();
+
+        _mockRoomQualityRepo.Setup(x => x.AnyAsync(It.IsAny<Expression<Func<RoomQuality, bool>>>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _roomQualityService.UpdateAsync(roomQualityId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockRoomQualityRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<RoomQualityUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Once());
+        Verify_Repo_AnyAsync<IRoomQualityRepository, RoomQuality>(_mockRoomQualityRepo);
+        Verify_Repo_Never_UpdateAsync<IRoomQualityRepository, RoomQuality>(_mockRoomQualityRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_SystemThrowException_AtUpdateRepositoryAsync_ReturnsServerError()
+    {
+        // 1. Arrange
+        var roomQualityId = 1;
+        var updateDTO = new RoomQualityUpdateDTO { Name = "Standard", Description = "Description", SortOrder = 1 };
+
+        MockUpdate_EntityFound(new RoomQuality { Id = roomQualityId, Name = "Old Standard", IsDeleted = false, TypeId = 1 });
+        MockUpdateValidation_Success();
+        MockUpdate_BusinessLogic_DuplicateCheck(false);
+
+        _mockRoomQualityRepo.Setup(x => x.UpdateAsync(It.IsAny<RoomQuality>()))
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _roomQualityService.UpdateAsync(roomQualityId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockRoomQualityRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<RoomQualityUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Once());
+        Verify_Repo_AnyAsync<IRoomQualityRepository, RoomQuality>(_mockRoomQualityRepo);
+        Verify_Repo_UpdateAsync<IRoomQualityRepository, RoomQuality>(_mockRoomQualityRepo);
+        Verify_Never_Saved();
     }
 
     [Fact]
     public async Task UpdateAsync_SystemThrowException_AtSaveChangesAsync_ReturnsServerError()
     {
-        var id = 1;
-        MockUpdate_EntityFound(new RoomQuality { Id = id, IsDeleted = false });
+        // 1. Arrange
+        var roomQualityId = 1;
+        var updateDTO = new RoomQualityUpdateDTO { Name = "Standard", Description = "Description", SortOrder = 1 };
+
+        MockUpdate_EntityFound(new RoomQuality { Id = roomQualityId, Name = "Standard", IsDeleted = false, TypeId = 1 });
         MockUpdateValidation_Success();
         MockUpdate_BusinessLogic_DuplicateCheck(false);
-        _mockUnitOfWork.Setup(dbu => dbu.SaveChangesAsync()).ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
-        var result = await _roomQualityService.UpdateAsync(id, new RoomQualityUpdateDTO());
+
+        _mockUnitOfWork.Setup(dbu => dbu.SaveChangesAsync())
+            .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
+
+        // 2. Act
+        var result = await _roomQualityService.UpdateAsync(roomQualityId, updateDTO);
+
+        // 3. Assert
+        result.Should().NotBeNull();
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+
+        // Verify
+        _mockRoomQualityRepo.Verify(x => x.GetByIdAsync(It.IsAny<int>()), Times.Once());
+        _mockUpdateValidator.Verify(x => x.ValidateAsync(It.IsAny<RoomQualityUpdateDTO>(), It.IsAny<CancellationToken>()), Times.Once());
+        Verify_Repo_AnyAsync<IRoomQualityRepository, RoomQuality>(_mockRoomQualityRepo);
+        Verify_Repo_UpdateAsync<IRoomQualityRepository, RoomQuality>(_mockRoomQualityRepo);
+        Verify_Saved(1);
     }
     #endregion
     
