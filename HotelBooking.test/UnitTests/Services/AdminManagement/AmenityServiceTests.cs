@@ -371,6 +371,16 @@ public class AmenityServiceTests : BaseServiceTest
             Description = "Description 1"
         };
 
+        // Mock GetByIdAsync --> Found
+        _mockAmenityRepo.Setup(x => x.GetByIdAsync(It.IsAny<int>()))
+            .ReturnsAsync(new Amenity { Id = amenityId, Name = "Amenity 1", TypeId = 1, IsDeleted = false });
+
+        // Mock validation success
+        MockUpdateValidation_Success();
+
+        // Mock duplicate name
+        MockUpdate_BusinessLogic_DuplicateCheck(true);
+
         // 2. Act
         var result = await _amenityService.UpdateAsync(amenityId, updateDTO);
 

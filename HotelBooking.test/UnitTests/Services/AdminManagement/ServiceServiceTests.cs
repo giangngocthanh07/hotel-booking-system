@@ -24,7 +24,7 @@ public class ServiceServiceTests : BaseServiceTest
         _mockCreateValidator = new Mock<IValidator<ServiceCreateDTO>>();
         _mockUpdateValidator = new Mock<IValidator<ServiceUpdateDTO>>();
         _mockPagingValidator = new Mock<IValidator<PagingRequest>>();
-        
+
         _serviceService = new ServiceService(
             _mockServiceRepo.Object,
             _mockUnitOfWork.Object,
@@ -145,7 +145,7 @@ public class ServiceServiceTests : BaseServiceTest
         Verify_Repo_AddAsync<IServiceRepository, Service>(_mockServiceRepo);
     }
     #endregion
-    
+
     #region UpdateAsync
     [Fact]
     public async Task UpdateAsync_ValidRequest_ReturnsSuccess()
@@ -202,54 +202,6 @@ public class ServiceServiceTests : BaseServiceTest
         Verify_Repo_Never_UpdateAsync<IServiceRepository, Service>(_mockServiceRepo);
         Verify_Never_Saved();
     }
-    #endregion
-
-    #region GetTypeDataAsync
-    [Fact]
-    public async Task GetTypeDataAsync_ReturnsSuccess_WhenTypesExist()
-    {
-        // 1. Arrange
-        var mockTypes = new List<ServiceType>
-        {
-            new ServiceType { Id = 1, Name = "Type 1", IsDeleted = false },
-            new ServiceType { Id = 2, Name = "Type 2", IsDeleted = false }
-        };
-
-        _mockServiceTypeRepo.Setup(x => x.WhereAsync(It.IsAny<Expression<Func<ServiceType, bool>>>()))
-            .ReturnsAsync(mockTypes.AsQueryable());
-
-        // 2. Act
-        var result = await _serviceService.GetTypeDataAsync();
-
-        // 3. Assert
-        result.Should().NotBeNull();
-        result.StatusCode.Should().Be(StatusCodeResponse.Success);
-        result.Content.Should().HaveCount(2);
-        result.Content!.First().Name.Should().Be("Type 1");
-    }
-
-    [Fact]
-    public async Task GetTypeDataAsync_ReturnsNotFound_WhenTypesListEmpty()
-    {
-        // 1. Arrange
-        _mockServiceTypeRepo.Setup(x => x.WhereAsync(It.IsAny<Expression<Func<ServiceType, bool>>>()))
-            .ReturnsAsync(new List<ServiceType>().AsQueryable());
-
-        // 2. Act
-        var result = await _serviceService.GetTypeDataAsync();
-
-        // 3. Assert
-        result.Should().NotBeNull();
-        result.StatusCode.Should().Be(StatusCodeResponse.NotFound);
-    }
-    [Fact]
-    public async Task UpdateAsync_InvalidId_ReturnsBadRequest()
-    {
-        var result = await _serviceService.UpdateAsync(-1, new ServiceStandardUpdateDTO());
-        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
-        result.Message.Should().Be(MessageResponse.AdminManagement.Service.INVALID_ID);
-        Verify_Repo_Never_UpdateAsync<IServiceRepository, Service>(_mockServiceRepo);
-    }
 
     [Fact]
     public async Task UpdateAsync_InvalidRequest_ReturnsBadRequest()
@@ -267,11 +219,20 @@ public class ServiceServiceTests : BaseServiceTest
     [Fact]
     public async Task UpdateAsync_DuplicateName_ReturnsConflict()
     {
+        // 1. Arrange
         var id = 1;
-        MockUpdate_EntityFound(new Service { Id = id, IsDeleted = false });
+        var updateDTO = new ServiceStandardUpdateDTO { Name = "Duplicate Service" };
+
+
+        MockUpdate_EntityFound(new Service { Id = id, TypeId = 1, Name = "Old Service", IsDeleted = false });
+
         MockUpdateValidation_Success();
         MockUpdate_BusinessLogic_DuplicateCheck(true);
-        var result = await _serviceService.UpdateAsync(id, new ServiceStandardUpdateDTO());
+
+        // 2. Act
+        var result = await _serviceService.UpdateAsync(id, updateDTO);
+
+        // 3. Assert
         result.StatusCode.Should().Be(StatusCodeResponse.Conflict);
         result.Message.Should().Be(MessageResponse.AdminManagement.Service.NAME_ALREADY_EXISTS);
         Verify_Repo_Never_UpdateAsync<IServiceRepository, Service>(_mockServiceRepo);
@@ -425,8 +386,57 @@ public class ServiceServiceTests : BaseServiceTest
         Verify_Repo_UpdateAsync<IServiceRepository, Service>(_mockServiceRepo);
         Verify_Saved(1);
     }
+
     #endregion
-    
+
+    #region GetTypeDataAsync
+    [Fact]
+    public async Task GetTypeDataAsync_ReturnsSuccess_WhenTypesExist()
+    {
+        // 1. Arrange
+        var mockTypes = new List<ServiceType>
+        {
+            new ServiceType { Id = 1, Name = "Type 1", IsDeleted = false },
+            new ServiceType { Id = 2, Name = "Type 2", IsDeleted = false }
+        };
+
+        _mockServiceTypeRepo.Setup(x => x.WhereAsync(It.IsAny<Expression<Func<ServiceType, bool>>>()))
+            .ReturnsAsync(mockTypes.AsQueryable());
+
+        // 2. Act
+        var result = await _serviceService.GetTypeDataAsync();
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Success);
+        result.Content.Should().HaveCount(2);
+        result.Content!.First().Name.Should().Be("Type 1");
+    }
+
+    [Fact]
+    public async Task GetTypeDataAsync_ReturnsNotFound_WhenTypesListEmpty()
+    {
+        // 1. Arrange
+        _mockServiceTypeRepo.Setup(x => x.WhereAsync(It.IsAny<Expression<Func<ServiceType, bool>>>()))
+            .ReturnsAsync(new List<ServiceType>().AsQueryable());
+
+        // 2. Act
+        var result = await _serviceService.GetTypeDataAsync();
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.NotFound);
+    }
+    [Fact]
+    public async Task UpdateAsync_InvalidId_ReturnsBadRequest()
+    {
+        var result = await _serviceService.UpdateAsync(-1, new ServiceStandardUpdateDTO());
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+        result.Message.Should().Be(MessageResponse.AdminManagement.Service.INVALID_ID);
+        Verify_Repo_Never_UpdateAsync<IServiceRepository, Service>(_mockServiceRepo);
+    }
+    #endregion
+
     #region GetServicesByTypeAsync
     [Fact]
     public async Task GetServicesByTypeAsync_ValidTypeId_ReturnsSuccess()

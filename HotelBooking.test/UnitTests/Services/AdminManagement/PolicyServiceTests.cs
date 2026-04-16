@@ -272,11 +272,16 @@ public class PolicyServiceTests : BaseServiceTest
     [Fact]
     public async Task UpdateAsync_DuplicateName_ReturnsConflict()
     {
+        // 1. Arrange
         var id = 1;
         MockUpdate_EntityFound(new Policy { Id = id, IsDeleted = false });
         MockUpdateValidation_Success();
         MockUpdate_BusinessLogic_DuplicateCheck(true);
+
+        // 2. Âct
         var result = await _policyService.UpdateAsync(id, new CheckInOutPolicyUpdateDTO());
+
+        // 3. Assert
         result.StatusCode.Should().Be(StatusCodeResponse.Conflict);
         result.Message.Should().Be(MessageResponse.AdminManagement.Policy.NAME_ALREADY_EXISTS);
         Verify_Repo_Never_UpdateAsync<IPolicyRepository, Policy>(_mockPolicyRepo);

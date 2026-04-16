@@ -366,6 +366,15 @@ public class BedTypeServiceTests : BaseServiceTest
             DefaultCapacity = 1
         };
 
+        // Mock GetByIdAsync --> found
+        MockUpdate_EntityFound(new BedType { Id = bedTypeId, Name = "Old Bed", IsDeleted = false });
+
+        // Mock validation success
+        MockUpdateValidation_Success();
+
+        // Mock duplicate name
+        MockUpdate_BusinessLogic_DuplicateCheck(true);
+
         // 2. Act
         var result = await _bedTypeService.UpdateAsync(bedTypeId, updateDTO);
 
