@@ -1,24 +1,38 @@
-public class CreateHotelDTO
+public enum HotelStatus
+{
+    Pending = 1,
+    Approved = 2,
+    Rejected = 3,
+    Suspended = 4
+}
+
+// Hotel Registration Form
+public class HotelRegistrationDTO
 {
     // Basic information
     public string Name { get; set; } = string.Empty;
-    public string Address { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public int CityId { get; set; } = 0;
+    public int PropertyTypeId { get; set; }
+    public int? StarRating { get; set; }
 
-    // Images
-    public UploadFileDTO? CoverFile { get; set; }   // Cover image (step 1)
-    public UploadFileDTO? MainFile { get; set; }    // Main image (step 4)
-    public List<UploadFileDTO>? SubFiles { get; set; } = new(); // 4 sub images
+    // 2. Contact
+    public string PublicPhone { get; set; } = string.Empty;
+    public string PublicEmail { get; set; } = string.Empty;
 
-    // Amenities: only send ID
-    public List<int> AmenityIds { get; set; } = new();
+    // 3. Location
+    public string Address { get; set; } = string.Empty;
+    public int CountryId { get; set; } = 4; // Default is 4 - Vietnam
+    public int ProvinceId { get; set; } = 0;
+    public int WardId { get; set; } = 0;
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
 
-    // Policies: only send ID
-    public List<int> PolicyIds { get; set; } = new();
+    // 4. Legal / Approval Info
+    public string TaxCode { get; set; } = string.Empty;
 
-    // Metadata
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    // Save URL file from AWS S3
+    public string BusinessLicenseUrl { get; set; } = string.Empty;
+
 }
 
 

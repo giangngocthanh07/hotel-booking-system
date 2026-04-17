@@ -11,7 +11,7 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
         public Task<List<SearchHotelResultDTO>> GetSearchOptionsAsync(string cityName, DateTime? checkIn, DateTime? checkOut,
         int? adults, int? children, int? rooms);
         public Task<ApiResponse<List<CityDTO>>> GetAllCitiesAsync();
-        public Task<ApiResponse<CreateHotelResponseDTO>> PostHotelAsync(CreateHotelDTO newHotel, int ownerId);
+        // public Task<ApiResponse<CreateHotelResponseDTO>> PostHotelAsync(CreateHotelDTO newHotel, int ownerId);
 
 
         public Task<ApiResponse<UploadResultDTO>> TestUploadImageToCloudinaryAsync(UploadFileDTO file, int userId);
@@ -173,118 +173,118 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
 
         #region POST HOTEL (Basic Info + Amenities + Images)
         // =============== UPLOAD NEW HOTEL ================
-        public async Task<ApiResponse<CreateHotelResponseDTO>> PostHotelAsync(CreateHotelDTO newHotel, int ownerId)
-        {
-            await _dbu.BeginTransactionAsync();
+        // public async Task<ApiResponse<CreateHotelResponseDTO>> PostHotelAsync(HotelRegistrationDTO newHotel, int ownerId)
+        // {
+        //     await _dbu.BeginTransactionAsync();
 
-            try
-            {
-                // ================= STEP 1: CREATE HOTEL =================
-                var hotel = new Hotel
-                {
-                    Name = newHotel.Name,
-                    Address = newHotel.Address,
-                    Description = newHotel.Description,
-                    CoverImageUrl = null,
-                    OwnerId = ownerId,
-                    CreatedAt = DateTime.UtcNow,
-                    IsVerified = true,  // default true; verification flow can be added later
-                    Status = "Active",
-                    IsDeleted = false,
-                    CountryId = null
-                };
+        //     try
+        //     {
+        //         // ================= STEP 1: CREATE HOTEL =================
+        //         var hotel = new Hotel
+        //         {
+        //             Name = newHotel.Name,
+        //             Address = newHotel.Address,
+        //             Description = newHotel.Description,
+        //             CoverImageUrl = null,
+        //             OwnerId = ownerId,
+        //             CreatedAt = DateTime.UtcNow,
+        //             IsVerified = true,  // default true; verification flow can be added later
+        //             Status = "Active",
+        //             IsDeleted = false,
+        //             CountryId = null
+        //         };
 
-                await _hotelRepository.AddAsync(hotel);
-                await _dbu.SaveChangesAsync();
+        //         await _hotelRepository.AddAsync(hotel);
+        //         await _dbu.SaveChangesAsync();
 
-                int hotelId = hotel.Id;
+        //         int hotelId = hotel.Id;
 
-                // ================= STEP 2: UPLOAD IMAGES =================
-                if (newHotel.CoverFile != null)
-                {
-                    var coverUrl = await _photoService.UploadHotelCoverImageAsync(newHotel.CoverFile, ownerId, hotelId);
-                    hotel.CoverImageUrl = coverUrl;
-                }
+        //         // ================= STEP 2: UPLOAD IMAGES =================
+        //         if (newHotel.CoverFile != null)
+        //         {
+        //             var coverUrl = await _photoService.UploadHotelCoverImageAsync(newHotel.CoverFile, ownerId, hotelId);
+        //             hotel.CoverImageUrl = coverUrl;
+        //         }
 
-                // Main image
-                if (newHotel.MainFile != null)
-                {
-                    var mainUrl = await _photoService.UploadHotelMainImageAsync(newHotel.MainFile, ownerId, hotel.Id);
-                    await _hotelImageRepository.AddAsync(new HotelImage
-                    {
-                        HotelId = hotel.Id,
-                        ImageUrl = mainUrl,
-                        IsDeleted = false
-                    });
-                }
+        //         // Main image
+        //         if (newHotel.MainFile != null)
+        //         {
+        //             var mainUrl = await _photoService.UploadHotelMainImageAsync(newHotel.MainFile, ownerId, hotel.Id);
+        //             await _hotelImageRepository.AddAsync(new HotelImage
+        //             {
+        //                 HotelId = hotel.Id,
+        //                 ImageUrl = mainUrl,
+        //                 IsDeleted = false
+        //             });
+        //         }
 
-                // Up to 4 sub-images
-                if (newHotel.SubFiles != null)
-                {
-                    foreach (var file in newHotel.SubFiles)
-                    {
-                        var subUrl = await _photoService.UploadHotelSubImageAsync(file, ownerId, hotel.Id);
-                        await _hotelImageRepository.AddAsync(new HotelImage
-                        {
-                            HotelId = hotel.Id,
-                            ImageUrl = subUrl,
-                            IsDeleted = false
-                        });
-                    }
-                }
+        //         // Up to 4 sub-images
+        //         if (newHotel.SubFiles != null)
+        //         {
+        //             foreach (var file in newHotel.SubFiles)
+        //             {
+        //                 var subUrl = await _photoService.UploadHotelSubImageAsync(file, ownerId, hotel.Id);
+        //                 await _hotelImageRepository.AddAsync(new HotelImage
+        //                 {
+        //                     HotelId = hotel.Id,
+        //                     ImageUrl = subUrl,
+        //                     IsDeleted = false
+        //                 });
+        //             }
+        //         }
 
-                // ================= STEP 3: AMENITIES & POLICIES =================
-                foreach (var amenityId in newHotel.AmenityIds)
-                {
-                    await _hotelAmenityRepository.AddAsync(new HotelAmenity
-                    {
-                        HotelId = hotel.Id,
-                        AmenityId = amenityId
-                    });
-                }
+        //         // ================= STEP 3: AMENITIES & POLICIES =================
+        //         foreach (var amenityId in newHotel.AmenityIds)
+        //         {
+        //             await _hotelAmenityRepository.AddAsync(new HotelAmenity
+        //             {
+        //                 HotelId = hotel.Id,
+        //                 AmenityId = amenityId
+        //             });
+        //         }
 
-                if (newHotel.PolicyIds != null && newHotel.PolicyIds.Any())
-                {
-                    foreach (var policyId in newHotel.PolicyIds)
-                    {
-                        await _hotelPolicyRepository.AddAsync(new HotelPolicy
-                        {
-                            HotelId = hotel.Id,
-                            PolicyId = policyId,
-                            CreatedAt = DateTime.UtcNow
-                        });
-                    }
-                }
+        //         if (newHotel.PolicyIds != null && newHotel.PolicyIds.Any())
+        //         {
+        //             foreach (var policyId in newHotel.PolicyIds)
+        //             {
+        //                 await _hotelPolicyRepository.AddAsync(new HotelPolicy
+        //                 {
+        //                     HotelId = hotel.Id,
+        //                     PolicyId = policyId,
+        //                     CreatedAt = DateTime.UtcNow
+        //                 });
+        //             }
+        //         }
 
-                // ================= STEP 4: FINAL UPDATE & COMMIT =================
-                await _hotelRepository.UpdateAsync(hotel);
-                await _dbu.SaveChangesAsync();
+        //         // ================= STEP 4: FINAL UPDATE & COMMIT =================
+        //         await _hotelRepository.UpdateAsync(hotel);
+        //         await _dbu.SaveChangesAsync();
 
-                await _dbu.CommitTransactionAsync();
+        //         await _dbu.CommitTransactionAsync();
 
-                return new ApiResponse<CreateHotelResponseDTO>
-                {
-                    StatusCode = StatusCodeResponse.Success,
-                    Message = MessageResponse.Common.CREATE_SUCCESSFULLY,
-                    Content = new CreateHotelResponseDTO
-                    {
-                        HotelId = hotel.Id,
-                        Name = hotel.Name
-                    }
-                };
-            }
-            catch (Exception)
-            {
-                await _dbu.RollBackTransactionAsync();
+        //         return new ApiResponse<CreateHotelResponseDTO>
+        //         {
+        //             StatusCode = StatusCodeResponse.Success,
+        //             Message = MessageResponse.Common.CREATE_SUCCESSFULLY,
+        //             Content = new CreateHotelResponseDTO
+        //             {
+        //                 HotelId = hotel.Id,
+        //                 Name = hotel.Name
+        //             }
+        //         };
+        //     }
+        //     catch (Exception)
+        //     {
+        //         await _dbu.RollBackTransactionAsync();
 
-                return new ApiResponse<CreateHotelResponseDTO>
-                {
-                    StatusCode = StatusCodeResponse.Error,
-                    Message = MessageResponse.Common.ERROR_IN_SERVER,
-                    Content = null
-                };
-            }
-        }
+        //         return new ApiResponse<CreateHotelResponseDTO>
+        //         {
+        //             StatusCode = StatusCodeResponse.Error,
+        //             Message = MessageResponse.Common.ERROR_IN_SERVER,
+        //             Content = null
+        //         };
+        //     }
+        // }
 
         #endregion
 

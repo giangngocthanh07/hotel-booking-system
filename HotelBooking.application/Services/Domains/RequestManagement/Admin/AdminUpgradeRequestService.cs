@@ -69,7 +69,10 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Admin
 
                 // 2. Build filter expression by status
                 Expression<Func<UpgradeRequest, bool>>? filter = null;
-                filter = r => r.Status == status;
+                if (!string.IsNullOrEmpty(status))
+                {
+                    filter = r => r.Status == status;
+                }
 
                 // 3. Call Repository with pagination
                 var (items, totalCount) = await _upgradeRequestRepo.GetPagedWithUserAsync(

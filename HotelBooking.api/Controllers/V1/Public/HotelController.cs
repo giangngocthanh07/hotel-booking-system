@@ -50,45 +50,45 @@ namespace HotelBooking.api.Controllers.V1.Public
         }
 
         // ================= POST NEW HOTEL ================
-        [Authorize(Roles = "Owner")]
-        [HttpPost("post-new-hotel")]
-        public async Task<IActionResult> PostNewHotelAsync([FromForm] CreateHotelRequestDTO newHotelRequest)
-        {
-            var claim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (claim == null || string.IsNullOrEmpty(claim.Value))
-            {
-                return BadRequest("User identifier claim is missing.");
-            }
-            var ownerId = int.Parse(claim.Value);
+        // [Authorize(Roles = "Owner")]
+        // [HttpPost("post-new-hotel")]
+        // public async Task<IActionResult> PostNewHotelAsync([FromForm] CreateHotelRequestDTO newHotelRequest)
+        // {
+        //     var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+        //     if (claim == null || string.IsNullOrEmpty(claim.Value))
+        //     {
+        //         return BadRequest("User identifier claim is missing.");
+        //     }
+        //     var ownerId = int.Parse(claim.Value);
 
-            // Map CreateHotelRequestDTO to CreateHotelDTO
-            var newHotelDTO = new CreateHotelDTO
-            {
-                Name = newHotelRequest.Name,
-                Address = newHotelRequest.Address,
-                Description = newHotelRequest.Description,
-                CityId = newHotelRequest.CityId,
-                AmenityIds = newHotelRequest.AmenityIds ?? new List<int>(),
-                PolicyIds = newHotelRequest.PolicyIds ?? new List<int>(),
-                CoverFile = newHotelRequest.CoverFile != null ? await _fileHelper.ConvertToUploadFileVM(newHotelRequest.CoverFile) : null,
-                MainFile = newHotelRequest.MainFile != null ? await _fileHelper.ConvertToUploadFileVM(newHotelRequest.MainFile) : null,
-                SubFiles = new List<UploadFileDTO>()
-            };
+        //     // Map CreateHotelRequestDTO to CreateHotelDTO
+        //     var newHotelDTO = new CreateHotelDTO
+        //     {
+        //         Name = newHotelRequest.Name,
+        //         Address = newHotelRequest.Address,
+        //         Description = newHotelRequest.Description,
+        //         CityId = newHotelRequest.CityId,
+        //         AmenityIds = newHotelRequest.AmenityIds ?? new List<int>(),
+        //         PolicyIds = newHotelRequest.PolicyIds ?? new List<int>(),
+        //         CoverFile = newHotelRequest.CoverFile != null ? await _fileHelper.ConvertToUploadFileVM(newHotelRequest.CoverFile) : null,
+        //         MainFile = newHotelRequest.MainFile != null ? await _fileHelper.ConvertToUploadFileVM(newHotelRequest.MainFile) : null,
+        //         SubFiles = new List<UploadFileDTO>()
+        //     };
 
-            if (newHotelRequest.SubFiles != null)
-            {
-                foreach (var subFile in newHotelRequest.SubFiles)
-                {
-                    if (subFile != null)
-                    {
-                        newHotelDTO.SubFiles.Add(await _fileHelper.ConvertToUploadFileVM(subFile));
-                    }
-                }
-            }
+        //     if (newHotelRequest.SubFiles != null)
+        //     {
+        //         foreach (var subFile in newHotelRequest.SubFiles)
+        //         {
+        //             if (subFile != null)
+        //             {
+        //                 newHotelDTO.SubFiles.Add(await _fileHelper.ConvertToUploadFileVM(subFile));
+        //             }
+        //         }
+        //     }
 
-            var result = await _hotelService.PostHotelAsync(newHotelDTO, ownerId);
-            return ApiResponseHandlerHelper.HandleResponse(result);
-        }
+        //     var result = await _hotelService.PostHotelAsync(newHotelDTO, ownerId);
+        //     return ApiResponseHandlerHelper.HandleResponse(result);
+        // }
 
         [Authorize(Roles = "Owner")]
         [HttpPost("test-upload-photo-cloudinary")]

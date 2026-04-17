@@ -516,7 +516,7 @@ public class ServiceServiceTests : BaseServiceTest
     private void MockUpdateValidation_Success()
     {
         _mockUpdateValidator.Setup(x => x.ValidateAsync(It.IsAny<ServiceUpdateDTO>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.FromResult(new FluentValidation.Results.ValidationResult()));
+            .ReturnsAsync(new FluentValidation.Results.ValidationResult());
     }
 
     private void MockUpdate_BusinessLogic_DuplicateCheck(bool isDuplicate)
