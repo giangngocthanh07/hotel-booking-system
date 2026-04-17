@@ -8,7 +8,6 @@ using HotelBooking.application.Helpers;
 using HotelBooking.application.Services.Domains.RequestManagement.Customer;
 using HotelBooking.infrastructure.Models;
 using Moq;
-using Org.BouncyCastle.Asn1.Cms;
 
 namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
 {

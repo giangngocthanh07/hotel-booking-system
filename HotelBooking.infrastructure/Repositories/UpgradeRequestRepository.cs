@@ -39,8 +39,6 @@ public interface IUpgradeRequestRepository : IRepository<UpgradeRequest>
 
     // Get distinct request statuses for filtering options
     Task<List<string>?> GetDistinctStatusesAsync();
-
-
 }
 
 public class UpgradeRequestRepository : Repository<UpgradeRequest>, IUpgradeRequestRepository
