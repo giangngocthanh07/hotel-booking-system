@@ -35,6 +35,17 @@ public class HotelRegistrationDTO
 
 }
 
+public class HotelAdditionalInfo
+{
+    public int? StarRating { get; set; }
+    public string PublicPhone { get; set; } = string.Empty;
+    public string PublicEmail { get; set; } = string.Empty;
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
+    public string TaxCode { get; set; } = string.Empty;
+    public string BusinessLicenseUrl { get; set; } = string.Empty;
+}
+
 
 public class CreateHotelRequestDTO
 {

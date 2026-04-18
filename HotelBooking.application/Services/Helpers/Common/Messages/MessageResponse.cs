@@ -50,18 +50,9 @@ public static class MessageResponse
         public const string SHORT_ADDRESS = "Address is too short!";
         public const string LONG_ADDRESS = "Address is too long!";
         public const string EMPTY_PHONE_NUMBER = "Phone number must not be empty!";
-        public const string INVALID_PHONE_NUMBER = "Phone number is invalid!";
+        public const string INVALID_PHONE_NUMBER = "Phone number or phone number format is invalid!";
         public const string EMPTY_EMAIL = "Email must not be empty!";
         public const string INVALID_EMAIL_FORMAT = "Email format is invalid!";
-
-        public static class Pagination
-        {
-            public const string MISSING_PAGE_INDEX = "Page number must not be empty!";
-            public const string INVALID_PAGE_INDEX = "Page number must be greater than 0!";
-            public const string MISSING_PAGE_SIZE = "Page size must not be empty!";
-            public const string INVALID_PAGE_SIZE = "Page size must be greater than 0!";
-            public const string PAGE_SIZE_TOO_LARGE = "Maximum page size is 100!";
-        }
     }
 
     // =====================================================
@@ -365,6 +356,7 @@ public static class MessageResponse
             public const string HOTEL_REQUEST_CANCELLED_SUCCESS = "Hotel request cancelled successfully!";
             public const string HOTEL_REQUEST_CANCEL_FAILED = "Failed to cancel hotel request!";
             public const string HOTEL_REGISTRATION_INVALID_PROPERTY_TYPEID = "Property type ID must not be empty and must be greater than 0!";
+            public const string HOTEL_REGISTRATION_NAME_ALREADY_EXISTS = "Hotel name already exists!";
             public const string HOTEL_REGISTRATION_INVALID_STARRATING = "Star rating must be between 1 and 5!";
             public const string HOTEL_REGISTRATION_INVALID_PROVINCE_ID = "Province ID must not be empty and must be greater than 0!";
             public const string HOTEL_REGISTRATION_INVALID_WARD_ID = "Ward ID must not be empty and must be greater than 0!";
@@ -376,169 +368,170 @@ public static class MessageResponse
             public const string HOTEL_REGISTRATION_EMPTY_BUSINESS_LICENSE_URL = "Business license URL must not be empty!";
             public const string HOTEL_REGISTRATION_INVALID_BUSINESS_LICENSE_URL = "Business license URL is invalid!";
         }
+    }
 
-        // =====================================================
-        // 6. ROOM MANAGEMENT MESSAGES
-        // =====================================================
-        public static class RoomManagement
-        {
-            // --- ROOM TYPE: VALIDATION MESSAGES (Layer 1 - BadRequest) ---
-            public const string ROOM_TYPE_ALREADY_EXISTS = "Room type name already exists for this hotel!";
-            public const string ROOM_TYPE_HOTEL_ID_INVALID = "Hotel ID must be greater than 0!";
-            public const string ROOM_TYPE_NAME_EMPTY = "Room type name must not be empty!";
-            public const string ROOM_TYPE_NAME_TOO_LONG = "Room type name must not exceed 100 characters!";
-            public const string ROOM_TYPE_DESCRIPTION_TOO_LONG = "Room type description must not exceed 500 characters!";
-            public const string ROOM_TYPE_PRICE_INVALID = "Price per night must be greater than or equal to 0!";
-            public const string ROOM_TYPE_CAPACITY_INVALID = "Capacity must be greater than 0!";
-            public const string ROOM_TYPE_ADULT_CAPACITY_INVALID = "Adult capacity must be greater than 0!";
-            public const string ROOM_TYPE_CHILD_CAPACITY_INVALID = "Child capacity must be greater than or equal to 0!";
-            public const string ROOM_TYPE_UNIT_TYPE_ID_INVALID = "Unit type ID must be greater than 0!";
-            public const string ROOM_TYPE_QUALITY_ID_INVALID = "Quality ID must be greater than 0!";
-            public const string ROOM_TYPE_ROOM_VIEW_ID_INVALID = "Room view ID must be greater than 0!";
-            public const string ROOM_TYPE_MAX_EXTRA_BEDS_INVALID = "Max extra beds must be greater than 0!";
-            public const string ROOM_TYPE_MAX_EXTRA_BEDS_MUST_BE_NULL_OR_ZERO = "Max extra beds must be null or 0 when extra bed is not allowed!";
-            public const string ROOM_TYPE_AREA_INVALID = "Area must not be negative!";
-            public const string ROOM_TYPE_TOTAL_ROOMS_INVALID = "Total rooms must be greater than 0!";
-            public const string ROOM_TYPE_BED_TYPES_REQUIRED = "At least one bed type is required!";
-            public const string ROOM_TYPE_BED_TYPE_ID_INVALID = "Bed type ID must be greater than 0!";
-            public const string ROOM_TYPE_BED_TYPE_QUANTITY_INVALID = "Bed type quantity must be greater than 0!";
-            public const string ROOM_TYPE_BED_TYPE_NAME_EMPTY = "Bed type name must not be empty!";
-            public const string ROOM_TYPE_NAME_ALREADY_EXISTS = "Room type name already exists!";
+    // =====================================================
+    // 6. ROOM MANAGEMENT MESSAGES
+    // =====================================================
+    public static class RoomManagement
+    {
+        // --- ROOM TYPE: VALIDATION MESSAGES (Layer 1 - BadRequest) ---
+        public const string ROOM_TYPE_ALREADY_EXISTS = "Room type name already exists for this hotel!";
+        public const string ROOM_TYPE_HOTEL_ID_INVALID = "Hotel ID must be greater than 0!";
+        public const string ROOM_TYPE_NAME_EMPTY = "Room type name must not be empty!";
+        public const string ROOM_TYPE_NAME_TOO_LONG = "Room type name must not exceed 100 characters!";
+        public const string ROOM_TYPE_DESCRIPTION_TOO_LONG = "Room type description must not exceed 500 characters!";
+        public const string ROOM_TYPE_PRICE_INVALID = "Price per night must be greater than or equal to 0!";
+        public const string ROOM_TYPE_CAPACITY_INVALID = "Capacity must be greater than 0!";
+        public const string ROOM_TYPE_ADULT_CAPACITY_INVALID = "Adult capacity must be greater than 0!";
+        public const string ROOM_TYPE_CHILD_CAPACITY_INVALID = "Child capacity must be greater than or equal to 0!";
+        public const string ROOM_TYPE_UNIT_TYPE_ID_INVALID = "Unit type ID must be greater than 0!";
+        public const string ROOM_TYPE_QUALITY_ID_INVALID = "Quality ID must be greater than 0!";
+        public const string ROOM_TYPE_ROOM_VIEW_ID_INVALID = "Room view ID must be greater than 0!";
+        public const string ROOM_TYPE_MAX_EXTRA_BEDS_INVALID = "Max extra beds must be greater than 0!";
+        public const string ROOM_TYPE_MAX_EXTRA_BEDS_MUST_BE_NULL_OR_ZERO = "Max extra beds must be null or 0 when extra bed is not allowed!";
+        public const string ROOM_TYPE_AREA_INVALID = "Area must not be negative!";
+        public const string ROOM_TYPE_TOTAL_ROOMS_INVALID = "Total rooms must be greater than 0!";
+        public const string ROOM_TYPE_BED_TYPES_REQUIRED = "At least one bed type is required!";
+        public const string ROOM_TYPE_BED_TYPE_ID_INVALID = "Bed type ID must be greater than 0!";
+        public const string ROOM_TYPE_BED_TYPE_QUANTITY_INVALID = "Bed type quantity must be greater than 0!";
+        public const string ROOM_TYPE_BED_TYPE_NAME_EMPTY = "Bed type name must not be empty!";
+        public const string ROOM_TYPE_NAME_ALREADY_EXISTS = "Room type name already exists!";
 
-            // --- ROOM TYPE: NOT FOUND MESSAGES (Layer 2 - Ghost ID Check) ---
-            public const string ROOM_TYPE_HOTEL_NOT_FOUND = "Hotel not found!";
-            public const string ROOM_TYPE_UNIT_TYPE_NOT_FOUND = "Unit type not found!";
-            public const string ROOM_TYPE_QUALITY_NOT_FOUND = "Room quality not found!";
-            public const string ROOM_TYPE_ROOM_VIEW_NOT_FOUND = "Room view not found!";
-            public const string ROOM_TYPE_BED_TYPE_NOT_FOUND = "Bed type not found!";
+        // --- ROOM TYPE: NOT FOUND MESSAGES (Layer 2 - Ghost ID Check) ---
+        public const string ROOM_TYPE_HOTEL_NOT_FOUND = "Hotel not found!";
+        public const string ROOM_TYPE_UNIT_TYPE_NOT_FOUND = "Unit type not found!";
+        public const string ROOM_TYPE_QUALITY_NOT_FOUND = "Room quality not found!";
+        public const string ROOM_TYPE_ROOM_VIEW_NOT_FOUND = "Room view not found!";
+        public const string ROOM_TYPE_BED_TYPE_NOT_FOUND = "Bed type not found!";
 
-            // --- ROOM TYPE: OPERATION MESSAGES (Layer 3 - Persistence) ---
-            public const string ROOM_TYPE_CREATED_SUCCESS = "Room type created successfully!";
-            public const string ROOM_TYPE_CREATED_FAILED = "Failed to create room type!";
-            public const string ROOM_TYPE_UPDATED_SUCCESS = "Room type updated successfully!";
-            public const string ROOM_TYPE_UPDATED_FAILED = "Failed to update room type!";
-            public const string ROOM_TYPE_DELETED_SUCCESS = "Room type deleted successfully!";
-            public const string ROOM_TYPE_DELETED_FAILED = "Failed to delete room type!";
-            public const string ROOM_TYPE_NOT_FOUND = "Room type not found!";
+        // --- ROOM TYPE: OPERATION MESSAGES (Layer 3 - Persistence) ---
+        public const string ROOM_TYPE_CREATED_SUCCESS = "Room type created successfully!";
+        public const string ROOM_TYPE_CREATED_FAILED = "Failed to create room type!";
+        public const string ROOM_TYPE_UPDATED_SUCCESS = "Room type updated successfully!";
+        public const string ROOM_TYPE_UPDATED_FAILED = "Failed to update room type!";
+        public const string ROOM_TYPE_DELETED_SUCCESS = "Room type deleted successfully!";
+        public const string ROOM_TYPE_DELETED_FAILED = "Failed to delete room type!";
+        public const string ROOM_TYPE_NOT_FOUND = "Room type not found!";
 
-            // --- ROOM NAME SUGGESTION: VALIDATION MESSAGES ---
-            public const string ROOM_NAME_SUGGESTION_REQUEST_NULL = "Room name suggestion request must not be null!";
-            public const string ROOM_NAME_SUGGESTION_UNIT_TYPE_REQUIRED = "Unit type is required for room name suggestion!";
-            public const string ROOM_NAME_SUGGESTION_UNIT_TYPE_ID_INVALID = "Unit type ID must be greater than 0!";
-            public const string ROOM_NAME_SUGGESTION_QUALITY_ID_INVALID = "Quality ID must be greater than 0!";
-            public const string ROOM_NAME_SUGGESTION_ROOM_VIEW_ID_INVALID = "Room view ID must be greater than 0!";
-            public const string ROOM_NAME_SUGGESTION_CAPACITY_REQUIRED = "Capacity information is required for room name suggestion!";
-            public const string ROOM_NAME_SUGGESTION_ADULT_CAPACITY_INVALID = "Adult capacity must be greater than 0!";
-            public const string ROOM_NAME_SUGGESTION_CHILDREN_CAPACITY_REQUIRED = "Children capacity is required!";
-            public const string ROOM_NAME_SUGGESTION_MAX_EXTRA_BEDS_REQUIRED = "Max extra beds is required when extra bed is allowed!";
-            public const string ROOM_NAME_SUGGESTION_MAX_EXTRA_BEDS_INVALID = "Max extra beds must be greater than 0!";
-            public const string ROOM_NAME_SUGGESTION_MAX_EXTRA_BEDS_MUST_BE_NULL_OR_ZERO = "Max extra beds must be null or 0 when extra bed is not allowed!";
-            public const string ROOM_NAME_SUGGESTION_BED_TYPES_REQUIRED = "At least one bed type is required!";
-            public const string ROOM_NAME_SUGGESTION_BED_TYPES_INVALID = "Each bed type must have a valid ID and quantity greater than 0!";
-            public const string ROOM_NAME_SUGGESTION_BED_TYPES_QUANTITY_INVALID = "Each bed type quantity must be greater than 0!";
+        // --- ROOM NAME SUGGESTION: VALIDATION MESSAGES ---
+        public const string ROOM_NAME_SUGGESTION_REQUEST_NULL = "Room name suggestion request must not be null!";
+        public const string ROOM_NAME_SUGGESTION_UNIT_TYPE_REQUIRED = "Unit type is required for room name suggestion!";
+        public const string ROOM_NAME_SUGGESTION_UNIT_TYPE_ID_INVALID = "Unit type ID must be greater than 0!";
+        public const string ROOM_NAME_SUGGESTION_QUALITY_ID_INVALID = "Quality ID must be greater than 0!";
+        public const string ROOM_NAME_SUGGESTION_ROOM_VIEW_ID_INVALID = "Room view ID must be greater than 0!";
+        public const string ROOM_NAME_SUGGESTION_CAPACITY_REQUIRED = "Capacity information is required for room name suggestion!";
+        public const string ROOM_NAME_SUGGESTION_ADULT_CAPACITY_INVALID = "Adult capacity must be greater than 0!";
+        public const string ROOM_NAME_SUGGESTION_CHILDREN_CAPACITY_REQUIRED = "Children capacity is required!";
+        public const string ROOM_NAME_SUGGESTION_MAX_EXTRA_BEDS_REQUIRED = "Max extra beds is required when extra bed is allowed!";
+        public const string ROOM_NAME_SUGGESTION_MAX_EXTRA_BEDS_INVALID = "Max extra beds must be greater than 0!";
+        public const string ROOM_NAME_SUGGESTION_MAX_EXTRA_BEDS_MUST_BE_NULL_OR_ZERO = "Max extra beds must be null or 0 when extra bed is not allowed!";
+        public const string ROOM_NAME_SUGGESTION_BED_TYPES_REQUIRED = "At least one bed type is required!";
+        public const string ROOM_NAME_SUGGESTION_BED_TYPES_INVALID = "Each bed type must have a valid ID and quantity greater than 0!";
+        public const string ROOM_NAME_SUGGESTION_BED_TYPES_QUANTITY_INVALID = "Each bed type quantity must be greater than 0!";
 
-            // --- ROOM NAME SUGGESTION: NOT FOUND MESSAGES ---
-            public const string ROOM_NAME_SUGGESTION_UNIT_TYPE_NOT_FOUND = "Unit type not found!";
-            public const string ROOM_NAME_SUGGESTION_QUALITY_NOT_FOUND = "Room quality not found!";
-            public const string ROOM_NAME_SUGGESTION_ROOM_VIEW_NOT_FOUND = "Room view not found!";
-            public const string ROOM_NAME_SUGGESTION_BED_TYPE_NOT_FOUND = "Bed type not found!";
-            public const string BED_CONFIGURATION_EMPTY = "Bed configuration is empty! Please provide at least one bed type with quantity.";
-        }
+        // --- ROOM NAME SUGGESTION: NOT FOUND MESSAGES ---
+        public const string ROOM_NAME_SUGGESTION_UNIT_TYPE_NOT_FOUND = "Unit type not found!";
+        public const string ROOM_NAME_SUGGESTION_QUALITY_NOT_FOUND = "Room quality not found!";
+        public const string ROOM_NAME_SUGGESTION_ROOM_VIEW_NOT_FOUND = "Room view not found!";
+        public const string ROOM_NAME_SUGGESTION_BED_TYPE_NOT_FOUND = "Bed type not found!";
+        public const string BED_CONFIGURATION_EMPTY = "Bed configuration is empty! Please provide at least one bed type with quantity.";
+    }
 
-        // =====================================================
-        // 6. PAGINATION MESSAGES
-        // =====================================================
-        public static class Pagination
-        {
-            public const string MISSING_PAGE_INDEX = "Page number must not be empty!";
-            public const string INVALID_PAGE_INDEX = "Page number must be greater than 0!";
-            public const string MISSING_PAGE_SIZE = "Page size must not be empty!";
-            public const string INVALID_PAGE_SIZE = "Page size must be greater than 0!";
-            public const string PAGE_SIZE_TOO_LARGE = "Maximum page size is 100!";
-        }
+    // =====================================================
+    // 6. PAGINATION MESSAGES
+    // =====================================================
+    public static class Pagination
+    {
+        public const string MISSING_PAGE_INDEX = "Page number must not be empty!";
+        public const string INVALID_PAGE_INDEX = "Page number must be greater than 0!";
+        public const string MISSING_PAGE_SIZE = "Page size must not be empty!";
+        public const string INVALID_PAGE_SIZE = "Page size must be greater than 0!";
+        public const string PAGE_SIZE_TOO_LARGE = "Maximum page size is 100!";
+    }
 
-        // =====================================================
-        // 7. MENU REQUEST MESSAGES
-        // =====================================================
-        public static class ManageMenu
-        {
-            public const string INVALID_MODULE = "Invalid module!";
-        }
+    // =====================================================
+    // 7. MENU REQUEST MESSAGES
+    // =====================================================
+    public static class ManageMenu
+    {
+        public const string INVALID_MODULE = "Invalid module!";
+    }
 
-        // =====================================================
-        // BACKWARD COMPATIBILITY (retained to avoid breaking existing code)
-        // =====================================================
-        [Obsolete("Use MessageResponse.Common.GET_SUCCESSFULLY instead")]
-        public static string GET_SUCCESSFULLY => Common.GET_SUCCESSFULLY;
-        [Obsolete("Use MessageResponse.Common.GET_FAILED instead")]
-        public static string GET_FAILED => Common.GET_FAILED;
-        [Obsolete("Use MessageResponse.Common.CREATE_SUCCESSFULLY instead")]
-        public static string CREATE_SUCCESSFULLY => Common.CREATE_SUCCESSFULLY;
-        [Obsolete("Use MessageResponse.Common.CREATE_FAILED instead")]
-        public static string CREATE_FAILED => Common.CREATE_FAILED;
-        [Obsolete("Use MessageResponse.Common.UPDATE_SUCCESSFULLY instead")]
-        public static string UPDATE_SUCCESSFULLY => Common.UPDATE_SUCCESSFULLY;
-        [Obsolete("Use MessageResponse.Common.UPDATE_FAILED instead")]
-        public static string UPDATE_FAILED => Common.UPDATE_FAILED;
-        [Obsolete("Use MessageResponse.Common.DELETE_SUCCESSFULLY instead")]
-        public static string DELETE_SUCCESSFULLY => Common.DELETE_SUCCESSFULLY;
-        [Obsolete("Use MessageResponse.Common.DELETE_FAILED instead")]
-        public static string DELETE_FAILED => Common.DELETE_FAILED;
-        [Obsolete("Use MessageResponse.Common.NOT_FOUND instead")]
-        public static string NOT_FOUND => Common.NOT_FOUND;
-        [Obsolete("Use MessageResponse.Common.BAD_REQUEST instead")]
-        public static string BAD_REQUEST => Common.BAD_REQUEST;
-        [Obsolete("Use MessageResponse.Validation.NAME_ALREADY_EXISTS instead")]
-        public static string NAME_ALREADY_EXISTS => Validation.NAME_ALREADY_EXISTS;
-        [Obsolete("Use MessageResponse.Validation.LONG_NAME instead")]
-        public static string LONG_NAME => Validation.LONG_NAME;
-        [Obsolete("Use MessageResponse.Validation.EMPTY_NAME instead")]
-        public static string EMPTY_NAME => Validation.EMPTY_NAME;
-        [Obsolete("Use MessageResponse.Common.EMPTY_LIST instead")]
-        public static string EMPTY_LIST => Common.EMPTY_LIST;
-        [Obsolete("Use MessageResponse.Validation.EMPTY_TYPE instead")]
-        public static string EMPTY_TYPE => Validation.EMPTY_TYPE;
-        [Obsolete("Use MessageResponse.Common.ERROR_IN_SERVER instead")]
-        public static string ERROR_IN_SERVER => Common.ERROR_IN_SERVER;
+    // =====================================================
+    // BACKWARD COMPATIBILITY (retained to avoid breaking existing code)
+    // =====================================================
+    [Obsolete("Use MessageResponse.Common.GET_SUCCESSFULLY instead")]
+    public static string GET_SUCCESSFULLY => Common.GET_SUCCESSFULLY;
+    [Obsolete("Use MessageResponse.Common.GET_FAILED instead")]
+    public static string GET_FAILED => Common.GET_FAILED;
+    [Obsolete("Use MessageResponse.Common.CREATE_SUCCESSFULLY instead")]
+    public static string CREATE_SUCCESSFULLY => Common.CREATE_SUCCESSFULLY;
+    [Obsolete("Use MessageResponse.Common.CREATE_FAILED instead")]
+    public static string CREATE_FAILED => Common.CREATE_FAILED;
+    [Obsolete("Use MessageResponse.Common.UPDATE_SUCCESSFULLY instead")]
+    public static string UPDATE_SUCCESSFULLY => Common.UPDATE_SUCCESSFULLY;
+    [Obsolete("Use MessageResponse.Common.UPDATE_FAILED instead")]
+    public static string UPDATE_FAILED => Common.UPDATE_FAILED;
+    [Obsolete("Use MessageResponse.Common.DELETE_SUCCESSFULLY instead")]
+    public static string DELETE_SUCCESSFULLY => Common.DELETE_SUCCESSFULLY;
+    [Obsolete("Use MessageResponse.Common.DELETE_FAILED instead")]
+    public static string DELETE_FAILED => Common.DELETE_FAILED;
+    [Obsolete("Use MessageResponse.Common.NOT_FOUND instead")]
+    public static string NOT_FOUND => Common.NOT_FOUND;
+    [Obsolete("Use MessageResponse.Common.BAD_REQUEST instead")]
+    public static string BAD_REQUEST => Common.BAD_REQUEST;
+    [Obsolete("Use MessageResponse.Validation.NAME_ALREADY_EXISTS instead")]
+    public static string NAME_ALREADY_EXISTS => Validation.NAME_ALREADY_EXISTS;
+    [Obsolete("Use MessageResponse.Validation.LONG_NAME instead")]
+    public static string LONG_NAME => Validation.LONG_NAME;
+    [Obsolete("Use MessageResponse.Validation.EMPTY_NAME instead")]
+    public static string EMPTY_NAME => Validation.EMPTY_NAME;
+    [Obsolete("Use MessageResponse.Common.EMPTY_LIST instead")]
+    public static string EMPTY_LIST => Common.EMPTY_LIST;
+    [Obsolete("Use MessageResponse.Validation.EMPTY_TYPE instead")]
+    public static string EMPTY_TYPE => Validation.EMPTY_TYPE;
+    [Obsolete("Use MessageResponse.Common.ERROR_IN_SERVER instead")]
+    public static string ERROR_IN_SERVER => Common.ERROR_IN_SERVER;
 
-        // Backward compatibility for old message classes
-        [Obsolete("Use MessageResponse.UserManagement.Login instead")]
-        public static class MessageLogin
-        {
-            public static string LOGIN_FAIL => UserManagement.Login.FAIL;
-            public static string LOGIN_SUCCESS => UserManagement.Login.SUCCESS;
-            public static string INVALID_CREDENTIALS => UserManagement.Login.INVALID_CREDENTIALS;
-            public static string USER_BLOCKED => UserManagement.Login.USER_BLOCKED;
-            public static string USER_DELETED => UserManagement.Login.USER_DELETED;
-        }
+    // Backward compatibility for old message classes
+    [Obsolete("Use MessageResponse.UserManagement.Login instead")]
+    public static class MessageLogin
+    {
+        public static string LOGIN_FAIL => UserManagement.Login.FAIL;
+        public static string LOGIN_SUCCESS => UserManagement.Login.SUCCESS;
+        public static string INVALID_CREDENTIALS => UserManagement.Login.INVALID_CREDENTIALS;
+        public static string USER_BLOCKED => UserManagement.Login.USER_BLOCKED;
+        public static string USER_DELETED => UserManagement.Login.USER_DELETED;
+    }
 
-        [Obsolete("Use MessageResponse.UserManagement.Register instead")]
-        public static class MessageRegister
-        {
-            public static string REGISTER_SUCCESS => UserManagement.Register.SUCCESS;
-            public static string REGISTER_FAIL => UserManagement.Register.FAIL;
-            public static string USERNAME_EXIST => UserManagement.Register.USERNAME_EXIST;
-            public static string EMAIL_EXIST => UserManagement.Register.EMAIL_EXIST;
-            public static string INVALID_EMAIL => UserManagement.Register.INVALID_EMAIL;
-            public static string SHORT_PASSWORD => UserManagement.Register.SHORT_PASSWORD;
-            public static string EMPTY_PASSWORD => UserManagement.Register.EMPTY_PASSWORD;
-            public static string UPPERCASE_LETTER_PASSWORD => UserManagement.Register.UPPERCASE_LETTER_PASSWORD;
-            public static string NUMBER_PASSWORD => UserManagement.Register.NUMBER_PASSWORD;
-            public static string LOWERCASE_LETTER_PASSWORD => UserManagement.Register.LOWERCASE_LETTER_PASSWORD;
-            public static string SPECIAL_CHARACTER_PASSWORD => UserManagement.Register.SPECIAL_CHARACTER_PASSWORD;
-        }
+    [Obsolete("Use MessageResponse.UserManagement.Register instead")]
+    public static class MessageRegister
+    {
+        public static string REGISTER_SUCCESS => UserManagement.Register.SUCCESS;
+        public static string REGISTER_FAIL => UserManagement.Register.FAIL;
+        public static string USERNAME_EXIST => UserManagement.Register.USERNAME_EXIST;
+        public static string EMAIL_EXIST => UserManagement.Register.EMAIL_EXIST;
+        public static string INVALID_EMAIL => UserManagement.Register.INVALID_EMAIL;
+        public static string SHORT_PASSWORD => UserManagement.Register.SHORT_PASSWORD;
+        public static string EMPTY_PASSWORD => UserManagement.Register.EMPTY_PASSWORD;
+        public static string UPPERCASE_LETTER_PASSWORD => UserManagement.Register.UPPERCASE_LETTER_PASSWORD;
+        public static string NUMBER_PASSWORD => UserManagement.Register.NUMBER_PASSWORD;
+        public static string LOWERCASE_LETTER_PASSWORD => UserManagement.Register.LOWERCASE_LETTER_PASSWORD;
+        public static string SPECIAL_CHARACTER_PASSWORD => UserManagement.Register.SPECIAL_CHARACTER_PASSWORD;
+    }
 
-        [Obsolete("Use MessageResponse.AdminManagement.Role instead")]
-        public static class RoleMessage
-        {
-            public static string ROLE_NOT_FOUND => AdminManagement.Role.NOT_FOUND;
-            public static string ROLE_ALREADY_EXISTS => AdminManagement.Role.ALREADY_EXISTS;
-            public static string ROLE_ADD_SUCCESS => AdminManagement.Role.ADD_SUCCESS;
-            public static string ROLE_ADD_FAILED => AdminManagement.Role.ADD_FAILED;
-            public static string ROLE_UPDATE_SUCCESS => AdminManagement.Role.UPDATE_SUCCESS;
-            public static string ROLE_UPDATE_FAILED => AdminManagement.Role.UPDATE_FAILED;
-            public static string ROLE_DELETE_SUCCESS => AdminManagement.Role.DELETE_SUCCESS;
-            public static string ROLE_DELETE_FAILED => AdminManagement.Role.DELETE_FAILED;
-        }
+    [Obsolete("Use MessageResponse.AdminManagement.Role instead")]
+    public static class RoleMessage
+    {
+        public static string ROLE_NOT_FOUND => AdminManagement.Role.NOT_FOUND;
+        public static string ROLE_ALREADY_EXISTS => AdminManagement.Role.ALREADY_EXISTS;
+        public static string ROLE_ADD_SUCCESS => AdminManagement.Role.ADD_SUCCESS;
+        public static string ROLE_ADD_FAILED => AdminManagement.Role.ADD_FAILED;
+        public static string ROLE_UPDATE_SUCCESS => AdminManagement.Role.UPDATE_SUCCESS;
+        public static string ROLE_UPDATE_FAILED => AdminManagement.Role.UPDATE_FAILED;
+        public static string ROLE_DELETE_SUCCESS => AdminManagement.Role.DELETE_SUCCESS;
+        public static string ROLE_DELETE_FAILED => AdminManagement.Role.DELETE_FAILED;
     }
 }
+

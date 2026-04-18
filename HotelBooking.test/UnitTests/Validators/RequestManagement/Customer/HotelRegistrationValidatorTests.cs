@@ -161,6 +161,8 @@ public class HotelRegistrationValidatorTests
         request.StarRating = null;
 
         var result = await _validator.TestValidateAsync(request);
+
+        result.IsValid.Should().BeTrue();
         result.ShouldNotHaveAnyValidationErrors();
     }
 
@@ -173,6 +175,8 @@ public class HotelRegistrationValidatorTests
         request.StarRating = invalidRating;
 
         var result = await _validator.TestValidateAsync(request);
+
+        result.IsValid.Should().BeFalse();
         result.ShouldHaveValidationErrorFor(x => x.StarRating)
               .WithErrorMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_INVALID_STARRATING);
     }
@@ -194,6 +198,7 @@ public class HotelRegistrationValidatorTests
 
     [Theory]
     [InlineData("12345678")]
+    [InlineData("12345678an")]
     [InlineData("12345678901")]
     public async Task ValidateAsync_InvalidPublicPhone_ReturnsError(string invalidPhone)
     {
@@ -284,6 +289,8 @@ public class HotelRegistrationValidatorTests
         request.Latitude = invalidLat;
 
         var result = await _validator.TestValidateAsync(request);
+
+        result.IsValid.Should().BeFalse();
         result.ShouldHaveValidationErrorFor(x => x.Latitude)
               .WithErrorMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_INVALID_LATITUDE);
     }
@@ -297,6 +304,8 @@ public class HotelRegistrationValidatorTests
         request.Longitude = invalidLng;
 
         var result = await _validator.TestValidateAsync(request);
+
+        result.IsValid.Should().BeFalse();
         result.ShouldHaveValidationErrorFor(x => x.Longitude)
               .WithErrorMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_INVALID_LONGITUDE);
     }
@@ -358,6 +367,8 @@ public class HotelRegistrationValidatorTests
         request.BusinessLicenseUrl = "not-a-valid-url"; // Test format URL
 
         var result = await _validator.TestValidateAsync(request);
+
+        result.IsValid.Should().BeFalse();
         result.ShouldHaveValidationErrorFor(x => x.BusinessLicenseUrl)
               .WithErrorMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_INVALID_BUSINESS_LICENSE_URL);
     }
