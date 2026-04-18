@@ -24,8 +24,8 @@ public class HotelRegistrationDTO
     public int CountryId { get; set; } = 4; // Default is 4 - Vietnam
     public int ProvinceId { get; set; } = 0;
     public int WardId { get; set; } = 0;
-    public double Latitude { get; set; }
-    public double Longitude { get; set; }
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
 
     // 4. Legal / Approval Info
     public string TaxCode { get; set; } = string.Empty;
