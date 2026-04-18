@@ -26,6 +26,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest
     public async Task HotelRegistration_ValidRequest_ShouldReturnTrue()
     {
         // 1. Arrange
+        int ownerId = 1;
         var request = CreateValidRequest();
 
         // Mock validate success
@@ -36,7 +37,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest
             .ReturnsAsync(false);
 
         // 2. Act
-        var result = await _service.HotelRegistrationAsync(request);
+        var result = await _service.HotelRegistrationAsync(request, ownerId);
 
         // 3. Assert
         result.Should().NotBeNull();
@@ -48,9 +49,32 @@ public class HotelRegistrationServiceTests : BaseServiceTest
     }
 
     [Fact]
+    public async Task HotelRegistration_InvalidOwnerId_ShouldReturnUnauthorized()
+    {
+        // 1. Arrange
+        int ownerId = -1;
+        var request = CreateValidRequest();
+
+        // 2. Act
+        var result = await _service.HotelRegistrationAsync(request, ownerId);
+
+        // 3. Assert
+        result.Should().NotBeNull();
+        result.StatusCode.Should().Be(StatusCodeResponse.Unauthorized);
+        result.Message.Should().Be(MessageResponse.RequestManagement.HotelApproval.OWNER_ID_INVALID);
+
+        // Verify steps
+        _mockValidator.Verify(r => r.ValidateAsync(It.IsAny<HotelRegistrationDTO>(), default), Times.Never);
+        Verify_Repo_Never_AnyAsync<IHotelRepository, Hotel>(_mockHotelRepo);
+        Verify_Repo_Never_AddAsync<IHotelRepository, Hotel>(_mockHotelRepo);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
     public async Task HotelRegistration_InvalidRequest_ShouldReturnBadRequest()
     {
         // 1. Arrange
+        int ownerId = 1;
         var request = CreateValidRequest();
 
         // Mock validate failure
@@ -63,7 +87,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest
             .ReturnsAsync(new FluentValidation.Results.ValidationResult(validationFailures));
 
         // 2. Act
-        var result = await _service.HotelRegistrationAsync(request);
+        var result = await _service.HotelRegistrationAsync(request, ownerId);
 
         // 3. Assert
         result.Should().NotBeNull();
@@ -79,6 +103,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest
     public async Task HotelRegistration_DuplicateName_ShouldReturnConflict()
     {
         // 1. Arrange
+        int ownerId = 1;
         var request = CreateValidRequest();
 
         MockValidationSuccess();
@@ -88,7 +113,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest
             .ReturnsAsync(true);
 
         // 2. Act
-        var result = await _service.HotelRegistrationAsync(request);
+        var result = await _service.HotelRegistrationAsync(request, ownerId);
 
         // 3. Assert
         result.Should().NotBeNull();
@@ -105,6 +130,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest
     public async Task HotelRegistration_SystemThrowsExceptionAtAnyAsync_ShouldReturnServerError()
     {
         // 1. Arrange
+        int ownerId = 1;
         var request = CreateValidRequest();
 
         MockValidationSuccess();
@@ -114,7 +140,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest
             .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
 
         // 2. Act
-        var result = await _service.HotelRegistrationAsync(request);
+        var result = await _service.HotelRegistrationAsync(request, ownerId);
 
         // 3. Assert
         result.Should().NotBeNull();
@@ -131,6 +157,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest
     public async Task HotelRegistration_SystemThrowsExceptionAtAddAsync_ShouldReturnServerError()
     {
         // 1. Arrange
+        int ownerId = 1;
         var request = CreateValidRequest();
 
         MockValidationSuccess();
@@ -144,7 +171,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest
             .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
 
         // 2. Act
-        var result = await _service.HotelRegistrationAsync(request);
+        var result = await _service.HotelRegistrationAsync(request, ownerId);
 
         // 3. Assert
         result.Should().NotBeNull();
@@ -161,6 +188,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest
     public async Task HotelRegistration_SaveDbFails_ShouldReturnError()
     {
         // 1. Arrange
+        int ownerId = 1;
         var request = CreateValidRequest();
 
         MockValidationSuccess();
@@ -173,7 +201,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest
         _mockUnitOfWork.Setup(x => x.SaveChangesAsync()).ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
 
         // 2. Act
-        var result = await _service.HotelRegistrationAsync(request);
+        var result = await _service.HotelRegistrationAsync(request, ownerId);
 
         // 3. Assert
         result.Should().NotBeNull();

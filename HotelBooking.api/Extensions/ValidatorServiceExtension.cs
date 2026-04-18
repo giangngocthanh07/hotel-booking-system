@@ -68,6 +68,7 @@ public static class ValidatorServiceExtension
     public static void AddRequestManagementValidators(this IServiceCollection services)
     {
         services.AddScoped<IValidator<CreateUpgradeRequestDTO>, CreateUpgradeRequestValidator>();
+        services.AddScoped<IValidator<HotelRegistrationDTO>, HotelRegistrationValidator>();
     }
 
     private static void AddCommonValidators(this IServiceCollection services)

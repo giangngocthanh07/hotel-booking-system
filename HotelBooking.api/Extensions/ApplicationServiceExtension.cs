@@ -44,6 +44,7 @@ public static class ApplicationServiceExtension
         services.AddScoped<IRequestOverviewService, RequestOverviewService>();
         services.AddScoped<ICustomerUpgradeRequestService, CustomerUpgradeRequestService>();
         services.AddScoped<IAdminUpgradeRequestService, AdminUpgradeRequestService>();
+        services.AddScoped<IHotelRegistrationService, HotelRegistrationService>();
 
         // User Management
         services.AddScoped<IRegisterService, RegisterService>();

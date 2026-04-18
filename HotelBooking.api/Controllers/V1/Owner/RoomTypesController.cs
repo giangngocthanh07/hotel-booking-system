@@ -1,14 +1,17 @@
 using HotelBooking.application.DTOs.Hotel;
 using HotelBooking.application.Helpers;
 using HotelBooking.application.Services.Domains.RoomManagement;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 // Remember to import the namespaces containing Service, DTO, and ResponseFactory
 
-namespace HotelBooking.API.Controllers
+namespace HotelBooking.API.Controllers.V1.Owner
 {
-    [Route("api/room-types")]
+    [Route("api/v1/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Owner")]
+    [Tags("Owner - Room Types")]
     public class RoomTypesController : ControllerBase
     {
         private readonly IRoomNameSuggestionService _suggestionService;

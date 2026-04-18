@@ -9,7 +9,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Customer
     public interface IHotelRegistrationService
     {
         // Hotel Registration
-        Task<ApiResponse<bool>> HotelRegistrationAsync(HotelRegistrationDTO request);
+        Task<ApiResponse<bool>> HotelRegistrationAsync(HotelRegistrationDTO request, int ownerId);
     }
 
     public class HotelRegistrationService : IHotelRegistrationService
@@ -25,10 +25,16 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Customer
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<ApiResponse<bool>> HotelRegistrationAsync(HotelRegistrationDTO request)
+        public async Task<ApiResponse<bool>> HotelRegistrationAsync(HotelRegistrationDTO request, int ownerId)
         {
             try
             {
+                // Check ownerId
+                if (ownerId <= 0)
+                {
+                    return ResponseFactory.Failure<bool>(StatusCodeResponse.Unauthorized, MessageResponse.RequestManagement.HotelApproval.OWNER_ID_INVALID);
+                }
+
                 var validation = await _validator.ValidateAsync(request);
                 if (!validation.IsValid)
                 {
@@ -60,6 +66,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Customer
 
                 var hotel = new Hotel
                 {
+                    OwnerId = ownerId,
                     Name = request.Name,
                     Address = request.Address,
                     Description = request.Description,

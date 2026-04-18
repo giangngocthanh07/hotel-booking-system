@@ -340,6 +340,7 @@ public static class MessageResponse
         /// </summary>
         public static class HotelApproval
         {
+            public const string OWNER_ID_INVALID = "Owner ID must be greater than 0!";
             public const string HOTELS_RETRIEVED = "Hotel list retrieved successfully!";
             public const string HOTEL_RETRIEVED = "Hotel information retrieved successfully!";
             public const string HOTEL_NOT_FOUND = "Hotel not found!";
