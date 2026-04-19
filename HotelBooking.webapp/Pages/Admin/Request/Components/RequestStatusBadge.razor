@@ -1,0 +1,29 @@
+@* Shared reusable status badge for request pages *@
+@using HotelBooking.webapp.ViewModels.Request.Base
+
+<span class="status-pill-modern badge-fixed-layout @GetStatusBadgeClass(Status) force-gpu @ExtraCssClass"
+      style="@ExtraStyle">
+    <i class="@GetStatusIcon(Status) me-2"></i>@Status.ToUpper()
+</span>
+
+@code {
+    [Parameter, EditorRequired] public string Status { get; set; } = string.Empty;
+    [Parameter] public string ExtraCssClass { get; set; } = string.Empty;
+    [Parameter] public string ExtraStyle { get; set; } = string.Empty;
+
+    private string GetStatusBadgeClass(string status) => status switch
+    {
+        "Pending"  => "bg-warning",
+        "Approved" => "bg-success",
+        "Rejected" => "bg-danger",
+        _          => "bg-secondary"
+    };
+
+    private string GetStatusIcon(string status) => status switch
+    {
+        "Pending"  => "fas fa-hourglass-half",
+        "Approved" => "fas fa-check-circle",
+        "Rejected" => "fas fa-times-circle",
+        _          => "fas fa-question-circle"
+    };
+}

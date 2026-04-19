@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using HotelBooking.webapp.Helpers.Common;
 using HotelBooking.webapp.ViewModels.Request;
 using HotelBooking.webapp.ViewModels.Request.Base;
+using HotelBooking.webapp.ViewModels.Request.HotelApproval;
 
 namespace HotelBooking.webapp.Services.Interface;
 
@@ -92,6 +93,22 @@ public interface IRequestService : ITokenService
     /// [Shortcut] Rejects an Upgrade Owner request.
     /// </summary>
     Task<ApiResponse<bool>> RejectUpgradeRequestAsync(int id);
+
+    // ==========================================
+    // HOTEL APPROVAL SHORTCUT METHODS
+    // ==========================================
+
+    /// <summary>[Shortcut] Retrieves paginated Hotel Approval requests.</summary>
+    Task<ApiResponse<PagedResult<HotelRegistrationDetailVM>>> GetHotelApprovalsAsync(
+        int pageIndex = 1,
+        int pageSize = 10,
+        string? status = null);
+
+    /// <summary>[Shortcut] Approves a Hotel Approval request.</summary>
+    Task<ApiResponse<bool>> ApproveHotelApprovalAsync(int id);
+
+    /// <summary>[Shortcut] Rejects a Hotel Approval request.</summary>
+    Task<ApiResponse<bool>> RejectHotelApprovalAsync(int id);
 }
 
 /// <summary>
@@ -188,6 +205,18 @@ public class RequestService : IRequestService
 
     public Task<ApiResponse<bool>> RejectUpgradeRequestAsync(int id)
         => RejectRequestAsync(RequestType.UpgradeOwner, id);
+
+    public Task<ApiResponse<PagedResult<HotelRegistrationDetailVM>>> GetHotelApprovalsAsync(
+        int pageIndex = 1,
+        int pageSize = 10,
+        string? status = null)
+        => GetRequestsAsync<HotelRegistrationDetailVM>(RequestType.HotelApproval, pageIndex, pageSize, status);
+
+    public Task<ApiResponse<bool>> ApproveHotelApprovalAsync(int id)
+        => ApproveRequestAsync(RequestType.HotelApproval, id);
+
+    public Task<ApiResponse<bool>> RejectHotelApprovalAsync(int id)
+        => RejectRequestAsync(RequestType.HotelApproval, id);
 
     // ==========================================
     // PRIVATE HELPERS

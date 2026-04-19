@@ -1,12 +1,12 @@
+using HotelBooking.webapp.ViewModels.Request.Base;
 
-using HotelBooking.application.DTOs.Request.Base;
+namespace HotelBooking.webapp.ViewModels.Request.HotelApproval;
 
-namespace HotelBooking.application.DTOs.Request.HotelApproval;
-
-public class HotelRegistrationDetailDTO : BaseRequestDTO
+public class HotelRegistrationDetailVM : BaseRequestVM
 {
-    public override RequestType Type { get; } = RequestType.HotelApproval;
     public override string RequesterName => Name;
+    public override RequestType Type => RequestType.HotelApproval;
+
     public int HotelId { get; set; }
     public string Name { get; set; } = string.Empty;
     public int OwnerId { get; set; }
@@ -31,6 +31,7 @@ public class HotelRegistrationDetailDTO : BaseRequestDTO
     public double? Longitude { get; set; }
     public string TaxCode { get; set; } = string.Empty;
     public string BusinessLicenseUrl { get; set; } = string.Empty;
+
 }
 
 

@@ -1,11 +1,7 @@
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
 using HotelBooking.application.DTOs.Hotel;
-using HotelBooking.application.Services.Domains.RequestManagement.Customer;
+using HotelBooking.application.Services.Domains.RequestManagement.Owner;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 //using V1.Models;
@@ -18,21 +14,12 @@ namespace HotelBooking.API.Controllers.V1.Owner
     [Tags("Owner - Hotel Services")]
     public class HotelController : ControllerBase
     {
-        private readonly IHotelRegistrationService _hotelRegistrationService;
 
-        public HotelController(IHotelRegistrationService hotelRegistrationService)
+        public HotelController()
         {
-            _hotelRegistrationService = hotelRegistrationService;
+            
         }
 
-        [HttpPost("hotel-registration")]
-        public async Task<IActionResult> HotelRegistration([FromBody] HotelRegistrationDTO request)
-        {
-            var ownerId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-
-            var result = await _hotelRegistrationService.HotelRegistrationAsync(request, ownerId);
-            return ApiResponseHandlerHelper.HandleResponse(result);
-        }
 
     }
 }

@@ -9,10 +9,10 @@ using HotelBooking.application.Validators.AdminManagement.RoomAttributes;
 using HotelBooking.application.Validators.Common;
 using HotelBooking.application.Validators.UserManagement.Login;
 using HotelBooking.application.Validators.UserManagement.Register;
-using HotelBooking.application.Validators.UserManagement;
 using HotelBooking.application.DTOs.Hotel;
 using HotelBooking.application.Validators.RoomManagement;
 using HotelBooking.application.Validators.RequestManagement.Customer;
+using HotelBooking.application.Validators.RequestManagement.Owner;
 
 public static class ValidatorServiceExtension
 {

@@ -8,7 +8,7 @@ using HotelBooking.application.Services.Domains.RequestManagement.Base;
 
 namespace HotelBooking.application.Services.Domains.RequestManagement.Customer;
 
-public interface ICustomerUpgradeRequestService : IBaseCustomerRequestService<UpgradeRequestDTO, CreateUpgradeRequestDTO>
+public interface ICustomerUpgradeRequestService : IBaseUserRequestService<UpgradeRequestDTO, CreateUpgradeRequestDTO>
 {
     Task<ApiResponse<UserForUpgradeDTO?>> GetUserForUpgradeAsync(int userId);
 }
@@ -64,7 +64,8 @@ public class CustomerUpgradeRequestService : ICustomerUpgradeRequestService
                 FullName = user.FullName ?? "",
                 Email = user.Email,
                 PhoneNumber = user.PhoneNumber,
-                RequestStatus = requestStatus
+                RequestStatus = requestStatus,
+                RequestId = latestRequest?.Id
             };
 
             return ResponseFactory.Success<UserForUpgradeDTO?>(
@@ -149,6 +150,7 @@ public class CustomerUpgradeRequestService : ICustomerUpgradeRequestService
 
             UpgradeRequestDTO saved = new UpgradeRequestDTO
             {
+                RequestId = request.Id,
                 UserId = request.UserId,
                 UserName = user.UserName,
                 FullName = user.FullName ?? "",
@@ -168,44 +170,19 @@ public class CustomerUpgradeRequestService : ICustomerUpgradeRequestService
         }
     }
 
-    public async Task<ApiResponse<bool>> CancelRequestAsync(int userId)
+    public async Task<ApiResponse<bool>> CancelRequestAsync(int userId, int requestId)
     {
         try
         {
             // Validate userId
-            if (userId <= 0)
+            if (userId <= 0 || requestId <= 0)
                 return ResponseFactory.Failure<bool>(
                     StatusCodeResponse.BadRequest,
-                    MessageResponse.RequestManagement.UpgradeRequest.USERID_INVALID);
-
-            // Check if user exists
-            var existingUser = await _userRepo.GetByIdAsync(userId);
-            if (existingUser == null)
-                return ResponseFactory.Failure<bool>(
-                    StatusCodeResponse.NotFound,
-                    MessageResponse.RequestManagement.UpgradeRequest.USER_NOT_FOUND);
-
-            // Check role via UserRoles table
-            var hasCustomerRole = await _userRoleRepo
-                .AnyAsync(ur => ur.UserId == userId && ur.RoleId == RoleTypeConstDTO.Customer);
-
-            if (!hasCustomerRole)
-                return ResponseFactory.Failure<bool>(
-                    StatusCodeResponse.Forbidden,
-                    MessageResponse.RequestManagement.UpgradeRequest.USER_NOT_CUSTOMER);
-
-            // Check if user is already a Owner
-            var hasOwnerRole = await _userRoleRepo
-                .AnyAsync(ur => ur.UserId == userId && ur.RoleId == RoleTypeConstDTO.Owner);
-
-            if (hasOwnerRole)
-                return ResponseFactory.Failure<bool>(
-                    StatusCodeResponse.Forbidden,
-                    MessageResponse.RequestManagement.UpgradeRequest.USER_ALREADY_OWNER);
+                    MessageResponse.RequestManagement.UpgradeRequest.USERID_OR_REQUESTID_INVALID);
 
             // Find user's pending request
             var pendingRequests = await _upgradeRequestRepo.GetPendingByIdAsync(userId);
-            var request = pendingRequests.FirstOrDefault();
+            var request = pendingRequests.FirstOrDefault(r => r.Id == requestId);
 
             if (request == null)
                 return ResponseFactory.Failure<bool>(
@@ -262,7 +239,7 @@ public class CustomerUpgradeRequestService : ICustomerUpgradeRequestService
 
             var requests = await _upgradeRequestRepo.GetByUserIdAsync(userId);
 
-            if (requests.Count() == 0)
+            if (!requests.Any())
                 return ResponseFactory.Success(new List<UpgradeRequestDTO>(), MessageResponse.RequestManagement.UpgradeRequest.NO_REQUESTS_FOUND);
 
 

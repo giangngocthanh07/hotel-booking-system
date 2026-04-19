@@ -40,11 +40,12 @@
                     @foreach (var req in FilteredRequests)
                     {
                         <tr class="glass-row-hover">
-                            <td class="text-center fw-bold text-primary">#@req.RequestId</td>
+                            <td class="text-center fw-bold text-primary">#@req.Id</td>
                             <td class="text-start px-4">
                                 <div class="d-flex flex-column">
-                                    <span class="fw-bold text-dark fs-6">@req.FullName</span>
-                                    <small class="text-muted font-monospace" style="font-size: 0.7rem;">@@@req.UserName</small>
+                                    <span class="fw-bold text-dark fs-6">@req.RequesterName</span>
+                                    <small class="text-muted font-monospace"
+                                           style="font-size: 0.7rem;">@@@req.TypeDisplay</small>
                                 </div>
                             </td>
                             <td class="text-center">
@@ -53,11 +54,11 @@
                                 </span>
                             </td>
                             <td class="text-center">
-                                <div class="text-dark small fw-600">@req.RequestedAt.ToString("dd/MM/yyyy")</div>
-                                <div class="text-muted extra-small">@req.RequestedAt.ToString("HH:mm")</div>
+                                <div class="text-dark small fw-600">@req.CreatedAt.ToString("dd/MM/yyyy")</div>
+                                <div class="text-muted extra-small">@req.CreatedAt.ToString("HH:mm")</div>
                             </td>
                             <td class="text-end pe-4">
-                                <button class="btn-glass-action" @onclick="() => ViewDetails(req.RequestId)">
+                                <button class="btn-glass-action" @onclick="() => ViewDetails(req.Id, req.Type)">
                                     <span>View Details</span>
                                     <i class="fas fa-arrow-right"></i>
                                 </button>
@@ -232,10 +233,10 @@
 </style>
 
 @code {
-    [Parameter] public List<UpgradeRequestVM> Requests { get; set; } = new();
+    [Parameter] public List<RecentRequestVM> Requests { get; set; } = new();
 
-    [Parameter] public EventCallback<int> OnApprove { get; set; }
-    [Parameter] public EventCallback<int> OnReject { get; set; }
+    [Parameter] public EventCallback<(int id, string type)> OnApprove { get; set; }
+    [Parameter] public EventCallback<(int id, string type)> OnReject { get; set; }
 
     private string searchTerm = "";
     private string selectedStatus = "";
@@ -246,11 +247,11 @@
         _httpClient = _httpClientFactory.CreateClient("HotelBookingAPI");
     }
 
-    private IEnumerable<UpgradeRequestVM> FilteredRequests => Requests
+    private IEnumerable<RecentRequestVM> FilteredRequests => Requests
         .Where(r => (string.IsNullOrEmpty(searchTerm) ||
-        r.RequestId.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-        r.UserName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-        r.FullName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)))
+        r.Id.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+        r.RequesterName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+        r.TypeDisplay.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)))
         .Where(r => string.IsNullOrEmpty(selectedStatus) || r.Status == selectedStatus)
         .ToList();
 
@@ -262,8 +263,15 @@
         _ => "bg-secondary text-white"
     };
 
-    private void ViewDetails(int requestId)
+    private void ViewDetails(int id, string type)
     {
-        NavigationManager.NavigateTo($"/admin/upgrade-requests/{requestId}");
+        if (type == "UpgradeOwner")
+        {
+            NavigationManager.NavigateTo($"/admin/upgrade-requests/{id}");
+        }
+        else if (type == "HotelApproval")
+        {
+            NavigationManager.NavigateTo($"/admin/hotel-approvals/{id}");
+        }
     }
 }

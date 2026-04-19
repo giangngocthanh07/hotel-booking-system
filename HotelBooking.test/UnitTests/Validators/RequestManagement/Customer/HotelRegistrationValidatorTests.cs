@@ -1,7 +1,8 @@
 
 using FluentAssertions;
 using FluentValidation.TestHelper;
-using HotelBooking.application.Validators.RequestManagement.Customer;
+using HotelBooking.application.DTOs.Hotel;
+using HotelBooking.application.Validators.RequestManagement.Owner;
 
 namespace HotelBooking.test.UnitTests.Validators.RequestManagement.Customer;
 

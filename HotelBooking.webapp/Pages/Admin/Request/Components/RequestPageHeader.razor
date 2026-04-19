@@ -1,0 +1,44 @@
+@* Shared detail-page header: breadcrumb + title + approve/reject action buttons *@
+
+<div class="d-flex justify-content-between align-items-center mb-4 header-glass p-3 shadow-sm">
+    <div class="d-flex align-items-center">
+        <button class="btn-glass-back me-3 force-gpu" @onclick="OnBack">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item">
+                        <a href="@BackUrl" class="text-primary text-decoration-none fw-bold">@BackLabel</a>
+                    </li>
+                    <li class="breadcrumb-item active">@ActiveLabel</li>
+                </ol>
+            </nav>
+            <h4 class="mb-0 fw-bold text-dark">@Title <span class="text-primary">#@RequestId</span></h4>
+        </div>
+    </div>
+
+    @if (ShowActions)
+    {
+        <div class="action-header-btns animate__animated animate__fadeInRight">
+            <button class="btn-glass-success me-2 shadow-sm force-gpu" @onclick="OnApprove">
+                <i class="fas fa-check me-2"></i>Approve
+            </button>
+            <button class="btn-glass-danger shadow-sm force-gpu" @onclick="OnReject">
+                <i class="fas fa-times me-2"></i>Reject
+            </button>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public int RequestId { get; set; }
+    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
+    [Parameter] public string BackUrl { get; set; } = "#";
+    [Parameter] public string BackLabel { get; set; } = "Back";
+    [Parameter] public string ActiveLabel { get; set; } = "Details";
+    [Parameter] public bool ShowActions { get; set; } = false;
+    [Parameter] public EventCallback OnBack { get; set; }
+    [Parameter] public EventCallback OnApprove { get; set; }
+    [Parameter] public EventCallback OnReject { get; set; }
+}

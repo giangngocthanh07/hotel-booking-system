@@ -4,7 +4,6 @@ using FluentAssertions;
 using FluentValidation;
 using HotelBooking.application.DTOs.Request.Base;
 using HotelBooking.application.DTOs.Request.UpgradeRequest;
-using HotelBooking.application.Helpers;
 using HotelBooking.application.Services.Domains.RequestManagement.Customer;
 using HotelBooking.infrastructure.Models;
 using Moq;
@@ -544,15 +543,12 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
         {
             // 1. Arrange
             int userId = 1;
-
-            // Mock User --> Found
-            // Mock UserRole is Customer and not is Owner
-            MockValidCustomerRole(userId);
+            int requestId = 7;
 
             // Mock user's pending request --> Is Pending Request
             var pendingRequests = new List<UpgradeRequest>
             {
-                new UpgradeRequest { Id = 99, UserId = userId, Status = RequestStatusConst.Pending }
+                new UpgradeRequest { Id = requestId, UserId = userId, Status = RequestStatusConst.Pending }
             };
 
             _mockUpgradeRequestRepo.Setup(r => r.GetPendingByIdAsync(userId))
@@ -562,7 +558,7 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
             _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
             // 2. Act
-            var result = await _service.CancelRequestAsync(userId);
+            var result = await _service.CancelRequestAsync(userId, requestId);
 
             // 3. Assert
             result.Should().NotBeNull();
@@ -570,7 +566,7 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
             result.Message.Should().Be(MessageResponse.RequestManagement.UpgradeRequest.REQUEST_CANCELLED_SUCCESS);
 
             _mockUpgradeRequestRepo.Verify(r => r.UpdateAsync(It.Is<UpgradeRequest>(req =>
-                req.Id == 99 &&
+                req.Id == requestId &&
                 req.Status == RequestStatusConst.Cancelled
             )), Times.Once);
             Verify_Saved(1);
@@ -581,13 +577,14 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
         {
             // 1. Arrange
             int userId = 0;
+            int requestId = 7;
 
             // 2. Act
-            var result = await _service.CancelRequestAsync(userId);
+            var result = await _service.CancelRequestAsync(userId, requestId);
 
             // 3. Assert
             result.Should().NotBeNull();
-            result.Message.Should().Be(MessageResponse.RequestManagement.UpgradeRequest.USERID_INVALID);
+            result.Message.Should().Be(MessageResponse.RequestManagement.UpgradeRequest.USERID_OR_REQUESTID_INVALID);
             result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
 
             Verify_Repo_Never_UpdateAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo);
@@ -595,79 +592,22 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
         }
 
         [Fact]
-        public async Task CancelRequest_UserNotFound_ShouldReturnNotFound()
+        public async Task CancelRequest_InvalidRequestId_ShouldReturnBadRequest()
         {
             // 1. Arrange
             int userId = 1;
-
-            // Mock User --> Not Found
-            _mockUserRepo.Setup(u => u.GetByIdAsync(userId))
-                 .ReturnsAsync((User)null!);
+            int requestId = 0;
 
             // 2. Act
-            var result = await _service.CancelRequestAsync(userId);
+            var result = await _service.CancelRequestAsync(userId, requestId);
 
             // 3. Assert
             result.Should().NotBeNull();
-            result.Message.Should().Be(MessageResponse.RequestManagement.UpgradeRequest.USER_NOT_FOUND);
-            result.StatusCode.Should().Be(StatusCodeResponse.NotFound);
+            result.Message.Should().Be(MessageResponse.RequestManagement.UpgradeRequest.USERID_OR_REQUESTID_INVALID);
+            result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
 
             Verify_Repo_Never_UpdateAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo);
             Verify_Never_Saved();
-        }
-
-        [Fact]
-        public async Task CancelRequest_UserNotCustomer_ShouldReturnForbidden()
-        {
-            // 1. Arrange
-            int userId = 1;
-
-            // Mock User --> Found
-            _mockUserRepo.Setup(u => u.GetByIdAsync(userId))
-                .ReturnsAsync(new User());
-
-            // Mock UserRole is not Customer Role
-            _mockUserRoleRepo.Setup(ur => ur.AnyAsync(It.IsAny<Expression<Func<UserRole, bool>>>()))
-                .ReturnsAsync(false);
-
-            // 2. Act
-            var result = await _service.CancelRequestAsync(userId);
-
-            // 3. Assert
-            result.Should().NotBeNull();
-            result.Message.Should().Be(MessageResponse.RequestManagement.UpgradeRequest.USER_NOT_CUSTOMER);
-            result.StatusCode.Should().Be(StatusCodeResponse.Forbidden);
-
-            Verify_Repo_Never_UpdateAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo);
-            Verify_Never_Saved();
-        }
-
-        [Fact]
-        public async Task CancelRequest_UserAlreadyOwner_ShouldReturnForbidden()
-        {
-            // 1. Arrange
-            int userId = 1;
-
-            // Mock User --> Found
-            _mockUserRepo.Setup(u => u.GetByIdAsync(userId))
-                .ReturnsAsync(new User());
-
-            // Mock UserRole is already an Owner
-            _mockUserRoleRepo.SetupSequence(ur => ur.AnyAsync(It.IsAny<Expression<Func<UserRole, bool>>>()))
-                .ReturnsAsync(true)
-                .ReturnsAsync(true);
-
-            // 2. Act
-            var result = await _service.CancelRequestAsync(userId);
-
-            // 3. Assert
-            result.Should().NotBeNull();
-            result.Message.Should().Be(MessageResponse.RequestManagement.UpgradeRequest.USER_ALREADY_OWNER);
-            result.StatusCode.Should().Be(StatusCodeResponse.Forbidden);
-
-            Verify_Repo_Never_UpdateAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo);
-            Verify_Never_Saved();
-
         }
 
         [Fact]
@@ -675,10 +615,10 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
         {
             // 1. Arrange
             int userId = 1;
+            int requestId = 7;
 
-            // Mock User --> Found
-            // Mock UserRole is Customer and not is Owner
-            MockValidCustomerRole(userId);
+            // Mock validation
+            MockValidationSuccess();
 
             // Mock user's pending request --> No Pending Request
             _mockUpgradeRequestRepo.Setup(r => r.GetPendingByIdAsync(userId))
@@ -686,7 +626,7 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
 
 
             // 2. Act
-            var result = await _service.CancelRequestAsync(userId);
+            var result = await _service.CancelRequestAsync(userId, requestId);
 
             // 3. Assert
             result.Should().NotBeNull();
@@ -702,21 +642,17 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
         {
             // 1. Arrange
             int userId = 1;
+            int requestId = 7;
 
-            // Mock User --> Found
-            // Simulate an existing user to pass the initial validation.
-
-            // Mock UserRole is Customer and not is Owner
-            // Ensure the user has the 'Customer' role and is not already an 'Owner', 
-            // granting them permission to cancel the request.
-            MockValidCustomerRole(userId);
+            // Mock validation
+            MockValidationSuccess();
 
             // Mock user's pending request --> Is Pending request
             // Provide a valid, 'Pending' upgrade request belonging to this user 
             // that is eligible for cancellation.
             var pendingRequests = new List<UpgradeRequest>
             {
-                new UpgradeRequest { Id = 99, UserId = userId, Status = RequestStatusConst.Pending }
+                new UpgradeRequest { Id = requestId, UserId = userId, Status = RequestStatusConst.Pending }
             };
 
             _mockUpgradeRequestRepo.Setup(r => r.GetPendingByIdAsync(userId)).ReturnsAsync(pendingRequests);
@@ -728,7 +664,7 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
                 .ReturnsAsync(0);
 
             // 2. Act
-            var result = await _service.CancelRequestAsync(userId);
+            var result = await _service.CancelRequestAsync(userId, requestId);
 
             // 3. Assert
             result.Should().NotBeNull();
@@ -736,85 +672,10 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
             result.Message.Should().Be(MessageResponse.RequestManagement.UpgradeRequest.REQUEST_CANCEL_FAILED);
 
             _mockUpgradeRequestRepo.Verify(r => r.UpdateAsync(It.Is<UpgradeRequest>(req =>
-                req.Id == 99 &&
+                req.Id == requestId &&
                 req.Status == RequestStatusConst.Cancelled
             )), Times.Once);
             Verify_Saved(1);
-        }
-
-        [Fact]
-        public async Task CancelRequest_SystemThrowsExceptionAtUserRepo_ShouldReturnServerError()
-        {
-            // 1. Arrange
-            int userId = 1;
-
-            // Mock User - Fail Fast --> No interact with DB
-            _mockUserRepo.Setup(u => u.GetByIdAsync(userId))
-                .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
-
-            // 2. Act
-            var result = await _service.CancelRequestAsync(userId);
-
-            // 3. Assert
-            result.Should().NotBeNull();
-            result.StatusCode.Should().Be(StatusCodeResponse.Error);
-            result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
-
-            Verify_Repo_Never_UpdateAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo);
-            Verify_Never_Saved();
-        }
-
-        [Fact]
-        public async Task CancelRequest_SystemThrowsExceptionAtUserRoleRepoAtStart_ShouldReturnServerError()
-        {
-            // 1. Arrange
-            int userId = 1;
-
-            // Mock User --> Found
-            _mockUserRepo.Setup(u => u.GetByIdAsync(userId))
-                .ReturnsAsync(new User());
-
-            // Mock UserRole - Fail Fast
-            _mockUserRoleRepo.Setup(ur => ur.AnyAsync(It.IsAny<Expression<Func<UserRole, bool>>>()))
-                .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
-
-            // 2. Act
-            var result = await _service.CancelRequestAsync(userId);
-
-            // 3. Assert
-            result.Should().NotBeNull();
-            result.StatusCode.Should().Be(StatusCodeResponse.Error);
-            result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
-
-            Verify_Repo_Never_UpdateAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo);
-            Verify_Never_Saved();
-        }
-
-        [Fact]
-        public async Task CancelRequest_SystemThrowsExceptionAtUserRoleRepoAtEnd_ShouldReturnServerError()
-        {
-            // 1. Arrange
-            int userId = 1;
-
-            // Mock User --> Found
-            _mockUserRepo.Setup(u => u.GetByIdAsync(userId))
-                .ReturnsAsync(new User());
-
-            // Mock UserRole --> Is Customer but fail at the second time
-            _mockUserRoleRepo.SetupSequence(ur => ur.AnyAsync(It.IsAny<Expression<Func<UserRole, bool>>>()))
-                .ReturnsAsync(true)
-                .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
-
-            // 2. Act
-            var result = await _service.CancelRequestAsync(userId);
-
-            // 3. Assert
-            result.Should().NotBeNull();
-            result.StatusCode.Should().Be(StatusCodeResponse.Error);
-            result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
-
-            Verify_Repo_Never_UpdateAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo);
-            Verify_Never_Saved();
         }
 
         [Fact]
@@ -822,17 +683,14 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
         {
             // 1. Arrange
             int userId = 1;
-
-            // Mock User --> Found
-            // Mock UserRole
-            MockValidCustomerRole(userId);
+            int requestId = 7;
 
             // Mock pending request --> Fail fast
             _mockUpgradeRequestRepo.Setup(r => r.GetPendingByIdAsync(userId))
                 .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
 
             // 2. Act
-            var result = await _service.CancelRequestAsync(userId);
+            var result = await _service.CancelRequestAsync(userId, requestId);
 
             // 3. Assert
             result.Should().NotBeNull();
@@ -848,15 +706,12 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
         {
             // 1. Arrange
             int userId = 1;
-
-            // Mock User --> Found
-            // Mock UserRole
-            MockValidCustomerRole(userId);
+            int requestId = 7;
 
             // Mock pending request --> Is Pending Request
             var pendingRequests = new List<UpgradeRequest>
             {
-                new UpgradeRequest { Id = 99, UserId = userId, Status = RequestStatusConst.Pending }
+                new UpgradeRequest { Id = requestId, UserId = userId, Status = RequestStatusConst.Pending }
             };
 
             _mockUpgradeRequestRepo.Setup(r => r.GetPendingByIdAsync(userId))
@@ -867,7 +722,7 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
                 .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
 
             // 2. Act
-            var result = await _service.CancelRequestAsync(userId);
+            var result = await _service.CancelRequestAsync(userId, requestId);
 
             // 3. Assert
             result.Should().NotBeNull();
@@ -875,7 +730,7 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
             result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
 
             _mockUpgradeRequestRepo.Verify(r => r.UpdateAsync(It.Is<UpgradeRequest>(req =>
-                req.Id == 99 &&
+                req.Id == requestId &&
                 req.Status == RequestStatusConst.Cancelled
             )), Times.Once);
             Verify_Never_Saved();
@@ -886,15 +741,12 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
         {
             // 1. Arrange
             int userId = 1;
-
-            // Mock User --> Found
-            // Mock UserRole
-            MockValidCustomerRole(userId);
+            int requestId = 7;
 
             // Mock pending request --> Is Pending Request)
             var pendingRequests = new List<UpgradeRequest>()
             {
-                new UpgradeRequest { Id = 99, UserId = userId, Status = RequestStatusConst.Pending }
+                new UpgradeRequest { Id = requestId, UserId = userId, Status = RequestStatusConst.Pending }
             };
             _mockUpgradeRequestRepo.Setup(r => r.GetPendingByIdAsync(userId))
                 .ReturnsAsync(pendingRequests);
@@ -904,7 +756,7 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
                 .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
 
             // 2. Act
-            var result = await _service.CancelRequestAsync(userId);
+            var result = await _service.CancelRequestAsync(userId, requestId);
 
             // 3. Assert
             result.Should().NotBeNull();
@@ -912,7 +764,7 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
             result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
 
             _mockUpgradeRequestRepo.Verify(r => r.UpdateAsync(It.Is<UpgradeRequest>(req =>
-                req.Id == 99 &&
+                req.Id == requestId &&
                 req.Status == RequestStatusConst.Cancelled
             )), Times.Once);
             Verify_Saved(1);

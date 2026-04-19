@@ -1,0 +1,437 @@
+@* filepath: e:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.webapp\Pages\Admin\Request\HotelApproval\Detail.razor *@
+@page "/admin/requests/hotel-approvals/{RequestId:int}"
+@using HotelBooking.webapp.Helpers.Common
+@using HotelBooking.webapp.ViewModels
+@using HotelBooking.webapp.ViewModels.Request.HotelApproval
+@using HotelBooking.webapp.Pages.Admin.Request.Components
+@using System.Net.Http.Headers
+
+@attribute [Authorize(Roles = "Admin")]
+@layout AdminLayout
+
+@inject NavigationManager NavigationManager
+@inject IHttpClientFactory _httpClientFactory
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+@inject ISnackbar Snackbar
+
+<PageTitle>Hotel Registration #@RequestId</PageTitle>
+
+<div class="container-fluid py-4 details-page-animate force-gpu">
+
+    @* --- Shared Page Header --- *@
+    <RequestPageHeader RequestId="RequestId"
+                       Title="Hotel Registration"
+                       BackUrl="/admin/requests/requests-overview"
+                       BackLabel="Requests Overview"
+                       ActiveLabel="Hotel Details"
+                       ShowActions="@(request != null && request.Status == RequestStatusConst.Pending)"
+                       OnBack="GoBack"
+                       OnApprove="ShowApproveModal"
+                       OnReject="ShowRejectModal" />
+
+    @* --- Loading / Error States --- *@
+    @if (isLoading)
+    {
+        <div class="glass-loader-wrapper text-center py-5">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
+            <p class="mt-3 fw-bold text-primary">Fetching hotel data...</p>
+        </div>
+    }
+    else if (request == null)
+    {
+        <div class="glass-alert-warning force-gpu shadow-sm p-4 text-center">
+            <i class="fas fa-exclamation-triangle fa-2x mb-2 text-warning"></i>
+            <h5 class="fw-bold">Request Not Found</h5>
+            <span class="text-muted">This registration request does not exist or has been removed.</span>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @* --- Left Column: Owner Information --- *@
+            <div class="col-lg-4">
+                <div class="glass-card-info h-100 shadow-sm force-gpu">
+                    <div class="glass-card-header-inner blue">
+                        <i class="fas fa-user-tie me-2"></i>Owner Profile
+                    </div>
+                    <div class="glass-card-body-inner">
+                        <div class="info-group">
+                            <label class="info-label">Full Name</label>
+                            <div class="info-value-box fw-bold text-dark">@request.OwnerFullName</div>
+                        </div>
+                        <div class="info-group">
+                            <label class="info-label">Email Address</label>
+                            <div class="info-value-box">
+                                <a href="mailto:@request.OwnerEmail"
+                                   class="text-primary fw-bold text-decoration-none">@request.OwnerEmail</a>
+                            </div>
+                        </div>
+                        <div class="info-group">
+                            <label class="info-label">Phone Number</label>
+                            <div class="info-value-box fw-bold">@request.OwnerPhoneNumber</div>
+                        </div>
+                        <div class="info-group">
+                            <label class="info-label">Owner Address</label>
+                            <div class="info-value-box text-muted">
+                                @(string.IsNullOrEmpty(request.OwnerAddress) ? "N/A" : request.OwnerAddress)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* --- Right Column: Hotel General Overview --- *@
+            <div class="col-lg-8">
+                <div class="glass-card-info h-100 shadow-sm force-gpu d-flex flex-column">
+
+                    <div class="glass-card-header-inner purple d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-hotel me-2"></i>Property Overview</span>
+                        <RequestStatusBadge Status="@request.Status" ExtraStyle="min-height:28px;" ExtraCssClass="bg-white" />
+                    </div>
+
+                    <div class="glass-card-body-inner flex-grow-1 d-flex flex-column">
+                        @* Hotel name + identifiers *@
+                        <div class="mb-4 border-bottom pb-3">
+                            <h3 class="fw-bold text-primary mb-1">@request.Name</h3>
+                            <div class="text-muted small">
+                                <i class="fas fa-hashtag me-1"></i>Hotel ID: @request.HotelId
+                                <span class="mx-2">|</span>
+                                <i class="fas fa-building me-1"></i>
+                                @(string.IsNullOrEmpty(request.PropertyTypeName)
+                                    ? $"Property Type ID: {request.PropertyTypeId}"
+                                    : request.PropertyTypeName)
+                            </div>
+                        </div>
+
+                        @* Quick Stats: Rating, Phone, Email *@
+                        <div class="row g-3 mb-4">
+                            <div class="col-sm-6 col-md-3">
+                                <div class="overview-stat-box">
+                                    <div class="stat-icon" style="color: #f59e0b; background: #fef3c7;">
+                                        <i class="fas fa-star"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <span class="stat-label">Rating</span>
+                                        <span class="stat-val">
+                                            @if (request.StarRating.HasValue && request.StarRating > 0)
+                                            {
+                                                @for (int i = 0; i < request.StarRating; i++) { <i class="fas fa-star text-warning" style="font-size: 0.75rem;"></i> }
+                                            }
+                                            else { <span class="text-muted">Unrated</span> }
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-md-4">
+                                <div class="overview-stat-box">
+                                    <div class="stat-icon" style="color: #3b82f6; background: #dbeafe;">
+                                        <i class="fas fa-phone-alt"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <span class="stat-label">Public Phone</span>
+                                        <span class="stat-val">@request.PublicPhone</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-12 col-md-5">
+                                <div class="overview-stat-box">
+                                    <div class="stat-icon" style="color: #ef4444; background: #fee2e2;">
+                                        <i class="fas fa-envelope"></i>
+                                    </div>
+                                    <div class="stat-content w-100 overflow-hidden">
+                                        <span class="stat-label">Public Email</span>
+                                        <span class="stat-val text-truncate d-block" title="@request.PublicEmail">@request.PublicEmail</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        @* Description *@
+                        <div class="desc-box p-3 rounded flex-grow-1">
+                            <h6 class="fw-bold text-dark mb-2" style="font-size: 0.85rem; text-transform: uppercase;">
+                                <i class="fas fa-align-left me-2 text-muted"></i>Property Description
+                            </h6>
+                            <p class="text-muted mb-0 custom-scrollbar"
+                               style="line-height: 1.6; font-size: 0.95rem; max-height: 120px; overflow-y: auto;">
+                                @(string.IsNullOrEmpty(request.Description)
+                                    ? "No description provided by the owner."
+                                    : request.Description)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* --- Full Width: Location & Legal --- *@
+            <div class="col-12">
+                <div class="glass-card-info shadow-sm force-gpu">
+                    <div class="glass-card-header-inner cyan">
+                        <i class="fas fa-map-marked-alt me-2"></i>Location &amp; Legal Documentation
+                    </div>
+                    <div class="glass-card-body-inner p-0">
+                        <div class="row g-0">
+                            @* Location *@
+                            <div class="col-lg-7 p-4 border-end-lg">
+                                <h6 class="fw-bold text-dark mb-4" style="font-size: 0.85rem; text-transform: uppercase;">
+                                    <i class="fas fa-map-marker-alt me-2 text-cyan"></i>Geographic Location
+                                </h6>
+                                <div class="d-flex align-items-start mb-3">
+                                    <div class="location-icon-large me-3 shadow-sm">
+                                        <i class="fas fa-map-pin"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark fs-5 mb-1">@request.Address</div>
+                                        <div class="text-muted mb-3" style="font-size: 0.9rem;">
+                                            <i class="fas fa-location-arrow me-1 opacity-50"></i>
+                                            <span class="fw-bold text-dark">
+                                                @(string.IsNullOrEmpty(request.WardName)
+                                                    ? $"Ward ID: {request.WardId}"
+                                                    : request.WardName)
+                                            </span>,
+                                            <span class="fw-bold text-dark">
+                                                @(string.IsNullOrEmpty(request.ProvinceName)
+                                                    ? $"Province ID: {request.ProvinceId}"
+                                                    : request.ProvinceName)
+                                            </span>
+                                            •
+                                            <span class="text-muted">
+                                                @(string.IsNullOrEmpty(request.CountryName) ? "Vietnam" : request.CountryName)
+                                            </span>
+                                        </div>
+                                        @if (request.Latitude.HasValue && request.Longitude.HasValue)
+                                        {
+                                            <div class="d-inline-flex align-items-center bg-light rounded-pill px-3 py-1 border shadow-sm"
+                                                 style="font-size: 0.8rem;">
+                                                <i class="fas fa-globe-asia text-success me-2"></i>
+                                                <span class="font-monospace text-muted fw-bold">
+                                                    @request.Latitude, @request.Longitude
+                                                </span>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            @* Legal *@
+                            <div class="col-lg-5 p-4 bg-light-glass">
+                                <h6 class="fw-bold text-dark mb-4" style="font-size: 0.85rem; text-transform: uppercase;">
+                                    <i class="fas fa-balance-scale me-2 text-cyan"></i>Legal &amp; Compliance
+                                </h6>
+                                <div class="mb-4">
+                                    <label class="info-label mb-1">Tax Identification Number</label>
+                                    <div class="tax-code-style flex-grow-1 px-3 py-2 rounded border fw-bold fs-5 text-center shadow-sm">
+                                        <i class="fas fa-hashtag text-muted me-2" style="font-size: 1rem;"></i>@request.TaxCode
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="info-label mb-1">Business License Document</label>
+                                    @if (!string.IsNullOrEmpty(request.BusinessLicenseUrl))
+                                    {
+                                        <div class="document-card d-flex align-items-center p-3 border rounded bg-white shadow-sm transition-hover">
+                                            <div class="doc-icon me-3">
+                                                <i class="fas fa-file-pdf text-danger fa-2x"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="fw-bold text-dark small text-truncate" style="max-width: 150px;">License_Document.pdf</div>
+                                                <div class="text-muted" style="font-size: 0.65rem;">Verified attachment</div>
+                                            </div>
+                                            <a href="@request.BusinessLicenseUrl" target="_blank"
+                                               class="btn btn-sm btn-light border btn-view-doc fw-bold">
+                                                View <i class="fas fa-external-link-alt ms-1"></i>
+                                            </a>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="p-3 border rounded bg-white text-center text-muted border-dashed">
+                                            <i class="fas fa-file-excel fa-2x mb-2 opacity-25"></i>
+                                            <div class="small fw-bold">No License Uploaded</div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* --- History Section --- *@
+            @if (request.Status != RequestStatusConst.Pending)
+            {
+                <div class="col-12">
+                    <RequestHistoryCard Status="@request.Status"
+                                        ProcessedAt="@request.ProcessedAt"
+                                        ProcessedByName="@request.ProcessedByName"
+                                        ActionVerb="Registration" />
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@* --- SHARED CONFIRMATION MODAL --- *@
+<ConfirmModal @ref="_confirmModal"
+              Title="@modalTitle"
+              Message="@modalMessage"
+              ConfirmText="@(actionType == "approve" ? "Confirm Approve" : "Confirm Reject")"
+              ConfirmIcon="@(actionType == "approve" ? "fa-check" : "fa-trash-can")"
+              ConfirmButtonClass="@(actionType == "approve" ? "btn-success glass-btn-confirm text-white" : "btn-glass-confirm-danger")"
+              IsProcessing="@isProcessing"
+              OnConfirm="ConfirmAction">
+    <div class="mt-3 p-2 rounded" style="background: rgba(0,0,0,0.03);">
+        <p class="text-muted small mb-0 text-center">
+            Target Request: <strong class="text-primary fs-6">#@RequestId</strong>
+        </p>
+    </div>
+</ConfirmModal>
+
+<style>
+    .details-page-animate { animation: fadeIn 0.5s ease-out; }
+    .header-glass { background: var(--glass-bg); backdrop-filter: var(--glass-blur); border: 1px solid var(--glass-border); border-radius: 20px; }
+    .glass-card-info { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 24px; overflow: hidden; }
+    .glass-card-header-inner { padding: 1.25rem 1.5rem; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: white; }
+    .glass-card-header-inner.blue   { background: linear-gradient(135deg, #3a7bd5, #00d2ff); }
+    .glass-card-header-inner.cyan   { background: linear-gradient(135deg, #0891b2, #06b6d4); }
+    .glass-card-header-inner.purple { background: linear-gradient(135deg, #8b5cf6, #d946ef); }
+    .glass-card-body-inner { padding: 2rem; }
+    .info-group { margin-bottom: 1.5rem; }
+    .info-label { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; display: block; }
+    .info-value-box { color: var(--text-dark); font-size: 1rem; font-weight: 600; padding: 12px 16px; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 12px; }
+    .tax-code-style { font-family: 'JetBrains Mono', monospace; color: var(--admin-blue); background: rgba(58, 123, 213, 0.05); }
+
+    /* Buttons */
+    .btn-glass-back { width: 42px; height: 42px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: #fff; color: var(--text-muted); transition: 0.3s; }
+    .btn-glass-back:hover { background: #f8fafc; color: var(--text-dark); transform: translateX(-3px); }
+    .btn-glass-success { background: var(--color-success); color: #fff; border: none; padding: 10px 24px; border-radius: 12px; font-weight: 700; transition: 0.3s; }
+    .btn-glass-danger  { background: var(--color-danger);  color: #fff; border: none; padding: 10px 24px; border-radius: 12px; font-weight: 700; transition: 0.3s; }
+
+    /* Status Badge */
+    .badge-fixed-layout { display: inline-flex !important; align-items: center !important; justify-content: center !important; min-height: 32px; padding: 0 16px !important; border-radius: 50px; font-weight: 800; font-size: 0.7rem; letter-spacing: 0.5px; text-transform: uppercase; }
+    .status-pill-modern.bg-warning { background: #fffbeb !important; color: #92400e !important; border-color: #fde68a !important; }
+    .status-pill-modern.bg-success { background: #f0fdf4 !important; color: #15803d !important; border-color: #bbf7d0 !important; }
+    .status-pill-modern.bg-danger  { background: #fef2f2 !important; color: #991b1b !important; border-color: #fecaca !important; }
+
+    /* History */
+    .glass-card-history { background: var(--glass-bg); border-radius: 20px; border-left: 6px solid #cbd5e1; }
+    .border-success-thick { border-left-color: var(--color-success) !important; background: rgba(16, 185, 129, 0.05); }
+    .border-danger-thick  { border-left-color: var(--color-danger)  !important; background: rgba(244, 63, 94, 0.05); }
+    .history-icon-circle { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.05); }
+
+    /* Overview Stats */
+    .overview-stat-box { display: flex; align-items: center; padding: 12px; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 14px; height: 100%; transition: transform 0.2s, box-shadow 0.2s; }
+    .overview-stat-box:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-color: #cbd5e1; }
+    .stat-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem; margin-right: 12px; flex-shrink: 0; }
+    .stat-content { display: flex; flex-direction: column; justify-content: center; }
+    .stat-label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; margin-bottom: 2px; }
+    .stat-val { font-size: 0.95rem; font-weight: 700; color: var(--text-dark); }
+
+    /* Description */
+    .desc-box { background: rgba(241, 245, 249, 0.6); border: 1px dashed #cbd5e1; }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* Location & Legal */
+    .text-cyan { color: #0891b2; }
+    .border-end-lg { border-bottom: 1px solid #e2e8f0; }
+    @@media (min-width: 992px) { .border-end-lg { border-bottom: none; border-right: 1px solid #e2e8f0; } }
+    .bg-light-glass { background: rgba(248, 250, 252, 0.6); }
+    .location-icon-large { width: 48px; height: 48px; background: linear-gradient(135deg, #e0f2fe, #bae6fd); color: #0284c7; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0; border: 1px solid #7dd3fc; }
+    .document-card { cursor: pointer; }
+    .document-card:hover { border-color: #cbd5e1 !important; transform: translateY(-2px); }
+    .btn-view-doc { color: var(--admin-blue); transition: 0.2s; }
+    .document-card:hover .btn-view-doc { background: var(--admin-blue); color: white; border-color: var(--admin-blue) !important; }
+    .border-dashed { border-style: dashed !important; border-width: 2px !important; background: #f8fafc !important; }
+
+    @@keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+
+@code {
+    [Parameter] public int RequestId { get; set; }
+
+    private ConfirmModal _confirmModal = default!;
+    private HttpClient _httpClient = null!;
+    private HotelRegistrationDetailVM? request;
+    private bool isLoading = true;
+    private bool isProcessing = false;
+    private string modalTitle = "";
+    private string modalMessage = "";
+    private string actionType = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _httpClient = _httpClientFactory.CreateClient("HotelBookingAPI");
+        var token = await _localStorage.GetItemAsync<string>("accessToken");
+        if (!string.IsNullOrEmpty(token))
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        await LoadRequestAsync();
+    }
+
+    private async Task LoadRequestAsync()
+    {
+        isLoading = true;
+        try
+        {
+            var response = await _httpClient.GetAsync($"v1/admin/hotel-approvals/{RequestId}");
+            if (response.IsSuccessStatusCode)
+            {
+                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<HotelRegistrationDetailVM>>();
+                request = apiResponse?.Content;
+            }
+        }
+        catch (Exception) { SnackbarHelper.Show(Snackbar, StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER); }
+        finally { isLoading = false; }
+    }
+
+    private void GoBack() => NavigationManager.NavigateTo("/admin/requests/requests-overview");
+
+    private void ShowApproveModal()
+    {
+        modalTitle   = "Approve Hotel";
+        modalMessage = "Are you sure you want to approve this property? It will become Active on the platform.";
+        actionType   = "approve";
+        _confirmModal.Show();
+    }
+
+    private void ShowRejectModal()
+    {
+        modalTitle   = "Reject Hotel";
+        modalMessage = "Are you sure you want to reject this hotel registration? This action cannot be undone.";
+        actionType   = "reject";
+        _confirmModal.Show();
+    }
+
+    private async Task ConfirmAction()
+    {
+        if (isProcessing) return;
+        isProcessing = true;
+        StateHasChanged();
+        try
+        {
+            var url = actionType == "approve"
+                ? $"v1/admin/hotel-approvals/{RequestId}/approve"
+                : $"v1/admin/hotel-approvals/{RequestId}/reject";
+
+            var response = await _httpClient.PostAsync(url, null);
+            if (response.IsSuccessStatusCode)
+            {
+                _confirmModal.Hide();
+                string successMsg = actionType == "approve"
+                    ? MessageResponse.RequestManagement.HotelApproval.APPROVED_SUCCESS
+                    : MessageResponse.RequestManagement.HotelApproval.REJECTED_SUCCESS;
+                Snackbar.Add(successMsg, Severity.Success);
+                await LoadRequestAsync();
+            }
+            else
+            {
+                Snackbar.Add(MessageResponse.Common.ERROR_IN_SERVER, Severity.Error);
+            }
+        }
+        finally
+        {
+            isProcessing = false;
+            StateHasChanged();
+        }
+    }
+}

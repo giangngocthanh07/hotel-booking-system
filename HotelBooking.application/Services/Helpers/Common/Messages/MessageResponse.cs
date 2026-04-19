@@ -290,6 +290,7 @@ public static class MessageResponse
         public static class UpgradeRequest
         {
             // Get User for Upgrade
+            public const string USERID_OR_REQUESTID_INVALID = "User ID or Request ID must be greater than 0!";
             public const string USERID_INVALID = "User ID must be greater than 0!";
             public const string USERID_REQUIRED = "User ID is required!";
             public const string USERNAME_REQUIRED = "Username must not be empty!";
@@ -375,6 +376,7 @@ public static class MessageResponse
             public const string HOTEL_REGISTRATION_INVALID_TAX_CODE = "Tax code must be exactly 10 or 13 digits!";
             public const string HOTEL_REGISTRATION_EMPTY_BUSINESS_LICENSE_URL = "Business license URL must not be empty!";
             public const string HOTEL_REGISTRATION_INVALID_BUSINESS_LICENSE_URL = "Business license URL is invalid!";
+            public const string HOTEL_REGISTRATION_NO_REQUEST_FOUND = "No request found!";
         }
     }
 

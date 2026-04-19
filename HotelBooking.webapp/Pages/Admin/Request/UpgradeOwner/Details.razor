@@ -3,6 +3,7 @@
 @using HotelBooking.webapp.Helpers.Common
 @using HotelBooking.webapp.ViewModels
 @using HotelBooking.webapp.ViewModels.Request
+@using HotelBooking.webapp.Pages.Admin.Request.Components
 @using System.Net.Http.Headers
 
 @attribute [Authorize(Roles = "Admin")]
@@ -13,393 +14,171 @@
 @inject Blazored.LocalStorage.ILocalStorageService _localStorage
 @inject ISnackbar Snackbar
 
-<PageTitle>Request Details #@RequestId</PageTitle>
+<PageTitle>Upgrade Request #@RequestId</PageTitle>
 
 <div class="container-fluid py-4 details-page-animate force-gpu">
-    @* --- Navigation & Header --- *@
-    <div class="d-flex justify-content-between align-items-center mb-4 header-glass p-3 shadow-sm">
-        <div class="d-flex align-items-center">
-            <button class="btn-glass-back me-3 force-gpu" @onclick="GoBack">
-                <i class="fas fa-arrow-left"></i>
-            </button>
-            <div>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a href="/admin/requests/upgrade-owner"
-                                                           class="text-primary text-decoration-none fw-bold">Requests</a></li>
-                            <li class="breadcrumb-item active">Details</li>
-                        </ol>
-                    </nav>
-                    <h4 class="mb-0 fw-bold text-dark">Upgrade Request <span class="text-primary">#@RequestId</span></h4>
+
+    @* --- Shared Page Header --- *@
+    <RequestPageHeader RequestId="RequestId"
+                       Title="Upgrade Request"
+                       BackUrl="/admin/requests/upgrade-owner"
+                       BackLabel="Requests"
+                       ActiveLabel="Details"
+                       ShowActions="@(request != null && request.Status == RequestStatusConst.Pending)"
+                       OnBack="GoBack"
+                       OnApprove="ShowApproveModal"
+                       OnReject="ShowRejectModal" />
+
+    @* --- Loading State --- *@
+    @if (isLoading)
+    {
+        <div class="glass-loader-wrapper text-center py-5">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
+            <p class="mt-3 fw-bold text-primary">Fetching partner data...</p>
+        </div>
+    }
+    else if (request == null)
+    {
+        <div class="glass-alert-warning force-gpu shadow-sm p-4 text-center">
+            <i class="fas fa-exclamation-triangle fa-2x mb-2 text-warning"></i>
+            <h5 class="fw-bold">Request Not Found</h5>
+            <span class="text-muted">This request does not exist or has been removed from the system.</span>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @* --- Left Column: User Information --- *@
+            <div class="col-lg-6">
+                <div class="glass-card-info h-100 shadow-sm force-gpu">
+                    <div class="glass-card-header-inner blue">
+                        <i class="fas fa-user-circle me-2"></i>User Profile
+                    </div>
+                    <div class="glass-card-body-inner">
+                        <div class="info-group">
+                            <label class="info-label">Username</label>
+                            <div class="info-value-box text-muted">@@@request.UserName</div>
+                        </div>
+                        <div class="info-group">
+                            <label class="info-label">Full Name</label>
+                            <div class="info-value-box fw-bold text-dark">@request.FullName</div>
+                        </div>
+                        <div class="info-group">
+                            <label class="info-label">Email Address</label>
+                            <div class="info-value-box">
+                                <a href="mailto:@request.Email"
+                                   class="text-primary fw-bold text-decoration-none">@request.Email</a>
+                            </div>
+                        </div>
+                        <div class="info-group">
+                            <label class="info-label">Phone Number</label>
+                            <div class="info-value-box fw-bold">@request.PhoneNumber</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            @if (request != null && request.Status == RequestStatusConst.Pending)
+            @* --- Right Column: Request / Business Information --- *@
+            <div class="col-lg-6">
+                <div class="glass-card-info h-100 shadow-sm force-gpu">
+                    <div class="glass-card-header-inner cyan d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-file-invoice me-2"></i>Business Details</span>
+                        <RequestStatusBadge Status="@request.Status" ExtraStyle="min-height:28px;" />
+                    </div>
+                    <div class="glass-card-body-inner">
+                        <div class="info-group">
+                            <label class="info-label">Tax Identification Number</label>
+                            <div class="info-value-box tax-code-style">@request.TaxCode</div>
+                        </div>
+                        <div class="info-group">
+                            <label class="info-label">Registered Business Address</label>
+                            <div class="info-value-box address-area">@request.Address</div>
+                        </div>
+                        <div class="info-group">
+                            <label class="info-label">Submission Timestamp</label>
+                            <div class="info-value-box text-muted small">
+                                @request.RequestedAt.ToString("MMMM dd, yyyy - HH:mm")
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* --- History Section (only when processed) --- *@
+            @if (request.Status != RequestStatusConst.Pending)
             {
-                <div class="action-header-btns animate__animated animate__fadeInRight">
-                    <button class="btn-glass-success me-2 shadow-sm force-gpu" @onclick="ShowApproveModal">
-                        <i class="fas fa-check me-2"></i>Approve
-                    </button>
-                    <button class="btn-glass-danger shadow-sm force-gpu" @onclick="ShowRejectModal">
-                        <i class="fas fa-times me-2"></i>Reject
-                    </button>
+                <div class="col-12 mt-2">
+                    <RequestHistoryCard Status="@request.Status"
+                                        ProcessedAt="@request.ProcessedAt"
+                                        ProcessedByName="@request.ProcessedByName"
+                                        ActionVerb="This request" />
                 </div>
             }
         </div>
+    }
+</div>
 
-        @if (isLoading)
-        {
-            <div class="glass-loader-wrapper">
-                <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
-                <p class="mt-3 fw-bold text-primary">Fetching partner data...</p>
-            </div>
-        }
-        else if (request == null)
-        {
-            <div class="glass-alert-warning force-gpu shadow-sm">
-                <i class="fas fa-exclamation-triangle me-3"></i>
-                <span>Request not found or has been removed from the system.</span>
-            </div>
-        }
-        else
-        {
-            <div class="row g-4">
-                @* --- Left Column: User Information --- *@
-                <div class="col-lg-6">
-                    <div class="glass-card-info h-100 shadow-sm force-gpu">
-                        <div class="glass-card-header-inner blue">
-                            <i class="fas fa-user-circle me-2"></i>User Profile
-                        </div>
-                        <div class="glass-card-body-inner">
-                            <div class="info-group">
-                                <label class="info-label">Username</label>
-                                <div class="info-value-box text-muted">@@@request.UserName</div>
-                            </div>
-                            <div class="info-group">
-                                <label class="info-label">Full Name</label>
-                                <div class="info-value-box fw-bold text-dark">@request.FullName</div>
-                            </div>
-                            <div class="info-group">
-                                <label class="info-label">Email Address</label>
-                                <div class="info-value-box">
-                                    <a href="mailto:@request.Email"
-                                       class="text-primary fw-bold text-decoration-none">@request.Email</a>
-                                </div>
-                            </div>
-                            <div class="info-group">
-                                <label class="info-label">Phone Number</label>
-                                <div class="info-value-box fw-bold">@request.PhoneNumber</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+@* --- SHARED CONFIRMATION MODAL --- *@
+<ConfirmModal @ref="_confirmModal"
+              Title="@modalTitle"
+              Message="@modalMessage"
+              ConfirmText="@(actionType == "approve" ? "Confirm Approve" : "Confirm Reject")"
+              ConfirmIcon="@(actionType == "approve" ? "fa-check" : "fa-trash-can")"
+              ConfirmButtonClass="@(actionType == "approve" ? "btn-success glass-btn-confirm text-white" : "btn-glass-confirm-danger")"
+              IsProcessing="@isProcessing"
+              OnConfirm="ConfirmAction">
+    <div class="mt-3 p-2 rounded" style="background: rgba(0,0,0,0.03);">
+        <p class="text-muted small mb-0 text-center">
+            Target Request: <strong class="text-primary fs-6">#@RequestId</strong>
+        </p>
+    </div>
+</ConfirmModal>
 
-                @* --- Right Column: Request Information --- *@
-                <div class="col-lg-6">
-                    <div class="glass-card-info h-100 shadow-sm force-gpu">
-                        <div class="glass-card-header-inner cyan">
-                            <i class="fas fa-file-invoice me-2"></i>Business Details
-                        </div>
-                        <div class="glass-card-body-inner">
-                            <div class="info-group">
-                                <label class="info-label">Current Review Status</label>
-                                <div class="badge-container-glass">
-                                    <span
-                                        class="status-pill-modern badge-fixed-layout @GetStatusBadgeClass(request.Status) force-gpu">
-                                        <i class="@GetStatusIcon(request.Status) me-2"></i>@request.Status.ToUpper()
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="info-group">
-                                <label class="info-label">Tax Identification Number</label>
-                                <div class="info-value-box tax-code-style">@request.TaxCode</div>
-                            </div>
-                            <div class="info-group">
-                                <label class="info-label">Registered Business Address</label>
-                                <div class="info-value-box address-area">@request.Address</div>
-                            </div>
-                            <div class="info-group">
-                                <label class="info-label">Submission Timestamp</label>
-                                <div class="info-value-box text-muted small">@request.RequestedAt.ToString("MMMM dd, yyyy - HH:mm")</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+<style>
+    /* --- LAYOUT --- */
+    .details-page-animate { animation: fadeIn 0.5s ease-out; }
+    .header-glass { background: var(--glass-bg); backdrop-filter: var(--glass-blur); border: 1px solid var(--glass-border); border-radius: 20px; }
+    .glass-card-info { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 24px; overflow: hidden; }
 
-                @* --- History Section --- *@
-                @if (request.Status != RequestStatusConst.Pending)
-                {
-                    <div class="col-12 mt-2">
-                        <div class="glass-card-history shadow-sm force-gpu @GetStatusBorderClass(request.Status)">
-                            <div class="d-flex align-items-center p-4">
-                                <div class="history-icon-circle @GetStatusTextClass(request.Status)">
-                                    <i class="@GetStatusIcon(request.Status) fa-2x"></i>
-                                </div>
-                                <div class="ms-4">
-                                    <h5 class="fw-bold mb-1 @GetStatusTextClass(request.Status)">
-                                        This request was @request.Status.ToUpper()
-                                    </h5>
-                                    <div class="text-muted small">
-                                        <span class="me-3"><i class="fas fa-calendar-check me-1"></i>
-                                            @request.ProcessedAt?.ToString("g")</span>
-                                            <span><i class="fas fa-user-shield me-1"></i> Auditor:
-                                                <strong>@request.ProcessedByName</strong></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                }
-            </div>
+    /* --- INFO ELEMENTS --- */
+    .glass-card-header-inner { padding: 1.25rem 1.5rem; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: white; }
+    .glass-card-header-inner.blue  { background: linear-gradient(135deg, #3a7bd5, #00d2ff); }
+    .glass-card-header-inner.cyan  { background: linear-gradient(135deg, #0891b2, #06b6d4); }
+    .glass-card-body-inner { padding: 2rem; }
+    .info-group { margin-bottom: 1.5rem; }
+    .info-label { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; display: block; }
+    .info-value-box { color: var(--text-dark); font-size: 1rem; font-weight: 600; padding: 12px 16px; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 12px; }
+    .tax-code-style { font-family: 'JetBrains Mono', monospace; color: var(--admin-blue); background: rgba(58, 123, 213, 0.05); }
 
-            @* --- SHARED CONFIRMATION MODAL --- *@
-            <ConfirmModal @ref="_confirmModal"
-                        Title="@modalTitle"
-                        Message="@modalMessage"
-                        ConfirmText="@(actionType == "approve" ? "Confirm Approve" : "Confirm Reject")"
-                        ConfirmIcon="@(actionType == "approve" ? "fa-check" : "fa-trash-can")"
-                        ConfirmButtonClass="@(actionType == "approve" ? "btn-success glass-btn-confirm text-white" : "btn-glass-confirm-danger")"
-                        IsProcessing="@isProcessing" 
-                        OnConfirm="ConfirmAction">
-                        
-                @* Additional content showing the target request ID *@
-                <div class="mt-3 p-2 rounded" style="background: rgba(0,0,0,0.03);">
-                    <p class="text-muted small mb-0 text-center">
-                        Target Request: <strong class="text-primary fs-6">#@RequestId</strong>
-                    </p>
-                </div>
-            </ConfirmModal>
+    /* --- STATUS BADGE (shared styles referenced by RequestStatusBadge component) --- */
+    .badge-fixed-layout { display: inline-flex !important; align-items: center !important; justify-content: center !important; line-height: 1 !important; min-height: 32px; padding: 0 16px !important; white-space: nowrap; border-radius: 50px; font-weight: 800; font-size: 0.7rem; letter-spacing: 0.5px; text-transform: uppercase; border: 1px solid transparent; }
+    .status-pill-modern.bg-warning { background: #fffbeb !important; color: #92400e !important; border-color: #fde68a !important; }
+    .status-pill-modern.bg-success { background: #f0fdf4 !important; color: #15803d !important; border-color: #bbf7d0 !important; }
+    .status-pill-modern.bg-danger  { background: #fef2f2 !important; color: #991b1b !important; border-color: #fecaca !important; }
 
-            <style>
-                /* --- LAYOUT STYLES --- */
-                .details-page-animate {
-                    animation: fadeIn 0.5s ease-out;
-                }
+    /* --- BUTTONS --- */
+    .btn-glass-back { width: 42px; height: 42px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: #fff; color: var(--text-muted); transition: 0.3s; }
+    .btn-glass-back:hover { background: #f8fafc; color: var(--text-dark); transform: translateX(-3px); }
+    .btn-glass-success { background: var(--color-success); color: #fff; border: none; padding: 10px 24px; border-radius: 12px; font-weight: 700; transition: 0.3s; }
+    .btn-glass-danger  { background: var(--color-danger);  color: #fff; border: none; padding: 10px 24px; border-radius: 12px; font-weight: 700; transition: 0.3s; }
 
-                .header-glass {
-                    background: var(--glass-bg);
-                    backdrop-filter: var(--glass-blur);
-                    border: 1px solid var(--glass-border);
-                    border-radius: 20px;
-                }
+    /* --- HISTORY --- */
+    .glass-card-history { background: var(--glass-bg); border-radius: 20px; border-left: 6px solid #cbd5e1; }
+    .border-success-thick { border-left-color: var(--color-success) !important; background: rgba(16, 185, 129, 0.05); }
+    .border-danger-thick  { border-left-color: var(--color-danger)  !important; background: rgba(244, 63, 94, 0.05); }
+    .history-icon-circle { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.05); }
 
-                .glass-card-info {
-                    background: var(--glass-bg);
-                    border: 1px solid var(--glass-border);
-                    border-radius: 24px;
-                    overflow: hidden;
-                }
-
-                /* --- INFO ELEMENTS --- */
-                .glass-card-header-inner {
-                    padding: 1.25rem 1.5rem;
-                    font-weight: 800;
-                    font-size: 0.85rem;
-                    text-transform: uppercase;
-                    letter-spacing: 1px;
-                    color: white;
-                }
-
-                .glass-card-header-inner.blue {
-                    background: linear-gradient(135deg, #3a7bd5, #00d2ff);
-                }
-
-                .glass-card-header-inner.cyan {
-                    background: linear-gradient(135deg, #0891b2, #06b6d4);
-                }
-
-                .glass-card-body-inner {
-                    padding: 2rem;
-                }
-
-                .info-group {
-                    margin-bottom: 1.5rem;
-                }
-
-                .info-label {
-                    font-size: 0.7rem;
-                    font-weight: 800;
-                    color: var(--text-muted);
-                    text-transform: uppercase;
-                    margin-bottom: 8px;
-                    display: block;
-                }
-
-                .info-value-box {
-                    color: var(--text-dark);
-                    font-size: 1rem;
-                    font-weight: 600;
-                    padding: 12px 16px;
-                    background: #fff;
-                    border: 1.5px solid #e2e8f0;
-                    border-radius: 12px;
-                }
-
-                .tax-code-style {
-                    font-family: 'JetBrains Mono', monospace;
-                    color: var(--admin-blue);
-                    background: rgba(58, 123, 213, 0.05);
-                }
-
-                /* --- BUTTONS --- */
-                .btn-glass-back {
-                    width: 42px;
-                    height: 42px;
-                    border-radius: 12px;
-                    border: 1.5px solid #e2e8f0;
-                    background: #fff;
-                    color: var(--text-muted);
-                    transition: 0.3s;
-                }
-
-                .btn-glass-back:hover {
-                    background: #f8fafc;
-                    color: var(--text-dark);
-                    transform: translateX(-3px);
-                }
-
-                .btn-glass-success {
-                    background: var(--color-success);
-                    color: #fff;
-                    border: none;
-                    padding: 10px 24px;
-                    border-radius: 12px;
-                    font-weight: 700;
-                    transition: 0.3s;
-                }
-
-                .btn-glass-danger {
-                    background: var(--color-danger);
-                    color: #fff;
-                    border: none;
-                    padding: 10px 24px;
-                    border-radius: 12px;
-                    font-weight: 700;
-                    transition: 0.3s;
-                }
-
-                /* --- MODAL STYLES --- */
-                .glass-modal {
-                    background: rgba(255, 255, 255, 0.95) !important;
-                    backdrop-filter: blur(20px);
-                    border-radius: 28px !important;
-                    border: 1px solid var(--glass-border) !important;
-                    overflow: hidden;
-                }
-
-                .glass-modal-header {
-                    padding: 1.5rem;
-                }
-
-                .btn-glass-cancel {
-                    background: #f1f5f9;
-                    border: 1.5px solid #e2e8f0;
-                    color: var(--text-muted);
-                    border-radius: 12px;
-                    font-weight: 700;
-                    padding: 10px 20px;
-                    transition: 0.3s;
-                }
-
-                .btn-glass-cancel:hover {
-                    background: #e2e8f0;
-                    color: var(--text-dark);
-                }
-
-                .badge-fixed-layout {
-                    display: inline-flex !important;
-                    align-items: center !important;
-                    justify-content: center !important;
-                    line-height: 1 !important;
-                    min-height: 32px;
-                    padding: 0 16px !important;
-                    white-space: nowrap;
-                    border-radius: 50px;
-                    font-weight: 800;
-                    font-size: 0.7rem;
-                    letter-spacing: 0.5px;
-                    text-transform: uppercase;
-                    border: 1px solid transparent;
-                }
-
-                .badge-container-glass {
-                    background: #ffffff;
-                    border: 1.5px solid #e2e8f0;
-                    border-radius: 12px;
-                    padding: 8px 12px;
-                    display: flex;
-                    align-items: center;
-                    min-height: 52px;
-                    transition: border-color 0.3s;
-                }
-
-                .badge-container-glass:hover {
-                    border-color: var(--admin-blue);
-                }
-
-                .status-pill-modern.bg-warning {
-                    background: #fffbeb !important;
-                    color: #92400e !important;
-                    border-color: #fde68a !important;
-                }
-
-                .status-pill-modern.bg-success {
-                    background: #f0fdf4 !important;
-                    color: #15803d !important;
-                    border-color: #bbf7d0 !important;
-                }
-
-                .status-pill-modern.bg-danger {
-                    background: #fef2f2 !important;
-                    color: #991b1b !important;
-                    border-color: #fecaca !important;
-                }
-
-                /* --- HISTORY --- */
-                .glass-card-history {
-                    background: var(--glass-bg);
-                    border-radius: 20px;
-                    border-left: 6px solid #cbd5e1;
-                }
-
-                .border-success-thick {
-                    border-left-color: var(--color-success) !important;
-                    background: rgba(16, 185, 129, 0.05);
-                }
-
-                .border-danger-thick {
-                    border-left-color: var(--color-danger) !important;
-                    background: rgba(244, 63, 94, 0.05);
-                }
-
-                @@keyframes fadeIn {
-                    from {
-                        opacity: 0;
-                        transform: translateY(15px);
-                    }
-
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-            </style>
+    @@keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+</style>
 
 @code {
     [Parameter] public int RequestId { get; set; }
 
-    // Modal Reference
     private ConfirmModal _confirmModal = default!;
-
-    // Data & State Variables
     private HttpClient _httpClient = null!;
     private UpgradeRequestVM? request;
     private bool isLoading = true;
     private bool isProcessing = false;
-
-    // Modal State Variables
     private string modalTitle = "";
     private string modalMessage = "";
     private string actionType = "";
@@ -433,19 +212,17 @@
 
     private void ShowApproveModal()
     {
-        modalTitle = "Approve Upgrade";
+        modalTitle   = "Approve Upgrade";
         modalMessage = "Are you sure you want to approve this request? The user will be immediately granted the Owner role.";
-        actionType = "approve";
-        
+        actionType   = "approve";
         _confirmModal.Show();
     }
 
     private void ShowRejectModal()
     {
-        modalTitle = "Reject Upgrade";
+        modalTitle   = "Reject Upgrade";
         modalMessage = "Are you sure you want to reject this request? This action cannot be undone.";
-        actionType = "reject";
-        
+        actionType   = "reject";
         _confirmModal.Show();
     }
 
@@ -457,18 +234,17 @@
         try
         {
             var url = actionType == "approve"
-                                                                                        ? $"v1/admin/upgrade-requests/{RequestId}/approve"
-            : $"v1/admin/upgrade-requests/{RequestId}/reject";
+                ? $"v1/admin/upgrade-requests/{RequestId}/approve"
+                : $"v1/admin/upgrade-requests/{RequestId}/reject";
 
             var response = await _httpClient.PostAsync(url, null);
-
             if (response.IsSuccessStatusCode)
             {
                 _confirmModal.Hide();
-
-                string successMsg = actionType == "approve" ? MessageResponse.RequestManagement.UpgradeRequest.APPROVE_SUCCESS : MessageResponse.RequestManagement.UpgradeRequest.REJECT_SUCCESS;
+                string successMsg = actionType == "approve"
+                    ? MessageResponse.RequestManagement.UpgradeRequest.APPROVE_SUCCESS
+                    : MessageResponse.RequestManagement.UpgradeRequest.REJECT_SUCCESS;
                 Snackbar.Add(successMsg, Severity.Success);
-
                 await LoadRequestAsync();
             }
             else
@@ -482,23 +258,4 @@
             StateHasChanged();
         }
     }
-
-    // Helper Methods
-    private string GetStatusBadgeClass(string status) => status switch
-    {
-        "Pending" => "bg-warning",
-        "Approved" =>
-        "bg-success",
-        "Rejected" => "bg-danger",
-        _ => "bg-secondary"
-    };
-    private string GetStatusBorderClass(string status) => status switch { "Approved" => "border-success-thick", "Rejected" => "border-danger-thick", _ => "" };
-    private string GetStatusTextClass(string status) => status switch
-    {
-        "Approved" => "text-success",
-        "Rejected" =>
-        "text-danger",
-        _ => "text-secondary"
-    };
-    private string GetStatusIcon(string status) => status switch { "Pending" => "fas fa-hourglass-half", "Approved" => "fas fa-check-circle", "Rejected" => "fas fa-times-circle", _ => "fas fa-question-circle" };
 }

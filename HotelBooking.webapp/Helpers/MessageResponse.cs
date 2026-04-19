@@ -246,6 +246,20 @@ public static class MessageResponse
             public const string REQUEST_CREATED_SUCCESS = "Request created successfully!";
             public const string REQUEST_CREATED_FAILED = "Failed to create request!";
         }
+
+        public static class HotelApproval
+        {
+            public const string NOT_FOUND = "Hotel registration not found!";
+            public const string ERROR_LOADING_DETAILS = "Error loading hotel registration details!";
+            public const string ERROR_LOADING_STATS = "Error loading hotel statistics!";
+            public const string ERROR_LOADING_PAGED = "Error loading hotel registration list!";
+            public const string NO_REQUESTS_FOUND = "No hotel registrations found!";
+
+            public const string APPROVED_SUCCESS = "Hotel approved successfully!";
+            public const string APPROVE_FAILED = "Failed to approve hotel!";
+            public const string REJECTED_SUCCESS = "Hotel rejected successfully!";
+            public const string REJECT_FAILED = "Failed to reject hotel!";
+        }
     }
 
     // =====================================================

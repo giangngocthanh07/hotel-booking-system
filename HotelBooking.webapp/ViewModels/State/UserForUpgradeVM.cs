@@ -10,5 +10,6 @@ namespace HotelBooking.webapp.ViewModels
         public string Email { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
         public string? RequestStatus { get; set; } = RequestStatusConst.None;
+        public int? RequestId { get; set; }
     }
 }

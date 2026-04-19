@@ -5,8 +5,9 @@ namespace HotelBooking.application.DTOs.Request.Overview
     /// </summary>
     public class RequestStatsDTO
     {
+        public RequestTypeStatsDTO Overall { get; set; } = new();
         public RequestTypeStatsDTO UpgradeRequest { get; set; } = new();
-        public RequestTypeStatsDTO? HotelApproval { get; set; }  
+        public RequestTypeStatsDTO? HotelApproval { get; set; }
 
         public int TotalPending { get; set; }
         public int TotalToday { get; set; }

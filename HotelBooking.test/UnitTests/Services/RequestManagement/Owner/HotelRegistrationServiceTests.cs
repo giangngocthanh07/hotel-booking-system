@@ -3,11 +3,11 @@ using System.Linq.Expressions;
 using FluentAssertions;
 using FluentValidation;
 using HotelBooking.application.DTOs.Hotel;
-using HotelBooking.application.Services.Domains.RequestManagement.Customer;
+using HotelBooking.application.Services.Domains.RequestManagement.Owner;
 using HotelBooking.infrastructure.Models;
 using Moq;
 
-namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer;
+namespace HotelBooking.test.UnitTests.Services.RequestManagement.Owner;
 
 public class HotelRegistrationServiceTests : BaseServiceTest
 {
@@ -38,7 +38,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest
             .ReturnsAsync(false);
 
         // 2. Act
-        var result = await _service.HotelRegistrationAsync(request, ownerId);
+        var result = await _service.CreateRequestAsync(ownerId, request);
 
         // 3. Assert
         result.Should().NotBeNull();
@@ -57,7 +57,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest
         var request = CreateValidRequest();
 
         // 2. Act
-        var result = await _service.HotelRegistrationAsync(request, ownerId);
+        var result = await _service.CreateRequestAsync(ownerId, request);
 
         // 3. Assert
         result.Should().NotBeNull();
@@ -88,7 +88,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest
             .ReturnsAsync(new FluentValidation.Results.ValidationResult(validationFailures));
 
         // 2. Act
-        var result = await _service.HotelRegistrationAsync(request, ownerId);
+        var result = await _service.CreateRequestAsync(ownerId, request);
 
         // 3. Assert
         result.Should().NotBeNull();
@@ -114,7 +114,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest
             .ReturnsAsync(true);
 
         // 2. Act
-        var result = await _service.HotelRegistrationAsync(request, ownerId);
+        var result = await _service.CreateRequestAsync(ownerId, request);
 
         // 3. Assert
         result.Should().NotBeNull();
@@ -141,7 +141,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest
             .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
 
         // 2. Act
-        var result = await _service.HotelRegistrationAsync(request, ownerId);
+        var result = await _service.CreateRequestAsync(ownerId, request);
 
         // 3. Assert
         result.Should().NotBeNull();
@@ -172,7 +172,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest
             .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
 
         // 2. Act
-        var result = await _service.HotelRegistrationAsync(request, ownerId);
+        var result = await _service.CreateRequestAsync(ownerId, request);
 
         // 3. Assert
         result.Should().NotBeNull();
@@ -202,7 +202,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest
         _mockUnitOfWork.Setup(x => x.SaveChangesAsync()).ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
 
         // 2. Act
-        var result = await _service.HotelRegistrationAsync(request, ownerId);
+        var result = await _service.CreateRequestAsync(ownerId, request);
 
         // 3. Assert
         result.Should().NotBeNull();

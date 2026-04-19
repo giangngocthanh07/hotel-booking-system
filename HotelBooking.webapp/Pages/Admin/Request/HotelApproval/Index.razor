@@ -1,0 +1,485 @@
+@* filepath: e:\Cybersoft\FinalProject\Hotel_Blazor\HotelBooking.webapp\Pages\Admin\Request\HotelApproval\Index.razor *@
+
+@page "/admin/requests/hotel-approval"
+@using HotelBooking.webapp.Helpers.Common
+@using HotelBooking.webapp.Pages.Admin.Base
+@using HotelBooking.webapp.Services.Interface
+@using HotelBooking.webapp.ViewModels.Request.HotelApproval
+@using HotelBooking.webapp.Pages.Admin.Request.Components
+@inherits AdminPageBase<IRequestService>
+
+@attribute [Authorize(Roles = "Admin")]
+@layout AdminLayout
+
+@inject ISnackbar Snackbar
+
+<PageTitle>Hotel Approval Requests</PageTitle>
+
+<div class="container-fluid py-4 page-content-animate force-gpu">
+
+    @* --- Header --- *@
+    <div class="text-center mb-5">
+        <h2 class="main-title">Hotel Approval Requests</h2>
+        <p class="text-muted small text-uppercase fw-bold" style="letter-spacing: 1px;">
+            Review and verify hotel registration submissions
+        </p>
+        <div class="title-underline"></div>
+    </div>
+
+    @* --- Stats Cards --- *@
+    <div class="row g-4 mb-4 animate__animated animate__fadeIn force-gpu">
+        @foreach (var item in new[] {
+            new { Label = "Pending",  Val = stats.Pending,  Icon = "fa-hourglass-half", Color = "warning", Status = (string?)"Pending" },
+            new { Label = "Approved", Val = stats.Approved, Icon = "fa-check-circle",   Color = "success", Status = (string?)"Approved" },
+            new { Label = "Rejected", Val = stats.Rejected, Icon = "fa-times-circle",   Color = "danger",  Status = (string?)"Rejected" },
+            new { Label = "Total",    Val = stats.Total,    Icon = "fa-hotel",           Color = "primary", Status = (string?)null }
+        })
+        {
+            <div class="col-md-3">
+                <div class="stat-glass-card @(selectedStatus == item.Status ? "active" : "") force-gpu"
+                     @onclick="@(() => FilterByStatus(item.Status))">
+                    <div class="stat-icon-wrap @item.Color force-gpu">
+                        <i class="fas @item.Icon"></i>
+                    </div>
+                    <div class="stat-data-content text-end">
+                        <h3 class="stat-number @item.Color">@item.Val</h3>
+                        <small class="stat-label-text">@item.Label</small>
+                    </div>
+                    <div class="stat-indicator-bar @item.Color"></div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @* --- Filters --- *@
+    <div class="glass-filter-wrapper mb-4 shadow-sm p-4">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="filter-label">Search</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text"
+                           class="form-control border-start-0"
+                           placeholder="Hotel name, owner, tax code..."
+                           value="@searchTerm"
+                           @oninput="@((e) => searchTerm = e.Value?.ToString() ?? "")" />
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="filter-label">Status</label>
+                <select class="form-select" @onchange="@((e) => OnSelectedStatusChanged(e.Value?.ToString()))" value="@selectedStatus">
+                    <option value="">All Statuses</option>
+                    @foreach (var s in statusList)
+                    {
+                        <option value="@s">@s</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="filter-label">Per Page</label>
+                <select class="form-select" @onchange="@((e) => OnPageSizeChanged(int.TryParse(e.Value?.ToString(), out var n) ? n : 10))" value="@pageSize">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button class="btn-glass-primary flex-grow-1" @onclick="ApplyFilters">
+                    <i class="fas fa-filter me-1"></i>Apply
+                </button>
+                <button class="btn-glass-reset" @onclick="ResetFilters">
+                    <i class="fas fa-redo"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @* --- Table --- *@
+    <div class="glass-table-container shadow-sm overflow-hidden">
+        @if (isLoading)
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" style="width: 2.5rem; height: 2.5rem;" role="status"></div>
+                <p class="mt-3 fw-bold text-primary">Loading hotel registrations...</p>
+            </div>
+        }
+        else if (!FilteredRequests.Any())
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-hotel fa-3x mb-3 opacity-25"></i>
+                <p class="fw-bold">No hotel registration requests found.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-header-glass">
+                        <tr>
+                            <th class="ps-4">#ID</th>
+                            <th>Hotel Name</th>
+                            <th>Owner</th>
+                            <th>Property Type</th>
+                            <th>Location</th>
+                            <th>Submitted</th>
+                            <th>Status</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var req in FilteredRequests)
+                        {
+                            <tr class="table-row-hover">
+                                <td class="ps-4">
+                                    <span class="badge-id">#@req.RequestId</span>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-dark">@req.Name</div>
+                                    <div class="text-muted small text-truncate" style="max-width: 200px;" title="@req.Address">
+                                        <i class="fas fa-map-marker-alt me-1 opacity-50"></i>@req.Address
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">@req.OwnerFullName</div>
+                                    <div class="text-muted small">@req.OwnerEmail</div>
+                                </td>
+                                <td>
+                                    <span class="type-pill">
+                                        @(string.IsNullOrEmpty(req.PropertyTypeName) ? $"Type #{req.PropertyTypeId}" : req.PropertyTypeName)
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="small">
+                                        <div class="fw-bold text-dark">
+                                            @(string.IsNullOrEmpty(req.ProvinceName) ? $"Province {req.ProvinceId}" : req.ProvinceName)
+                                        </div>
+                                        <div class="text-muted">
+                                            @(string.IsNullOrEmpty(req.WardName) ? $"Ward {req.WardId}" : req.WardName)
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="small text-muted">@req.RequestedAt.ToString("MMM dd, yyyy")</div>
+                                    <div class="small text-muted opacity-75">@req.RequestedAt.ToString("HH:mm")</div>
+                                </td>
+                                <td>
+                                    <RequestStatusBadge Status="@req.Status" />
+                                </td>
+                                <td class="pe-4">
+                                    <div class="d-flex gap-2 justify-content-end">
+                                        <button class="btn-action-view" title="View Details"
+                                                @onclick="@(() => ViewDetails(req))">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        @if (req.Status == RequestStatusConst.Pending)
+                                        {
+                                            <button class="btn-action-approve" title="Approve"
+                                                    @onclick="@(() => ShowApproveModal(req))">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button class="btn-action-reject" title="Reject"
+                                                    @onclick="@(() => ShowRejectModal(req))">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        @* Pagination *@
+        <div class="glass-footer p-3 border-top bg-light-glass d-flex justify-content-center">
+            <Pagination CurrentPage="@currentPage"
+                        TotalPages="@totalPages"
+                        TotalCount="@totalCount"
+                        IsLoading="@isLoading"
+                        OnPageChange="GoToPage" />
+        </div>
+    </div>
+</div>
+
+@* --- Confirmation Modal --- *@
+<ConfirmModal @ref="_confirmModal"
+              Title="@modalTitle"
+              Message="@modalMessage"
+              ConfirmText="@(actionType == "approve" ? "Confirm Approve" : "Confirm Reject")"
+              ConfirmIcon="@(actionType == "approve" ? "fa-check" : "fa-trash-can")"
+              ConfirmButtonClass="@(actionType == "approve" ? "btn-success glass-btn-confirm text-white" : "btn-glass-confirm-danger")"
+              IsProcessing="@isProcessing"
+              OnConfirm="ConfirmAction">
+    @if (selectedRequest != null)
+    {
+        <div class="selected-request-info-box mt-3 text-start">
+            <div class="info-item">
+                <span class="label">REQUEST ID</span>
+                <span class="value text-primary">#@selectedRequest.RequestId</span>
+            </div>
+            <div class="info-item">
+                <span class="label">HOTEL NAME</span>
+                <span class="value">@selectedRequest.Name</span>
+            </div>
+            <div class="info-item">
+                <span class="label">OWNER</span>
+                <span class="value text-muted">@selectedRequest.OwnerFullName</span>
+            </div>
+        </div>
+    }
+</ConfirmModal>
+
+<style>
+    .page-content-animate { animation: fadeInUp 0.5s ease-out; }
+    .main-title { color: var(--text-dark); font-family: 'DM Serif Display', serif; font-size: 2.5rem; }
+    .title-underline { width: 60px; height: 4px; background: var(--admin-primary-gradient); margin: 1rem auto; border-radius: 10px; }
+
+    /* Glass containers */
+    .glass-filter-wrapper, .glass-table-container { background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--glass-border); border-radius: 24px; }
+    .bg-light-glass { background: rgba(0, 0, 0, 0.02); }
+
+    /* Stat cards */
+    .stat-glass-card { background: var(--glass-bg); backdrop-filter: var(--glass-blur); border: 1px solid var(--glass-border); border-radius: 24px; padding: 1.5rem; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; }
+    .stat-glass-card:hover { transform: translateY(-5px); background: var(--glass-bg-deep); box-shadow: var(--glass-shadow) !important; }
+    .stat-glass-card.active { background: #fff !important; border-color: var(--admin-blue) !important; box-shadow: 0 10px 25px rgba(58, 123, 213, 0.15) !important; transform: translateY(-5px) scale(1.02); }
+    .stat-icon-wrap { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; transition: 0.3s; }
+    .stat-icon-wrap.warning { background: rgba(245, 158, 11, 0.1); color: var(--color-warning); }
+    .stat-icon-wrap.success { background: rgba(16, 185, 129, 0.1); color: var(--color-success); }
+    .stat-icon-wrap.danger  { background: rgba(244, 63, 94, 0.1);  color: var(--color-danger); }
+    .stat-icon-wrap.primary { background: rgba(58, 123, 213, 0.1); color: var(--admin-blue); }
+    .stat-number { font-weight: 900; margin: 0; font-size: 2rem; line-height: 1; }
+    .stat-number.warning { color: var(--color-warning); }
+    .stat-number.success { color: var(--color-success); }
+    .stat-number.danger  { color: var(--color-danger); }
+    .stat-number.primary { color: var(--admin-blue); }
+    .stat-label-text { font-weight: 800; color: var(--text-muted); text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px; margin-top: 4px; display: block; }
+    .stat-indicator-bar { position: absolute; bottom: 0; left: 0; height: 5px; width: 100%; opacity: 0.4; }
+    .stat-indicator-bar.warning { background: var(--color-warning); }
+    .stat-indicator-bar.success { background: var(--color-success); }
+    .stat-indicator-bar.danger  { background: var(--color-danger); }
+    .stat-indicator-bar.primary { background: var(--admin-blue); }
+    .active .stat-indicator-bar { opacity: 1; height: 6px; }
+
+    /* Filters */
+    .filter-label { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; display: block; }
+    .btn-glass-primary { background: var(--admin-blue); color: #fff; border: none; padding: 10px 16px; border-radius: 12px; font-weight: 700; transition: 0.3s; font-size: 0.85rem; }
+    .btn-glass-primary:hover { background: #2d6bc4; transform: translateY(-1px); }
+    .btn-glass-reset { background: #f1f5f9; border: 1.5px solid #e2e8f0; color: var(--text-muted); padding: 10px 14px; border-radius: 12px; transition: 0.3s; }
+    .btn-glass-reset:hover { background: #e2e8f0; color: var(--text-dark); }
+
+    /* Table */
+    .table-header-glass th { background: rgba(248, 250, 252, 0.8); font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; padding: 1rem; border-bottom: 1.5px solid #e2e8f0; }
+    .table-row-hover { transition: background 0.2s; }
+    .table-row-hover:hover { background: rgba(58, 123, 213, 0.04); }
+    .badge-id { font-weight: 800; color: var(--admin-blue); font-size: 0.9rem; }
+    .type-pill { background: rgba(58, 123, 213, 0.08); color: var(--admin-blue); padding: 4px 10px; border-radius: 50px; font-size: 0.75rem; font-weight: 700; }
+
+    /* Status badge (matches RequestStatusBadge classes) */
+    .badge-fixed-layout { display: inline-flex !important; align-items: center !important; justify-content: center !important; min-height: 28px; padding: 0 12px !important; border-radius: 50px; font-weight: 800; font-size: 0.65rem; letter-spacing: 0.5px; text-transform: uppercase; border: 1px solid transparent; }
+    .status-pill-modern.bg-warning { background: #fffbeb !important; color: #92400e !important; border-color: #fde68a !important; }
+    .status-pill-modern.bg-success { background: #f0fdf4 !important; color: #15803d !important; border-color: #bbf7d0 !important; }
+    .status-pill-modern.bg-danger  { background: #fef2f2 !important; color: #991b1b !important; border-color: #fecaca !important; }
+    .status-pill-modern.bg-secondary { background: #f1f5f9 !important; color: #64748b !important; border-color: #cbd5e1 !important; }
+
+    /* Action buttons */
+    .btn-action-view, .btn-action-approve, .btn-action-reject { width: 32px; height: 32px; border-radius: 8px; border: 1.5px solid; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; transition: 0.2s; cursor: pointer; }
+    .btn-action-view    { border-color: #e2e8f0; background: #fff; color: var(--text-muted); }
+    .btn-action-view:hover { background: var(--admin-blue); color: #fff; border-color: var(--admin-blue); }
+    .btn-action-approve { border-color: #bbf7d0; background: #f0fdf4; color: #15803d; }
+    .btn-action-approve:hover { background: #15803d; color: #fff; border-color: #15803d; }
+    .btn-action-reject  { border-color: #fecaca; background: #fef2f2; color: #991b1b; }
+    .btn-action-reject:hover  { background: #991b1b; color: #fff; border-color: #991b1b; }
+
+    /* Modal info box */
+    .selected-request-info-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.25rem; border-radius: 16px; }
+    .info-item { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.85rem; }
+    .info-item .label { color: var(--text-muted); font-weight: 800; font-size: 0.7rem; }
+    .info-item .value { color: var(--text-dark); font-weight: 700; }
+
+    .glass-btn-confirm { padding: 10px 30px; border-radius: 12px; font-weight: 700; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+
+    @@keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+
+@code {
+    private ConfirmModal _confirmModal = default!;
+
+    private List<HotelRegistrationDetailVM> requests = new();
+    private List<string> statusList = new() { "Pending", "Approved", "Rejected", "Cancelled" };
+    private RequestTypeStatsVM stats = new();
+
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private int totalPages = 0;
+    private int totalCount = 0;
+    private string searchTerm = "";
+    private string? selectedStatus = null;
+
+    private bool isLoading = false;
+    private bool isProcessing = false;
+
+    private HotelRegistrationDetailVM? selectedRequest;
+    private string modalTitle = "";
+    private string modalMessage = "";
+    private string actionType = "";
+
+    private IEnumerable<HotelRegistrationDetailVM> FilteredRequests =>
+        string.IsNullOrWhiteSpace(searchTerm)
+            ? requests
+            : requests.Where(r =>
+                r.RequestId.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                (r.Name?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (r.OwnerFullName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (r.OwnerEmail?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (r.TaxCode?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (r.ProvinceName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false));
+
+    protected override async Task LoadDataAsync()
+    {
+        await LoadStatsAsync();
+        await LoadRequestsAsync();
+    }
+
+    private async Task LoadStatsAsync()
+    {
+        try
+        {
+            var response = await Service.GetStatsAsync();
+            if (response.StatusCode == StatusCodeResponse.Success && response.Content != null)
+                stats = response.Content.HotelApproval ?? new RequestTypeStatsVM();
+        }
+        catch (Exception)
+        {
+            SnackbarHelper.Show(Snackbar, StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
+        }
+    }
+
+    private async Task LoadRequestsAsync()
+    {
+        isLoading = true;
+        StateHasChanged();
+        try
+        {
+            var response = await Service.GetHotelApprovalsAsync(currentPage, pageSize, selectedStatus);
+            if (response.StatusCode == StatusCodeResponse.Success && response.Content != null)
+            {
+                requests   = response.Content.Items;
+                totalPages = response.Content.TotalPages;
+                totalCount = response.Content.TotalCount;
+            }
+            else
+            {
+                requests = new();
+                SnackbarHelper.Show(Snackbar, response.StatusCode ?? StatusCodeResponse.Error,
+                    response.Message ?? MessageResponse.Common.ERROR_IN_SERVER);
+            }
+        }
+        catch (Exception)
+        {
+            SnackbarHelper.Show(Snackbar, StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
+            requests = new();
+        }
+        finally { isLoading = false; StateHasChanged(); }
+    }
+
+    private async Task OnSelectedStatusChanged(string? value)
+    {
+        selectedStatus = string.IsNullOrEmpty(value) ? null : value;
+        currentPage = 1;
+        await LoadRequestsAsync();
+    }
+
+    private async Task OnPageSizeChanged(int value)
+    {
+        pageSize = value;
+        currentPage = 1;
+        await LoadRequestsAsync();
+    }
+
+    private async Task FilterByStatus(string? status)
+    {
+        selectedStatus = status;
+        currentPage = 1;
+        await LoadRequestsAsync();
+    }
+
+    private async Task ApplyFilters() { currentPage = 1; await LoadRequestsAsync(); }
+
+    private async Task ResetFilters()
+    {
+        searchTerm = "";
+        selectedStatus = null;
+        pageSize = 10;
+        currentPage = 1;
+        await LoadRequestsAsync();
+    }
+
+    private async Task GoToPage(int page)
+    {
+        if (page >= 1 && page <= totalPages && page != currentPage)
+        {
+            currentPage = page;
+            await LoadRequestsAsync();
+        }
+    }
+
+    private void ViewDetails(HotelRegistrationDetailVM req) =>
+        Navigation.NavigateTo($"/admin/requests/hotel-approvals/{req.RequestId}");
+
+    private void ShowApproveModal(HotelRegistrationDetailVM req)
+    {
+        selectedRequest = req;
+        modalTitle   = "Confirm Approval";
+        modalMessage = "Are you sure you want to APPROVE this hotel registration? It will become active on the platform.";
+        actionType   = "approve";
+        _confirmModal.Show();
+    }
+
+    private void ShowRejectModal(HotelRegistrationDetailVM req)
+    {
+        selectedRequest = req;
+        modalTitle   = "Confirm Rejection";
+        modalMessage = "Are you sure you want to REJECT this hotel registration? This action cannot be undone.";
+        actionType   = "reject";
+        _confirmModal.Show();
+    }
+
+    private async Task ConfirmAction()
+    {
+        if (selectedRequest == null) return;
+        isProcessing = true;
+        StateHasChanged();
+        try
+        {
+            var response = actionType == "approve"
+                ? await Service.ApproveHotelApprovalAsync(selectedRequest.RequestId)
+                : await Service.RejectHotelApprovalAsync(selectedRequest.RequestId);
+
+            if (response.StatusCode == StatusCodeResponse.Success)
+            {
+                string successMsg = actionType == "approve"
+                    ? MessageResponse.RequestManagement.HotelApproval.APPROVED_SUCCESS
+                    : MessageResponse.RequestManagement.HotelApproval.REJECTED_SUCCESS;
+                SnackbarHelper.Show(Snackbar, response.StatusCode ?? StatusCodeResponse.Success,
+                    response.Message ?? successMsg);
+                _confirmModal.Hide();
+                currentPage = 1;
+                await LoadDataAsync();
+            }
+            else
+            {
+                SnackbarHelper.Show(Snackbar, response.StatusCode ?? StatusCodeResponse.Error,
+                    response.Message ?? MessageResponse.Common.ERROR_IN_SERVER);
+            }
+        }
+        catch (Exception)
+        {
+            SnackbarHelper.Show(Snackbar, StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
+        }
+        finally { isProcessing = false; StateHasChanged(); }
+    }
+}

@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace V1.Controllers
 {
-    [Route("api/v1/admin/hotel-approval-requests")]
+    [Route("api/v1/admin/hotel-approvals")]
     [ApiController]
     [Authorize(Roles = "Admin")]
     [Tags("Admin - Hotel Approval Requests")]

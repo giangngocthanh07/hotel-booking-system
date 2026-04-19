@@ -1,6 +1,5 @@
 using HotelBooking.application.DTOs.Request.Base;
 using HotelBooking.application.DTOs.Request.Overview;
-using HotelBooking.application.Helpers;
 
 namespace HotelBooking.application.Services.Domains.RequestManagement
 {
@@ -17,11 +16,12 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
     public class RequestOverviewService : IRequestOverviewService
     {
         private readonly IUpgradeRequestRepository _upgradeRequestRepo;
-        // private readonly IHotelApprovalRepository _hotelApprovalRepo; // For future implementation
+        private readonly IHotelRepository _hotelRepo;
 
-        public RequestOverviewService(IUpgradeRequestRepository upgradeRequestRepo)
+        public RequestOverviewService(IUpgradeRequestRepository upgradeRequestRepo, IHotelRepository hotelRepo)
         {
             _upgradeRequestRepo = upgradeRequestRepo;
+            _hotelRepo = hotelRepo;
         }
 
         public async Task<ApiResponse<RequestStatsDTO>> GetStatsAsync()
@@ -29,26 +29,51 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
             try
             {
                 // Retrieve raw statistics from repository
-                var rawStats = await _upgradeRequestRepo.GetStatsRawAsync();
+                var rawUpgradeStats = await _upgradeRequestRepo.GetStatsRawAsync();
+                var rawHotelStats = await _hotelRepo.GetStatsRawAsync();
 
                 // Mapping to DTO at the Application layer
                 var upgradeStats = new RequestTypeStatsDTO
                 {
-                    Total = rawStats.Total,
-                    Pending = rawStats.Pending,
-                    Approved = rawStats.Approved,
-                    Rejected = rawStats.Rejected,
-                    Cancelled = rawStats.Cancelled,
-                    Today = rawStats.Today,
-                    ThisWeek = rawStats.ThisWeek,
-                    ThisMonth = rawStats.ThisMonth
+                    Total = rawUpgradeStats.Total,
+                    Pending = rawUpgradeStats.Pending,
+                    Approved = rawUpgradeStats.Approved,
+                    Rejected = rawUpgradeStats.Rejected,
+                    Cancelled = rawUpgradeStats.Cancelled,
+                    Today = rawUpgradeStats.Today,
+                    ThisWeek = rawUpgradeStats.ThisWeek,
+                    ThisMonth = rawUpgradeStats.ThisMonth
+                };
+
+                var hotelStats = new RequestTypeStatsDTO
+                {
+                    Total = rawHotelStats.Total,
+                    Pending = rawHotelStats.Pending,
+                    Approved = rawHotelStats.Approved,
+                    Rejected = rawHotelStats.Rejected,
+                    Cancelled = rawHotelStats.Cancelled,
+                    Today = rawHotelStats.Today,
+                    ThisWeek = rawHotelStats.ThisWeek,
+                    ThisMonth = rawHotelStats.ThisMonth
+                };
+
+                var overallStats = new RequestTypeStatsDTO
+                {
+                    Total = upgradeStats.Total + hotelStats.Total,
+                    Pending = upgradeStats.Pending + hotelStats.Pending,
+                    Approved = upgradeStats.Approved + hotelStats.Approved,
+                    Rejected = upgradeStats.Rejected + hotelStats.Rejected,
+                    Cancelled = upgradeStats.Cancelled + hotelStats.Cancelled,
+                    Today = upgradeStats.Today + hotelStats.Today,
+                    ThisWeek = upgradeStats.ThisWeek + hotelStats.ThisWeek,
+                    ThisMonth = upgradeStats.ThisMonth + hotelStats.ThisMonth
                 };
 
                 var stats = new RequestStatsDTO
                 {
+                    Overall = overallStats,
                     UpgradeRequest = upgradeStats,
-                    TotalPending = upgradeStats.Pending, // Sum of all pending requests
-                    TotalToday = upgradeStats.Today      // Sum of all requests today
+                    HotelApproval = hotelStats
                 };
 
                 return ResponseFactory.Success(stats, MessageResponse.Common.GET_SUCCESSFULLY);
@@ -67,6 +92,9 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
 
                 // Get recent upgrade requests - using RequestType enum
                 var upgradeRequests = await _upgradeRequestRepo.GetRecentAsync(count);
+                var hotelRequests = await _hotelRepo.GetRecentAsync(count);
+
+                // 2. Map Upgrade Requests
                 recentRequests.AddRange(upgradeRequests.Select(r => new RecentRequestDTO
                 {
                     Id = r.Id,
@@ -75,6 +103,17 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
                     RequesterName = r.User?.FullName ?? r.User?.UserName ?? "",
                     Status = r.Status ?? RequestStatusConst.Pending,
                     CreatedAt = r.RequestedAt
+                }));
+
+                // 3. Map Hotel Requests
+                recentRequests.AddRange(hotelRequests.Select(h => new RecentRequestDTO
+                {
+                    Id = h.Id,
+                    Type = RequestType.HotelApproval.ToString(),
+                    TypeDisplay = RequestType.HotelApproval.GetDisplayNameEn(),
+                    RequesterName = h.Name,
+                    Status = h.Status ?? RequestStatusConst.Pending,
+                    CreatedAt = h.CreatedAt ?? DateTime.Now
                 }));
 
                 // Sort by date and take top N

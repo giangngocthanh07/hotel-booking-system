@@ -9,6 +9,7 @@ using HotelBooking.application.Services.Domains.UserManagement;
 using HotelBooking.application.Services.Domains.RoomManagement;
 using HotelBooking.application.Services.Domains.UserManagement.Register;
 using HotelBooking.application.Services.Domains.UserManagement.Login;
+using HotelBooking.application.Services.Domains.RequestManagement.Owner;
 
 public static class ApplicationServiceExtension
 {

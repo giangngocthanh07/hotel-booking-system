@@ -47,7 +47,7 @@
 
             <div class="p-0">
                 @* Note: RecentRequests needs to receive EventCallbacks so the Dashboard can handle Modal actions *@
-                <RecentRequests Requests="@pagedRequests" OnApprove="ShowApproveModal" OnReject="ShowRejectModal" />
+                <RecentRequests Requests="@recentRequests" OnApprove="ShowApproveModal" OnReject="ShowRejectModal" />
             </div>
 
             @* --- FOOTER / PAGINATION --- *@
@@ -55,10 +55,6 @@
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                     <div class="small text-muted">
                         Showing total <strong>@TotalCount</strong> global requests
-                    </div>
-                    <div class="pagination-wrapper">
-                        <Pagination CurrentPage="@CurrentPage" TotalPages="@TotalPages" TotalCount="@TotalCount"
-                                    IsLoading="@isLoading" OnPageChange="GoToPage" />
                     </div>
                 </div>
             </div>
@@ -68,10 +64,10 @@
 
 @* --- SHARED CONFIRMATION MODAL --- *@
 <ConfirmModal @ref="_confirmModal" Title="@modalTitle" Message="@modalMessage"
-              ConfirmText="@(actionType == "approve" ? "Confirm Approve" : "Confirm Reject")"
-              ConfirmIcon="@(actionType == "approve" ? "fa-check" : "fa-trash-can")"
-              ConfirmButtonClass="@(actionType == "approve" ? "btn-success glass-btn-confirm text-white" : "btn-glass-confirm-danger")"
-              IsProcessing="@isProcessingAction" OnConfirm="ConfirmDashboardAction">
+    ConfirmText="@(actionType == "approve" ? "Confirm Approve" : "Confirm Reject")"
+    ConfirmIcon="@(actionType == "approve" ? "fa-check" : "fa-trash-can")"
+    ConfirmButtonClass="@(actionType == "approve" ? "btn-success glass-btn-confirm text-white" : "btn-glass-confirm-danger")"
+    IsProcessing="@isProcessingAction" OnConfirm="ConfirmDashboardAction">
 
     @if (selectedRequestId > 0)
     {
@@ -170,17 +166,16 @@
     private HttpClient _httpClient = null!;
     private CancellationTokenSource _cts = new();
 
-    private List<UpgradeRequestVM> pagedRequests = new();
+    private List<RecentRequestVM> recentRequests = new();
     private RequestStatsVM stats = new();
     private bool isLoading = false;
 
-    private int CurrentPage { get; set; } = 1;
-    private int PageSize { get; set; } = 5;
-    private int TotalPages { get; set; } = 0;
-    private int TotalCount { get; set; } = 0;
+
+    private int TotalCount { get; set; } = 10;
 
     // --- MODAL ACTION STATE ---
     private int selectedRequestId = 0;
+    private string selectedRequestType = "";
     private string actionType = "";
     private string modalTitle = "";
     private string modalMessage = "";
@@ -219,16 +214,13 @@
         StateHasChanged();
         try
         {
-            var url = $"v1/admin/upgrade-requests?pageIndex={CurrentPage}&pageSize={PageSize}";
-            var response = await _httpClient.GetAsync(url, _cts.Token);
+            var response = await _httpClient.GetAsync("v1/admin/requests/recent?count=10", _cts.Token);
             if (response.IsSuccessStatusCode)
             {
-                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<PagedResult<UpgradeRequestVM>>>();
+                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<List<RecentRequestVM>>>();
                 if (apiResponse?.Content != null)
                 {
-                    pagedRequests = apiResponse.Content.Items;
-                    TotalPages = apiResponse.Content.TotalPages;
-                    TotalCount = apiResponse.Content.TotalCount;
+                    recentRequests = apiResponse.Content;
                 }
             }
         }
@@ -237,23 +229,25 @@
     }
 
     // --- MODAL HANDLERS ---
-    private async Task ShowApproveModal(int reqId)
+    private async Task ShowApproveModal((int id, string type) requestParams)
     {
-        selectedRequestId = reqId;
+        selectedRequestId = requestParams.id;
+        selectedRequestType = requestParams.type;
         actionType = "approve";
         modalTitle = "Approve Partner";
         modalMessage = "Confirm approval for this upgrade request?";
-        
+
         _confirmModal.Show();
     }
 
-    private async Task ShowRejectModal(int reqId)
+    private async Task ShowRejectModal((int id, string type) requestParams)
     {
-        selectedRequestId = reqId;
+        selectedRequestId = requestParams.id;
+        selectedRequestType = requestParams.type;
         actionType = "reject";
         modalTitle = "Reject Request";
         modalMessage = "Are you sure you want to reject this application?";
-        
+
         _confirmModal.Show();
     }
 
@@ -264,9 +258,20 @@
         StateHasChanged();
         try
         {
-            var url = actionType == "approve"
+            string url = "";
+
+            if (selectedRequestType == "UpgradeOwner")
+            {
+                url = actionType == "approve"
                 ? $"v1/admin/upgrade-requests/{selectedRequestId}/approve"
                 : $"v1/admin/upgrade-requests/{selectedRequestId}/reject";
+            }
+            else if (selectedRequestType == "HotelApproval")
+            {
+                url = actionType == "approve"
+                ? $"v1/admin/hotel-approvals/{selectedRequestId}/approve"
+                : $"v1/admin/hotel-approvals/{selectedRequestId}/reject";
+            }
 
             var response = await _httpClient.PostAsync(url, null);
 
@@ -275,7 +280,7 @@
                 _confirmModal.Hide();
 
                 string successMsg = actionType == "approve" ? MessageResponse.RequestManagement.UpgradeRequest.APPROVE_SUCCESS :
-MessageResponse.RequestManagement.UpgradeRequest.REJECT_SUCCESS;
+                MessageResponse.RequestManagement.UpgradeRequest.REJECT_SUCCESS;
                 Snackbar.Add(successMsg, Severity.Success);
                 await LoadStatsAsync();
                 await LoadPagedRequestsAsync();
@@ -283,14 +288,5 @@ MessageResponse.RequestManagement.UpgradeRequest.REJECT_SUCCESS;
         }
         catch (Exception) { SnackbarHelper.Show(Snackbar, StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER); }
         finally { isProcessingAction = false; }
-    }
-
-    private async Task GoToPage(int page)
-    {
-        if (page >= 1 && page <= TotalPages && page != CurrentPage)
-        {
-            CurrentPage =
-page; await LoadPagedRequestsAsync();
-        }
     }
 }

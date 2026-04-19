@@ -1,3 +1,5 @@
+using HotelBooking.application.DTOs.Request.Base;
+
 namespace HotelBooking.application.DTOs.Hotel;
 
 public static class HotelStatus
@@ -9,8 +11,11 @@ public static class HotelStatus
 }
 
 // Hotel Registration Form
-public class HotelRegistrationDTO
+public class HotelRegistrationDTO : BaseRequestDTO
 {
+    public override RequestType Type { get; } = RequestType.HotelApproval;
+    public override string RequesterName => Name;
+
     // Basic information
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;

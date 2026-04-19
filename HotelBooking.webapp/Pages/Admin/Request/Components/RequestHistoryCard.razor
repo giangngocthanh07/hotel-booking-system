@@ -1,0 +1,58 @@
+@* Shared history card shown when a request has been approved or rejected *@
+
+<div class="glass-card-history shadow-sm force-gpu @GetStatusBorderClass(Status)">
+    <div class="d-flex align-items-center p-4">
+        <div class="history-icon-circle @GetStatusTextClass(Status)">
+            <i class="@GetStatusIcon(Status) fa-2x"></i>
+        </div>
+        <div class="ms-4">
+            <h5 class="fw-bold mb-1 @GetStatusTextClass(Status)">
+                @ActionVerb was @Status.ToUpper()
+            </h5>
+            <div class="text-muted small">
+                <span class="me-3">
+                    <i class="fas fa-calendar-check me-1"></i>@ProcessedAt?.ToString("g")
+                </span>
+                <span>
+                    <i class="fas fa-user-shield me-1"></i> Auditor:
+                    <strong>@(string.IsNullOrEmpty(ProcessedByName) ? "N/A" : ProcessedByName)</strong>
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    /// <summary>The final status string: "Approved" or "Rejected".</summary>
+    [Parameter, EditorRequired] public string Status { get; set; } = string.Empty;
+
+    /// <summary>Timestamp the admin took action.</summary>
+    [Parameter] public DateTime? ProcessedAt { get; set; }
+
+    /// <summary>Full name of the admin who processed the request.</summary>
+    [Parameter] public string? ProcessedByName { get; set; }
+
+    /// <summary>The noun/verb that describes the subject, e.g. "Registration" or "This request".</summary>
+    [Parameter] public string ActionVerb { get; set; } = "Request";
+
+    private string GetStatusBorderClass(string status) => status switch
+    {
+        "Approved" => "border-success-thick",
+        "Rejected" => "border-danger-thick",
+        _ => ""
+    };
+
+    private string GetStatusTextClass(string status) => status switch
+    {
+        "Approved" => "text-success",
+        "Rejected" => "text-danger",
+        _ => "text-secondary"
+    };
+
+    private string GetStatusIcon(string status) => status switch
+    {
+        "Approved" => "fas fa-check-circle",
+        "Rejected" => "fas fa-times-circle",
+        _ => "fas fa-question-circle"
+    };
+}

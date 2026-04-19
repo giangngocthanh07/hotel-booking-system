@@ -69,13 +69,13 @@ namespace HotelBooking.api.Controllers.V1.Public
         /// <summary>
         /// Cancel a pending request
         /// </summary>
-        [HttpPost("cancel")]
-        public async Task<IActionResult> Cancel()
+        [HttpPut("{requestId}/cancel")]
+        public async Task<IActionResult> Cancel(int requestId)
         {
             var userId = GetUserId();
             if (userId == 0) return Unauthorized();
 
-            var response = await _upgradeRequestService.CancelRequestAsync(userId);
+            var response = await _upgradeRequestService.CancelRequestAsync(userId, requestId);
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 

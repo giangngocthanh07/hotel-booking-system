@@ -40,15 +40,15 @@ public interface IBaseAdminRequestService<T> where T : BaseRequestDTO
 }
 
 // ==========================================
-// 2. CUSTOMER BASE INTERFACE
+// 2. BASE INTERFACE
 // ==========================================
 
 /// <summary>
-/// Generic Base Interface for Customer Request Services.
+/// Generic Base Interface for Request Services.
 /// </summary>
 /// <typeparam name="T">DTO type</typeparam>
 /// <typeparam name="TCreate">DTO type for creating new</typeparam>
-public interface IBaseCustomerRequestService<T, TCreate>
+public interface IBaseUserRequestService<T, TCreate>
     where T : BaseRequestDTO
     where TCreate : class
 {
@@ -60,7 +60,7 @@ public interface IBaseCustomerRequestService<T, TCreate>
     /// <summary>
     /// Cancel request (if pending)
     /// </summary>
-    Task<ApiResponse<bool>> CancelRequestAsync(int userId);
+    Task<ApiResponse<bool>> CancelRequestAsync(int userId, int requestId);
 
     /// <summary>
     /// Get all requests of a specific user
