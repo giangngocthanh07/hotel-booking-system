@@ -1,9 +1,11 @@
-public enum HotelStatus
+namespace HotelBooking.application.DTOs.Hotel;
+
+public static class HotelStatus
 {
-    Pending = 1,
-    Approved = 2,
-    Rejected = 3,
-    Suspended = 4
+    public const string Suspended = "Suspended";
+    public const string Active = "Active";
+    public const string Inactive = "Inactive";
+    public const string Deleted = "Deleted";
 }
 
 // Hotel Registration Form

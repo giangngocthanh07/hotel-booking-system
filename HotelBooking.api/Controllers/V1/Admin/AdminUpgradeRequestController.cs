@@ -80,8 +80,8 @@ namespace HotelBooking.api.Controllers.V1.Admin
 
         private int GetAdminId()
         {
-            var claim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("nameid");
-            return claim != null && int.TryParse(claim.Value, out var id) ? id : 0;
+            var claim = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            return claim;
         }
     }
 }

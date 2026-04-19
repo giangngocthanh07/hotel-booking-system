@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 using FluentAssertions;
 using FluentValidation;
+using HotelBooking.application.DTOs.Hotel;
 using HotelBooking.application.Services.Domains.RequestManagement.Customer;
 using HotelBooking.infrastructure.Models;
 using Moq;

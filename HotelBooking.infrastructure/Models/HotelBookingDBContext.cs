@@ -243,7 +243,8 @@ public partial class HotelBookingDBContext : DbContext
 
             entity.HasOne(d => d.Country).WithMany(p => p.Hotels)
                 .HasForeignKey(d => d.CountryId)
-                .HasConstraintName("FK__Hotels__CountryI__1BC821DD");
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__Hotels__CountryI__324172E1");
 
             entity.HasOne(d => d.Owner).WithMany(p => p.Hotels)
                 .HasForeignKey(d => d.OwnerId)
@@ -257,10 +258,12 @@ public partial class HotelBookingDBContext : DbContext
 
             entity.HasOne(d => d.Province).WithMany(p => p.Hotels)
                 .HasForeignKey(d => d.ProvinceId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Hotels_Provinces");
 
             entity.HasOne(d => d.Ward).WithMany(p => p.Hotels)
                 .HasForeignKey(d => d.WardId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Hotels_Wards");
         });
 

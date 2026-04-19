@@ -1,6 +1,7 @@
 
 using System.Text.Json;
 using FluentValidation;
+using HotelBooking.application.DTOs.Hotel;
 using HotelBooking.application.DTOs.Request.Base;
 using HotelBooking.infrastructure.Models;
 

@@ -12,13 +12,13 @@ namespace HotelBooking.API.Controllers.V1.Owner
     [ApiController]
     [Authorize(Roles = "Owner")]
     [Tags("Owner - Room Types")]
-    public class RoomTypesController : ControllerBase
+    public class RoomTypeController : ControllerBase
     {
         private readonly IRoomNameSuggestionService _suggestionService;
         private readonly IRoomTypeService _roomTypeService;
 
         // Dependency Injection
-        public RoomTypesController(IRoomNameSuggestionService suggestionService, IRoomTypeService roomTypeService)
+        public RoomTypeController(IRoomNameSuggestionService suggestionService, IRoomTypeService roomTypeService)
         {
             _suggestionService = suggestionService;
             _roomTypeService = roomTypeService;

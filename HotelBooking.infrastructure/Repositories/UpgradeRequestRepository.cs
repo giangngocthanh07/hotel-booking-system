@@ -91,7 +91,7 @@ public class UpgradeRequestRepository : Repository<UpgradeRequest>, IUpgradeRequ
 
     public async Task<UpgradeRequest?> GetByIdWithUserAsync(int id)
     {
-        return await _dbSet.AsNoTracking().Include(ur => ur.User).FirstOrDefaultAsync();
+        return await _dbSet.AsNoTracking().Include(ur => ur.User).FirstOrDefaultAsync(ur => ur.Id == id);
     }
 
     public async Task<(int Total, int Pending, int Approved, int Rejected, int Cancelled, int Today, int ThisWeek, int ThisMonth)> GetStatsRawAsync()

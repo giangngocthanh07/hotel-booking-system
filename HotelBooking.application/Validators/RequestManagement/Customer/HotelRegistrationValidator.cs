@@ -1,6 +1,7 @@
 
 using System.Data;
 using FluentValidation;
+using HotelBooking.application.DTOs.Hotel;
 
 namespace HotelBooking.application.Validators.RequestManagement.Customer;
 
