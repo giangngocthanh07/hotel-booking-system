@@ -1,6 +1,6 @@
 # HotelBooking Project - Test Layer Structure
 
-_Last updated: 10-Apr-2026 | Version: 1.3_
+_Last updated: 21-Apr-2026 | Version: 1.4_
 
 ---
 
@@ -9,41 +9,63 @@ _Last updated: 10-Apr-2026 | Version: 1.3_
 This document outlines the architecture and organization of the testing layer `HotelBooking.test`.
 
 ```
-HotelBooking.test/
-├── IntegrationTests/              # Tests evaluating how different pieces work together
-│   ├── Infracstructure/           # Infrastructure layer integration tests
-│   └── Service/                   # Service layer integration tests
+HotelBooking.test/                     # xUnit test project (.NET 9)
+├── IntegrationTests/                  # Tests verifying cross-layer interactions
+│   ├── Infracstructure/               # EF Core / DB integration tests
+│   └── Service/                       # Service + repo integration tests
+│       └── UserManagement/
 │
-├── UnitTests/                     # Isolated tests for individual components
-│   ├── Common/                    # Tests for shared base classes and utilities
-│   │   └── BaseServiceTest.cs     # Shared test base (mock setup, common asserts)
+├── UnitTests/                         # Isolated tests for individual components
+│   ├── Common/
+│   │   └── BaseServiceTest.cs         # Shared test base (Moq setup, verify helpers)
 │   │
-│   ├── Helpers/                   # Tests for Helpers in Application layer
+│   ├── Helpers/                       # Tests for pure utility classes
 │   │   └── RoomManagement/
 │   │       ├── BedConfigurationHelperTests.cs
 │   │       └── CapacityHelperTests.cs
 │   │
-│   ├── Services/                  # Business logic unit tests per domain
+│   ├── Services/                      # Business logic unit tests (mirrors Domains/)
 │   │   ├── AdminManagement/
-│   │   │   └── ManagementAdminServiceTests.cs
+│   │   │   ├── AmenityServiceTests.cs
+│   │   │   ├── ManagementAdminServiceTests.cs
+│   │   │   ├── PolicyServiceTests.cs
+│   │   │   └── RoomAttributes/
+│   │   │       ├── BedTypeServiceTests.cs
+│   │   │       ├── RoomQualityServiceTests.cs
+│   │   │       ├── RoomViewServiceTests.cs
+│   │   │       ├── ServiceServiceTests.cs
+│   │   │       └── UnitTypeServiceTests.cs
+│   │   │
 │   │   ├── RequestManagement/
 │   │   │   ├── Admin/
+│   │   │   │   ├── AdminHotelApprovalRequestServiceTests.cs  ⭐ NEW
 │   │   │   │   └── AdminUpgradeRequestServiceTests.cs
-│   │   │   └── Customer/
-│   │   │       └── CustomerUpgradeRequestServiceTests.cs
+│   │   │   ├── Customer/
+│   │   │   │   └── CustomerUpgradeRequestServiceTests.cs
+│   │   │   └── Owner/
+│   │   │       └── OwnerHotelRequestServiceTests.cs          (if applicable)
+│   │   │
 │   │   ├── RoomManagement/
 │   │   │   ├── RoomNameSuggestionTests.cs
 │   │   │   └── RoomTypeServiceTests.cs
+│   │   │
 │   │   └── UserManagement/
+│   │       ├── Login/
 │   │       ├── Register/
 │   │       └── UserServiceTests.cs
 │   │
-│   └── Validators/                # FluentValidation rule tests
-│       ├── AdminManagement/       # (placeholder — tests to be added)
+│   └── Validators/                    # FluentValidation rule tests (mirrors Validators/)
+│       ├── AdminManagement/
+│       │   └── RoomAttributes/
+│       │       └── (validators tests)
 │       ├── Common/
+│       │   └── PagingRequestValidatorTests.cs
 │       ├── RequestManagement/
 │       │   ├── Admin/
-│       │   └── Customer/
+│       │   ├── Customer/
+│       │   │   └── CustomerUpgradeRequestValidatorTests.cs
+│       │   └── Owner/
+│       │       └── HotelRegistrationValidatorTests.cs        ⭐ NEW
 │       ├── RoomManagement/
 │       │   ├── RoomNameSuggestionValidatorTests.cs
 │       │   └── RoomTypeValidatorTests.cs
@@ -51,55 +73,92 @@ HotelBooking.test/
 │           ├── Login/
 │           └── Register/
 │
-├── TestResults/                   # Generated reports and logs from test runs
-│
-├── appsettings.test.json          # Configuration for testing environment
-└── HotelBooking.test.csproj       # Project file defining test dependencies
+├── TestResults/                       # Generated test reports (gitignored)
+├── appsettings.test.json              # Test-specific DB connection strings
+└── HotelBooking.test.csproj           # Test project reference dependencies
 ```
 
 ---
 
-### **Testing Strategies & Conventions:**
+## 🧭 Testing Conventions
 
-1. **Unit Tests — Services (`UnitTests/Services/`)**:
-   - Test isolated business logic (Domain Services in `HotelBooking.application`) without external side effects.
-   - Dependencies (repositories, DBContext, external APIs) are mocked using `Moq`.
-   - Tests are mirrored to the domain structure in `Services/Domains/`.
-   - Naming convention: `MethodName_StateUnderTest_ExpectedBehavior`.
+### 1. Unit Tests — Services (`UnitTests/Services/`)
 
-2. **Unit Tests — Validators (`UnitTests/Validators/`)**:
-   - Test `FluentValidation` rules for each request DTO.
-   - Structured to mirror the `Validators/` folder organization in `HotelBooking.application`.
-   - Covers valid, boundary, and invalid input scenarios.
+- Test isolated business logic (Application layer services) with **no real DB or network calls**.
+- All repository/UoW dependencies are mocked with **Moq**.
+- Mirror the `Services/Domains/` folder structure exactly.
+- Naming: `MethodName_StateUnderTest_ExpectedBehavior`
 
-3. **Unit Tests — Helpers (`UnitTests/Helpers/`)**:
-   - Tests for pure helper/utility functions with no external dependencies.
-   - Examples: `BedConfigurationHelper`, `CapacityHelper`.
+```csharp
+// Example:
+ApproveRequest_ValidRequest_ShouldReturnSuccess()
+GetPagedRequests_InvalidStatus_ShouldReturnBadRequest()
+```
 
-4. **Integration Tests (`IntegrationTests/`)**:
-   - Verify the interaction between layers or external systems (e.g., EF Core to database).
-   - Uses a dedicated test database defined in `appsettings.test.json`.
+### 2. Unit Tests — Validators (`UnitTests/Validators/`)
 
-5. **Configuration (`appsettings.test.json`)**:
-   - Stores test-specific connection strings and dummy API keys.
-   - Never overlaps with `appsettings.json` used in development or production.
+- Test `FluentValidation` rule correctness for each input DTO.
+- Use `FluentValidation.TestHelper` (`ShouldHaveValidationErrorFor`, `ShouldNotHaveAnyValidationErrors`).
+- Mirror the `Validators/` folder in `HotelBooking.application`.
+- Covers: valid baseline, boundary values, required-field empty, format violations.
+
+### 3. Unit Tests — Helpers (`UnitTests/Helpers/`)
+
+- Tests for pure helper/utility functions with **no external dependencies**.
+- `BedConfigurationHelper`, `CapacityHelper`, etc.
+
+### 4. Integration Tests (`IntegrationTests/`)
+
+- Verify interaction between layers (e.g., EF Core ↔ real DB).
+- Uses a dedicated test database from `appsettings.test.json`.
+- Never shares configuration with development or production.
+
+### 5. BaseServiceTest Pattern
+
+```csharp
+// All service test classes inherit from BaseServiceTest
+public class MyServiceTests : BaseServiceTest
+{
+    // BaseServiceTest provides:
+    // - _mockUnitOfWork      (Moq<IUnitOfWork>, pre-setup SaveChangesAsync → 1)
+    // - _fixture             (AutoFixture)
+    // - Verify_Saved(n)      / Verify_Never_Saved()
+    // - Verify_Repo_UpdateAsync<TRepo, TEntity>(mock, n)
+    // - Verify_Repo_Never_UpdateAsync<TRepo, TEntity>(mock)
+    // - Verify_Repo_AddAsync<TRepo, TEntity>(mock, n)
+    // - Verify_Repo_AnyAsync<TRepo, TEntity>(mock, n)
+}
+```
+
+---
+
+## 📦 Test Dependencies
+
+| Package | Purpose |
+|---------|---------|
+| `xUnit` | Test framework (.NET 9) |
+| `Moq` | Repository/service mocking |
+| `FluentAssertions` | Readable assertion syntax (`Should().Be(...)`) |
+| `FluentValidation.TestHelper` | Validator-specific assertions |
+| `AutoFixture` | Auto-generate test data |
+| `Microsoft.EntityFrameworkCore.InMemory` | In-memory DB for integration tests |
 
 ---
 
 ## 📊 Test Coverage Status
 
-| Domain                   | Services Tests           | Validator Tests          | Helper Tests         |
-| ------------------------ | ------------------------ | ------------------------ | -------------------- |
-| **AdminManagement**      | ✅ ManagementAdminService | 🔲 Pending               | —                    |
-| **RequestManagement**    | ✅ Admin + Customer       | 🔲 Pending               | —                    |
-| **RoomManagement**       | ✅ RoomType + Suggestion  | ✅ RoomType + Suggestion  | ✅ BedConfig + Capacity |
-| **UserManagement**       | ✅ UserService + Register | 🔲 Login / Register pending | —                |
-| **Auth**                 | 🔲 Pending               | —                        | —                    |
-| **HotelManagement**      | 🔲 Pending               | —                        | —                    |
-| **BookingManagement**    | 🔲 Pending               | —                        | —                    |
+| Domain | Service Tests | Validator Tests | Helper Tests |
+|--------|--------------|-----------------|--------------|
+| **AdminManagement** | ✅ Amenity, Policy, ManagementAdmin, RoomAttributes | 🔲 Pending | — |
+| **RequestManagement** | ✅ AdminUpgrade, **AdminHotelApproval** ⭐, CustomerUpgrade | ✅ HotelRegistration, CustomerUpgrade | — |
+| **RoomManagement** | ✅ RoomType, RoomNameSuggestion | ✅ RoomType, RoomNameSuggestion | ✅ BedConfig, Capacity |
+| **UserManagement** | ✅ UserService, Register | 🔲 Login / Register pending | — |
+| **Auth** | 🔲 Pending | — | — |
+| **HotelManagement** | 🔲 Pending | — | — |
+| **BookingManagement** | 🔲 Pending | — | — |
 
 ---
 
 Created: 07-Mar-2026
-Updated: 10-Apr-2026
-Version: 1.3
+Updated: 21-Apr-2026
+Version: 1.4

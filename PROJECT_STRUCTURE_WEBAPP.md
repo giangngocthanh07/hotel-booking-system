@@ -1,21 +1,23 @@
 # HotelBooking Project - WebApp (Frontend) Structure
 
-_Last updated: 10-Apr-2026 | Version: 1.3_
+_Last updated: 21-Apr-2026 | Version: 1.4_
 
 ---
 
-## 📁 Blazor WebApp Structure Overview
+## 📁 Blazor Server Frontend — `HotelBooking.webapp`
 
-This document outlines the architecture and organization of the frontend layer `HotelBooking.webapp`, which is built using Blazor Server.
+Built with **Blazor Server (.NET 9)**. Communicates with `HotelBooking.api` via typed `HttpClient` services.
 
 ```
 HotelBooking.webapp/
-├── Pages/                         # Routable Blazor components (Views)
-│   ├── Admin/                     # Pages accessible only by Admin role
+├── Pages/                             # Routable Blazor components (@page directive)
+│   │
+│   ├── Admin/                         # Admin-only pages (requires Admin role)
 │   │   ├── Base/
-│   │   │   └── AdminPageBase.cs   # Shared code-behind base class for Admin pages
-│   │   ├── Manage/
-│   │   │   ├── Groups/            # Individual manager components per entity
+│   │   │   └── AdminPageBase.cs       # Shared code-behind base for all Admin pages
+│   │   │
+│   │   ├── Manage/                    # Entity management pages
+│   │   │   ├── Groups/                # One manager component per entity type
 │   │   │   │   ├── AmenityManager.razor
 │   │   │   │   ├── BedTypeManager.razor
 │   │   │   │   ├── PolicyManager.razor
@@ -25,135 +27,192 @@ HotelBooking.webapp/
 │   │   │   │   ├── ServiceManager.razor
 │   │   │   │   └── UnitTypeManager.razor
 │   │   │   └── SharedLayouts/
-│   │   │       ├── GlobalNavMenu.razor     # Side-nav for management section
-│   │   │       └── MasterDetailLayout.razor # Reusable master/detail page layout
-│   │   ├── Request/               # Admin-side request management
-│   │   │   ├── Components/
-│   │   │   │   ├── RecentRequests.razor    # Dashboard: recent request widget
-│   │   │   │   └── RequestOverview.razor   # Dashboard: statistics overview card
-│   │   │   ├── UpgradeOwner/      # ⭐ Full Owner Upgrade Request flow
+│   │   │       ├── GlobalNavMenu.razor       # Sidebar nav for the management section
+│   │   │       └── MasterDetailLayout.razor  # Two-panel layout (list + edit form)
+│   │   │
+│   │   ├── Request/                   # Admin-side request management
+│   │   │   ├── Components/            # ⭐ Shared components reused across request pages
+│   │   │   │   ├── RecentRequests.razor         # Dashboard: recent requests table widget
+│   │   │   │   ├── RequestHistoryCard.razor      # Shared audit info card (approver, date)
+│   │   │   │   ├── RequestPageHeader.razor       # Unified header with breadcrumbs + actions
+│   │   │   │   ├── RequestOverview.razor         # Dashboard: stats summary cards
+│   │   │   │   └── RequestStatusBadge.razor      # Centralized status badge styling
+│   │   │   │
+│   │   │   ├── HotelApproval/         # ⭐ NEW — Hotel registration approval flow
+│   │   │   │   ├── Detail.razor       # Full detail view of a hotel registration request
+│   │   │   │   └── Index.razor        # Paginated list of all hotel approval requests
+│   │   │   │
+│   │   │   ├── UpgradeOwner/          # Owner upgrade request flow
 │   │   │   │   ├── Components/
-│   │   │   │   │   ├── UpgradeFilters.razor   # Filter bar for upgrade list
+│   │   │   │   │   ├── UpgradeFilters.razor   # Filter bar (status, search)
 │   │   │   │   │   ├── UpgradeStatsCard.razor # Stats summary card
 │   │   │   │   │   └── UpgradeTable.razor     # Data table with pagination
-│   │   │   │   ├── Details.razor  # Full detail view of a single upgrade request
-│   │   │   │   └── Index.razor    # List view of all upgrade requests
-│   │   │   ├── Details.razor      # General request details page (shared/overview)
-│   │   │   └── Index.razor        # General request dashboard (with stats widgets)
+│   │   │   │   ├── Details.razor      # Full detail view of an upgrade request
+│   │   │   │   └── Index.razor        # Paginated list of all upgrade requests
+│   │   │   │
+│   │   │   └── Index.razor            # Main request dashboard (overview + recent list)
+│   │   │
 │   │   └── AdminHomeDashboard.razor
 │   │
-│   ├── Hotel/                     # Pages for hotel browsing
-│   │   └── SearchResult.razor
+│   ├── Hotel/
+│   │   └── SearchResult.razor         # Hotel search results page
 │   │
-│   ├── Public/                    # Publicly accessible pages (no auth required)
+│   ├── Public/                        # No auth required
 │   │   ├── About.razor
 │   │   └── Hotels.razor
 │   │
-│   ├── User/                      # User-specific pages
+│   ├── User/
 │   │   ├── Customer/
 │   │   │   ├── CustomerLogin.razor
 │   │   │   ├── CustomerRegister.razor
-│   │   │   └── UpgradeOwnerForm.razor    # Form to submit upgrade request
+│   │   │   └── UpgradeOwnerForm.razor   # Customer: submit upgrade-to-owner request
 │   │   │
 │   │   └── Owner/
-│   │       ├── Steps/             # ⭐ Multi-step Hotel Creation Wizard
-│   │       │   ├── HotelWizard.razor     # Wizard container / step-controller
-│   │       │   ├── StepBasicInfo.razor   # Step 1: Hotel basic info
-│   │       │   ├── StepImages.razor      # Step 2: Photo uploads (Cloudinary)
-│   │       │   ├── StepAmenities.razor   # Step 3: Assign amenities
-│   │       │   └── StepPolicies.razor    # Step 4: Assign policies
+│   │       ├── Steps/                 # ⭐ Multi-step Hotel Creation Wizard
+│   │       │   ├── HotelWizard.razor        # Wizard container / step controller
+│   │       │   ├── StepBasicInfo.razor      # Step 1: Hotel basic info
+│   │       │   ├── StepImages.razor         # Step 2: Photo uploads (Cloudinary)
+│   │       │   ├── StepAmenities.razor      # Step 3: Assign amenities
+│   │       │   └── StepPolicies.razor       # Step 4: Assign policies
 │   │       └── OwnerDashboard.razor
 │   │
-│   ├── Index.razor                # Main landing page
-│   └── _Host.cshtml               # Root Razor Page hosting the Blazor app
+│   ├── Index.razor                    # Landing page
+│   └── _Host.cshtml                   # Root Razor Page that hosts the Blazor app
 │
-├── Components/                    # Reusable, non-routable Blazor UI components
+├── Components/                        # Reusable non-routable UI components
 │   ├── Admin/
-│   │   └── AdminSidebar.razor     # Sidebar navigation used in AdminLayout
-│   ├── DualValidation.razor       # ⭐ NEW - Shared dual-field validation component
+│   │   └── AdminSidebar.razor         # Sidebar navigation used in AdminLayout
+│   ├── DualValidation.razor           # Shared two-field form validation component
 │   ├── HotelCard.razor
 │   ├── OwnerHeader.razor
 │   └── SearchForm.razor
 │
-├── ViewModels/                    # Data models specifically designed for Views
-│   ├── Base/                      # Shared/Common ViewModels
-│   ├── Form/                      # ViewModels for form inputs (Login, Register...)
-│   ├── Hotel/                     # ViewModels for Hotel data display
-│   ├── Request/                   # ViewModels for Request processes
-│   ├── Response/                  # ViewModels mapping API responses
-│   └── State/                     # ViewModels for application state management
+├── ViewModels/                        # View-layer data models (decouple UI from raw API)
+│   ├── Base/                          # Shared/common ViewModels
+│   ├── Form/                          # Input form ViewModels (Login, Register)
+│   ├── Hotel/                         # Hotel display ViewModels
+│   ├── Request/                       # Request-related ViewModels
+│   │   ├── Base/                      # Shared request ViewModels
+│   │   ├── HotelApproval/             # ⭐ NEW — HotelApproval-specific ViewModels
+│   │   └── UpgradeRequest/            # UpgradeRequest-specific ViewModels
+│   ├── Response/                      # ViewModels wrapping API responses
+│   └── State/                         # Application/wizard state ViewModels
 │
-├── Services/                      # Frontend services for API communication
-│   ├── Base/                      # Base HttpClient configuration
-│   ├── Interface/                 # Interfaces for frontend services
-│   ├── HotelFormState.cs          # State management service for hotel creation wizard
-│   ├── ManageService.cs           # Service: Admin/Management API calls
-│   └── RequestService.cs          # Service: Request (Upgrade) API calls
+├── Services/                          # Frontend HTTP services (typed HttpClient)
+│   ├── Base/                          # Base HttpClient wrapper/config
+│   ├── Interface/                     # IRequestService, IManageService, etc.
+│   ├── HotelFormState.cs              # Scoped state service for hotel creation wizard
+│   ├── ManageService.cs               # Admin/Management API calls
+│   └── RequestService.cs             # Request management API calls (Upgrade + HotelApproval facade)
 │
-├── Shared/                        # Shared layouts and global components
+├── Shared/                            # Shared layouts and globally available components
 │   ├── AdminLayout.razor
-│   ├── AuthLayout.razor           # ⭐ NEW - Dedicated layout for Login/Register pages
-│   ├── ConfirmModal.razor         # ⭐ NEW - Global reusable confirmation modal
+│   ├── AuthLayout.razor               # Dedicated layout for Login/Register pages
+│   ├── ConfirmModal.razor             # Global reusable confirmation modal
 │   ├── Footer.razor
 │   ├── Header.razor
 │   ├── MainLayout.razor
 │   ├── OwnerLayout.razor
 │   └── Pagination.razor
 │
-├── Authentication/                # Custom authentication state providers and handlers
-│   └── CustomAuthStateProvider.cs
+├── Authentication/
+│   └── CustomAuthStateProvider.cs     # Custom JWT-based AuthenticationStateProvider
 │
-├── Helpers/                       # Frontend helper utilities
+├── Helpers/                           # Frontend-side utilities
 │   ├── Common/
 │   ├── Manage/
-│   ├── MessageResponse.cs
-│   └── StatusCodeResponse.cs
+│   │   └── Icon/
+│   ├── MessageResponse.cs             # Local frontend message constants (mirrors API)
+│   └── StatusCodeResponse.cs          # HTTP status constants
 │
-├── wwwroot/                       # Static web assets
-│   ├── css/                       # Stylesheets
-│   ├── images/                    # Image assets
-│   ├── js/                        # JavaScript interoperability files
-│   └── favicon.ico
+├── wwwroot/                           # Static web assets
+│   ├── css/                           # Custom stylesheets + Bootstrap + Open Iconic
+│   ├── images/                        # Image assets (hotels, etc.)
+│   └── js/                            # JavaScript interop files
 │
-├── App.razor                      # Root component of the Blazor application
-├── _Imports.razor                 # Global using directives for Razor components
-├── appsettings.json               # Frontend config (API Base URL, etc.)
-└── Program.cs                     # WebAssembly/Server startup config and DI
+├── App.razor                          # Root Blazor component (router config)
+├── _Imports.razor                     # Global @using directives for Razor components
+├── appsettings.json                   # Frontend config: API base URL, auth settings
+└── Program.cs                         # Blazor Server startup, DI, middleware
 ```
 
 ---
 
-### **Architecture & Conventions:**
+## 🏗️ Architecture & Conventions
 
-1. **Pages vs Components**:
-   - `Pages/`: Components with an `@page` directive, navigated via URL. Organized by user role (`Admin`, `User`) or functional domain (`Hotel`, `Public`).
-   - `Components/`: Reusable UI elements embedded inside Pages or other Components — no `@page` directive.
+### 1. Pages vs Components
 
-2. **ViewModels**:
-   - Serve as view-layer DTOs, decoupling UI from raw API response formats.
-   - Separated into `Form` (user input), `Response` (API data display), `State` (navigation/wizard state), etc.
+| | `Pages/` | `Components/` |
+|-|----------|--------------|
+| Has `@page` directive | ✅ Yes | ❌ No |
+| Navigable via URL | ✅ Yes | ❌ No |
+| Can embed Components | ✅ Yes | ✅ Yes |
+| Reused across pages | ❌ Typically not | ✅ Yes |
 
-3. **Services**:
-   - Encapsulate HTTP calls to `HotelBooking.api`.
-   - Interfaces defined in `Services/Interface/` for testability and DI.
-   - `Program.cs` registers services using `AddHttpClient` and `AddScoped`.
+### 2. Shared Request Components (`Pages/Admin/Request/Components/`)
 
-4. **Authentication**:
-   - Custom `AuthenticationStateProvider` handles JWT tokens stored in Local Storage.
-   - `AuthLayout.razor` provides a dedicated layout for Login/Register routes.
+Introduced in v1.4 to eliminate duplication between `HotelApproval` and `UpgradeOwner` pages:
 
-5. **Admin Management Pattern**:
-   - `MasterDetailLayout.razor` provides a reusable two-panel layout for all entity managers.
-   - `GlobalNavMenu.razor` lets users navigate between entity types (Amenities, Policies, Services, etc.).
-   - `AdminPageBase.cs` provides code-behind logic (pagination, delete confirm, etc.) shared across Admin pages.
+| Component | Purpose |
+|-----------|---------|
+| `RequestPageHeader.razor` | Unified header with breadcrumbs and action buttons |
+| `RequestStatusBadge.razor` | Consistent status badge styling (Pending/Approved/Rejected) |
+| `RequestHistoryCard.razor` | Audit trail display (approver name, processed date) |
+| `RecentRequests.razor` | Dashboard widget — recent requests across both types |
+| `RequestOverview.razor` | Dashboard stats summary cards |
 
-6. **Owner Hotel Wizard**:
-   - `HotelWizard.razor` acts as the orchestrating container.
-   - Each `Step*.razor` handles one phase of hotel creation.
-   - `HotelFormState.cs` persists the multi-step form state as a scoped service.
+### 3. ViewModels
+
+- **`Form/`** — Bind directly to form inputs (Login, Register, hotel wizard steps)
+- **`Response/`** — Map and display API responses (lists, detail views)
+- **`State/`** — Track UI state (wizard step, filter selections, modal visibility)
+- **`Request/`** — Request-specific VMs split by domain (`HotelApproval/`, `UpgradeRequest/`)
+
+### 4. RequestService Facade
+
+`RequestService.cs` implements `IRequestService` and serves as a facade over both request types:
+
+```csharp
+// Single service, two domains — no code duplication at call-site
+await RequestService.ApproveHotelAsync(hotelId, adminId);
+await RequestService.ApproveUpgradeAsync(requestId, adminId);
+```
+
+### 5. Authentication
+
+- `CustomAuthStateProvider` reads JWT from local storage and builds `ClaimsPrincipal`.
+- `AuthLayout.razor` applies a minimal layout for Login/Register routes.
+- Admin/Owner pages protected via route-level `[Authorize]` or `<AuthorizeView>`.
+
+### 6. Admin Management Pattern
+
+- `MasterDetailLayout.razor` → two-panel layout (entity list + inline edit form).
+- `GlobalNavMenu.razor` → sidebar navigation across entity types.
+- `AdminPageBase.cs` → shared code-behind (pagination, confirm delete, state resets).
+
+### 7. Hotel Creation Wizard (Owner)
+
+- `HotelWizard.razor` orchestrates step transitions.
+- Each `Step*.razor` handles one isolated phase.
+- `HotelFormState.cs` (scoped DI) persists data across steps without URL state.
+
+---
+
+## 📊 Feature Status
+
+| Feature | Pages | Shared Components | Status |
+|---------|-------|-------------------|--------|
+| Admin — Entity Management | AmenityManager, PolicyManager... | MasterDetailLayout | ✅ Complete |
+| Admin — Request Dashboard | Request/Index.razor | RequestOverview, RecentRequests | ✅ Complete |
+| Admin — Upgrade Requests | UpgradeOwner/Index, Details | RequestPageHeader, RequestStatusBadge, RequestHistoryCard | ✅ Complete |
+| Admin — Hotel Approval | **HotelApproval/Index, Detail** | Same shared components | ✅ Complete ⭐ |
+| Owner — Hotel Wizard | Steps/HotelWizard + 4 Steps | — | ✅ Complete |
+| Customer — Upgrade Form | UpgradeOwnerForm.razor | — | ✅ Complete |
+| Public — Hotel Search | SearchResult.razor | SearchForm, HotelCard | ✅ Complete |
+| Auth — Login/Register | CustomerLogin, CustomerRegister | AuthLayout | ✅ Complete |
 
 ---
 
 Created: 07-Mar-2026
-Updated: 10-Apr-2026
-Version: 1.3
+Updated: 21-Apr-2026
+Version: 1.4
