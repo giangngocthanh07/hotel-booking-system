@@ -1,7 +1,6 @@
-using System.Text.Json;
+
+using HotelBooking.application.DTOs.Hotel;
 using HotelBooking.application.Services.Domains.Media;
-using HotelBooking.infrastructure.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace HotelBooking.application.Services.Domains.HotelManagement
 {
@@ -10,8 +9,7 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
         public Task<string> GetOwnerDashBoard(int ownerId);
         public Task<List<SearchHotelResultDTO>> GetSearchOptionsAsync(string cityName, DateTime? checkIn, DateTime? checkOut,
         int? adults, int? children, int? rooms);
-        public Task<ApiResponse<List<CityDTO>>> GetAllCitiesAsync();
-        // public Task<ApiResponse<CreateHotelResponseDTO>> PostHotelAsync(CreateHotelDTO newHotel, int ownerId);
+        public Task<ApiResponse<IEnumerable<PropertyTypeDTO>>> GetPropertyTypesAsync();
 
 
         public Task<ApiResponse<UploadResultDTO>> TestUploadImageToCloudinaryAsync(UploadFileDTO file, int userId);
@@ -23,20 +21,18 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
         private readonly IHotelImageRepository _hotelImageRepository;
         private readonly IHotelAmenityRepository _hotelAmenityRepository;
         private readonly IHotelPolicyRepository _hotelPolicyRepository;
-        private readonly ICountryRepository _countryRepository;
-        private readonly ICityRepository _cityRepository;
+        private readonly IPropertyTypeRepository _propTypeRepository;
         private readonly IImageHelper _imageHelper;
         private readonly IPhotoService _photoService;
         public IUnitOfWork _dbu;
 
-        public HotelService(IHotelRepository hotelRepository, IHotelImageRepository hotelImageRepository, IHotelAmenityRepository hotelAmenityRepository, IHotelPolicyRepository hotelPolicyRepository, ICountryRepository countryRepository, ICityRepository cityRepository, IImageHelper imageHelper, IPhotoService photoService, IUnitOfWork dbu)
+        public HotelService(IHotelRepository hotelRepository, IHotelImageRepository hotelImageRepository, IHotelAmenityRepository hotelAmenityRepository, IHotelPolicyRepository hotelPolicyRepository, IPropertyTypeRepository propTypeRepository, IImageHelper imageHelper, IPhotoService photoService, IUnitOfWork dbu)
         {
             _hotelRepository = hotelRepository;
             _hotelImageRepository = hotelImageRepository;
             _hotelAmenityRepository = hotelAmenityRepository;
             _hotelPolicyRepository = hotelPolicyRepository;
-            _countryRepository = countryRepository;
-            _cityRepository = cityRepository;
+            _propTypeRepository = propTypeRepository;
             _imageHelper = imageHelper;
             _photoService = photoService;
             _dbu = dbu;
@@ -71,104 +67,36 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
             }).ToList();
         }
 
-        #region 
-        [Obsolete]
-        public async Task<ApiResponse<List<CityDTO>>> GetAllCitiesVNAsync()
+        #region PROPERTY TYPE
+        public async Task<ApiResponse<IEnumerable<PropertyTypeDTO>>> GetPropertyTypesAsync()
         {
             try
             {
-                var country = await _countryRepository.FirstOrDefaultAsync(c => c.Name.ToLower() == "vietnam");
-
-                List<CityDTO> result = new List<CityDTO>();
-
-                var cities = await _cityRepository.GetAllAsync();
-
-                if (cities == null || cities.Count() == 0)
+                var propertyTypes = await _propTypeRepository.GetAllAsync();
+                var result = propertyTypes.Select(p => new PropertyTypeDTO
                 {
-                    return new ApiResponse<List<CityDTO>>
-                    {
-                        StatusCode = StatusCodeResponse.NotFound,
-                        Message = MessageResponse.EMPTY_LIST,
-                        Content = null
-                    };
-                }
+                    Id = p.Id,
+                    Name = p.Name
+                }).ToList();
 
-                foreach (var city in cities)
-                {
-                    var additional = JsonSerializer.Deserialize<Dictionary<string, string>>(city.Additional ?? "{}");
-
-                    result.Add(new CityDTO
-                    {
-                        Id = city.Id,
-                        Name = city.Name,
-                    });
-                }
-
-                return new ApiResponse<List<CityDTO>>
+                return new ApiResponse<IEnumerable<PropertyTypeDTO>>
                 {
                     StatusCode = StatusCodeResponse.Success,
-                    Message = MessageResponse.UPDATE_SUCCESSFULLY,
+                    Message = MessageResponse.Common.GET_SUCCESSFULLY,
                     Content = result
                 };
             }
             catch (Exception)
             {
-                return new ApiResponse<List<CityDTO>>
+                return new ApiResponse<IEnumerable<PropertyTypeDTO>>
                 {
                     StatusCode = StatusCodeResponse.Error,
-                    Message = MessageResponse.ERROR_IN_SERVER,
+                    Message = MessageResponse.Common.ERROR_IN_SERVER,
                     Content = null
                 };
             }
         }
 
-        [Obsolete]
-        public async Task<ApiResponse<List<CityDTO>>> GetAllCitiesAsync()
-        {
-            try
-            {
-                List<CityDTO> result = new List<CityDTO>();
-
-                var cities = await _cityRepository.GetAllAsync();
-
-                if (cities == null || cities.Count() == 0)
-                {
-                    return new ApiResponse<List<CityDTO>>
-                    {
-                        StatusCode = StatusCodeResponse.NotFound,
-                        Message = MessageResponse.EMPTY_LIST,
-                        Content = null
-                    };
-                }
-
-                foreach (var city in cities)
-                {
-                    var additional = JsonSerializer.Deserialize<Dictionary<string, string>>(city.Additional ?? "{}");
-
-                    result.Add(new CityDTO
-                    {
-                        Id = city.Id,
-                        Name = city.Name,
-                    });
-                }
-
-                return new ApiResponse<List<CityDTO>>
-                {
-                    StatusCode = StatusCodeResponse.Success,
-                    Message = MessageResponse.UPDATE_SUCCESSFULLY,
-                    Content = result
-                };
-            }
-            catch (Exception)
-            {
-                return new ApiResponse<List<CityDTO>>
-                {
-                    StatusCode = StatusCodeResponse.Error,
-                    Message = MessageResponse.ERROR_IN_SERVER,
-                    Content = null
-                };
-            }
-        }
         #endregion
 
         #region POST HOTEL (Basic Info + Amenities + Images)

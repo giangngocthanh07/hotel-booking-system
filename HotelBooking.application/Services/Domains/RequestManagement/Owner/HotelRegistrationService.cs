@@ -15,12 +15,14 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
 
     public class HotelRegistrationService : IHotelRegistrationService
     {
+        private readonly IHotelApprovalRequestRepository _approvalRepo;
         private readonly IHotelRepository _hotelRepo;
         private readonly IValidator<HotelRegistrationDTO> _validator;
         private readonly IUnitOfWork _unitOfWork;
 
-        public HotelRegistrationService(IHotelRepository hotelRepo, IValidator<HotelRegistrationDTO> validator, IUnitOfWork unitOfWork)
+        public HotelRegistrationService(IHotelApprovalRequestRepository approvalRepo, IHotelRepository hotelRepo, IValidator<HotelRegistrationDTO> validator, IUnitOfWork unitOfWork)
         {
+            _approvalRepo = approvalRepo;
             _hotelRepo = hotelRepo;
             _validator = validator;
             _unitOfWork = unitOfWork;
@@ -54,32 +56,49 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
                 }
 
                 // Add Hotel Request to Hotel with Pending Status
-                var additionalData = new HotelAdditionalInfo
+                var additionalData = new HotelAdditionalInfoForm
                 {
+                    Description = request.Description,
                     StarRating = request.StarRating,
                     PublicPhone = request.PublicPhone,
                     PublicEmail = request.PublicEmail,
                     Latitude = request.Latitude,
                     Longitude = request.Longitude,
-                    TaxCode = request.TaxCode,
-                    BusinessLicenseUrl = request.BusinessLicenseUrl
+                    PropType = new PropertyTypeDTO
+                    {
+                        Id = request.PropertyTypeId,
+                        Name = request.PropertyTypeName
+                    },
+                    Country = new CountryDTO
+                    {
+                        Id = request.CountryId,
+                        Name = request.CountryName
+                    },
+                    Province = new ProvinceDTO
+                    {
+                        Id = request.ProvinceId,
+                        Name = request.ProvinceName
+                    },
+                    Ward = new WardDTO
+                    {
+                        Id = request.WardId,
+                        Name = request.WardName
+                    }
                 };
 
-                var hotel = new Hotel
+                var hotel = new HotelApprovalRequest
                 {
                     OwnerId = ownerId,
                     Name = request.Name,
                     Address = request.Address,
-                    Description = request.Description,
-                    PropertyTypeId = request.PropertyTypeId,
-                    CountryId = request.CountryId,
-                    ProvinceId = request.ProvinceId,
-                    WardId = request.WardId,
+                    TaxCode = request.TaxCode,
+                    BusinessLicenseUrl = request.BusinessLicenseUrl,
+                    CreatedAt = DateTime.Now,
                     Status = RequestStatusConst.Pending,
                     Additional = JsonSerializer.Serialize(additionalData)
                 };
 
-                await _hotelRepo.AddAsync(hotel);
+                await _approvalRepo.AddAsync(hotel);
                 var result = await _unitOfWork.SaveChangesAsync();
 
                 var dto = new HotelRegistrationDetailDTO
@@ -88,25 +107,24 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
                     OwnerId = hotel.OwnerId,
                     Name = hotel.Name,
                     Address = hotel.Address,
-                    Description = hotel.Description,
-                    PropertyTypeId = hotel.PropertyTypeId,
-                    CountryId = hotel.CountryId,
-                    ProvinceId = hotel.ProvinceId,
-                    WardId = hotel.WardId,
-                    ProvinceName = hotel.Province?.Name ?? string.Empty,
-                    WardName = hotel.Ward?.Name ?? string.Empty,
-                    CountryName = hotel.Country?.Name ?? string.Empty,
-                    Status = hotel.Status,
+                    Description = additionalData.Description,
+                    PropertyTypeId = additionalData.PropType.Id,
+                    PropertyTypeName = additionalData.PropType.Name,
+                    CountryId = additionalData.Country.Id,
+                    CountryName = additionalData.Country.Name,
+                    ProvinceId = additionalData.Province.Id,
+                    ProvinceName = additionalData.Province.Name,
+                    WardId = additionalData.Ward.Id,
+                    WardName = additionalData.Ward.Name,
                     StarRating = additionalData.StarRating,
+                    Status = hotel.Status,
                     PublicPhone = additionalData.PublicPhone,
                     PublicEmail = additionalData.PublicEmail,
                     Latitude = additionalData.Latitude,
                     Longitude = additionalData.Longitude,
-                    TaxCode = additionalData.TaxCode,
-                    BusinessLicenseUrl = additionalData.BusinessLicenseUrl
+                    TaxCode = hotel.TaxCode,
+                    BusinessLicenseUrl = hotel.BusinessLicenseUrl
                 };
-
-
 
                 return ResponseFactory.Success(dto, MessageResponse.RequestManagement.HotelApproval.HOTEL_REQUEST_CREATED_SUCCESS);
             }
@@ -133,7 +151,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
                     return ResponseFactory.Failure<bool>(StatusCodeResponse.BadRequest, MessageResponse.RequestManagement.HotelApproval.HOTEL_INVALID_REQUEST_ID);
                 }
 
-                var pendingRequests = await _hotelRepo.GetPendingByIdAsync(userId);
+                var pendingRequests = await _approvalRepo.GetPendingByIdAsync(userId);
                 var request = pendingRequests.FirstOrDefault(r => r.Id == requestId);
 
                 if (request == null)
@@ -144,7 +162,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
                 }
 
                 request.Status = RequestStatusConst.Cancelled;
-                await _hotelRepo.UpdateAsync(request);
+                await _approvalRepo.UpdateAsync(request);
 
                 var saved = await _unitOfWork.SaveChangesAsync() > 0;
                 return saved ? ResponseFactory.Success(true, MessageResponse.RequestManagement.HotelApproval.HOTEL_REQUEST_CANCELLED_SUCCESS) : ResponseFactory.Failure<bool>(StatusCodeResponse.Error, MessageResponse.RequestManagement.HotelApproval.HOTEL_REQUEST_CANCEL_FAILED);
@@ -167,7 +185,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
                         MessageResponse.RequestManagement.HotelApproval.OWNER_ID_INVALID);
                 }
 
-                var requests = await _hotelRepo.GetByUserIdAsync(userId);
+                var requests = await _approvalRepo.GetByUserIdAsync(userId);
 
                 if (!requests.Any())
                 {
@@ -192,21 +210,24 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
                     dto.OwnerId = i.OwnerId;
                     dto.Name = i.Name;
                     dto.Address = i.Address;
-                    dto.Description = i.Description;
-                    dto.PropertyTypeId = i.PropertyTypeId;
-                    dto.CountryId = i.CountryId;
-                    dto.ProvinceId = i.ProvinceId;
-                    dto.WardId = i.WardId;
-                    dto.ProvinceName = i.Province?.Name ?? string.Empty;
-                    dto.WardName = i.Ward?.Name ?? string.Empty;
-                    dto.CountryName = i.Country?.Name ?? string.Empty;
+                    dto.Description = additionalInfo.Description;
+                    dto.PropertyTypeId = additionalInfo.PropType.Id;
+                    dto.PropertyTypeName = additionalInfo.PropType.Name;
+                    dto.CountryId = additionalInfo.Country.Id;
+                    dto.CountryName = additionalInfo.Country.Name;
+                    dto.ProvinceId = additionalInfo.Province.Id;
+                    dto.ProvinceName = additionalInfo.Province.Name;
+                    dto.WardId = additionalInfo.Ward.Id;
+                    dto.WardName = additionalInfo.Ward.Name;
+
                     dto.Latitude = additionalInfo?.Latitude;
                     dto.Longitude = additionalInfo?.Longitude;
+
                     dto.StarRating = additionalInfo?.StarRating;
                     dto.PublicPhone = additionalInfo?.PublicPhone ?? string.Empty;
                     dto.PublicEmail = additionalInfo?.PublicEmail ?? string.Empty;
-                    dto.TaxCode = additionalInfo?.TaxCode ?? string.Empty;
-                    dto.BusinessLicenseUrl = additionalInfo?.BusinessLicenseUrl ?? string.Empty;
+                    dto.TaxCode = i.TaxCode;
+                    dto.BusinessLicenseUrl = i.BusinessLicenseUrl;
                     dto.Status = i.Status ?? RequestStatusConst.None;
 
                     dtoItems.Add(dto);

@@ -16,12 +16,12 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
     public class RequestOverviewService : IRequestOverviewService
     {
         private readonly IUpgradeRequestRepository _upgradeRequestRepo;
-        private readonly IHotelRepository _hotelRepo;
+        private readonly IHotelApprovalRequestRepository _hotelApprovalRepo;
 
-        public RequestOverviewService(IUpgradeRequestRepository upgradeRequestRepo, IHotelRepository hotelRepo)
+        public RequestOverviewService(IUpgradeRequestRepository upgradeRequestRepo, IHotelApprovalRequestRepository hotelApprovalRepo)
         {
             _upgradeRequestRepo = upgradeRequestRepo;
-            _hotelRepo = hotelRepo;
+            _hotelApprovalRepo = hotelApprovalRepo;
         }
 
         public async Task<ApiResponse<RequestStatsDTO>> GetStatsAsync()
@@ -30,7 +30,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
             {
                 // Retrieve raw statistics from repository
                 var rawUpgradeStats = await _upgradeRequestRepo.GetStatsRawAsync();
-                var rawHotelStats = await _hotelRepo.GetStatsRawAsync();
+                var rawHotelStats = await _hotelApprovalRepo.GetStatsRawAsync();
 
                 // Mapping to DTO at the Application layer
                 var upgradeStats = new RequestTypeStatsDTO
@@ -92,7 +92,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
 
                 // Get recent upgrade requests - using RequestType enum
                 var upgradeRequests = await _upgradeRequestRepo.GetRecentAsync(count);
-                var hotelRequests = await _hotelRepo.GetRecentAsync(count);
+                var hotelRequests = await _hotelApprovalRepo.GetRecentAsync(count);
 
                 // 2. Map Upgrade Requests
                 recentRequests.AddRange(upgradeRequests.Select(r => new RecentRequestDTO
@@ -113,7 +113,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
                     TypeDisplay = RequestType.HotelApproval.GetDisplayNameEn(),
                     RequesterName = h.Name,
                     Status = h.Status ?? RequestStatusConst.Pending,
-                    CreatedAt = h.CreatedAt ?? DateTime.Now
+                    CreatedAt = h.CreatedAt
                 }));
 
                 // Sort by date and take top N

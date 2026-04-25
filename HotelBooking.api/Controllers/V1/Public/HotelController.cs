@@ -42,12 +42,14 @@ namespace HotelBooking.api.Controllers.V1.Public
             return Ok(response);
         }
 
-        [HttpGet("get-all-cities")]
-        public async Task<IActionResult> GetAllCitiesAsync()
+        [HttpGet("get-property-types")]
+        public async Task<IActionResult> GetAllPropertyTypes()
         {
-            var response = await _hotelService.GetAllCitiesAsync();
+            var response = await _hotelService.GetPropertyTypesAsync();
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
+
+        
 
         // ================= POST NEW HOTEL ================
         // [Authorize(Roles = "Owner")]

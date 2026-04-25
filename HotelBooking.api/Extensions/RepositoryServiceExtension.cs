@@ -5,6 +5,7 @@ public static class RepositoryServiceExtension
         services.AddUserRepositories();
         services.AddHotelRepositories();
         services.AddAdminRepositories();
+        services.AddLocationRepositories();
 
         services.AddScoped<ICountryRepository, CountryRepository>();
         services.AddScoped<IAmenityTypeRepository, AmenityTypeRepository>();
@@ -13,7 +14,6 @@ public static class RepositoryServiceExtension
         services.AddScoped<IRoomQualityGroupRepository, RoomQualityGroupRepository>();
 
         // Ensure related repos are present
-        services.AddScoped<ICityRepository, CityRepository>();
         services.AddScoped<IAmenityRepository, AmenityRepository>();
         services.AddScoped<IPolicyRepository, PolicyRepository>();
         services.AddScoped<IServiceRepository, ServiceRepository>();
@@ -32,6 +32,7 @@ public static class RepositoryServiceExtension
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserRoleRepository, UserRoleRepository>();
         services.AddScoped<IUpgradeRequestRepository, UpgradeRequestRepository>();
+        services.AddScoped<IHotelApprovalRequestRepository, HotelApprovalRequestRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
         return services;
     }
@@ -39,6 +40,7 @@ public static class RepositoryServiceExtension
     public static IServiceCollection AddHotelRepositories(this IServiceCollection services)
     {
         services.AddScoped<IHotelRepository, HotelRepository>();
+        services.AddScoped<IPropertyTypeRepository, PropertyTypeRepository>();
         services.AddScoped<IRoomRepository, RoomRepository>();
         services.AddScoped<IRoomTypeRepository, RoomTypeRepository>();
         services.AddScoped<IRoomTypeBedConfigRepository, RoomTypeBedConfigRepository>();
@@ -58,6 +60,14 @@ public static class RepositoryServiceExtension
         services.AddScoped<IPolicyRepository, PolicyRepository>();
         services.AddScoped<IServiceRepository, ServiceRepository>();
         // ... Add related admin repos here
+        return services;
+    }
+
+    public static IServiceCollection AddLocationRepositories(this IServiceCollection services)
+    {
+        services.AddScoped<ICountryRepository, CountryRepository>();
+        services.AddScoped<IProvinceRepository, ProvinceRepository>();
+        services.AddScoped<IWardRepository, WardRepository>();
         return services;
     }
 }

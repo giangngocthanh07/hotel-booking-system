@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace HotelBooking.infrastructure.Models;
@@ -34,6 +34,8 @@ public partial class User
     public string? TaxCode { get; set; }
 
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+
+    public virtual ICollection<HotelApprovalRequest> HotelApprovalRequests { get; set; } = new List<HotelApprovalRequest>();
 
     public virtual ICollection<Hotel> Hotels { get; set; } = new List<Hotel>();
 

@@ -20,6 +20,7 @@ public class HotelRegistrationDTO : BaseRequestDTO
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public int PropertyTypeId { get; set; }
+    public string PropertyTypeName { get; set; } = string.Empty;
     public int? StarRating { get; set; }
 
     // 2. Contact
@@ -29,30 +30,59 @@ public class HotelRegistrationDTO : BaseRequestDTO
     // 3. Location
     public string Address { get; set; } = string.Empty;
     public int CountryId { get; set; } = 4; // Default is 4 - Vietnam
+    public string CountryName { get; set; } = string.Empty;
     public int ProvinceId { get; set; } = 0;
+    public string ProvinceName { get; set; } = string.Empty;
     public int WardId { get; set; } = 0;
+    public string WardName { get; set; } = string.Empty;
     public double? Latitude { get; set; }
     public double? Longitude { get; set; }
 
     // 4. Legal / Approval Info
     public string TaxCode { get; set; } = string.Empty;
-
-    // Save URL file from AWS S3
     public string BusinessLicenseUrl { get; set; } = string.Empty;
-
 }
 
-public class HotelAdditionalInfo
+public class HotelAdditionalInfoForm
 {
+    public string? Description { get; set; }
+
     public int? StarRating { get; set; }
     public string PublicPhone { get; set; } = string.Empty;
     public string PublicEmail { get; set; } = string.Empty;
+
     public double? Latitude { get; set; }
     public double? Longitude { get; set; }
-    public string TaxCode { get; set; } = string.Empty;
-    public string BusinessLicenseUrl { get; set; } = string.Empty;
+    
+    public PropertyTypeDTO PropType { get; set; } = new();
+    public CountryDTO Country { get; set; } = new();
+    public ProvinceDTO Province { get; set; } = new();
+    public WardDTO Ward { get; set; } = new();
 }
 
+public class PropertyTypeDTO
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+}
+
+public class CountryDTO
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+}
+
+public class ProvinceDTO
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+}
+
+public class WardDTO
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+}
 
 public class CreateHotelRequestDTO
 {

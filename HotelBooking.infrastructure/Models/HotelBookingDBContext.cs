@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
@@ -32,6 +32,8 @@ public partial class HotelBookingDBContext : DbContext
     public virtual DbSet<Hotel> Hotels { get; set; }
 
     public virtual DbSet<HotelAmenity> HotelAmenities { get; set; }
+
+    public virtual DbSet<HotelApprovalRequest> HotelApprovalRequests { get; set; }
 
     public virtual DbSet<HotelImage> HotelImages { get; set; }
 
@@ -284,6 +286,27 @@ public partial class HotelBookingDBContext : DbContext
             entity.HasOne(d => d.Hotel).WithMany(p => p.HotelAmenities)
                 .HasForeignKey(d => d.HotelId)
                 .HasConstraintName("FK_HotelAmenities_Hotels");
+        });
+
+        modelBuilder.Entity<HotelApprovalRequest>(entity =>
+        {
+            entity.Property(e => e.Address).HasMaxLength(500);
+            entity.Property(e => e.AdminRemark).HasMaxLength(500);
+            entity.Property(e => e.BusinessLicenseUrl).HasMaxLength(2048);
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Name).HasMaxLength(255);
+            entity.Property(e => e.Status).HasMaxLength(50);
+            entity.Property(e => e.TaxCode)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
+
+            entity.HasOne(d => d.Owner).WithMany(p => p.HotelApprovalRequests)
+                .HasForeignKey(d => d.OwnerId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_HotelApprovalRequests_Users");
         });
 
         modelBuilder.Entity<HotelImage>(entity =>

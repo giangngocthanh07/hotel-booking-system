@@ -16,15 +16,18 @@ public interface IAdminHotelApprovalRequestService : IBaseAdminRequestService<Ho
 
 public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestService
 {
+    private readonly IHotelApprovalRequestRepository _approvalRepo;
     private readonly IHotelRepository _hotelRepo;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IValidator<PagingRequest> _pagingValidator;
 
     public AdminHotelApprovalRequestService(
+        IHotelApprovalRequestRepository approvalRepo,
         IHotelRepository hotelRepo,
         IUnitOfWork unitOfWork,
         IValidator<PagingRequest> pagingValidator)
     {
+        _approvalRepo = approvalRepo;
         _hotelRepo = hotelRepo;
         _unitOfWork = unitOfWork;
         _pagingValidator = pagingValidator;
@@ -34,7 +37,7 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
     {
         try
         {
-            var statuses = await _hotelRepo.GetDistinctStatusesAsync();
+            var statuses = await _approvalRepo.GetDistinctStatusesAsync();
             return ResponseFactory.Success(statuses, MessageResponse.Common.GET_SUCCESSFULLY);
         }
         catch (Exception)
@@ -54,9 +57,9 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
                     MessageResponse.RequestManagement.HotelApproval.HOTEL_INVALID_REQUEST_ID);
             }
 
-            var hotelRequest = await _hotelRepo.GetByIdWithOwnerAsync(requestId);
+            var approvalRequest = await _approvalRepo.GetByIdWithOwnerAsync(requestId);
 
-            if (hotelRequest == null)
+            if (approvalRequest == null)
                 return ResponseFactory.Failure<HotelRegistrationDetailDTO>(
                     StatusCodeResponse.NotFound,
                     MessageResponse.RequestManagement.HotelApproval.HOTEL_REQUEST_NOT_FOUND);
@@ -70,51 +73,54 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
                 RequestStatusConst.None
             };
 
-            if (string.IsNullOrEmpty(hotelRequest.Status) || !validRequestStatuses.Contains(hotelRequest.Status))
+            if (string.IsNullOrEmpty(approvalRequest.Status) || !validRequestStatuses.Contains(approvalRequest.Status))
             {
                 return ResponseFactory.Failure<HotelRegistrationDetailDTO>(
                     StatusCodeResponse.BadRequest,
                     MessageResponse.RequestManagement.AdminHotelApprovalRequestService.INVALID_STATUS);
             }
 
-            if (hotelRequest.Owner == null)
+            if (approvalRequest.Owner == null)
                 return ResponseFactory.Failure<HotelRegistrationDetailDTO>(
                     StatusCodeResponse.NotFound,
                     MessageResponse.RequestManagement.HotelApproval.HOTEL_OWNER_NOT_FOUND);
 
-            var additionalInfo = !string.IsNullOrEmpty(hotelRequest.Additional)
-                ? JsonSerializer.Deserialize<HotelAdditionalInfo>(hotelRequest.Additional)
+            var additionalInfo = !string.IsNullOrEmpty(approvalRequest.Additional)
+                ? JsonSerializer.Deserialize<HotelAdditionalInfo>(approvalRequest.Additional)
                 : new HotelAdditionalInfo();
 
             var dto = new HotelRegistrationDetailDTO
             {
-                RequestId    = hotelRequest.Id,
-                HotelId      = hotelRequest.Id,
-                Name         = hotelRequest.Name,
-                OwnerId      = hotelRequest.OwnerId,
-                OwnerFullName    = hotelRequest.Owner.FullName ?? string.Empty,
-                OwnerEmail       = hotelRequest.Owner.Email,
-                OwnerPhoneNumber = hotelRequest.Owner.PhoneNumber,
-                OwnerAddress     = hotelRequest.Owner.Address ?? string.Empty,
-                Address          = hotelRequest.Address,
-                Description      = hotelRequest.Description,
-                PropertyTypeId   = hotelRequest.PropertyTypeId,
-                PropertyTypeName = hotelRequest.PropertyType?.Name ?? string.Empty,
-                CountryId        = hotelRequest.CountryId,
-                CountryName      = hotelRequest.Country?.Name ?? string.Empty,
-                ProvinceId       = hotelRequest.ProvinceId,
-                ProvinceName     = hotelRequest.Province?.Name ?? string.Empty,
-                WardId           = hotelRequest.WardId,
-                WardName         = hotelRequest.Ward?.Name ?? string.Empty,
-                StarRating       = additionalInfo?.StarRating,
-                PublicPhone      = additionalInfo?.PublicPhone ?? string.Empty,
-                PublicEmail      = additionalInfo?.PublicEmail ?? string.Empty,
-                Longitude        = additionalInfo?.Longitude,
-                Latitude         = additionalInfo?.Latitude,
-                TaxCode          = additionalInfo?.TaxCode ?? string.Empty,
-                BusinessLicenseUrl = additionalInfo?.BusinessLicenseUrl ?? string.Empty,
-                Status           = hotelRequest.Status ?? RequestStatusConst.None,
-                RequestedAt      = hotelRequest.CreatedAt ?? DateTime.Now
+                RequestId = approvalRequest.Id,
+                Name = approvalRequest.Name,
+                OwnerId = approvalRequest.OwnerId,
+                OwnerFullName = approvalRequest.Owner?.FullName ?? string.Empty,
+                OwnerEmail = approvalRequest.Owner?.Email ?? string.Empty,
+                OwnerPhoneNumber = approvalRequest.Owner?.PhoneNumber ?? string.Empty,
+                OwnerAddress = approvalRequest.Owner?.Address ?? string.Empty,
+                Address = approvalRequest.Address,
+                TaxCode = approvalRequest.TaxCode,
+                BusinessLicenseUrl = approvalRequest.BusinessLicenseUrl,
+                Status = approvalRequest.Status,
+                RequestedAt = approvalRequest.CreatedAt,
+
+                Description = additionalInfo?.Description,
+
+                PropertyTypeId = additionalInfo!.PropType.Id,
+                PropertyTypeName = additionalInfo!.PropType.Name,
+                CountryId = additionalInfo.Country.Id,
+                CountryName = additionalInfo.Country.Name,
+                ProvinceId = additionalInfo.Province.Id,
+                ProvinceName = additionalInfo.Province.Name,
+                WardId = additionalInfo.Ward.Id,
+                WardName = additionalInfo.Ward.Name,
+
+                StarRating = additionalInfo?.StarRating,
+                PublicPhone = additionalInfo!.PublicPhone,
+                PublicEmail = additionalInfo.PublicEmail,
+
+                Longitude = additionalInfo?.Longitude,
+                Latitude = additionalInfo?.Latitude,
             };
 
             return ResponseFactory.Success(dto, MessageResponse.RequestManagement.HotelApproval.HOTELS_RETRIEVED);
@@ -159,7 +165,7 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
             }
 
             // Build filter expression by status
-            Expression<Func<Hotel, bool>>? filter;
+            Expression<Func<HotelApprovalRequest, bool>>? filter;
             if (!string.IsNullOrEmpty(status))
             {
                 filter = r => r.Status == status;
@@ -169,7 +175,7 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
                 filter = r => r.Status != null && validRequestStatuses.Contains(r.Status);
             }
 
-            var (items, totalCount) = await _hotelRepo.GetPagedWithUserAsync(
+            var (items, totalCount) = await _approvalRepo.GetPagedWithUserAsync(
                 filter,
                 pagingRequest.PageIndex ?? 1,
                 pagingRequest.PageSize ?? 10);
@@ -186,28 +192,35 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
 
                 var dto = new HotelRegistrationDetailDTO
                 {
-                    RequestId        = i.Id,
-                    HotelId          = i.Id,
-                    OwnerId          = i.OwnerId,
-                    Name             = i.Name,
-                    Address          = i.Address,
-                    Description      = i.Description,
-                    PropertyTypeId   = i.PropertyTypeId,
-                    PropertyTypeName = i.PropertyType?.Name ?? string.Empty,
-                    CountryId        = i.CountryId,
-                    ProvinceId       = i.ProvinceId,
-                    WardId           = i.WardId,
-                    Latitude         = additionalInfo?.Latitude,
-                    Longitude        = additionalInfo?.Longitude,
-                    StarRating       = additionalInfo?.StarRating,
-                    PublicPhone      = additionalInfo?.PublicPhone ?? string.Empty,
-                    PublicEmail      = additionalInfo?.PublicEmail ?? string.Empty,
-                    TaxCode          = additionalInfo?.TaxCode ?? string.Empty,
-                    BusinessLicenseUrl = additionalInfo?.BusinessLicenseUrl ?? string.Empty,
-                    Status           = i.Status ?? RequestStatusConst.None,
-                    OwnerFullName    = i.Owner?.FullName ?? string.Empty,
-                    OwnerEmail       = i.Owner?.Email ?? string.Empty,
-                    OwnerPhoneNumber = i.Owner?.PhoneNumber ?? string.Empty
+                    RequestId = i.Id,
+                    OwnerId = i.OwnerId,
+                    Name = i.Name,
+                    Address = i.Address,
+                    TaxCode = i.TaxCode,
+                    BusinessLicenseUrl = i.BusinessLicenseUrl,
+                    Status = i.Status ?? RequestStatusConst.None,
+                    RequestedAt = i.CreatedAt,
+                    OwnerFullName = i.Owner?.FullName ?? string.Empty,
+                    OwnerEmail = i.Owner?.Email ?? string.Empty,
+                    OwnerPhoneNumber = i.Owner?.PhoneNumber ?? string.Empty,
+
+                    Description = additionalInfo.Description,
+
+                    PropertyTypeId = additionalInfo.PropType.Id,
+                    PropertyTypeName = additionalInfo.PropType.Name,
+                    CountryId = additionalInfo.Country.Id,
+                    CountryName = additionalInfo.Country.Name,
+                    ProvinceId = additionalInfo.Province.Id,
+                    ProvinceName = additionalInfo.Province.Name,
+                    WardId = additionalInfo.Ward.Id,
+                    WardName = additionalInfo.Ward.Name,
+
+                    Latitude = additionalInfo.Latitude,
+                    Longitude = additionalInfo.Longitude,
+
+                    StarRating = additionalInfo.StarRating,
+                    PublicPhone = additionalInfo.PublicPhone,
+                    PublicEmail = additionalInfo.PublicEmail
                 };
                 dtoItems.Add(dto);
             }
@@ -236,21 +249,65 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
                     MessageResponse.RequestManagement.HotelApproval.HOTEL_INVALID_REQUEST_ID);
 
             // Load the hotel (tracked – not AsNoTracking)
-            var hotel = await _hotelRepo.GetByIdAsync(requestId);
+            var request = await _approvalRepo.GetByIdAsync(requestId);
 
-            if (hotel == null)
+            if (request == null)
                 return ResponseFactory.Failure<bool>(
                     StatusCodeResponse.NotFound,
                     MessageResponse.RequestManagement.HotelApproval.HOTEL_REQUEST_NOT_FOUND);
 
-            if (hotel.Status != RequestStatusConst.Pending)
+            if (request.Status != RequestStatusConst.Pending)
                 return ResponseFactory.Failure<bool>(
                     StatusCodeResponse.BadRequest,
                     MessageResponse.RequestManagement.HotelApproval.STATUS_INVALID);
 
-            hotel.Status     = RequestStatusConst.Approved;
+            request.Status = RequestStatusConst.Approved;
+            request.AdminId = adminId;
+            request.UpdatedAt = DateTime.Now;
 
-            await _hotelRepo.UpdateAsync(hotel);
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var additionalInfo = !string.IsNullOrWhiteSpace(request.Additional)
+                ? JsonSerializer.Deserialize<HotelAdditionalInfo>(request.Additional, options) ?? new HotelAdditionalInfo()
+                : new HotelAdditionalInfo();
+
+            var hotelAdditionalData = new HotelEntityAdditionalData
+            {
+                StarRating = additionalInfo.StarRating,
+                PublicPhone = additionalInfo.PublicPhone,
+                PublicEmail = additionalInfo.PublicEmail,
+                Latitude = additionalInfo.Latitude,
+                Longitude = additionalInfo.Longitude,
+
+                TaxCode = request.TaxCode,
+                BusinessLicenseUrl = request.BusinessLicenseUrl
+            };
+
+            string hotelAdditionalJson = JsonSerializer.Serialize(hotelAdditionalData);
+
+            var newHotel = new Hotel
+            {
+                Name = request.Name,
+                OwnerId = request.OwnerId,
+                Address = request.Address,
+                Description = additionalInfo.Description,
+                PropertyTypeId = additionalInfo.PropType.Id,
+                CountryId = additionalInfo.Country.Id,
+                ProvinceId = additionalInfo.Province.Id,
+                WardId = additionalInfo.Ward.Id,
+
+                Additional = hotelAdditionalJson,
+
+                CreatedAt = DateTime.Now,
+                IsVerified = true,
+                IsDeleted = false,
+                Status = "Active",
+                CoverImageUrl = string.Empty
+
+            };
+
+            await _hotelRepo.AddAsync(newHotel);
+            await _approvalRepo.UpdateAsync(request);
+
             var saved = await _unitOfWork.SaveChangesAsync() > 0;
 
             return saved
@@ -272,21 +329,23 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
                     StatusCodeResponse.BadRequest,
                     MessageResponse.RequestManagement.HotelApproval.HOTEL_INVALID_REQUEST_ID);
 
-            var hotel = await _hotelRepo.GetByIdAsync(requestId);
+            var request = await _approvalRepo.GetByIdAsync(requestId);
 
-            if (hotel == null)
+            if (request == null)
                 return ResponseFactory.Failure<bool>(
                     StatusCodeResponse.NotFound,
                     MessageResponse.RequestManagement.HotelApproval.HOTEL_REQUEST_NOT_FOUND);
 
-            if (hotel.Status != RequestStatusConst.Pending)
+            if (request.Status != RequestStatusConst.Pending)
                 return ResponseFactory.Failure<bool>(
                     StatusCodeResponse.BadRequest,
                     MessageResponse.RequestManagement.HotelApproval.STATUS_INVALID);
 
-            hotel.Status     = RequestStatusConst.Rejected;
+            request.Status = RequestStatusConst.Rejected;
+            request.AdminId = adminId;
+            request.UpdatedAt = DateTime.Now;
 
-            await _hotelRepo.UpdateAsync(hotel);
+            await _approvalRepo.UpdateAsync(request);
             var saved = await _unitOfWork.SaveChangesAsync() > 0;
 
             return saved

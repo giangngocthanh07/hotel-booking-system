@@ -1,0 +1,761 @@
+@page "/owner/hotel-registration"
+@using HotelBooking.webapp.ViewModels.Request.HotelApproval
+@using HotelBooking.webapp.Services.Interface
+@layout OwnerLayout
+
+@inject IRequestService RequestService
+@inject ISnackbar Snackbar
+@inject NavigationManager NavManager
+
+<PageTitle>Hotel Registration – HotelBooking</PageTitle>
+
+<div class="hotel-reg-container">
+
+    <!-- ── Header ──────────────────────────────────────────────── -->
+    <div class="hotel-reg-header">
+        <div class="hotel-reg-header-icon">
+            <MudIcon Icon="@Icons.Material.Filled.Hotel" Style="font-size:2rem; color:#fff;" />
+        </div>
+        <div>
+            <h1 class="hotel-reg-title">Register Your Property</h1>
+            <p class="hotel-reg-subtitle">Fill in the details below to submit your property for approval</p>
+        </div>
+    </div>
+
+    <!-- ── Progress bar ─────────────────────────────────────────── -->
+    <div class="hotel-reg-steps">
+        @for (int i = 0; i < _steps.Length; i++)
+        {
+            int idx = i;
+            <div class="hotel-reg-step @(idx == _activeStep ? "active" : "") @(idx < _activeStep ? "done" : "")">
+                <div class="hotel-reg-step-circle">
+                    @if (idx < _activeStep)
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.Check" Style="font-size:1rem;" />
+                    }
+                    else
+                    {
+                        <span>@(idx + 1)</span>
+                    }
+                </div>
+                <span class="hotel-reg-step-label">@_steps[idx]</span>
+            </div>
+            @if (idx < _steps.Length - 1)
+            {
+                <div class="hotel-reg-step-connector @(idx < _activeStep ? "done" : "")"></div>
+            }
+        }
+    </div>
+
+    <!-- ── Form card ─────────────────────────────────────────────── -->
+    <MudPaper Class="hotel-reg-card" Elevation="3">
+
+        <EditForm Model="_form" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+
+            <!-- ══ STEP 1: Basic Information ══════════════════════════ -->
+            @if (_activeStep == 0)
+            {
+                <div class="hotel-reg-section-title">
+                    <MudIcon Icon="@Icons.Material.Filled.Info" Class="me-2" />
+                    Basic Information
+                </div>
+
+                <div class="hotel-reg-grid-2">
+                    <MudTextField @bind-Value="_form.Name" Label="Hotel Name *" Variant="Variant.Outlined"
+                                  For="@(() => _form.Name)" Placeholder="e.g. Grand Palace Hotel" Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.BusinessCenter" HelperText="2–50 characters" />
+
+                    <MudSelect T="int" @bind-Value="_form.PropertyTypeId" Label="Property Type *" Variant="Variant.Outlined"
+                               For="@(() => _form.PropertyTypeId)" Adornment="Adornment.Start"
+                               AdornmentIcon="@Icons.Material.Filled.MapsHomeWork">
+                        <MudSelectItem T="int" Value="0" Disabled>-- Select type --</MudSelectItem>
+                        @foreach (var pt in _propertyTypes)
+                        {
+                            <MudSelectItem T="int" Value="pt.Id">@pt.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </div>
+
+                <MudTextField @bind-Value="_form.Description" Label="Description" Variant="Variant.Outlined"
+                              For="@(() => _form.Description)" Lines="4"
+                              Placeholder="Describe your hotel, unique features, location highlights..."
+                              HelperText="Optional — up to 500 characters" Class="mt-3" />
+
+                <div class="hotel-reg-grid-2 mt-3">
+                    <div>
+                        <div class="hotel-reg-field-label">Star Rating (Optional)</div>
+                        <div class="hotel-reg-star-row">
+                            @for (int s = 1; s <= 5; s++)
+                            {
+                                int star = s;
+                                <MudIconButton
+                                Icon="@(_form.StarRating >= star ? Icons.Material.Filled.Star : Icons.Material.Outlined.StarOutline)"
+                                Color="@(_form.StarRating >= star ? Color.Warning : Color.Default)"
+                                OnClick="@(() => _form.StarRating = (_form.StarRating == star ? (int?)null : star))"
+                                Size="Size.Large" />
+                            }
+                            @if (_form.StarRating.HasValue)
+                            {
+                                <MudChip T="string" Color="Color.Warning" Size="Size.Small" Class="ms-2">@_form.StarRating ★
+                                </MudChip>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- ══ STEP 2: Contact ════════════════════════════════════ -->
+            @if (_activeStep == 1)
+            {
+                <div class="hotel-reg-section-title">
+                    <MudIcon Icon="@Icons.Material.Filled.ContactPhone" Class="me-2" />
+                    Public Contact Information
+                </div>
+
+                <MudAlert Severity="Severity.Info" Class="mb-4" Dense="true">
+                    These contact details will be visible to guests on the hotel listing page.
+                </MudAlert>
+
+                <div class="hotel-reg-grid-2">
+                    <MudTextField @bind-Value="_form.PublicPhone" Label="Public Phone *" Variant="Variant.Outlined"
+                                  For="@(() => _form.PublicPhone)" Mask="@(new PatternMask("0000000000"))"
+                                  Placeholder="e.g. 0281234567" Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Phone" HelperText="10-digit phone number" />
+
+                    <MudTextField @bind-Value="_form.PublicEmail" Label="Public Email *" Variant="Variant.Outlined"
+                                  For="@(() => _form.PublicEmail)" Placeholder="e.g. info@grandpalace.com" Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Email" InputType="InputType.Email" />
+                </div>
+            }
+
+            <!-- ══ STEP 3: Location ═══════════════════════════════════ -->
+            @if (_activeStep == 2)
+            {
+                <div class="hotel-reg-section-title">
+                    <MudIcon Icon="@Icons.Material.Filled.LocationOn" Class="me-2" />
+                    Location
+                </div>
+
+                <MudTextField @bind-Value="_form.Address" Label="Full Address *" Variant="Variant.Outlined"
+                              For="@(() => _form.Address)" Placeholder="Street number, street name, district"
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Place" HelperText="5–500 characters"
+                              Class="mb-3" />
+
+                <div class="hotel-reg-grid-2 mt-3">
+                    <MudSelect T="int" @bind-Value="_form.ProvinceId" Label="Province / City *" Variant="Variant.Outlined"
+                               For="@(() => _form.ProvinceId)" Adornment="Adornment.Start"
+                               AdornmentIcon="@Icons.Material.Filled.LocationCity" @bind-Value:after="OnProvinceChanged">
+                        <MudSelectItem T="int" Value="0" Disabled>-- Select province --</MudSelectItem>
+                        @foreach (var p in _provinces)
+                        {
+                            <MudSelectItem T="int" Value="p.Id">@p.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+
+                    <MudSelect T="int" @bind-Value="_form.WardId" Label="Ward / District *" Variant="Variant.Outlined"
+                               For="@(() => _form.WardId)" Disabled="@(_form.ProvinceId == 0)" Adornment="Adornment.Start"
+                               AdornmentIcon="@Icons.Material.Filled.Map">
+                        <MudSelectItem T="int" Value="0" Disabled>-- Select ward --</MudSelectItem>
+                        @foreach (var w in _wards)
+                        {
+                            <MudSelectItem T="int" Value="w.Id">@w.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </div>
+
+                <div class="hotel-reg-grid-2 mt-3">
+                    <MudNumericField T="double?" @bind-Value="_form.Latitude" Label="Latitude (Optional)"
+                                     Variant="Variant.Outlined" For="@(() => _form.Latitude)" Placeholder="-90 to 90"
+                                     Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.MyLocation" Step="0.000001"
+                                     Format="F6" />
+
+                    <MudNumericField T="double?" @bind-Value="_form.Longitude" Label="Longitude (Optional)"
+                                     Variant="Variant.Outlined" For="@(() => _form.Longitude)" Placeholder="-180 to 180"
+                                     Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.MyLocation" Step="0.000001"
+                                     Format="F6" />
+                </div>
+
+                @if (_form.Latitude.HasValue && _form.Longitude.HasValue)
+                {
+                    <MudAlert Severity="Severity.Success" Dense="true" Class="mt-2">
+                        Coordinates set: @_form.Latitude.Value.ToString("F6"), @_form.Longitude.Value.ToString("F6")
+                    </MudAlert>
+                }
+            }
+
+            <!-- ══ STEP 4: Legal ══════════════════════════════════════ -->
+            @if (_activeStep == 3)
+            {
+                <div class="hotel-reg-section-title">
+                    <MudIcon Icon="@Icons.Material.Filled.Gavel" Class="me-2" />
+                    Legal &amp; Approval Documents
+                </div>
+
+                <MudAlert Severity="Severity.Warning" Class="mb-4" Dense="true">
+                    These documents are required for official verification. Your hotel will remain in
+                    <strong>Pending</strong> status until an admin reviews and approves your registration.
+                </MudAlert>
+
+                <div class="hotel-reg-grid-2">
+                    <MudTextField @bind-Value="_form.TaxCode" Label="Tax Code *" Variant="Variant.Outlined"
+                                  For="@(() => _form.TaxCode)" Placeholder="10 or 13 digits" Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Receipt" HelperText="Must be exactly 10 or 13 digits" />
+
+                    <div>
+                        <div class="hotel-reg-field-label">Business License (PDF/Image) *</div>
+                        <MudFileUpload T="IBrowserFile" FilesChanged="UploadLicenseAsync" Accept=".pdf,.jpg,.jpeg,.png">
+                            <ActivatorContent>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+                                           StartIcon="@Icons.Material.Filled.CloudUpload" Disabled="@_isUploadingLicense"
+                                           Style="width: 100%; height: 56px; border-style: dashed; border-width: 2px;">
+                                    @if (_isUploadingLicense)
+                                    {
+                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+                                        <span>Uploading...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Click to Upload File</span>
+                                    }
+                                </MudButton>
+                            </ActivatorContent>
+                        </MudFileUpload>
+
+                        @if (!string.IsNullOrEmpty(_form.BusinessLicenseUrl))
+                        {
+                            <MudAlert Severity="Severity.Success" Dense="true" Class="mt-2">
+                                License uploaded successfully!
+                            </MudAlert>
+                        }
+                        <ValidationMessage For="@(() => _form.BusinessLicenseUrl)"
+                                           style="color: #f44336; font-size: 0.75rem; margin-top: 4px; padding-left: 14px;" />
+                    </div>
+                </div>
+
+                <!-- Review Summary ───────────────────────────────────── -->
+                <div class="hotel-reg-section-title mt-5">
+                    <MudIcon Icon="@Icons.Material.Filled.Summarize" Class="me-2" />
+                    Submission Summary
+                </div>
+
+                <MudSimpleTable Hover="true" Dense="true" Class="hotel-reg-summary-table">
+                    <tbody>
+                        <tr>
+                            <td>Hotel Name</td>
+                            <td><strong>@_form.Name</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Public Phone</td>
+                            <td>@_form.PublicPhone</td>
+                        </tr>
+                        <tr>
+                            <td>Public Email</td>
+                            <td>@_form.PublicEmail</td>
+                        </tr>
+                        <tr>
+                            <td>Address</td>
+                            <td>@_form.Address</td>
+                        </tr>
+                        <tr>
+                            <td>Star Rating</td>
+                            <td>@(_form.StarRating.HasValue ? $"{_form.StarRating} ★" : "Not specified")</td>
+                        </tr>
+                        <tr>
+                            <td>Tax Code</td>
+                            <td>@_form.TaxCode</td>
+                        </tr>
+                    </tbody>
+                </MudSimpleTable>
+            }
+
+            <!-- ── Navigation buttons ───────────────────────────────── -->
+            <div class="hotel-reg-nav">
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.ChevronLeft"
+                           Disabled="@(_activeStep == 0)" OnClick="PrevStep" Class="hotel-reg-btn-prev">
+                    Previous
+                </MudButton>
+
+                <div class="d-flex gap-2">
+                    <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@Icons.Material.Filled.RestartAlt"
+                               OnClick="ResetForm">
+                        Reset
+                    </MudButton>
+
+                    @if (_activeStep < _steps.Length - 1)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                                   EndIcon="@Icons.Material.Filled.ChevronRight" OnClick="NextStep" Class="hotel-reg-btn-next">
+                            Next
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Send"
+                                   ButtonType="ButtonType.Submit" Disabled="@_isSubmitting" Class="hotel-reg-btn-submit">
+                            @if (_isSubmitting)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+                                <span>Submitting...</span>
+                            }
+                            else
+                            {
+                                <span>Submit for Approval</span>
+                            }
+                        </MudButton>
+                    }
+                </div>
+            </div>
+
+        </EditForm>
+
+    </MudPaper>
+</div>
+
+<!-- ──────────────────────────────────────────────────────────────── -->
+<style>
+    .hotel-reg-container {
+        max-width: 820px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+        font-family: 'Inter', 'Segoe UI', sans-serif;
+    }
+
+    /* ── Header ─────────────────────────────────────────────────────── */
+    /* Uses --admin-primary-gradient from site.css: #00d2ff → #3a7bd5   */
+    .hotel-reg-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+        border-radius: 12px;
+        padding: 1.5rem 2rem;
+        margin-bottom: 2rem;
+        color: #fff;
+        box-shadow: 0 4px 20px rgba(79, 172, 254, .35);
+    }
+
+    .hotel-reg-header-icon {
+        width: 56px;
+        height: 56px;
+        background: rgba(255, 255, 255, .2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    /* Matches DM Serif Display used by h1/h2 in site.css */
+    .hotel-reg-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+        font-family: 'DM Serif Display', serif;
+    }
+
+    .hotel-reg-subtitle {
+        font-size: .875rem;
+        opacity: .85;
+        margin: .25rem 0 0;
+    }
+
+    /* ── Step Indicator ─────────────────────────────────────────────── */
+    .hotel-reg-steps {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.75rem;
+        padding: 0 .5rem;
+    }
+
+    .hotel-reg-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: .35rem;
+        flex-shrink: 0;
+    }
+
+    .hotel-reg-step-circle {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 2px solid #bdbdbd;
+        background: #fff;
+        color: #9e9e9e;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: .875rem;
+        transition: all .25s ease;
+    }
+
+    /* Active — primary brand from navbar: #4facfe */
+    .hotel-reg-step.active .hotel-reg-step-circle {
+        border-color: #4facfe;
+        background: #4facfe;
+        color: #fff;
+        box-shadow: 0 0 0 4px rgba(79, 172, 254, .22);
+    }
+
+    /* Done — success from site.css --color-success */
+    .hotel-reg-step.done .hotel-reg-step-circle {
+        border-color: #10b981;
+        background: #10b981;
+        color: #fff;
+    }
+
+    .hotel-reg-step-label {
+        font-size: .75rem;
+        color: #64748b;
+        /* --text-muted */
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    /* Active label — deep primary from footer gradient */
+    .hotel-reg-step.active .hotel-reg-step-label {
+        color: #0071c2;
+        font-weight: 600;
+    }
+
+    .hotel-reg-step.done .hotel-reg-step-label {
+        color: #10b981;
+    }
+
+    .hotel-reg-step-connector {
+        flex: 1;
+        height: 2px;
+        background: #e0e0e0;
+        margin: 0 .5rem;
+        margin-bottom: 1.35rem;
+        transition: background .25s ease;
+    }
+
+    .hotel-reg-step-connector.done {
+        background: #10b981;
+    }
+
+    /* ── Form Card ──────────────────────────────────────────────────── */
+    .hotel-reg-card {
+        border-radius: 12px !important;
+        padding: 2rem 2.5rem !important;
+    }
+
+    /* ── Section Title ──────────────────────────────────────────────── */
+    /* Matches h2/h3 color #1a2a6c from site.css */
+    .hotel-reg-section-title {
+        display: flex;
+        align-items: center;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1a2a6c;
+        margin-bottom: 1.25rem;
+        padding-bottom: .5rem;
+        border-bottom: 2px solid #e0f3ff;
+        /* light tint of #4facfe */
+    }
+
+    /* ── 2-column grid ──────────────────────────────────────────────── */
+    .hotel-reg-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    @@media (max-width: 600px) {
+        .hotel-reg-grid-2 {
+            grid-template-columns: 1fr;
+        }
+
+        .hotel-reg-card {
+            padding: 1.25rem !important;
+        }
+
+        .hotel-reg-header {
+            padding: 1rem 1.25rem;
+        }
+
+        .hotel-reg-step-label {
+            display: none;
+        }
+    }
+
+    /* ── Star Rating ────────────────────────────────────────────────── */
+    .hotel-reg-field-label {
+        font-size: .75rem;
+        color: #64748b;
+        /* --text-muted */
+        margin-bottom: .25rem;
+        font-weight: 500;
+    }
+
+    .hotel-reg-star-row {
+        display: flex;
+        align-items: center;
+        gap: .1rem;
+        flex-wrap: wrap;
+    }
+
+    /* ── Summary Table ──────────────────────────────────────────────── */
+    .hotel-reg-summary-table {
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #e0e0e0;
+    }
+
+    .hotel-reg-summary-table td:first-child {
+        color: #64748b;
+        /* --text-muted */
+        width: 40%;
+        padding: .6rem 1rem;
+        font-size: .875rem;
+    }
+
+    .hotel-reg-summary-table td:last-child {
+        color: #1e293b;
+        /* --text-main */
+        padding: .6rem 1rem;
+        font-size: .875rem;
+    }
+
+    /* ── Navigation buttons ─────────────────────────────────────────── */
+    .hotel-reg-nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 2rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid #f0f0f0;
+    }
+</style>
+
+@code {
+    @inject HttpClient HttpClient
+    private readonly string[] _steps = { "Basic Info", "Contact", "Location", "Legal & Submit" };
+    private int _activeStep = 0;
+    private bool _isSubmitting = false;
+    private bool _isUploadingLicense = false;
+    private HotelRegistrationFormVM _form = new();
+    private List<PropertyTypeVM> _propertyTypes = new();
+    private List<ProvinceVM> _provinces = new();
+    private List<WardVM> _wards = new();
+    protected override async Task OnInitializedAsync()
+    {
+        var ptResponse = await RequestService.GetPropertyTypesAsync();
+        if (ptResponse != null && ptResponse.StatusCode == StatusCodeResponse.Success)
+        {
+            _propertyTypes = ptResponse.Content ?? new List<PropertyTypeVM>();
+        }
+
+        var provResponse = await RequestService.GetProvincesAsync();
+        if (provResponse != null && provResponse.StatusCode == StatusCodeResponse.Success)
+        {
+            _provinces = provResponse.Content ?? new List<ProvinceVM>();
+        }
+    }
+
+    private async Task OnProvinceChanged()
+    {
+        _form.WardId = 0;
+        _wards.Clear();
+        if (_form.ProvinceId <= 0) return;
+
+        var wardResponse = await RequestService.GetWardsByProvinceAsync(_form.ProvinceId);
+        if (wardResponse != null && wardResponse.StatusCode == StatusCodeResponse.Success)
+        {
+            _wards = wardResponse.Content ?? new List<WardVM>();
+        }
+    }
+
+    private void NextStep()
+
+    {
+        if (!ValidateCurrentStep()) return;
+        if (_activeStep < _steps.Length - 1) _activeStep++;
+    }
+    private void PrevStep()
+    {
+        if (_activeStep > 0) _activeStep--;
+    }
+    private void ResetForm()
+    {
+        _form = new HotelRegistrationFormVM();
+        _activeStep = 0;
+        Snackbar.Add("Form has been reset.", Severity.Info);
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (!ValidateCurrentStep()) return;
+        _isSubmitting = true;
+
+        try
+        {
+            // TODO: map _form → HotelRegistrationDTO and call API
+            await Task.Delay(1500);
+            Snackbar.Add("Your property has been submitted for approval! We will review it within 2–3 business days.",
+            Severity.Success);
+            NavManager.NavigateTo("/owner/dashboard");
+        }
+
+        catch (Exception)
+        {
+            Snackbar.Add(MessageResponse.Common.ERROR_IN_SERVER, Severity.Error);
+        }
+
+        finally
+        {
+            _isSubmitting = false;
+        }
+
+    }
+
+    private bool ValidateCurrentStep() => _activeStep switch
+    {
+        0 => ValidateStep0(),
+        1 => ValidateStep1(),
+        2 => ValidateStep2(),
+        3 => ValidateStep3(),
+        _ => true
+    };
+
+    private bool ValidateStep0()
+    {
+        if (string.IsNullOrWhiteSpace(_form.Name) || _form.Name.Length < 2 || _form.Name.Length > 50)
+        { Snackbar.Add("Hotel name must be 2–50 characters.", Severity.Error); return false; }
+
+        if (_form.PropertyTypeId <= 0)
+        { Snackbar.Add("Please select a property type.", Severity.Error); return false; }
+
+        if (_form.StarRating.HasValue && (_form.StarRating < 1 || _form.StarRating > 5))
+        { Snackbar.Add("Star rating must be 1–5.", Severity.Error); return false; }
+
+        return true;
+
+    }
+
+    private bool ValidateStep1()
+    {
+        if (string.IsNullOrWhiteSpace(_form.PublicPhone))
+        { Snackbar.Add("Public phone is required.", Severity.Error); return false; }
+
+        if (string.IsNullOrWhiteSpace(_form.PublicEmail))
+        { Snackbar.Add("Public email is required.", Severity.Error); return false; }
+
+        return true;
+    }
+
+    private bool ValidateStep2()
+    {
+        if (string.IsNullOrWhiteSpace(_form.Address) || _form.Address.Length < 5)
+        { Snackbar.Add("Please enter a valid address (min. 5 characters).", Severity.Error); return false; }
+
+        if (_form.ProvinceId <= 0)
+        { Snackbar.Add("Please select a province.", Severity.Error); return false; }
+
+        if (_form.WardId <= 0)
+        { Snackbar.Add("Please select a ward.", Severity.Error); return false; }
+
+        return true;
+
+    }
+
+    private bool ValidateStep3()
+    {
+        if (string.IsNullOrWhiteSpace(_form.TaxCode) || (_form.TaxCode.Length != 10 && _form.TaxCode.Length != 13))
+        { Snackbar.Add("Tax code must be exactly 10 or 13 digits.", Severity.Error); return false; }
+
+        if (string.IsNullOrWhiteSpace(_form.BusinessLicenseUrl))
+        { Snackbar.Add("Business license URL is required.", Severity.Error); return false; }
+
+        return true;
+    }
+
+    private async Task UploadLicenseAsync(IBrowserFile file)
+    {
+        if (file == null) return;
+
+        _isUploadingLicense = true;
+        try
+        {
+            // Gọi thông qua RequestService (đã được inject sẵn ở đầu file)
+            var apiResult = await RequestService.UploadBusinessLicenseAsync(file);
+
+            if (apiResult != null && apiResult.Content != null)
+            {
+                // Gán link trả về vào form
+                _form.BusinessLicenseUrl = apiResult.Content.StoredFileName;
+                Snackbar.Add("Business license uploaded successfully!", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add(apiResult?.Message ?? "Upload failed.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"File is too large or an error occurred: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isUploadingLicense = false;
+            StateHasChanged();
+        }
+    }
+
+
+    // ── Local ViewModel ────────────────────────────────────────────
+
+    public class HotelRegistrationFormVM
+    {
+        [Required(ErrorMessage = "Hotel name is required.")]
+        [StringLength(50, MinimumLength = 2, ErrorMessage = "Hotel name must be 2–50 characters.")]
+        public string Name { get; set; } = string.Empty;
+
+        [MaxLength(500, ErrorMessage = "Description cannot exceed 500 characters.")]
+        public string Description { get; set; } = string.Empty;
+
+        [Required]
+        [Range(1, int.MaxValue, ErrorMessage = "Please select a property type.")]
+        public int PropertyTypeId { get; set; } = 0;
+
+        [Range(1, 5, ErrorMessage = "Star rating must be between 1 and 5.")]
+        public int? StarRating { get; set; }
+
+        [Required(ErrorMessage = "Public phone is required.")]
+        [RegularExpression(@"^\d{10}$", ErrorMessage = "Phone number must be exactly 10 digits.")]
+        public string PublicPhone { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Public email is required.")]
+        [EmailAddress(ErrorMessage = "Invalid email format.")]
+        public string PublicEmail { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Address is required.")]
+        [StringLength(500, MinimumLength = 5, ErrorMessage = "Please enter a valid address (min. 5 characters).")]
+        public string Address { get; set; } = string.Empty;
+
+        [Required]
+        [Range(1, int.MaxValue, ErrorMessage = "Please select a province.")]
+        public int ProvinceId { get; set; } = 0;
+
+        [Required]
+        [Range(1, int.MaxValue, ErrorMessage = "Please select a ward.")]
+        public int WardId { get; set; } = 0;
+
+        [Range(-90.0, 90.0, ErrorMessage = "Latitude must be between -90 and 90.")]
+        public double? Latitude { get; set; }
+
+        [Range(-180.0, 180.0, ErrorMessage = "Longitude must be between -180 and 180.")]
+        public double? Longitude { get; set; }
+
+        [Required(ErrorMessage = "Tax code is required.")]
+        [RegularExpression(@"^(\d{10}|\d{13})$", ErrorMessage = "Tax code must be exactly 10 or 13 digits.")]
+        public string TaxCode { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Business license URL is required.")]
+        [Url(ErrorMessage = "Please enter a valid URL (e.g., https://...).")]
+        public string BusinessLicenseUrl { get; set; } = string.Empty;
+    }
+}

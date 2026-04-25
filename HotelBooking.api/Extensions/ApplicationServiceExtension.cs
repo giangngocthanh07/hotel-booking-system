@@ -10,6 +10,7 @@ using HotelBooking.application.Services.Domains.RoomManagement;
 using HotelBooking.application.Services.Domains.UserManagement.Register;
 using HotelBooking.application.Services.Domains.UserManagement.Login;
 using HotelBooking.application.Services.Domains.RequestManagement.Owner;
+using HotelBooking.application.Services.Domains.Common;
 
 public static class ApplicationServiceExtension
 {
@@ -23,7 +24,9 @@ public static class ApplicationServiceExtension
 
         // Hotel & Business Services
         services.AddScoped<IHotelService, HotelService>();
+        services.AddScoped<ILocationService, LocationService>();
         services.AddScoped<IPhotoService, PhotoService>();
+        services.AddScoped<IFileService, FileService>();
         services.AddScoped<IRoomTypeService, RoomTypeService>();
 
 

@@ -1,8 +1,10 @@
 using System.Net.Http.Headers;
 using HotelBooking.webapp.Helpers.Common;
+using HotelBooking.webapp.ViewModels.Hotel;
 using HotelBooking.webapp.ViewModels.Request;
 using HotelBooking.webapp.ViewModels.Request.Base;
 using HotelBooking.webapp.ViewModels.Request.HotelApproval;
+using Microsoft.AspNetCore.Components.Forms;
 
 namespace HotelBooking.webapp.Services.Interface;
 
@@ -109,6 +111,17 @@ public interface IRequestService : ITokenService
 
     /// <summary>[Shortcut] Rejects a Hotel Approval request.</summary>
     Task<ApiResponse<bool>> RejectHotelApprovalAsync(int id);
+
+    // ==========================================
+    // HOTEL REGISTRATION METHODS
+    // ==========================================
+
+    Task<ApiResponse<List<PropertyTypeVM>>> GetPropertyTypesAsync();
+    Task<ApiResponse<List<CountryVM>>> GetCountriesAsync();
+    Task<ApiResponse<List<ProvinceVM>>> GetProvincesAsync(int countryId = 4);
+
+    Task<ApiResponse<List<WardVM>>> GetWardsByProvinceAsync(int provinceId);
+    Task<ApiResponse<UploadResultVM>> UploadBusinessLicenseAsync(IBrowserFile file);
 }
 
 /// <summary>
@@ -217,6 +230,37 @@ public class RequestService : IRequestService
 
     public Task<ApiResponse<bool>> RejectHotelApprovalAsync(int id)
         => RejectRequestAsync(RequestType.HotelApproval, id);
+
+    // ==========================================
+    // HOTEL REGISTRATION METHODS
+    // ==========================================
+
+    public Task<ApiResponse<List<CountryVM>>> GetCountriesAsync()
+        => _http.GetApiAsync<List<CountryVM>>("v1/location/get-countries");
+    public Task<ApiResponse<List<PropertyTypeVM>>> GetPropertyTypesAsync()
+        => _http.GetApiAsync<List<PropertyTypeVM>>("v1/hotel/get-property-types");
+
+    public Task<ApiResponse<List<ProvinceVM>>> GetProvincesAsync(int countryId = 4)
+        => _http.GetApiAsync<List<ProvinceVM>>($"v1/location/get-provinces/{countryId}");
+
+    public Task<ApiResponse<List<WardVM>>> GetWardsByProvinceAsync(int provinceId)
+        => _http.GetApiAsync<List<WardVM>>($"v1/location/get-wards/{provinceId}");
+
+    public async Task<ApiResponse<UploadResultVM>> UploadBusinessLicenseAsync(IBrowserFile file)
+    {
+        long maxFileSize = 1024 * 1024 * 5; // 5MB
+        using var content = new MultipartFormDataContent();
+
+        var fileContent = new StreamContent(file.OpenReadStream(maxFileSize));
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
+
+        content.Add(fileContent, "file", file.Name);
+
+        // Sử dụng cái HTTP wrapper có sẵn của bạn (nó đã được config BaseAddress)
+        // Nếu _http của bạn có hàm PostFormAsync hoặc PostAsync, hãy dùng nó. 
+        // Ví dụ dưới đây giả định wrapper của bạn tên là PostApiAsync:
+        return await _http.PostApiAsync<UploadResultVM>("v1/file/upload-business-license");
+    }
 
     // ==========================================
     // PRIVATE HELPERS
