@@ -15,7 +15,7 @@ public class UnitTypeService : BaseManage<UnitType, IUnitTypeRepository, UnitTyp
 {
     private readonly IValidator<PagingRequest> _pagingValidator;
 
-    public UnitTypeService(IUnitTypeRepository repo, IUnitOfWork dbu, IValidator<UnitTypeCreateDTO> createVal, IValidator<UnitTypeUpdateDTO> updateVal, IValidator<PagingRequest> pagingValidator) : base(repo, dbu, createVal, updateVal)
+    public UnitTypeService(IUnitTypeRepository repo, IUnitOfWork dbu, ILogger logger, IValidator<UnitTypeCreateDTO> createVal, IValidator<UnitTypeUpdateDTO> updateVal, IValidator<PagingRequest> pagingValidator) : base(repo, dbu, logger, createVal, updateVal)
     {
         _pagingValidator = pagingValidator;
     }
@@ -85,8 +85,9 @@ public class UnitTypeService : BaseManage<UnitType, IUnitTypeRepository, UnitTyp
             bool exists = await _repo.AnyAsync(x => x.Id == id && x.IsDeleted == false);
             return ResponseFactory.Success(exists, MessageResponse.Common.CHECK_EXISTED_SUCCESSFULLY);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError("UnitTypeService.UnitTypeExistsAsync: {ErrorMessage}", ex.Message);
             return ResponseFactory.ServerError<bool>();
         }
     }
@@ -104,8 +105,9 @@ public class UnitTypeService : BaseManage<UnitType, IUnitTypeRepository, UnitTyp
 
             return ResponseFactory.Success(unitType.Name, MessageResponse.Common.GET_SUCCESSFULLY);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError("UnitTypeService.GetUnitTypeNameByIdAsync: {ErrorMessage}", ex.Message);
             return ResponseFactory.ServerError<string>();
         }
     }
@@ -126,8 +128,9 @@ public class UnitTypeService : BaseManage<UnitType, IUnitTypeRepository, UnitTyp
             var result = utList.Select(ut => MapToDto(ut)).ToList();
             return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError("UnitTypeService.GetAllAsync: {ErrorMessage}", ex.Message);
             return ResponseFactory.ServerError<List<UnitTypeDTO>>();
         }
     }
@@ -175,8 +178,9 @@ public class UnitTypeService : BaseManage<UnitType, IUnitTypeRepository, UnitTyp
 
             return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError("UnitTypeService.GetPagedListAsync: {ErrorMessage}", ex.Message);
             // Log the exception if necessary
             return ResponseFactory.ServerError<PagedManageResult<UnitTypeDTO>>();
         }

@@ -18,14 +18,17 @@ namespace HotelBooking.application.Services.Domains.UserManagement.Register
         private readonly IValidator<RegisterCustomerDTO> _registerCustomerValidator;
         private readonly IValidator<RegisterAdminDTO> _registerAdminValidator;
         private readonly IUnitOfWork _dbu;
+        private readonly ILogger _logger;
 
-        public RegisterService(IUserRepository userRepository, IUserRoleRepository userRoleRepository, IValidator<RegisterCustomerDTO> registerCustomerValidator, IValidator<RegisterAdminDTO> registerAdminValidator, IUnitOfWork dbu)
+
+        public RegisterService(IUserRepository userRepository, IUserRoleRepository userRoleRepository, IValidator<RegisterCustomerDTO> registerCustomerValidator, IValidator<RegisterAdminDTO> registerAdminValidator, IUnitOfWork dbu, ILogger logger)
         {
             _userRepository = userRepository;
             _userRoleRepository = userRoleRepository;
             _registerCustomerValidator = registerCustomerValidator;
             _registerAdminValidator = registerAdminValidator;
             _dbu = dbu;
+            _logger = logger;
         }
 
         public async Task<ApiResponse<RegisterResponseDTO>> RegisterCustomer(RegisterCustomerDTO newCustomer)
@@ -85,8 +88,9 @@ namespace HotelBooking.application.Services.Domains.UserManagement.Register
                 }, MessageResponse.UserManagement.Register.SUCCESS);
 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError("RegisterService.RegisterCustomer: {ErrorMessage}", ex.Message);
                 await _dbu.RollBackTransactionAsync();
                 return ResponseFactory.ServerError<RegisterResponseDTO>();
             }
@@ -150,8 +154,9 @@ namespace HotelBooking.application.Services.Domains.UserManagement.Register
                     Email = newUser.Email
                 }, MessageResponse.UserManagement.Register.SUCCESS);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError("RegisterService.RegisterAdmin: {ErrorMessage}", ex.Message);
                 await _dbu.RollBackTransactionAsync();
                 return ResponseFactory.ServerError<RegisterResponseDTO>();
             }

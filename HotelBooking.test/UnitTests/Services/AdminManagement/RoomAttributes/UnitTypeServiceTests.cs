@@ -8,7 +8,7 @@ using Moq;
 
 namespace HotelBooking.test.UnitTests.Services.AdminManagement.RoomAttributes;
 
-public class UnitTypeServiceTests : BaseServiceTest
+public class UnitTypeServiceTests : BaseServiceTest<UnitTypeService>
 {
     private readonly Mock<IUnitTypeRepository> _mockUnitTypeRepo;
     private readonly Mock<IValidator<UnitTypeCreateDTO>> _mockCreateValidator;
@@ -22,10 +22,11 @@ public class UnitTypeServiceTests : BaseServiceTest
         _mockCreateValidator = new Mock<IValidator<UnitTypeCreateDTO>>();
         _mockUpdateValidator = new Mock<IValidator<UnitTypeUpdateDTO>>();
         _mockPagingValidator = new Mock<IValidator<PagingRequest>>();
-        
+
         _unitTypeService = new UnitTypeService(
             _mockUnitTypeRepo.Object,
             _mockUnitOfWork.Object,
+            _mockLogger.Object,
             _mockCreateValidator.Object,
             _mockUpdateValidator.Object,
             _mockPagingValidator.Object
@@ -115,6 +116,7 @@ public class UnitTypeServiceTests : BaseServiceTest
         var result = await _unitTypeService.CreateAsync(createDto);
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
         Verify_Repo_Never_AddAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -127,6 +129,7 @@ public class UnitTypeServiceTests : BaseServiceTest
         var result = await _unitTypeService.CreateAsync(createDto);
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -139,6 +142,7 @@ public class UnitTypeServiceTests : BaseServiceTest
         var result = await _unitTypeService.CreateAsync(createDto);
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
         Verify_Repo_AddAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
+        VerifyLogErrorOnce();
     }
     #endregion
     #region UpdateAsync
@@ -247,6 +251,7 @@ public class UnitTypeServiceTests : BaseServiceTest
         Verify_Repo_Never_AnyAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
         Verify_Repo_Never_UpdateAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -260,7 +265,7 @@ public class UnitTypeServiceTests : BaseServiceTest
         MockUpdateValidation_Success();
 
         // Mock AnyAsync throw Exception
-        _mockUnitTypeRepo.Setup(x => x.AnyAsync(It.IsAny<Expression<Func<UnitType, bool>>>())) 
+        _mockUnitTypeRepo.Setup(x => x.AnyAsync(It.IsAny<Expression<Func<UnitType, bool>>>()))
             .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
 
         // 2. Act
@@ -277,6 +282,7 @@ public class UnitTypeServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
         Verify_Repo_Never_UpdateAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -290,7 +296,7 @@ public class UnitTypeServiceTests : BaseServiceTest
         MockUpdateValidation_Success();
 
         // Mock AnyAsync throw Exception
-        _mockUnitTypeRepo.Setup(x => x.AnyAsync(It.IsAny<Expression<Func<UnitType, bool>>>())) 
+        _mockUnitTypeRepo.Setup(x => x.AnyAsync(It.IsAny<Expression<Func<UnitType, bool>>>()))
             .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
 
         // 2. Act
@@ -307,6 +313,7 @@ public class UnitTypeServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
         Verify_Repo_Never_UpdateAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -338,6 +345,7 @@ public class UnitTypeServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
         Verify_Repo_UpdateAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -369,9 +377,10 @@ public class UnitTypeServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
         Verify_Repo_UpdateAsync<IUnitTypeRepository, UnitType>(_mockUnitTypeRepo);
         Verify_Saved(1);
+        VerifyLogErrorOnce();
     }
     #endregion
-    
+
     #region GetPagedListAsync
     [Fact]
     public async Task GetPagedListAsync_ValidPaging_ReturnsSuccess()
@@ -485,6 +494,7 @@ public class UnitTypeServiceTests : BaseServiceTest
         result.Should().NotBeNull();
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
         result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+        VerifyLogErrorOnce();
     }
     #endregion
 

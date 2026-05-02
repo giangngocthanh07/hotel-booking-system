@@ -15,7 +15,7 @@ using HotelBooking.application.Services.Domains.UserManagement.Login;
 
 namespace HotelBooking.Tests.Services.UserManagement
 {
-    public class UserServiceTest : BaseServiceTest
+    public class UserServiceTest : BaseServiceTest<UserService>
     {
         private readonly Mock<IRegisterService> _mockRegisterService;
         private readonly Mock<ILoginService> _mockLoginService;
@@ -30,7 +30,7 @@ namespace HotelBooking.Tests.Services.UserManagement
             _mockUserRepo = new Mock<IUserRepository>();
 
 
-            _service = new UserService(_mockRegisterService.Object, _mockLoginService.Object, _mockUserRepo.Object);
+            _service = new UserService(_mockRegisterService.Object, _mockLoginService.Object, _mockUserRepo.Object, _mockLogger.Object);
         }
 
         [Fact]
@@ -135,6 +135,7 @@ namespace HotelBooking.Tests.Services.UserManagement
             // Verify steps
             _mockUserRepo.Verify(r => r.GetByIdAsync(userId), Times.Once);
             _mockUserRepo.Verify(r => r.GetUserWithRoles(It.IsAny<Expression<Func<User, bool>>>()), Times.Never);
+            VerifyLogErrorOnce();
         }
 
         [Fact]
@@ -158,6 +159,7 @@ namespace HotelBooking.Tests.Services.UserManagement
             // Verify steps
             _mockUserRepo.Verify(r => r.GetByIdAsync(userId), Times.Once);
             _mockUserRepo.Verify(r => r.GetUserWithRoles(It.IsAny<Expression<Func<User, bool>>>()), Times.Once);
+            VerifyLogErrorOnce();
         }
     }
 

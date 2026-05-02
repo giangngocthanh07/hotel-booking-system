@@ -13,7 +13,8 @@ public static class ManagementAdminHelper
         // Func to extract Id
         Func<TTypeEntity, int> getTypeIdFunc,
         // Func to extract Name
-        Func<TTypeEntity, string> getTypeNameFunc)
+        Func<TTypeEntity, string> getTypeNameFunc,
+        ILogger logger)
 
         where TTypeRepo : IRepository<TTypeEntity>
         where TTypeEntity : class
@@ -39,8 +40,9 @@ public static class ManagementAdminHelper
 
             return ResponseFactory.Success(menuResult, MessageResponse.Common.GET_SUCCESSFULLY);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            logger.LogError("Error retrieving types for menu: {ErrorMessage}", ex.Message);
             return ResponseFactory.ServerError<ManageMenuResult>();
         }
     }
@@ -62,7 +64,8 @@ public static class ManagementAdminHelper
         Func<int, int, int, Task<(IEnumerable<TEntity> Items, int TotalCount)>> getPagedItemsFunc,
 
         // Logic to map from Entity to DTO
-        Func<TEntity, TDto> mapToDtoFunc)
+        Func<TEntity, TDto> mapToDtoFunc,
+        ILogger logger)
 
         where TEntity : class
         where TDto : class
@@ -142,8 +145,9 @@ public static class ManagementAdminHelper
 
             return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            logger.LogError("Error retrieving data by type: {ErrorMessage}", ex.Message);
             return ResponseFactory.ServerError<PagedManageResult<TDto>>();
         }
     }

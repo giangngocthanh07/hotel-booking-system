@@ -19,6 +19,7 @@ public class CustomerUpgradeRequestService : ICustomerUpgradeRequestService
     private readonly IUserRepository _userRepo;
     private readonly IUserRoleRepository _userRoleRepo;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ILogger _logger;
     private readonly IValidator<CreateUpgradeRequestDTO> _createRequestValidator;
 
     public CustomerUpgradeRequestService(
@@ -26,12 +27,14 @@ public class CustomerUpgradeRequestService : ICustomerUpgradeRequestService
         IUserRepository userRepo,
         IUserRoleRepository userRoleRepo,
         IUnitOfWork unitOfWork,
+        ILogger logger,
         IValidator<CreateUpgradeRequestDTO> createRequestValidator)
     {
         _upgradeRequestRepo = upgradeRequestRepo;
         _userRepo = userRepo;
         _userRoleRepo = userRoleRepo;
         _unitOfWork = unitOfWork;
+        _logger = logger;
         _createRequestValidator = createRequestValidator;
     }
 
@@ -72,8 +75,9 @@ public class CustomerUpgradeRequestService : ICustomerUpgradeRequestService
                 userForUpgradeDTO,
                 MessageResponse.RequestManagement.UpgradeRequest.USER_INFO_RETRIEVED);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError("CustomerUpgradeRequestService.GetUserForUpgradeAsync: {ErrorMessage}", ex.Message);
             return ResponseFactory.ServerError<UserForUpgradeDTO?>();
         }
     }
@@ -164,8 +168,9 @@ public class CustomerUpgradeRequestService : ICustomerUpgradeRequestService
 
             return ResponseFactory.Success(saved, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_CREATED_SUCCESS);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError("CustomerUpgradeRequestService.CreateRequestAsync: {ErrorMessage}", ex.Message);
             return ResponseFactory.ServerError<UpgradeRequestDTO>();
         }
     }
@@ -197,8 +202,9 @@ public class CustomerUpgradeRequestService : ICustomerUpgradeRequestService
                 ? ResponseFactory.Success(true, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_CANCELLED_SUCCESS)
                 : ResponseFactory.Failure<bool>(StatusCodeResponse.Error, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_CANCEL_FAILED);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError("CustomerUpgradeRequestService.CancelRequestAsync: {ErrorMessage}", ex.Message);
             return ResponseFactory.ServerError<bool>();
         }
     }
@@ -259,8 +265,9 @@ public class CustomerUpgradeRequestService : ICustomerUpgradeRequestService
 
             return ResponseFactory.Success(dtos, MessageResponse.RequestManagement.UpgradeRequest.REQUESTS_RETRIEVED);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError("CustomerUpgradeRequestService.GetMyRequestsAsync: {ErrorMessage}", ex.Message);
             return ResponseFactory.ServerError<List<UpgradeRequestDTO>>();
         }
     }

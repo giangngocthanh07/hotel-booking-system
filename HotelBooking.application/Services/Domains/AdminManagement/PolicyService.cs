@@ -22,11 +22,12 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
         public PolicyService(
             IPolicyRepository repository,
             IUnitOfWork unitOfWork,
+            ILogger logger,
             IPolicyTypeRepository policyTypeRepo,
             IValidator<PolicyCreateDTO> createVal,
         IValidator<PolicyUpdateDTO> updateVal,
         IValidator<PagingRequest> pagingValidator)
-            : base(repository, unitOfWork, createVal, updateVal)
+            : base(repository, unitOfWork, logger, createVal, updateVal)
         {
             _policyTypeRepo = policyTypeRepo;
             _pagingValidator = pagingValidator;
@@ -123,8 +124,9 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
 
                 return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError("PolicyService.GetTypeDataAsync: {ErrorMessage}", ex.Message);
                 return ResponseFactory.ServerError<List<PolicyTypeDTO>>();
             }
         }
@@ -170,7 +172,8 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
                 },
 
                 // Logic 4: Map to DTO (reuses the existing MapToDto method)
-                mapToDtoFunc: MapToDto
+                mapToDtoFunc: MapToDto,
+                logger: _logger
             );
         }
     }

@@ -1,5 +1,6 @@
 
 using System.Linq.Expressions;
+using Castle.Core.Logging;
 using FluentAssertions;
 using FluentValidation;
 using HotelBooking.application.DTOs.Request.Base;
@@ -7,28 +8,31 @@ using HotelBooking.application.DTOs.Request.UpgradeRequest;
 using HotelBooking.application.DTOs.Role;
 using HotelBooking.application.Services.Domains.RequestManagement.Admin;
 using HotelBooking.infrastructure.Models;
-using Microsoft.IdentityModel.Tokens.Experimental;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace HotelBooking.test.UnitTests.Services.RequestManagement.Admin;
 
-public class AdminUpgradeRequestServiceTests : BaseServiceTest
+public class AdminUpgradeRequestServiceTests : BaseServiceTest<AdminUpgradeRequestService>
 {
     private readonly Mock<IUpgradeRequestRepository> _mockUpgradeRequestRepo;
     private readonly Mock<IUserRoleRepository> _mockUserRoleRepo;
     private readonly Mock<IValidator<PagingRequest>> _mockPagingValidator;
     private readonly IAdminUpgradeRequestService _service;
 
+
     public AdminUpgradeRequestServiceTests()
     {
         _mockUpgradeRequestRepo = new Mock<IUpgradeRequestRepository>();
         _mockUserRoleRepo = new Mock<IUserRoleRepository>();
         _mockPagingValidator = new Mock<IValidator<PagingRequest>>();
+
         _service = new AdminUpgradeRequestService(
             _mockUpgradeRequestRepo.Object,
             _mockUserRoleRepo.Object,
             _mockUnitOfWork.Object,
-            _mockPagingValidator.Object);
+            _mockPagingValidator.Object,
+            _mockLogger.Object);
     }
 
     #region GET PAGED REQUESTS TESTS
@@ -228,6 +232,7 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest
         // Verify
         _mockPagingValidator.Verify(v => v.ValidateAsync(It.IsAny<PagingRequest>(), default), Times.Once);
         _mockUpgradeRequestRepo.Verify(v => v.GetPagedWithUserAsync(It.IsAny<Expression<Func<UpgradeRequest, bool>>>(), pageIndex, pageSize), Times.Once);
+        VerifyLogErrorOnce();
     }
 
     #endregion
@@ -388,6 +393,8 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest
         result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
 
         result.Content.Should().BeNull();
+
+        VerifyLogErrorOnce();
     }
 
     #endregion
@@ -773,6 +780,7 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest
         Verify_Repo_Never_AddAsync<IUserRoleRepository, UserRole>(_mockUserRoleRepo);
         Verify_Repo_Never_UpdateAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -823,6 +831,7 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest
         Verify_Repo_Never_AddAsync<IUserRoleRepository, UserRole>(_mockUserRoleRepo);
         Verify_Repo_Never_UpdateAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -875,6 +884,7 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest
         Verify_Repo_Never_AddAsync<IUserRoleRepository, UserRole>(_mockUserRoleRepo);
         Verify_Repo_Never_UpdateAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -927,6 +937,7 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest
 
         Verify_Repo_Never_UpdateAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -986,6 +997,7 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest
         Verify_Repo_UpdateAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo, 1);
 
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
 
     }
 
@@ -1037,6 +1049,7 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest
         Verify_Repo_UpdateAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo, 1);
 
         Verify_Saved(1);
+        VerifyLogErrorOnce();
     }
     #endregion
 
@@ -1248,6 +1261,7 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest
         _mockUpgradeRequestRepo.Verify(r => r.GetByIdAsync(requestId), Times.Once);
         Verify_Repo_Never_UpdateAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -1296,6 +1310,7 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest
         Verify_Repo_UpdateAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo, 1);
 
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -1345,6 +1360,7 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest
         _mockUpgradeRequestRepo.Verify(r => r.GetByIdAsync(requestId), Times.Once);
         Verify_Repo_UpdateAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo, 1);
         Verify_Saved(1);
+        VerifyLogErrorOnce();
 
     }
 
@@ -1398,6 +1414,8 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest
         // Verify that GetDistinctStatusesAsync is called once
         _mockUpgradeRequestRepo.Verify(r => r.GetDistinctStatusesAsync(), Times.Once);
 
+        VerifyLogErrorOnce();
+
     }
 
     #endregion
@@ -1419,6 +1437,15 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest
         _mockUserRoleRepo.SetupSequence(ur => ur.AnyAsync(It.IsAny<Expression<Func<UserRole, bool>>>()))
             .ReturnsAsync(true)
             .ReturnsAsync(false);
+    }
+
+    private void VerifyLogErrorOnce()
+    {
+        _mockLogger.Verify(
+            x => x.Log(LogLevel.Error, It.IsAny<EventId>(),
+            It.Is<It.IsAnyType>((v, t) => true),
+            It.IsAny<Exception>(),
+            It.Is<Func<It.IsAnyType, Exception?, string>>((v, t) => true)), Times.Once);
     }
 
     #endregion

@@ -9,7 +9,7 @@ using FluentAssertions;
 
 namespace HotelBooking.Tests.Services.RoomManagement
 {
-    public class RoomTypeServiceTests : BaseServiceTest
+    public class RoomTypeServiceTests : BaseServiceTest<RoomTypeService>
     {
         private readonly Mock<IHotelRepository> _mockHotelRepo;
         private readonly Mock<IRoomTypeRepository> _mockRoomTypeRepo;
@@ -25,7 +25,7 @@ namespace HotelBooking.Tests.Services.RoomManagement
             _mockBedConfigRepo = new Mock<IRoomTypeBedConfigRepository>();
             _mockAttributeFacade = new Mock<IRoomAttributeFacade>();
             _mockValidator = new Mock<IValidator<RoomTypeCreateDTO>>();
-            _service = new RoomTypeService(_mockHotelRepo.Object, _mockRoomTypeRepo.Object, _mockBedConfigRepo.Object, _mockValidator.Object, _mockAttributeFacade.Object, _mockUnitOfWork.Object);
+            _service = new RoomTypeService(_mockHotelRepo.Object, _mockRoomTypeRepo.Object, _mockBedConfigRepo.Object, _mockValidator.Object, _mockAttributeFacade.Object, _mockUnitOfWork.Object, _mockLogger.Object);
         }
 
         // --- TESTS FOR CreateRoomTypeAsync ---
@@ -393,6 +393,7 @@ namespace HotelBooking.Tests.Services.RoomManagement
             Verify_Repo_AnyAsync<IRoomTypeRepository, RoomType>(_mockRoomTypeRepo);
             Verify_Repo_Never_AddAsync<IRoomTypeRepository, RoomType>(_mockRoomTypeRepo);
             Verify_Never_Saved();
+            VerifyLogErrorOnce();
         }
 
         [Fact]
@@ -448,6 +449,7 @@ namespace HotelBooking.Tests.Services.RoomManagement
             Verify_Repo_AnyAsync<IRoomTypeRepository, RoomType>(_mockRoomTypeRepo);
             Verify_Repo_AddAsync<IRoomTypeRepository, RoomType>(_mockRoomTypeRepo, 1);
             Verify_Never_Saved();
+            VerifyLogErrorOnce();
         }
 
         [Fact]
@@ -499,6 +501,7 @@ namespace HotelBooking.Tests.Services.RoomManagement
             Verify_Saved(1); // Only attempted to save the RoomType before the exception
             _mockUnitOfWork.Verify(u => u.CommitTransactionAsync(), Times.Never);
             _mockUnitOfWork.Verify(u => u.RollBackTransactionAsync(), Times.Once);
+            VerifyLogErrorOnce();
         }
 
         [Fact]
@@ -549,6 +552,7 @@ namespace HotelBooking.Tests.Services.RoomManagement
             Verify_Repo_AddAsync<IRoomTypeRepository, RoomType>(_mockRoomTypeRepo);
             Verify_Saved(1); // Only attempted to save the RoomType before the exception
             Verify_Repo_AddAsync<IRoomTypeBedConfigRepository, RoomTypeBedConfig>(_mockBedConfigRepo);
+            VerifyLogErrorOnce();
         }
 
         [Fact]
@@ -602,6 +606,7 @@ namespace HotelBooking.Tests.Services.RoomManagement
             Verify_Saved(2); // Attempted to save both RoomType and BedConfig before the exception
             _mockUnitOfWork.Verify(u => u.CommitTransactionAsync(), Times.Never);
             _mockUnitOfWork.Verify(u => u.RollBackTransactionAsync(), Times.Once);
+            VerifyLogErrorOnce();
         }
 
 

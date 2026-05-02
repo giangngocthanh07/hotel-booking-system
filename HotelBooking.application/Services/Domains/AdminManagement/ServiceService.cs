@@ -21,11 +21,12 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
         public ServiceService(
             IServiceRepository repository,
             IUnitOfWork unitOfWork,
+            ILogger logger,
             IServiceTypeRepository serviceTypeRepo,
             IValidator<ServiceCreateDTO> createVal,
             IValidator<ServiceUpdateDTO> updateVal,
             IValidator<PagingRequest> pagingValidator)
-            : base(repository, unitOfWork, createVal, updateVal)
+            : base(repository, unitOfWork, logger, createVal, updateVal)
         {
             _serviceTypeRepo = serviceTypeRepo;
             _pagingValidator = pagingValidator;
@@ -142,8 +143,9 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
 
                 return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError("ServiceService.GetTypeDataAsync: {ErrorMessage}", ex.Message);
                 return ResponseFactory.ServerError<List<ServiceTypeDTO>>();
             }
         }
@@ -187,7 +189,8 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
                         q => q.OrderByDescending(x => x.Id)),
 
                 // Logic 4: Map to DTO (reuses the existing MapToDto method)
-                mapToDtoFunc: MapToDto
+                mapToDtoFunc: MapToDto,
+                logger: _logger
             );
         }
     }

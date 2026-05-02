@@ -19,13 +19,16 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
         private readonly IHotelRepository _hotelRepo;
         private readonly IValidator<HotelRegistrationDTO> _validator;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ILogger _logger;
 
-        public HotelRegistrationService(IHotelApprovalRequestRepository approvalRepo, IHotelRepository hotelRepo, IValidator<HotelRegistrationDTO> validator, IUnitOfWork unitOfWork)
+
+        public HotelRegistrationService(IHotelApprovalRequestRepository approvalRepo, IHotelRepository hotelRepo, IValidator<HotelRegistrationDTO> validator, IUnitOfWork unitOfWork, ILogger logger)
         {
             _approvalRepo = approvalRepo;
             _hotelRepo = hotelRepo;
             _validator = validator;
             _unitOfWork = unitOfWork;
+            _logger = logger;
         }
 
         public async Task<ApiResponse<HotelRegistrationDetailDTO>> CreateRequestAsync(int ownerId, HotelRegistrationDTO request)
@@ -128,8 +131,9 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
 
                 return ResponseFactory.Success(dto, MessageResponse.RequestManagement.HotelApproval.HOTEL_REQUEST_CREATED_SUCCESS);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError("HotelRegistrationService.CreateRequestAsync: {ErrorMessage}", ex.Message);
                 return ResponseFactory.ServerError<HotelRegistrationDetailDTO>();
             }
         }
@@ -167,8 +171,9 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
                 var saved = await _unitOfWork.SaveChangesAsync() > 0;
                 return saved ? ResponseFactory.Success(true, MessageResponse.RequestManagement.HotelApproval.HOTEL_REQUEST_CANCELLED_SUCCESS) : ResponseFactory.Failure<bool>(StatusCodeResponse.Error, MessageResponse.RequestManagement.HotelApproval.HOTEL_REQUEST_CANCEL_FAILED);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError("HotelRegistrationService.CancelRequestAsync: {ErrorMessage}", ex.Message);
                 return ResponseFactory.ServerError<bool>();
             }
         }
@@ -234,8 +239,9 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
                 }
                 return ResponseFactory.Success(dtoItems, MessageResponse.RequestManagement.HotelApproval.HOTELS_RETRIEVED);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError("HotelRegistrationService.GetMyRequestsAsync: {ErrorMessage}", ex.Message);
                 return ResponseFactory.ServerError<List<HotelRegistrationDetailDTO>>();
             }
         }

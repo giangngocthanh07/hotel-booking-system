@@ -22,9 +22,10 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
             IAmenityRepository repository,
             IAmenityTypeRepository amenityTypeRepository,
             IUnitOfWork unitOfWork,
+            ILogger logger,
             IValidator<AmenityCreateDTO> createValidator,
         IValidator<AmenityUpdateDTO> updateValidator)
-            : base(repository, unitOfWork, createValidator, updateValidator)
+            : base(repository, unitOfWork, logger, createValidator, updateValidator)
         {
             _amenityTypeRepo = amenityTypeRepository;
         }
@@ -129,8 +130,9 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
 
                 return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError("AmenityService.GetTypeDataAsync: {ErrorMessage}", ex.Message);
                 return ResponseFactory.ServerError<List<AmenityTypeDTO>>();
             }
         }
@@ -156,7 +158,8 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
                         page,
                         size,
                         q => q.OrderByDescending(x => x.Id)),
-                mapToDtoFunc: MapToDto
+                mapToDtoFunc: MapToDto,
+                logger: _logger
             );
         }
     }

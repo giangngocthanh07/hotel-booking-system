@@ -13,6 +13,8 @@ namespace HotelBooking.application.Services.Domains.RoomManagement
     {
         private readonly IRoomAttributeFacade _attributeFacade;
         private readonly IValidator<RoomNameSuggestionRequest> _validator;
+        private readonly ILogger _logger;
+
 
         private const string WITH = "with";
         private const string FOR = "for";
@@ -22,10 +24,11 @@ namespace HotelBooking.application.Services.Domains.RoomManagement
         private const string FEATURE_BATHROOM = "Private Bathroom";
 
 
-        public RoomNameSuggestionService(IRoomAttributeFacade attributeFacade, IValidator<RoomNameSuggestionRequest> validator)
+        public RoomNameSuggestionService(IRoomAttributeFacade attributeFacade, IValidator<RoomNameSuggestionRequest> validator, ILogger logger)
         {
             _attributeFacade = attributeFacade;
             _validator = validator;
+            _logger = logger;
         }
 
         public async Task<ApiResponse<List<string>>> SuggestRoomNamesAsync(RoomNameSuggestionRequest request)

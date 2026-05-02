@@ -18,17 +18,21 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Admin
         private readonly IUserRoleRepository _userRoleRepo;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IValidator<PagingRequest> _pagingValidator;
+        private readonly ILogger<AdminUpgradeRequestService> _logger;
+
 
         public AdminUpgradeRequestService(
             IUpgradeRequestRepository upgradeRequestRepo,
             IUserRoleRepository userRoleRepo,
             IUnitOfWork unitOfWork,
-            IValidator<PagingRequest> pagingValidator)
+            IValidator<PagingRequest> pagingValidator,
+            ILogger<AdminUpgradeRequestService> logger)
         {
             _upgradeRequestRepo = upgradeRequestRepo;
             _userRoleRepo = userRoleRepo;
             _unitOfWork = unitOfWork;
             _pagingValidator = pagingValidator;
+            _logger = logger;
         }
 
         public async Task<ApiResponse<PagedResult<UpgradeRequestDTO>>> GetPagedRequestsAsync(
@@ -103,8 +107,9 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Admin
 
                 return ResponseFactory.Success(pagedResult, MessageResponse.RequestManagement.UpgradeRequest.REQUESTS_RETRIEVED);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "[AdminUpgradeRequestService - GetPagedRequestsAsync] Error getting upgrade requests: {ErrorMessage}", ex.Message);
                 return ResponseFactory.ServerError<PagedResult<UpgradeRequestDTO>>();
             }
         }
@@ -149,8 +154,9 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Admin
 
                 return ResponseFactory.Success(requestDTO, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_RETRIEVED);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "[AdminUpgradeRequestService - GetByRequestIdAsync] Error getting upgrade request with ID {RequestId}: {ErrorMessage}", requestId, ex.Message);
                 return ResponseFactory.ServerError<UpgradeRequestDTO>();
             }
         }
@@ -216,8 +222,9 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Admin
                     ? ResponseFactory.Success(true, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_APPROVED_SUCCESS)
                     : ResponseFactory.Failure<bool>(StatusCodeResponse.Error, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_APPROVE_FAILED);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "[AdminUpgradeRequestService - ApproveRequestAsync] Error approving upgrade request with ID {RequestId} by Admin with ID: {AdminId}: {ErrorMessage}", requestId, adminId, ex.Message);
                 return ResponseFactory.ServerError<bool>();
             }
         }
@@ -248,8 +255,9 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Admin
                     ? ResponseFactory.Success(true, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_REJECTED_SUCCESS)
                     : ResponseFactory.Failure<bool>(StatusCodeResponse.Error, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_REJECT_FAILED);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "[AdminUpgradeRequestService - RejectRequestAsync] Error rejecting upgrade request: {ErrorMessage}", ex.Message);
                 return ResponseFactory.ServerError<bool>();
             }
         }
@@ -261,8 +269,9 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Admin
                 var statuses = await _upgradeRequestRepo.GetDistinctStatusesAsync();
                 return ResponseFactory.Success(statuses, MessageResponse.Common.GET_SUCCESSFULLY);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "[AdminUpgradeRequestService - GetAllStatusesAsync] Error getting all statuses: {ErrorMessage}", ex.Message);
                 return ResponseFactory.ServerError<List<string>>();
             }
         }

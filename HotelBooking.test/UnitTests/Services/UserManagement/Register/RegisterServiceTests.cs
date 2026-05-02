@@ -9,7 +9,7 @@ using Moq;
 
 namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
 {
-    public class RegisterServiceTests : BaseServiceTest
+    public class RegisterServiceTests : BaseServiceTest<RegisterService>
     {
         private readonly Mock<IUserRepository> _mockUserRepo;
         private readonly Mock<IUserRoleRepository> _mockUserRoleRepo;
@@ -23,7 +23,7 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
             _mockRegisterCustomerValidator = new Mock<IValidator<RegisterCustomerDTO>>();
             _mockRegisterAdminValidator = new Mock<IValidator<RegisterAdminDTO>>();
 
-            _service = new RegisterService(_mockUserRepo.Object, _mockUserRoleRepo.Object, _mockRegisterCustomerValidator.Object, _mockRegisterAdminValidator.Object, _mockUnitOfWork.Object);
+            _service = new RegisterService(_mockUserRepo.Object, _mockUserRoleRepo.Object, _mockRegisterCustomerValidator.Object, _mockRegisterAdminValidator.Object, _mockUnitOfWork.Object, _mockLogger.Object);
         }
 
         [Fact]
@@ -247,6 +247,7 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
             Verify_Repo_Never_AddAsync<IUserRepository, User>(_mockUserRepo);
             Verify_Repo_Never_AddAsync<IUserRoleRepository, UserRole>(_mockUserRoleRepo);
             Verify_Never_Saved();
+            VerifyLogErrorOnce();
         }
 
         [Fact]
@@ -284,6 +285,7 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
             Verify_Repo_AddAsync<IUserRepository, User>(_mockUserRepo);
             Verify_Repo_Never_AddAsync<IUserRoleRepository, UserRole>(_mockUserRoleRepo);
             Verify_Never_Saved();
+            VerifyLogErrorOnce();
         }
 
         [Fact]
@@ -328,6 +330,7 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
             Verify_Saved(1); // Save should be called once for User before the exception occurs
             _mockUnitOfWork.Verify(x => x.CommitTransactionAsync(), Times.Never);
             _mockUnitOfWork.Verify(x => x.RollBackTransactionAsync(), Times.Once);
+            VerifyLogErrorOnce();
         }
 
         [Fact]
@@ -364,6 +367,7 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
             Verify_Repo_AddAsync<IUserRepository, User>(_mockUserRepo);
             Verify_Repo_AddAsync<IUserRoleRepository, UserRole>(_mockUserRoleRepo);
             Verify_Saved(1);
+            VerifyLogErrorOnce();
         }
 
         [Fact]
@@ -409,6 +413,7 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
             Verify_Saved(2); // Save should be called once for User before the exception occurs and once for UserRole which fails
             _mockUnitOfWork.Verify(x => x.CommitTransactionAsync(), Times.Never);
             _mockUnitOfWork.Verify(x => x.RollBackTransactionAsync(), Times.Once);
+            VerifyLogErrorOnce();
         }
 
         // ----- Admin Registration tests -----
@@ -452,6 +457,7 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
             Verify_Saved(2); // Expecting 2 saves: one for User and one for UserRole
             _mockUnitOfWork.Verify(x => x.CommitTransactionAsync(), Times.Once);
             _mockUnitOfWork.Verify(x => x.RollBackTransactionAsync(), Times.Never);
+
         }
 
         [Fact]
@@ -633,6 +639,7 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
             Verify_Repo_Never_AddAsync<IUserRepository, User>(_mockUserRepo);
             Verify_Repo_Never_AddAsync<IUserRoleRepository, UserRole>(_mockUserRoleRepo);
             Verify_Never_Saved();
+            VerifyLogErrorOnce();
         }
 
         [Fact]
@@ -670,6 +677,7 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
             Verify_Repo_AddAsync<IUserRepository, User>(_mockUserRepo);
             Verify_Repo_Never_AddAsync<IUserRoleRepository, UserRole>(_mockUserRoleRepo);
             Verify_Never_Saved();
+            VerifyLogErrorOnce();
         }
 
         [Fact]
@@ -714,6 +722,7 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
             Verify_Saved(1); // Save should be called once for User before the exception occurs
             _mockUnitOfWork.Verify(x => x.CommitTransactionAsync(), Times.Never);
             _mockUnitOfWork.Verify(x => x.RollBackTransactionAsync(), Times.Once);
+            VerifyLogErrorOnce();
         }
 
         [Fact]
@@ -751,6 +760,7 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
             Verify_Repo_AddAsync<IUserRepository, User>(_mockUserRepo);
             Verify_Repo_AddAsync<IUserRoleRepository, UserRole>(_mockUserRoleRepo);
             Verify_Saved(1);
+            VerifyLogErrorOnce();
         }
 
         [Fact]
@@ -796,6 +806,7 @@ namespace HotelBooking.test.UnitTests.Services.UserManagement.Register
             Verify_Saved(2); // Save should be called once for User before the exception occurs and once for UserRole which fails
             _mockUnitOfWork.Verify(x => x.CommitTransactionAsync(), Times.Never);
             _mockUnitOfWork.Verify(x => x.RollBackTransactionAsync(), Times.Once);
+            VerifyLogErrorOnce();
         }
     }
 }

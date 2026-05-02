@@ -25,8 +25,10 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
         private readonly IImageHelper _imageHelper;
         private readonly IPhotoService _photoService;
         public IUnitOfWork _dbu;
+        public ILogger _logger;
 
-        public HotelService(IHotelRepository hotelRepository, IHotelImageRepository hotelImageRepository, IHotelAmenityRepository hotelAmenityRepository, IHotelPolicyRepository hotelPolicyRepository, IPropertyTypeRepository propTypeRepository, IImageHelper imageHelper, IPhotoService photoService, IUnitOfWork dbu)
+
+        public HotelService(IHotelRepository hotelRepository, IHotelImageRepository hotelImageRepository, IHotelAmenityRepository hotelAmenityRepository, IHotelPolicyRepository hotelPolicyRepository, IPropertyTypeRepository propTypeRepository, IImageHelper imageHelper, IPhotoService photoService, IUnitOfWork dbu, ILogger logger)
         {
             _hotelRepository = hotelRepository;
             _hotelImageRepository = hotelImageRepository;
@@ -36,6 +38,7 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
             _imageHelper = imageHelper;
             _photoService = photoService;
             _dbu = dbu;
+            _logger = logger;
         }
 
         public async Task<string> GetOwnerDashBoard(int ownerId)
@@ -86,8 +89,9 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
                     Content = result
                 };
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError("HotelService.GetPropertyTypesAsync: {ErrorMessage}", ex.Message);
                 return new ApiResponse<IEnumerable<PropertyTypeDTO>>
                 {
                     StatusCode = StatusCodeResponse.Error,

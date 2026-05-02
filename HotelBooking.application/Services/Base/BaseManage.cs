@@ -15,17 +15,20 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateDTO, TUpdateDTO> :
     // Implementation of base management functionalities
     protected readonly TRepo _repo;
     protected readonly IUnitOfWork _dbu;
+    protected readonly ILogger _logger;
 
     // Inject validators (optional — can be null)
     // Inject two separate validators (both nullable)
     protected readonly IValidator<TCreateDTO>? _createValidator;
     protected readonly IValidator<TUpdateDTO>? _updateValidator;
 
-    public BaseManage(TRepo repo, IUnitOfWork dbu, IValidator<TCreateDTO>? createValidator = null,
+    public BaseManage(TRepo repo, IUnitOfWork dbu, ILogger logger,
+       IValidator<TCreateDTO>? createValidator = null,
         IValidator<TUpdateDTO>? updateValidator = null)
     {
         _repo = repo;
         _dbu = dbu;
+        _logger = logger;
         _createValidator = createValidator;
         _updateValidator = updateValidator;
     }
@@ -89,8 +92,10 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateDTO, TUpdateDTO> :
 
             return ResponseFactory.Success(dto, MessageResponse.Common.GET_SUCCESSFULLY);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            // Log ex here if needed
+            _logger.LogError("GetByIdAsync Error: {ErrorMessage}", ex.Message);
             return ResponseFactory.ServerError<TDto>();
         }
     }
@@ -129,6 +134,7 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateDTO, TUpdateDTO> :
         catch (Exception ex)
         {
             // Log ex here if needed
+            _logger.LogError("CreateAsync Error: {ErrorMessage}", ex.Message);
             return ResponseFactory.Failure<TDto>(StatusCodeResponse.Error, ex.InnerException?.Message ?? ex.Message);
         }
     }
@@ -180,8 +186,10 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateDTO, TUpdateDTO> :
 
             return ResponseFactory.Success(dto, MessageResponse.Common.UPDATE_SUCCESSFULLY);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            // Log ex here if needed
+            _logger.LogError("UpdateAsync Error: {ErrorMessage}", ex.Message);
             return ResponseFactory.ServerError<TDto>();
         }
     }
@@ -223,8 +231,10 @@ public abstract class BaseManage<TEntity, TRepo, TDto, TCreateDTO, TUpdateDTO> :
                 return ResponseFactory.Failure<bool>(StatusCodeResponse.BadRequest, MessageResponse.Common.DELETE_FAILED);
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            // Log ex here if needed
+            _logger.LogError("DeleteAsync Error: {ErrorMessage}", ex.Message);
             return ResponseFactory.ServerError<bool>();
         }
     }

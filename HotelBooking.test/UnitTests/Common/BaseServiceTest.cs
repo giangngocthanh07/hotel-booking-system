@@ -1,17 +1,21 @@
 using AutoFixture;
 using Moq;
 using System.Linq.Expressions;
+using Microsoft.Extensions.Logging;
 
-public abstract class BaseServiceTest
+public abstract class BaseServiceTest<T>
 {
     // Protected to allow derived classes (e.g., UserServiceTest) access
     protected readonly Fixture _fixture;
     protected readonly Mock<IUnitOfWork> _mockUnitOfWork;
+    protected readonly Mock<ILogger<T>> _mockLogger;
+
 
     public BaseServiceTest()
     {
         _fixture = new Fixture();
         _mockUnitOfWork = new Mock<IUnitOfWork>();
+        _mockLogger = new Mock<ILogger<T>>();
 
         // Default setup for Unit of Work (required by ~99% of tests)
         // Simulates SaveChangesAsync returning 1 (successful persistence)
@@ -136,5 +140,24 @@ public abstract class BaseServiceTest
         mockRepo.Verify(x => x.AnyAsync(It.IsAny<Expression<Func<TEntity, bool>>>()), Times.Never);
     }
 
+    //
+    #region Verify Log
+
+    protected void VerifyLogErrorOnce(int times = 1)
+    {
+        _mockLogger.Verify(
+            x => x.Log(
+                It.Is<LogLevel>(level => level == LogLevel.Warning || level == LogLevel.Error), // 1. Level
+                It.IsAny<EventId>(),                                                           // 2. EventId
+                It.Is<It.IsAnyType>((v, t) => true),                                           // 3. State 
+                It.IsAny<Exception>(),                                                         // 4. Exception
+                It.Is<Func<It.IsAnyType, Exception?, string>>((v, t) => true)                  // 5. Formatter
+            ),
+            Times.Exactly(times)
+        );
+    }
+    #endregion
+
     #endregion
 }
+

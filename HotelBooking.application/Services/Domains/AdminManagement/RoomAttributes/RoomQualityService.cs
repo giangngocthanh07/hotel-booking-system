@@ -15,8 +15,8 @@ public interface IRoomQualityService : ITypedManage<RoomQualityDTO, RoomQualityG
 public class RoomQualityService : BaseManage<RoomQuality, IRoomQualityRepository, RoomQualityDTO, RoomQualityCreateDTO, RoomQualityUpdateDTO>, IRoomQualityService
 {
     private readonly IRoomQualityGroupRepository _roomQualityTypeRepo;
-    public RoomQualityService(IRoomQualityRepository repository, IUnitOfWork dbo, IRoomQualityGroupRepository roomQualityTypeRepo, IValidator<RoomQualityCreateDTO> createVal,
-            IValidator<RoomQualityUpdateDTO> updateVal) : base(repository, dbo, createVal, updateVal)
+    public RoomQualityService(IRoomQualityRepository repository, IUnitOfWork dbo, ILogger logger, IRoomQualityGroupRepository roomQualityTypeRepo, IValidator<RoomQualityCreateDTO> createVal,
+            IValidator<RoomQualityUpdateDTO> updateVal) : base(repository, dbo, logger, createVal, updateVal)
     {
         _roomQualityTypeRepo = roomQualityTypeRepo;
     }
@@ -88,8 +88,9 @@ public class RoomQualityService : BaseManage<RoomQuality, IRoomQualityRepository
             var exists = await _repo.AnyAsync(x => x.Id == id && x.IsDeleted == false);
             return ResponseFactory.Success(exists, MessageResponse.Common.CHECK_EXISTED_SUCCESSFULLY);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError("RoomQualityService.RoomQualityExistsAsync: {ErrorMessage}", ex.Message);
             return ResponseFactory.ServerError<bool>();
         }
     }
@@ -106,8 +107,9 @@ public class RoomQualityService : BaseManage<RoomQuality, IRoomQualityRepository
 
             return ResponseFactory.Success(entity.Name, MessageResponse.Common.GET_SUCCESSFULLY);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError("RoomQualityService.GetRoomQualityNameByIdAsync: {ErrorMessage}", ex.Message);
             return ResponseFactory.ServerError<string>();
         }
     }
@@ -141,8 +143,9 @@ public class RoomQualityService : BaseManage<RoomQuality, IRoomQualityRepository
 
             return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError("RoomQualityService.GetAllByTypeAsync: {ErrorMessage}", ex.Message);
             return ResponseFactory.ServerError<List<RoomQualityDTO>>();
 
         }
@@ -169,8 +172,9 @@ public class RoomQualityService : BaseManage<RoomQuality, IRoomQualityRepository
 
             return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError("RoomQualityService.GetTypeDataAsync: {ErrorMessage}", ex.Message);
             return ResponseFactory.ServerError<List<RoomQualityGroupDTO>>();
         }
     }
@@ -204,7 +208,8 @@ public class RoomQualityService : BaseManage<RoomQuality, IRoomQualityRepository
                 size,
                 q => q.OrderByDescending(x => x.Id)),
             // Logic 4: Map to DTO (Reuse existing MapToDto method)
-            mapToDtoFunc: MapToDto
+            mapToDtoFunc: MapToDto,
+            logger: _logger
         );
     }
 

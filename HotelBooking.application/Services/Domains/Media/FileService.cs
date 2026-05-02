@@ -11,8 +11,10 @@ public interface IFileService
 public class FileService : IFileService
 {
     private readonly Cloudinary _cloudinary;
+    private readonly ILogger _logger;
 
-    public FileService(IConfiguration Configuration)
+
+    public FileService(IConfiguration Configuration, ILogger logger)
     {
         var cloudName = Configuration["Cloudinary:CloudName"];
         var apiKey = Configuration["Cloudinary:ApiKey"];
@@ -22,6 +24,8 @@ public class FileService : IFileService
         var acc = new Account(cloudName, apiKey, apiSecret);
         _cloudinary = new Cloudinary(acc);
         _cloudinary.Api.Secure = true;
+
+        _logger = logger;
     }
 
     public async Task<ApiResponse<UploadResultDTO>> UploadBusinessLicenseAsync(UploadFileDTO file, int userId)
@@ -89,8 +93,9 @@ public class FileService : IFileService
                 }
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError("FileService.UploadBusinessLicenseAsync: {ErrorMessage}", ex.Message);
             return ResponseFactory.ServerError<UploadResultDTO>();
         }
     }

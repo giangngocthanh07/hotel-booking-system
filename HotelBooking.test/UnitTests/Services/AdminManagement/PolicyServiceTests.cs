@@ -8,7 +8,7 @@ using Moq;
 
 namespace HotelBooking.test.UnitTests.Services.AdminManagement;
 
-public class PolicyServiceTests : BaseServiceTest
+public class PolicyServiceTests : BaseServiceTest<PolicyService>
 {
     private readonly Mock<IPolicyTypeRepository> _mockPolicyTypeRepo;
     private readonly Mock<IPolicyRepository> _mockPolicyRepo;
@@ -28,6 +28,7 @@ public class PolicyServiceTests : BaseServiceTest
         _policyService = new PolicyService(
             _mockPolicyRepo.Object,
             _mockUnitOfWork.Object,
+            _mockLogger.Object,
             _mockPolicyTypeRepo.Object,
             _mockCreateValidator.Object,
             _mockUpdateValidator.Object,
@@ -133,6 +134,7 @@ public class PolicyServiceTests : BaseServiceTest
         var result = await _policyService.CreateAsync(createDto);
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -145,6 +147,7 @@ public class PolicyServiceTests : BaseServiceTest
         var result = await _policyService.CreateAsync(createDto);
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
         Verify_Repo_AddAsync<IPolicyRepository, Policy>(_mockPolicyRepo);
+        VerifyLogErrorOnce();
     }
     #endregion
 
@@ -312,6 +315,7 @@ public class PolicyServiceTests : BaseServiceTest
         Verify_Repo_Never_AnyAsync<IPolicyRepository, Policy>(_mockPolicyRepo);
         Verify_Repo_Never_UpdateAsync<IPolicyRepository, Policy>(_mockPolicyRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -342,6 +346,7 @@ public class PolicyServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IPolicyRepository, Policy>(_mockPolicyRepo);
         Verify_Repo_Never_UpdateAsync<IPolicyRepository, Policy>(_mockPolicyRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -372,6 +377,7 @@ public class PolicyServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IPolicyRepository, Policy>(_mockPolicyRepo);
         Verify_Repo_Never_UpdateAsync<IPolicyRepository, Policy>(_mockPolicyRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -407,6 +413,7 @@ public class PolicyServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IPolicyRepository, Policy>(_mockPolicyRepo);
         Verify_Repo_UpdateAsync<IPolicyRepository, Policy>(_mockPolicyRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -441,6 +448,7 @@ public class PolicyServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IPolicyRepository, Policy>(_mockPolicyRepo);
         Verify_Repo_UpdateAsync<IPolicyRepository, Policy>(_mockPolicyRepo);
         Verify_Saved(1);
+        VerifyLogErrorOnce();
     }
     #endregion
 

@@ -13,11 +13,13 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
     {
         private readonly IRoleRepository _roleRepository;
         IUnitOfWork _dbu;
+        ILogger _logger;
 
-        public RoleService(IRoleRepository roleRepository, IUnitOfWork dbu)
+        public RoleService(IRoleRepository roleRepository, IUnitOfWork dbu, ILogger logger)
         {
             _roleRepository = roleRepository;
             _dbu = dbu;
+            _logger = logger;
         }
 
         public async Task<ApiResponse<bool>> AddAsync(RoleDTO newRole)
@@ -39,8 +41,9 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
                 return ResponseFactory.Success<bool>(true, MessageResponse.AdminManagement.Role.ADD_SUCCESS);
 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError("RoleService.AddAsync: {ErrorMessage}", ex.Message);
                 return ResponseFactory.ServerError<bool>();
             }
         }

@@ -32,14 +32,16 @@ public class RoomAttributeFacade : IRoomAttributeFacade
     public IRoomViewService RoomViewService { get; }
     public IRoomQualityService RoomQualityService { get; }
     private readonly IValidator<GetRoomAttributeRequest> _validator;
+    private readonly ILogger _logger;
 
-    public RoomAttributeFacade(IUnitTypeService unitTypeService, IBedTypeService bedTypeService, IRoomViewService roomViewService, IRoomQualityService roomQualityService, IValidator<GetRoomAttributeRequest> validator)
+    public RoomAttributeFacade(IUnitTypeService unitTypeService, IBedTypeService bedTypeService, IRoomViewService roomViewService, IRoomQualityService roomQualityService, IValidator<GetRoomAttributeRequest> validator, ILogger logger)
     {
         UnitTypeService = unitTypeService;
         BedTypeService = bedTypeService;
         RoomViewService = roomViewService;
         RoomQualityService = roomQualityService;
         _validator = validator;
+        _logger = logger;
     }
 
     public async Task<ApiResponse<PagedManageResult<RoomAttributeDTO>>> GetPagedByTypeAsync(
@@ -85,8 +87,9 @@ public class RoomAttributeFacade : IRoomAttributeFacade
                        MessageResponse.Common.BAD_REQUEST);
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError("RoomAttributeFacade.GetPagedByTypeAsync: {ErrorMessage}", ex.Message);
             return ResponseFactory.ServerError<PagedManageResult<RoomAttributeDTO>>();
         }
     }
@@ -142,8 +145,9 @@ public class RoomAttributeFacade : IRoomAttributeFacade
                     var qualityResponse = await RoomQualityService.GetRoomQualityNameByIdAsync(request.QualityId.Value);
                     resultDTO.QualityName = qualityResponse?.Content;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    _logger.LogError("RoomAttributeFacade.GetRoomAttributeNamesAsync: {ErrorMessage}", ex.Message);
                     Console.WriteLine(MessageResponse.Common.ERROR_IN_SERVER);
                 }
             }
@@ -156,8 +160,9 @@ public class RoomAttributeFacade : IRoomAttributeFacade
                     var viewResponse = await RoomViewService.GetRoomViewNameByIdAsync(request.RoomViewId.Value);
                     resultDTO.RoomViewName = viewResponse?.Content;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    _logger.LogError("RoomAttributeFacade.GetRoomAttributeNamesAsync: {ErrorMessage}", ex.Message);
                     Console.WriteLine(MessageResponse.Common.ERROR_IN_SERVER);
                 }
             }
@@ -176,15 +181,17 @@ public class RoomAttributeFacade : IRoomAttributeFacade
                             Quantity = bed.Quantity
                         });
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
+                        _logger.LogError("RoomAttributeFacade.GetRoomAttributeNamesAsync: {ErrorMessage}", ex.Message);
                         Console.WriteLine(MessageResponse.Common.ERROR_IN_SERVER);
                     }
                 }
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError("RoomAttributeFacade.GetRoomAttributeNamesAsync: {ErrorMessage}", ex.Message);
             Console.WriteLine(MessageResponse.Common.ERROR_IN_SERVER);
         }
 

@@ -9,7 +9,7 @@ using Moq;
 
 namespace HotelBooking.test.UnitTests.Services.AdminManagement;
 
-public class AmenityServiceTests : BaseServiceTest
+public class AmenityServiceTests : BaseServiceTest<AmenityService>
 {
     private readonly Mock<IAmenityTypeRepository> _mockAmenityTypeRepo;
     private readonly Mock<IAmenityRepository> _mockAmenityRepo;
@@ -27,6 +27,7 @@ public class AmenityServiceTests : BaseServiceTest
             _mockAmenityRepo.Object,
             _mockAmenityTypeRepo.Object,
             _mockUnitOfWork.Object,
+            _mockLogger.Object,
             _mockCreateValidator.Object,
             _mockUpdateValidator.Object
         );
@@ -160,6 +161,7 @@ public class AmenityServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
         Verify_Repo_Never_AddAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -194,6 +196,7 @@ public class AmenityServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
         Verify_Repo_AddAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -226,6 +229,7 @@ public class AmenityServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
         Verify_Repo_AddAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
         Verify_Saved(1);
+        VerifyLogErrorOnce();
     }
     #endregion
 
@@ -428,6 +432,7 @@ public class AmenityServiceTests : BaseServiceTest
 
         Verify_Repo_Never_UpdateAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -455,6 +460,7 @@ public class AmenityServiceTests : BaseServiceTest
         Verify_Repo_Never_AnyAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
         Verify_Repo_Never_UpdateAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -490,6 +496,7 @@ public class AmenityServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
         Verify_Repo_Never_UpdateAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -524,6 +531,7 @@ public class AmenityServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
         Verify_Repo_UpdateAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -559,6 +567,7 @@ public class AmenityServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
         Verify_Repo_UpdateAsync<IAmenityRepository, Amenity>(_mockAmenityRepo);
         Verify_Saved(1);
+        VerifyLogErrorOnce();
     }
     #endregion
 
@@ -785,6 +794,8 @@ public class AmenityServiceTests : BaseServiceTest
         pagingRequest.PageIndex.Value,
         pagingRequest.PageSize.Value,
         It.IsAny<Func<IQueryable<Amenity>, IOrderedQueryable<Amenity>>>()), Times.Never());
+
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -812,6 +823,8 @@ public class AmenityServiceTests : BaseServiceTest
             pagingRequest.PageIndex.Value,
             pagingRequest.PageSize.Value,
             It.IsAny<Func<IQueryable<Amenity>, IOrderedQueryable<Amenity>>>()), Times.Never());
+
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -850,6 +863,8 @@ public class AmenityServiceTests : BaseServiceTest
             pagingRequest.PageIndex.Value,
             pagingRequest.PageSize.Value,
             It.IsAny<Func<IQueryable<Amenity>, IOrderedQueryable<Amenity>>>()), Times.Once());
+
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -883,6 +898,8 @@ public class AmenityServiceTests : BaseServiceTest
         _mockAmenityTypeRepo.Verify(x => x.WhereAsync(It.IsAny<Expression<Func<AmenityType, bool>>>()
             ), Times.Once());
         _mockAmenityRepo.Verify(x => x.GetPagedAsync(It.IsAny<Expression<Func<Amenity, bool>>>(), pagingRequest.PageIndex.Value, pagingRequest.PageSize.Value, It.IsAny<Func<IQueryable<Amenity>, IOrderedQueryable<Amenity>>>()), Times.Once());
+
+        VerifyLogErrorOnce();
     }
 
     #endregion

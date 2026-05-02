@@ -8,7 +8,7 @@ using Moq;
 
 namespace HotelBooking.test.UnitTests.Services.AdminManagement.RoomAttributes;
 
-public class RoomQualityServiceTests : BaseServiceTest
+public class RoomQualityServiceTests : BaseServiceTest<RoomQualityService>
 {
     private readonly Mock<IRoomQualityRepository> _mockRoomQualityRepo;
     private readonly Mock<IRoomQualityGroupRepository> _mockRoomQualityGroupRepo;
@@ -26,6 +26,7 @@ public class RoomQualityServiceTests : BaseServiceTest
         _roomQualityService = new RoomQualityService(
             _mockRoomQualityRepo.Object,
             _mockUnitOfWork.Object,
+            _mockLogger.Object,
             _mockRoomQualityGroupRepo.Object,
             _mockCreateValidator.Object,
             _mockUpdateValidator.Object
@@ -116,6 +117,7 @@ public class RoomQualityServiceTests : BaseServiceTest
         var result = await _roomQualityService.CreateAsync(createDto);
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
         Verify_Repo_Never_AddAsync<IRoomQualityRepository, RoomQuality>(_mockRoomQualityRepo);
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -128,6 +130,7 @@ public class RoomQualityServiceTests : BaseServiceTest
         var result = await _roomQualityService.CreateAsync(createDto);
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -140,6 +143,7 @@ public class RoomQualityServiceTests : BaseServiceTest
         var result = await _roomQualityService.CreateAsync(createDto);
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
         Verify_Repo_AddAsync<IRoomQualityRepository, RoomQuality>(_mockRoomQualityRepo);
+        VerifyLogErrorOnce();
     }
     #endregion
     #region UpdateAsync
@@ -296,6 +300,7 @@ public class RoomQualityServiceTests : BaseServiceTest
         Verify_Repo_Never_AnyAsync<IRoomQualityRepository, RoomQuality>(_mockRoomQualityRepo);
         Verify_Repo_Never_UpdateAsync<IRoomQualityRepository, RoomQuality>(_mockRoomQualityRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -325,6 +330,7 @@ public class RoomQualityServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IRoomQualityRepository, RoomQuality>(_mockRoomQualityRepo);
         Verify_Repo_Never_UpdateAsync<IRoomQualityRepository, RoomQuality>(_mockRoomQualityRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -354,6 +360,7 @@ public class RoomQualityServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IRoomQualityRepository, RoomQuality>(_mockRoomQualityRepo);
         Verify_Repo_Never_UpdateAsync<IRoomQualityRepository, RoomQuality>(_mockRoomQualityRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -384,6 +391,7 @@ public class RoomQualityServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IRoomQualityRepository, RoomQuality>(_mockRoomQualityRepo);
         Verify_Repo_UpdateAsync<IRoomQualityRepository, RoomQuality>(_mockRoomQualityRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -414,6 +422,7 @@ public class RoomQualityServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IRoomQualityRepository, RoomQuality>(_mockRoomQualityRepo);
         Verify_Repo_UpdateAsync<IRoomQualityRepository, RoomQuality>(_mockRoomQualityRepo);
         Verify_Saved(1);
+        VerifyLogErrorOnce();
     }
     #endregion
     

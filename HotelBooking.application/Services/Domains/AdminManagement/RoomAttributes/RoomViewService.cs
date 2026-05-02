@@ -14,8 +14,9 @@ public class RoomViewService : BaseManage<RoomView, IRoomViewRepository, RoomVie
 {
     private readonly IValidator<PagingRequest> _pagingValidator;
 
-    public RoomViewService(IRoomViewRepository repo, IUnitOfWork dbu, IValidator<RoomViewCreateDTO> createVal,
-            IValidator<RoomViewUpdateDTO> updateVal, IValidator<PagingRequest> pagingValidator) : base(repo, dbu, createVal, updateVal)
+    public RoomViewService(IRoomViewRepository repo, IUnitOfWork dbu, ILogger logger,
+           IValidator<RoomViewCreateDTO> createVal,
+            IValidator<RoomViewUpdateDTO> updateVal, IValidator<PagingRequest> pagingValidator) : base(repo, dbu, logger, createVal, updateVal)
     {
         _pagingValidator = pagingValidator;
     }
@@ -80,8 +81,9 @@ public class RoomViewService : BaseManage<RoomView, IRoomViewRepository, RoomVie
             var result = rvList.Select(rv => MapToDto(rv)).ToList();
             return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError("RoomViewService.GetAllAsync: {ErrorMessage}", ex.Message);
             return ResponseFactory.ServerError<List<RoomViewDTO>>();
         }
     }
@@ -93,8 +95,9 @@ public class RoomViewService : BaseManage<RoomView, IRoomViewRepository, RoomVie
             var exists = await _repo.AnyAsync(x => x.Id == id && x.IsDeleted == false);
             return ResponseFactory.Success(exists, MessageResponse.Common.CHECK_EXISTED_SUCCESSFULLY);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError("RoomViewService.RoomViewExistsAsync: {ErrorMessage}", ex.Message);
             return ResponseFactory.ServerError<bool>();
         }
     }
@@ -112,8 +115,9 @@ public class RoomViewService : BaseManage<RoomView, IRoomViewRepository, RoomVie
 
             return ResponseFactory.Success(roomView.Name, MessageResponse.Common.GET_SUCCESSFULLY);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError("RoomViewService.GetRoomViewNameByIdAsync: {ErrorMessage}", ex.Message);
             return ResponseFactory.ServerError<string>();
         }
     }
@@ -162,8 +166,9 @@ public class RoomViewService : BaseManage<RoomView, IRoomViewRepository, RoomVie
 
             return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError("RoomViewService.GetPagedListAsync: {ErrorMessage}", ex.Message);
             // Log the exception if necessary
             return ResponseFactory.ServerError<PagedManageResult<RoomViewDTO>>();
         }

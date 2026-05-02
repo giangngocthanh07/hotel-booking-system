@@ -17,12 +17,15 @@ namespace HotelBooking.application.Services.Domains.UserManagement.Login
         private readonly IUserRepository _userRepository;
         private readonly IJwtAuthService _jwtAuthService;
         private readonly IValidator<LoginUserDTO> _loginValidator;
+        private readonly ILogger _logger;
 
-        public LoginService(IUserRepository userRepository, IJwtAuthService jwtAuthService, IValidator<LoginUserDTO> loginValidator)
+
+        public LoginService(IUserRepository userRepository, IJwtAuthService jwtAuthService, IValidator<LoginUserDTO> loginValidator, ILogger logger)
         {
             _userRepository = userRepository;
             _jwtAuthService = jwtAuthService;
             _loginValidator = loginValidator;
+            _logger = logger;
         }
 
         public async Task<ApiResponse<LoginResponseDTO>> LoginUser(LoginUserDTO userLogin)
@@ -57,8 +60,9 @@ namespace HotelBooking.application.Services.Domains.UserManagement.Login
                     Roles = roles,
                 }, MessageResponse.UserManagement.Login.SUCCESS);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError("LoginService.LoginUser: {ErrorMessage}", ex.Message);
                 return ResponseFactory.Failure<LoginResponseDTO>(StatusCodeResponse.Error, MessageResponse.UserManagement.Login.ERROR_IN_SERVER);
             }
         }

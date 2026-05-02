@@ -6,7 +6,7 @@ using Moq;
 
 namespace HotelBooking.Tests.Services.RoomManagement
 {
-    public class RoomNameSuggestionTests : BaseServiceTest
+    public class RoomNameSuggestionTests : BaseServiceTest<RoomNameSuggestionService>
     {
         private readonly Mock<IRoomAttributeFacade> _mockAttributeFacade;
         private readonly Mock<IValidator<RoomNameSuggestionRequest>> _mockValidator;
@@ -16,7 +16,7 @@ namespace HotelBooking.Tests.Services.RoomManagement
         {
             _mockAttributeFacade = new Mock<IRoomAttributeFacade>();
             _mockValidator = new Mock<IValidator<RoomNameSuggestionRequest>>();
-            _service = new RoomNameSuggestionService(_mockAttributeFacade.Object, _mockValidator.Object);
+            _service = new RoomNameSuggestionService(_mockAttributeFacade.Object, _mockValidator.Object, _mockLogger.Object);
         }
 
         [Fact]

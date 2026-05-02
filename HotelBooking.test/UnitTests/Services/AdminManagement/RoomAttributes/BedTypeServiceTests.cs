@@ -8,7 +8,7 @@ using Moq;
 
 namespace HotelBooking.test.UnitTests.Services.AdminManagement.RoomAttributes;
 
-public class BedTypeServiceTests : BaseServiceTest
+public class BedTypeServiceTests : BaseServiceTest<BedTypeService>
 {
     private readonly Mock<IBedTypeRepository> _mockBedTypeRepo;
     private readonly Mock<IValidator<BedTypeCreateDTO>> _mockCreateValidator;
@@ -26,6 +26,7 @@ public class BedTypeServiceTests : BaseServiceTest
         _bedTypeService = new BedTypeService(
             _mockBedTypeRepo.Object,
             _mockUnitOfWork.Object,
+            _mockLogger.Object,
             _mockCreateValidator.Object,
             _mockUpdateValidator.Object,
             _mockPagingValidator.Object
@@ -158,6 +159,7 @@ public class BedTypeServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
         Verify_Repo_Never_AddAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -191,6 +193,7 @@ public class BedTypeServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
         Verify_Repo_AddAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -223,6 +226,7 @@ public class BedTypeServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
         Verify_Repo_AddAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
         Verify_Saved(1);
+        VerifyLogErrorOnce();
     }
 
     #endregion
@@ -425,6 +429,7 @@ public class BedTypeServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
         Verify_Repo_Never_UpdateAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
     [Fact]
     public async Task UpdateAsync_SystemThrowException_AtUpdateRepositoryAsync_ReturnsServerError()
@@ -460,6 +465,7 @@ public class BedTypeServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
         Verify_Repo_UpdateAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -492,6 +498,7 @@ public class BedTypeServiceTests : BaseServiceTest
         Verify_Repo_Never_AnyAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
         Verify_Repo_Never_UpdateAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -530,6 +537,7 @@ public class BedTypeServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
         Verify_Repo_Never_UpdateAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -571,6 +579,7 @@ public class BedTypeServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
         Verify_Repo_UpdateAsync<IBedTypeRepository, BedType>(_mockBedTypeRepo);
         Verify_Saved(1);
+        VerifyLogErrorOnce();
 
     }
     #endregion
@@ -688,6 +697,7 @@ public class BedTypeServiceTests : BaseServiceTest
         result.Should().NotBeNull();
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
         result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+        VerifyLogErrorOnce();
     }
     #endregion
 

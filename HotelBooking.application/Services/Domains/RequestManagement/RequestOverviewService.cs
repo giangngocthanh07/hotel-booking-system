@@ -17,11 +17,14 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
     {
         private readonly IUpgradeRequestRepository _upgradeRequestRepo;
         private readonly IHotelApprovalRequestRepository _hotelApprovalRepo;
+        private readonly ILogger _logger;
 
-        public RequestOverviewService(IUpgradeRequestRepository upgradeRequestRepo, IHotelApprovalRequestRepository hotelApprovalRepo)
+
+        public RequestOverviewService(IUpgradeRequestRepository upgradeRequestRepo, IHotelApprovalRequestRepository hotelApprovalRepo, ILogger logger)
         {
             _upgradeRequestRepo = upgradeRequestRepo;
             _hotelApprovalRepo = hotelApprovalRepo;
+            _logger = logger;
         }
 
         public async Task<ApiResponse<RequestStatsDTO>> GetStatsAsync()
@@ -78,8 +81,9 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
 
                 return ResponseFactory.Success(stats, MessageResponse.Common.GET_SUCCESSFULLY);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError("RequestOverviewService.GetStatsAsync: {ErrorMessage}", ex.Message);
                 return ResponseFactory.ServerError<RequestStatsDTO>();
             }
         }
@@ -124,8 +128,9 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
 
                 return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError("RequestOverviewService.GetRecentRequestsAsync: {ErrorMessage}", ex.Message);
                 return ResponseFactory.ServerError<List<RecentRequestDTO>>();
             }
         }

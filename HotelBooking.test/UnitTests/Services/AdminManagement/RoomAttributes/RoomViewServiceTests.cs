@@ -8,7 +8,7 @@ using Moq;
 
 namespace HotelBooking.test.UnitTests.Services.AdminManagement.RoomAttributes;
 
-public class RoomViewServiceTests : BaseServiceTest
+public class RoomViewServiceTests : BaseServiceTest<RoomViewService>
 {
     private readonly Mock<IRoomViewRepository> _mockRoomViewRepo;
     private readonly Mock<IValidator<RoomViewCreateDTO>> _mockCreateValidator;
@@ -26,6 +26,7 @@ public class RoomViewServiceTests : BaseServiceTest
         _roomViewService = new RoomViewService(
             _mockRoomViewRepo.Object,
             _mockUnitOfWork.Object,
+            _mockLogger.Object,
             _mockCreateValidator.Object,
             _mockUpdateValidator.Object,
             _mockPagingValidator.Object
@@ -127,6 +128,7 @@ public class RoomViewServiceTests : BaseServiceTest
         var result = await _roomViewService.CreateAsync(createDto);
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -139,6 +141,7 @@ public class RoomViewServiceTests : BaseServiceTest
         var result = await _roomViewService.CreateAsync(createDto);
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
         Verify_Repo_AddAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
+        VerifyLogErrorOnce();
     }
     #endregion
     
@@ -239,6 +242,7 @@ public class RoomViewServiceTests : BaseServiceTest
         var result = await _roomViewService.UpdateAsync(id, new RoomViewUpdateDTO());
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
         Verify_Repo_Never_UpdateAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -266,6 +270,7 @@ public class RoomViewServiceTests : BaseServiceTest
         Verify_Repo_Never_AnyAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
         Verify_Repo_Never_UpdateAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -296,6 +301,7 @@ public class RoomViewServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
         Verify_Repo_Never_UpdateAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -326,6 +332,7 @@ public class RoomViewServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
         Verify_Repo_Never_UpdateAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -357,6 +364,7 @@ public class RoomViewServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
         Verify_Repo_UpdateAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -384,6 +392,7 @@ public class RoomViewServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
         Verify_Repo_UpdateAsync<IRoomViewRepository, RoomView>(_mockRoomViewRepo);
         Verify_Saved(1);
+        VerifyLogErrorOnce();
     }
     #endregion
 
@@ -500,6 +509,7 @@ public class RoomViewServiceTests : BaseServiceTest
         result.Should().NotBeNull();
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
         result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
+        VerifyLogErrorOnce();
     }
     #endregion
 

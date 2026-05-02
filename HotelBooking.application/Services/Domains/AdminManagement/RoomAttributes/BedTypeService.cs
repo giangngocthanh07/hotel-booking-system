@@ -15,9 +15,10 @@ public class BedTypeService : BaseManage<BedType, IBedTypeRepository, BedTypeDTO
 {
     private readonly IValidator<PagingRequest> _pagingValidator;
 
-    public BedTypeService(IBedTypeRepository repo, IUnitOfWork dbu, IValidator<BedTypeCreateDTO> createVal,
+    public BedTypeService(IBedTypeRepository repo, IUnitOfWork dbu, ILogger logger,
+           IValidator<BedTypeCreateDTO> createVal,
             IValidator<BedTypeUpdateDTO> updateVal,
-            IValidator<PagingRequest> pagingValidator) : base(repo, dbu, createVal, updateVal)
+            IValidator<PagingRequest> pagingValidator) : base(repo, dbu, logger, createVal, updateVal)
     {
         _pagingValidator = pagingValidator;
     }
@@ -123,8 +124,9 @@ public class BedTypeService : BaseManage<BedType, IBedTypeRepository, BedTypeDTO
 
             return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError("BedTypeService.GetAllAsync: {ErrorMessage}", ex.Message);
             return ResponseFactory.ServerError<List<BedTypeDTO>>();
         }
     }
@@ -191,9 +193,10 @@ public class BedTypeService : BaseManage<BedType, IBedTypeRepository, BedTypeDTO
 
             return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             // Log error if necessary
+            _logger.LogError("BedTypeService.GetPagedListAsync: {ErrorMessage}", ex.Message);
             return ResponseFactory.ServerError<PagedManageResult<BedTypeDTO>>();
         }
     }

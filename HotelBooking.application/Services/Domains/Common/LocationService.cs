@@ -16,14 +16,16 @@ public class LocationService : ILocationService
     private readonly IProvinceRepository _provinceRepository;
     private readonly IWardRepository _wardRepository;
     private readonly IUnitOfWork _dbu;
+    private readonly ILogger _logger;
 
-    public LocationService(ICountryRepository countryRepository, IPropertyTypeRepository propTypeRepository, IProvinceRepository provinceRepository, IWardRepository wardRepository, IUnitOfWork dbu)
+    public LocationService(ICountryRepository countryRepository, IPropertyTypeRepository propTypeRepository, IProvinceRepository provinceRepository, IWardRepository wardRepository, IUnitOfWork dbu, ILogger logger)
     {
         _countryRepository = countryRepository;
         _propTypeRepository = propTypeRepository;
         _provinceRepository = provinceRepository;
         _wardRepository = wardRepository;
         _dbu = dbu;
+        _logger = logger;
     }
 
     public async Task<ApiResponse<List<CountryDTO>>> GetCountriesAsync()
@@ -39,8 +41,9 @@ public class LocationService : ILocationService
 
             return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError("LocationService.GetCountriesAsync: {ErrorMessage}", ex.Message);
             return ResponseFactory.ServerError<List<CountryDTO>>();
         }
     }
@@ -58,8 +61,9 @@ public class LocationService : ILocationService
 
             return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError("LocationService.GetProvincesAsync: {ErrorMessage}", ex.Message);
             return ResponseFactory.ServerError<List<ProvinceDTO>>();
         }
     }
@@ -77,8 +81,9 @@ public class LocationService : ILocationService
 
             return ResponseFactory.Success(result, MessageResponse.Common.GET_SUCCESSFULLY);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError("LocationService.GetWardsByProvinceAsync: {ErrorMessage}", ex.Message);
             return ResponseFactory.ServerError<List<WardDTO>>();
         }
     }

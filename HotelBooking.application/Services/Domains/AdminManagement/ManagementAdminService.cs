@@ -23,6 +23,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
         private readonly IRoomQualityGroupRepository _roomQualityRepo;
 
         private readonly IValidator<ManageMenuRequest> _validator;
+        private readonly ILogger _logger;
 
         // Validation optimization: static HashSet for O(1) lookup
         private static readonly HashSet<ManageModuleEnum> _modulesWithTypeId = new()
@@ -38,13 +39,15 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
             IServiceTypeRepository serviceTypeRepo,
             IPolicyTypeRepository policyTypeRepo,
             IRoomQualityGroupRepository roomQualityRepo,
-            IValidator<ManageMenuRequest> validator)
+            IValidator<ManageMenuRequest> validator,
+            ILogger logger)
         {
             _amenityTypeRepo = amenityTypeRepo;
             _serviceTypeRepo = serviceTypeRepo;
             _policyTypeRepo = policyTypeRepo;
             _roomQualityRepo = roomQualityRepo;
             _validator = validator;
+            _logger = logger;
         }
 
         public async Task<ApiResponse<ManageMenuResult>> GetManageMenuAsync(ManageMenuRequest request)
@@ -73,7 +76,8 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
                             _serviceTypeRepo,
                             x => x.IsDeleted != true,
                             x => x.Id,
-                            x => x.Name
+                            x => x.Name,
+                            _logger
                         );
 
                     case ManageModuleEnum.Policy:
@@ -81,7 +85,8 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
                             _policyTypeRepo,
                             x => x.IsDeleted != true,
                             x => x.Id,
-                            x => x.Name
+                            x => x.Name,
+                            _logger
                         );
 
                     case ManageModuleEnum.Amenity:
@@ -89,7 +94,8 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
                             _amenityTypeRepo,
                             x => x.IsDeleted != true,
                             x => x.Id,
-                            x => x.Name
+                            x => x.Name,
+                            _logger
                         );
 
                     // RoomQuality is special: it acts as its own Type
@@ -98,7 +104,8 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
                             _roomQualityRepo,
                             x => x.IsDeleted != true,
                             x => x.Id,
-                            x => x.Name
+                            x => x.Name,
+                            _logger
                         );
 
                     // Modules without sub-types (Flat Modules)
@@ -111,8 +118,9 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
                         return ResponseFactory.Failure<ManageMenuResult>(StatusCodeResponse.BadRequest, MessageResponse.Common.BAD_REQUEST);
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError("ManagementAdminService.GetManageMenuAsync: {ErrorMessage}", ex.Message);
                 return ResponseFactory.Failure<ManageMenuResult>(
                     StatusCodeResponse.Error,
                     MessageResponse.Common.ERROR_IN_SERVER

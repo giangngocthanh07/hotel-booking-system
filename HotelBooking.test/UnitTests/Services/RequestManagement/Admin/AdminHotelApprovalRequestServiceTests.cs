@@ -8,73 +8,76 @@ using HotelBooking.application.DTOs.Request.Base;
 using HotelBooking.application.DTOs.Request.HotelApproval;
 using HotelBooking.application.Services.Domains.RequestManagement.Admin;
 using HotelBooking.infrastructure.Models;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace HotelBooking.test.UnitTests.Services.RequestManagement.Admin;
 
-public class AdminHotelApprovalRequestServiceTests : BaseServiceTest
+public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelApprovalRequestService>
 {
     private readonly Mock<IHotelApprovalRequestRepository> _mockApprovalRepo;
     private readonly Mock<IHotelRepository> _mockHotelRepo;
     private readonly Mock<IValidator<PagingRequest>> _mockPagingValidator;
     private readonly IAdminHotelApprovalRequestService _service;
 
+
     private const int ValidRequestId = 99;
-    private const int ValidAdminId   = 1;
-    private const int ValidOwnerId   = 5;
+    private const int ValidAdminId = 1;
+    private const int ValidOwnerId = 5;
 
     private static User BuildOwner() => new User
     {
-        Id          = ValidOwnerId,
-        UserName    = "owner_user",
-        FullName    = "John Owner",
-        Email       = "owner@hotel.com",
+        Id = ValidOwnerId,
+        UserName = "owner_user",
+        FullName = "John Owner",
+        Email = "owner@hotel.com",
         PhoneNumber = "0909123456",
-        Address     = "123 Owner Street"
+        Address = "123 Owner Street"
     };
 
     private static string BuildAdditionalJson() =>
         JsonSerializer.Serialize(new HotelAdditionalInfo
         {
-            StarRating  = 3,
+            StarRating = 3,
             PublicPhone = "0281234567",
             PublicEmail = "info@hotel.com",
-            PropType    = new PropertyTypeDTO { Id = 3, Name = "Hotel" },
-            Country     = new CountryDTO     { Id = 4, Name = "Vietnam" },
-            Province    = new ProvinceDTO    { Id = 1, Name = "Ha Noi" },
-            Ward        = new WardDTO        { Id = 2, Name = "Quan Hoan Kiem" },
-            Latitude    = 21.0,
-            Longitude   = 105.0
+            PropType = new PropertyTypeDTO { Id = 3, Name = "Hotel" },
+            Country = new CountryDTO { Id = 4, Name = "Vietnam" },
+            Province = new ProvinceDTO { Id = 1, Name = "Ha Noi" },
+            Ward = new WardDTO { Id = 2, Name = "Quan Hoan Kiem" },
+            Latitude = 21.0,
+            Longitude = 105.0
         });
 
     private static HotelApprovalRequest BuildPendingRequest(
-        User?   owner      = null,
+        User? owner = null,
         string? additional = null,
-        string? status     = null) => new HotelApprovalRequest
-    {
-        Id                 = ValidRequestId,
-        Name               = "Test Hotel",
-        Address            = "456 Hotel Avenue",
-        TaxCode            = "1234567890",
-        BusinessLicenseUrl = "https://license.com/hotel.pdf",
-        OwnerId            = ValidOwnerId,
-        Status             = status ?? RequestStatusConst.Pending,
-        Additional         = additional ?? BuildAdditionalJson(),
-        CreatedAt          = DateTime.UtcNow,
-        Owner              = owner ?? BuildOwner()
-    };
+        string? status = null) => new HotelApprovalRequest
+        {
+            Id = ValidRequestId,
+            Name = "Test Hotel",
+            Address = "456 Hotel Avenue",
+            TaxCode = "1234567890",
+            BusinessLicenseUrl = "https://license.com/hotel.pdf",
+            OwnerId = ValidOwnerId,
+            Status = status ?? RequestStatusConst.Pending,
+            Additional = additional ?? BuildAdditionalJson(),
+            CreatedAt = DateTime.UtcNow,
+            Owner = owner ?? BuildOwner()
+        };
 
     public AdminHotelApprovalRequestServiceTests()
     {
-        _mockApprovalRepo    = new Mock<IHotelApprovalRequestRepository>();
-        _mockHotelRepo       = new Mock<IHotelRepository>();
+        _mockApprovalRepo = new Mock<IHotelApprovalRequestRepository>();
+        _mockHotelRepo = new Mock<IHotelRepository>();
         _mockPagingValidator = new Mock<IValidator<PagingRequest>>();
 
         _service = new AdminHotelApprovalRequestService(
             _mockApprovalRepo.Object,
             _mockHotelRepo.Object,
             _mockUnitOfWork.Object,
-            _mockPagingValidator.Object);
+            _mockPagingValidator.Object,
+            _mockLogger.Object);
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -121,6 +124,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest
         result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
         result.Content.Should().BeNull();
         _mockApprovalRepo.Verify(r => r.GetDistinctStatusesAsync(), Times.Once);
+        VerifyLogErrorOnce();
     }
 
     #endregion
@@ -134,7 +138,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest
     public async Task GetByRequestId_ValidRequest_ShouldReturnMappedDTO()
     {
         // Arrange
-        var request        = BuildPendingRequest();
+        var request = BuildPendingRequest();
         var additionalInfo = JsonSerializer.Deserialize<HotelAdditionalInfo>(request.Additional!);
 
         _mockApprovalRepo.Setup(r => r.GetByIdWithOwnerAsync(ValidRequestId))
@@ -170,6 +174,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest
         result.Message.Should().Be(MessageResponse.RequestManagement.HotelApproval.HOTEL_INVALID_REQUEST_ID);
         result.Content.Should().BeNull();
         _mockApprovalRepo.Verify(r => r.GetByIdWithOwnerAsync(It.IsAny<int>()), Times.Never);
+
     }
 
     [Fact]
@@ -296,6 +301,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
         result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
         result.Content.Should().BeNull();
+        VerifyLogErrorOnce();
     }
 
     #endregion
@@ -309,9 +315,9 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest
     public async Task GetPagedRequests_ValidRequest_ShouldReturnPagedResult()
     {
         // Arrange
-        var paging   = new PagingRequest { PageIndex = 1, PageSize = 10 };
+        var paging = new PagingRequest { PageIndex = 1, PageSize = 10 };
         var requests = new List<HotelApprovalRequest> { BuildPendingRequest(), BuildPendingRequest() };
-        requests[1].Id   = 100;
+        requests[1].Id = 100;
         requests[1].Name = "Another Hotel";
 
         MockPagingValidationSuccess();
@@ -434,6 +440,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
         result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
         result.Content.Should().BeNull();
+        VerifyLogErrorOnce();
     }
 
     #endregion
@@ -465,7 +472,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest
             req.AdminId == ValidAdminId)), Times.Once);
 
         _mockHotelRepo.Verify(r => r.AddAsync(It.Is<Hotel>(h =>
-            h.Name    == request.Name &&
+            h.Name == request.Name &&
             h.OwnerId == request.OwnerId &&
             h.IsVerified == true)), Times.Once);
 
@@ -601,6 +608,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest
         _mockApprovalRepo.Verify(r => r.GetByIdAsync(ValidRequestId), Times.Once);
         Verify_Repo_Never_UpdateAsync<IHotelApprovalRequestRepository, HotelApprovalRequest>(_mockApprovalRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -623,6 +631,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest
         Verify_Repo_UpdateAsync<IHotelApprovalRequestRepository, HotelApprovalRequest>(_mockApprovalRepo, 1);
         Verify_Repo_AddAsync<IHotelRepository, Hotel>(_mockHotelRepo, 1);
         Verify_Saved(1);
+        VerifyLogErrorOnce();
     }
 
     #endregion
@@ -650,7 +659,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest
         result.Content.Should().BeTrue();
 
         _mockApprovalRepo.Verify(r => r.UpdateAsync(It.Is<HotelApprovalRequest>(req =>
-            req.Status  == RequestStatusConst.Rejected &&
+            req.Status == RequestStatusConst.Rejected &&
             req.AdminId == ValidAdminId)), Times.Once);
 
         // Hotel repo should NOT be touched on reject
@@ -787,6 +796,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest
         _mockApprovalRepo.Verify(r => r.GetByIdAsync(ValidRequestId), Times.Once);
         Verify_Repo_Never_UpdateAsync<IHotelApprovalRequestRepository, HotelApprovalRequest>(_mockApprovalRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -808,6 +818,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest
 
         Verify_Repo_UpdateAsync<IHotelApprovalRequestRepository, HotelApprovalRequest>(_mockApprovalRepo, 1);
         Verify_Saved(1);
+        VerifyLogErrorOnce();
     }
 
     #endregion
@@ -835,5 +846,6 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest
             .ReturnsAsync(new FluentValidation.Results.ValidationResult(failures));
     }
 
+    
     #endregion
 }

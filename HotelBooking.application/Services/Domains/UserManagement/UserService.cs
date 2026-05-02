@@ -22,12 +22,15 @@ namespace HotelBooking.application.Services.Domains.UserManagement
         private readonly IUserRepository _userRepository;
         public IRegisterService Register { get; }
         public ILoginService Login { get; }
+        private readonly ILogger _logger;
 
-        public UserService(IRegisterService register, ILoginService login, IUserRepository userRepository)
+
+        public UserService(IRegisterService register, ILoginService login, IUserRepository userRepository, ILogger logger)
         {
             Register = register;
             Login = login;
             _userRepository = userRepository;
+            _logger = logger;
         }
 
         public async Task<ApiResponse<UserDetailDTO>> GetByIdAsync(int id)
@@ -68,8 +71,9 @@ namespace HotelBooking.application.Services.Domains.UserManagement
                 };
                 return ResponseFactory.Success(userDetailDTO, MessageResponse.Common.GET_SUCCESSFULLY);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError("UserService.GetByIdAsync: {ErrorMessage}", ex.Message);
                 return ResponseFactory.ServerError<UserDetailDTO>();
             }
         }

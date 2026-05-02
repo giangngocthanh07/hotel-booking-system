@@ -43,8 +43,9 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
             var statuses = await _approvalRepo.GetDistinctStatusesAsync();
             return ResponseFactory.Success(statuses, MessageResponse.Common.GET_SUCCESSFULLY);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "[AdminHotelApprovalRequestService - GetAllStatusesAsync] Error getting all statuses: {ErrorMessage}", ex.Message);
             return ResponseFactory.ServerError<List<string>>();
         }
     }
@@ -128,8 +129,9 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
 
             return ResponseFactory.Success(dto, MessageResponse.RequestManagement.HotelApproval.HOTELS_RETRIEVED);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "[AdminHotelApprovalRequestService - GetByRequestIdAsync] Error getting hotel registration request with ID {RequestId}: {ErrorMessage}", requestId, ex.Message);
             return ResponseFactory.ServerError<HotelRegistrationDetailDTO>();
         }
     }
@@ -236,8 +238,9 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
 
             return ResponseFactory.Success(pagedResult, MessageResponse.RequestManagement.HotelApproval.HOTELS_RETRIEVED);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "[AdminHotelApprovalRequestService - GetPagedRequestsAsync] Error getting hotel registration requests: {ErrorMessage}", ex.Message);
             return ResponseFactory.ServerError<PagedResult<HotelRegistrationDetailDTO>>();
         }
     }

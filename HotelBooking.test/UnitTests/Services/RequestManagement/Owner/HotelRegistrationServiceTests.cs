@@ -9,7 +9,7 @@ using Moq;
 
 namespace HotelBooking.test.UnitTests.Services.RequestManagement.Owner;
 
-public class HotelRegistrationServiceTests : BaseServiceTest
+public class HotelRegistrationServiceTests : BaseServiceTest<HotelRegistrationService>
 {
     private readonly Mock<IHotelApprovalRequestRepository> _mockApprovalRepo;
     private readonly Mock<IHotelRepository> _mockHotelRepo;
@@ -22,7 +22,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest
         _mockApprovalRepo = new Mock<IHotelApprovalRequestRepository>();
         _mockHotelRepo = new Mock<IHotelRepository>();
         _mockValidator = new Mock<IValidator<HotelRegistrationDTO>>();
-        _service = new HotelRegistrationService(_mockApprovalRepo.Object, _mockHotelRepo.Object, _mockValidator.Object, _mockUnitOfWork.Object);
+        _service = new HotelRegistrationService(_mockApprovalRepo.Object, _mockHotelRepo.Object, _mockValidator.Object, _mockUnitOfWork.Object, _mockLogger.Object);
     }
 
     [Fact]
@@ -154,6 +154,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IHotelRepository, Hotel>(_mockHotelRepo);
         Verify_Repo_Never_AddAsync<IHotelApprovalRequestRepository, HotelApprovalRequest>(_mockApprovalRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -185,6 +186,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IHotelRepository, Hotel>(_mockHotelRepo);
         Verify_Repo_AddAsync<IHotelApprovalRequestRepository, HotelApprovalRequest>(_mockApprovalRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -215,6 +217,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IHotelRepository, Hotel>(_mockHotelRepo);
         Verify_Repo_AddAsync<IHotelApprovalRequestRepository, HotelApprovalRequest>(_mockApprovalRepo);
         Verify_Saved(1);
+        VerifyLogErrorOnce();
     }
 
 

@@ -15,8 +15,10 @@ namespace HotelBooking.application.Services.Domains.Media
 public class PhotoService : IPhotoService
 {
     private readonly Cloudinary _cloudinary;
+    private readonly ILogger _logger;
 
-    public PhotoService(IConfiguration Configuration)
+
+    public PhotoService(IConfiguration Configuration, ILogger logger)
     {
         var cloudName = Configuration["Cloudinary:CloudName"];
         var apiKey = Configuration["Cloudinary:ApiKey"];
@@ -26,6 +28,8 @@ public class PhotoService : IPhotoService
         var acc = new Account(cloudName, apiKey, apiSecret);
         _cloudinary = new Cloudinary(acc);
         _cloudinary.Api.Secure = true;
+
+        _logger = logger;
     }
 
     public async Task<string> UploadPhotoAsync(UploadFileDTO file, int userId)

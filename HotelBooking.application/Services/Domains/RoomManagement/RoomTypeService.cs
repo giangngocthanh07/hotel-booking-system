@@ -18,9 +18,10 @@ namespace HotelBooking.application.Services.Domains.RoomManagement
         private readonly IRoomTypeBedConfigRepository _bedConfigRepo;
         private readonly IRoomAttributeFacade _attributeFacade;
         private readonly IUnitOfWork _dbu;
+        private readonly ILogger _logger;
         private readonly IValidator<RoomTypeCreateDTO> _validator;
 
-        public RoomTypeService(IHotelRepository hotelRepo, IRoomTypeRepository roomTypeRepo, IRoomTypeBedConfigRepository bedConfigRepo, IValidator<RoomTypeCreateDTO> validator, IRoomAttributeFacade attributeFacade, IUnitOfWork dbu)
+        public RoomTypeService(IHotelRepository hotelRepo, IRoomTypeRepository roomTypeRepo, IRoomTypeBedConfigRepository bedConfigRepo, IValidator<RoomTypeCreateDTO> validator, IRoomAttributeFacade attributeFacade, IUnitOfWork dbu, ILogger logger)
         {
             _hotelRepo = hotelRepo;
             _roomTypeRepo = roomTypeRepo;
@@ -28,6 +29,7 @@ namespace HotelBooking.application.Services.Domains.RoomManagement
             _validator = validator;
             _attributeFacade = attributeFacade;
             _dbu = dbu;
+            _logger = logger;
         }
         public async Task<ApiResponse<RoomTypeResponseDTO>> CreateRoomTypeAsync(RoomTypeCreateDTO request)
         {
@@ -139,8 +141,9 @@ namespace HotelBooking.application.Services.Domains.RoomManagement
 
                 return ResponseFactory.Success(dto, MessageResponse.Common.CREATE_SUCCESSFULLY);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError("RoomTypeService.CreateRoomTypeAsync: {ErrorMessage}", ex.Message);
                 await _dbu.RollBackTransactionAsync();
                 return ResponseFactory.Failure<RoomTypeResponseDTO>(StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
             }

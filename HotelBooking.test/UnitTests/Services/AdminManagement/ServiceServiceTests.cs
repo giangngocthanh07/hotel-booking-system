@@ -8,7 +8,7 @@ using Moq;
 
 namespace HotelBooking.test.UnitTests.Services.AdminManagement;
 
-public class ServiceServiceTests : BaseServiceTest
+public class ServiceServiceTests : BaseServiceTest<ServiceService>
 {
     private readonly Mock<IServiceTypeRepository> _mockServiceTypeRepo;
     private readonly Mock<IServiceRepository> _mockServiceRepo;
@@ -28,6 +28,7 @@ public class ServiceServiceTests : BaseServiceTest
         _serviceService = new ServiceService(
             _mockServiceRepo.Object,
             _mockUnitOfWork.Object,
+            _mockLogger.Object,
             _mockServiceTypeRepo.Object,
             _mockCreateValidator.Object,
             _mockUpdateValidator.Object,
@@ -119,6 +120,7 @@ public class ServiceServiceTests : BaseServiceTest
         var result = await _serviceService.CreateAsync(createDto);
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
         Verify_Repo_Never_AddAsync<IServiceRepository, Service>(_mockServiceRepo);
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -131,6 +133,7 @@ public class ServiceServiceTests : BaseServiceTest
         var result = await _serviceService.CreateAsync(createDto);
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -143,6 +146,7 @@ public class ServiceServiceTests : BaseServiceTest
         var result = await _serviceService.CreateAsync(createDto);
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
         Verify_Repo_AddAsync<IServiceRepository, Service>(_mockServiceRepo);
+        VerifyLogErrorOnce();
     }
     #endregion
 
@@ -263,6 +267,7 @@ public class ServiceServiceTests : BaseServiceTest
         Verify_Repo_Never_AnyAsync<IServiceRepository, Service>(_mockServiceRepo);
         Verify_Repo_Never_UpdateAsync<IServiceRepository, Service>(_mockServiceRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -293,6 +298,7 @@ public class ServiceServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IServiceRepository, Service>(_mockServiceRepo);
         Verify_Repo_Never_UpdateAsync<IServiceRepository, Service>(_mockServiceRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -323,6 +329,7 @@ public class ServiceServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IServiceRepository, Service>(_mockServiceRepo);
         Verify_Repo_Never_UpdateAsync<IServiceRepository, Service>(_mockServiceRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -354,6 +361,7 @@ public class ServiceServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IServiceRepository, Service>(_mockServiceRepo);
         Verify_Repo_UpdateAsync<IServiceRepository, Service>(_mockServiceRepo);
         Verify_Never_Saved();
+        VerifyLogErrorOnce();
     }
 
     [Fact]
@@ -385,6 +393,7 @@ public class ServiceServiceTests : BaseServiceTest
         Verify_Repo_AnyAsync<IServiceRepository, Service>(_mockServiceRepo);
         Verify_Repo_UpdateAsync<IServiceRepository, Service>(_mockServiceRepo);
         Verify_Saved(1);
+        VerifyLogErrorOnce();
     }
 
     #endregion

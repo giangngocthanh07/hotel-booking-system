@@ -10,7 +10,7 @@ using Moq;
 
 namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
 {
-    public class CustomerUpgradeRequestServiceTests : BaseServiceTest
+    public class CustomerUpgradeRequestServiceTests : BaseServiceTest<CustomerUpgradeRequestService>
     {
         private readonly Mock<IUpgradeRequestRepository> _mockUpgradeRequestRepo;
         private readonly Mock<IUserRepository> _mockUserRepo;
@@ -24,7 +24,7 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
             _mockUserRepo = new Mock<IUserRepository>();
             _mockUserRoleRepo = new Mock<IUserRoleRepository>();
             _mockCreateValidator = new Mock<IValidator<CreateUpgradeRequestDTO>>();
-            _service = new CustomerUpgradeRequestService(_mockUpgradeRequestRepo.Object, _mockUserRepo.Object, _mockUserRoleRepo.Object, _mockUnitOfWork.Object, _mockCreateValidator.Object);
+            _service = new CustomerUpgradeRequestService(_mockUpgradeRequestRepo.Object, _mockUserRepo.Object, _mockUserRoleRepo.Object, _mockUnitOfWork.Object, _mockLogger.Object, _mockCreateValidator.Object);
         }
 
         #region CREATE REQUEST TESTS
@@ -342,6 +342,7 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
 
             Verify_Repo_Never_AddAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo);
             Verify_Never_Saved();
+            VerifyLogErrorOnce();
         }
 
         [Fact]
@@ -375,6 +376,7 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
 
             Verify_Repo_Never_AddAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo);
             Verify_Never_Saved();
+            VerifyLogErrorOnce();
         }
 
         [Fact]
@@ -410,6 +412,7 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
 
             Verify_Repo_Never_AddAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo);
             Verify_Never_Saved();
+            VerifyLogErrorOnce();
         }
 
         [Fact]
@@ -444,6 +447,7 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
 
             Verify_Repo_Never_AddAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo);
             Verify_Never_Saved();
+            VerifyLogErrorOnce();
         }
 
         [Fact]
@@ -488,6 +492,7 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
                 req.Status == RequestStatusConst.Pending
             )), Times.Once);
             Verify_Never_Saved();
+            VerifyLogErrorOnce();
         }
 
         [Fact]
@@ -533,6 +538,7 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
                 req.Status == RequestStatusConst.Pending
             )), Times.Once);
             Verify_Saved(1);
+            VerifyLogErrorOnce();
         }
 
         #endregion
@@ -699,6 +705,7 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
 
             Verify_Repo_Never_UpdateAsync<IUpgradeRequestRepository, UpgradeRequest>(_mockUpgradeRequestRepo);
             Verify_Never_Saved();
+            VerifyLogErrorOnce();
         }
 
         [Fact]
@@ -734,6 +741,7 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
                 req.Status == RequestStatusConst.Cancelled
             )), Times.Once);
             Verify_Never_Saved();
+            VerifyLogErrorOnce();
         }
 
         [Fact]
@@ -768,6 +776,7 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
                 req.Status == RequestStatusConst.Cancelled
             )), Times.Once);
             Verify_Saved(1);
+            VerifyLogErrorOnce();
         }
 
         #endregion
@@ -948,6 +957,7 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
             Verify_Repo_Never_AnyAsync<IUserRoleRepository, UserRole>(_mockUserRoleRepo);
 
             _mockUpgradeRequestRepo.Verify(r => r.GetByUserIdAsync(It.IsAny<int>()), Times.Never);
+            VerifyLogErrorOnce();
         }
 
         [Fact]
@@ -977,6 +987,7 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
 
             // Make sure that upgradeRequest's query no interact with DB
             _mockUpgradeRequestRepo.Verify(r => r.GetByUserIdAsync(It.IsAny<int>()), Times.Never);
+            VerifyLogErrorOnce();
         }
 
         [Fact]
@@ -1007,6 +1018,7 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
 
             // Make sure that upgradeRequest's query not interact with DB
             _mockUpgradeRequestRepo.Verify(u => u.GetByUserIdAsync(It.IsAny<int>()), Times.Never);
+            VerifyLogErrorOnce();
 
         }
 
@@ -1033,6 +1045,7 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Customer
 
             // Make sure that upgradeRequest's query is called once
             _mockUpgradeRequestRepo.Verify(r => r.GetByUserIdAsync(It.IsAny<int>()), Times.Once);
+            VerifyLogErrorOnce();
         }
 
 

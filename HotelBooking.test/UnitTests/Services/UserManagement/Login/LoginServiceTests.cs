@@ -4,8 +4,6 @@ using FluentValidation;
 using FluentValidation.Results;
 using HotelBooking.application.DTOs.Role;
 using HotelBooking.application.DTOs.User.Login;
-using HotelBooking.application.Helpers;
-using HotelBooking.application.Helpers.Infrastructure;
 using HotelBooking.application.Services.Domains.Auth;
 using HotelBooking.application.Services.Domains.UserManagement.Login;
 using HotelBooking.infrastructure.Models;
@@ -13,7 +11,7 @@ using Moq;
 
 namespace HotelBooking.test.UnitTests.Services.UserManagement.Login;
 
-public class LoginServiceTests : BaseServiceTest
+public class LoginServiceTests : BaseServiceTest<LoginService>
 {
     private readonly Mock<IUserRepository> _mockUserRepo;
     private readonly Mock<IValidator<LoginUserDTO>> _mockLoginValidator;
@@ -26,7 +24,7 @@ public class LoginServiceTests : BaseServiceTest
 
         _mockJwtAuthService = new Mock<IJwtAuthService>();
 
-        _service = new LoginService(_mockUserRepo.Object, _mockJwtAuthService.Object, _mockLoginValidator.Object);
+        _service = new LoginService(_mockUserRepo.Object, _mockJwtAuthService.Object, _mockLoginValidator.Object, _mockLogger.Object);
 
     }
 
@@ -175,6 +173,7 @@ public class LoginServiceTests : BaseServiceTest
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
         result.Message.Should().Be(MessageResponse.UserManagement.Login.ERROR_IN_SERVER);
         result.Content.Should().BeNull();
+        VerifyLogErrorOnce();
     }
 
 }

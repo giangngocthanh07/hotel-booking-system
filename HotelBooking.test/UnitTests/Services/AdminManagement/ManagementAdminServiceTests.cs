@@ -9,10 +9,12 @@ using HotelBooking.application.Helpers;
 // 2. Using Entities and Repo Interfaces from Infrastructure layer
 using HotelBooking.infrastructure.Models;
 using System.Linq.Expressions;
+using Microsoft.Extensions.Logging;
+
 
 namespace HotelBooking.Tests.Services.AdminManagement
 {
-    public class ManagementAdminServiceTest : BaseServiceTest
+    public class ManagementAdminServiceTest : BaseServiceTest<ManagementAdminService>
     {
         private readonly Mock<IAmenityTypeRepository> _mockAmenityTypeRepo;
         private readonly Mock<IPolicyTypeRepository> _mockPolicyTypeRepo;
@@ -20,6 +22,9 @@ namespace HotelBooking.Tests.Services.AdminManagement
         private readonly Mock<IRoomQualityGroupRepository> _mockRoomQualityTypeRepo;
         private readonly Mock<IValidator<ManageMenuRequest>> _mockValidator;
         private readonly ManagementAdminService _managementAdminService;
+        private readonly Mock<ILogger> _logger;
+
+
 
         public ManagementAdminServiceTest()
         {
@@ -33,7 +38,8 @@ namespace HotelBooking.Tests.Services.AdminManagement
                 _mockServiceTypeRepo.Object,
                 _mockPolicyTypeRepo.Object,
                 _mockRoomQualityTypeRepo.Object,
-                _mockValidator.Object
+                _mockValidator.Object,
+                _logger!.Object
             );
         }
 
