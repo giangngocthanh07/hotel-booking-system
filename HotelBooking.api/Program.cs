@@ -1,52 +1,80 @@
 using HotelBooking.infrastructure.Models;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
-var builder = WebApplication.CreateBuilder(args);
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
 
-// 1. Database - Service EF
-var connectionString = builder.Configuration.GetConnectionString("connectionStringHotelBooking");
-builder.Services.AddDbContext<HotelBookingDBContext>(options =>
-    options.UseSqlServer(connectionString));
-
-// 2. Business Extensions
-builder.Services.AddAppRepositories();
-builder.Services.AddApplicationServices();
-builder.Services.AddAppValidators();
-
-// 3. Infrastructure Extensions
-builder.Services.AddSwaggerConfiguration();
-builder.Services.AddJwtAuthentication(builder.Configuration);
-
-// 4. Common Services
-builder.Services.AddControllers();
-builder.Services.AddCors(options =>
+try
 {
-    options.AddPolicy("AllowAll", policy =>
+    Log.Information("Starting web application...");
+
+    var builder = WebApplication.CreateBuilder(args);
+
+    // Serilog Configuration
+    builder.Host.UseSerilog((context, services, configuration) => configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services));
+
+    // 1. Database - Service EF
+    var connectionString = builder.Configuration.GetConnectionString("connectionStringHotelBooking");
+    builder.Services.AddDbContext<HotelBookingDBContext>(options =>
+        options.UseSqlServer(connectionString));
+
+    // 2. Business Extensions
+    builder.Services.AddAppRepositories();
+    builder.Services.AddApplicationServices();
+    builder.Services.AddAppValidators();
+
+    // 3. Infrastructure Extensions
+    builder.Services.AddSwaggerConfiguration();
+    builder.Services.AddJwtAuthentication(builder.Configuration);
+
+    // 4. Common Services
+    builder.Services.AddControllers();
+    builder.Services.AddCors(options =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        options.AddPolicy("AllowAll", policy =>
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        });
     });
-});
 
-/*  =============== BUILD APP =============== */
-var app = builder.Build();
+    /*  =============== BUILD APP =============== */
+    var app = builder.Build();
 
-// Configure Middleware Pipeline
-app.UseCors("AllowAll");
+    // Add request logging
+    app.UseSerilogRequestLogging();
 
-app.UseMiddleware<PerformanceMiddleware>();
+    // Configure Middleware Pipeline
+    app.UseCors("AllowAll");
 
-//use middleware controller
-app.MapControllers();
+    app.UseMiddleware<PerformanceMiddleware>();
 
-if (app.Environment.IsDevelopment()) // Only show Swagger in Development for security
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    //use middleware controller
+    app.MapControllers();
+
+    if (app.Environment.IsDevelopment()) // Only show Swagger in Development for security
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
+
+    //use middleware authentication
+    app.UseAuthentication();
+    app.UseAuthorization();
+    app.Run();
 }
-
-//use middleware authentication
-app.UseAuthentication();
-app.UseAuthorization();
-app.Run();
+catch (Exception ex)
+{
+    // Catch Errors during app start
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    // Close and flush logs
+    Log.CloseAndFlush();
+}

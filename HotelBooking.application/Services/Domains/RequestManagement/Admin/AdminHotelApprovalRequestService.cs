@@ -20,17 +20,20 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
     private readonly IHotelRepository _hotelRepo;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IValidator<PagingRequest> _pagingValidator;
+    private readonly ILogger<AdminHotelApprovalRequestService> _logger;
 
     public AdminHotelApprovalRequestService(
         IHotelApprovalRequestRepository approvalRepo,
         IHotelRepository hotelRepo,
         IUnitOfWork unitOfWork,
-        IValidator<PagingRequest> pagingValidator)
+        IValidator<PagingRequest> pagingValidator,
+        ILogger<AdminHotelApprovalRequestService> logger)
     {
         _approvalRepo = approvalRepo;
         _hotelRepo = hotelRepo;
         _unitOfWork = unitOfWork;
         _pagingValidator = pagingValidator;
+        _logger = logger;
     }
 
     public async Task<ApiResponse<List<string>>> GetAllStatusesAsync()
@@ -314,8 +317,9 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
                 ? ResponseFactory.Success(true, MessageResponse.RequestManagement.HotelApproval.APPROVED_SUCCESS)
                 : ResponseFactory.Failure<bool>(StatusCodeResponse.Error, MessageResponse.RequestManagement.HotelApproval.APPROVE_FAILED);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "[AdminHotelApprovalRequestService - ApproveRequestAsync] Error approving hotel registration request with ID {RequestId} by Admin with ID: {AdminId}: {ErrorMessage}", requestId, adminId, ex.Message);
             return ResponseFactory.ServerError<bool>();
         }
     }
@@ -352,8 +356,9 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
                 ? ResponseFactory.Success(true, MessageResponse.RequestManagement.HotelApproval.REJECTED_SUCCESS)
                 : ResponseFactory.Failure<bool>(StatusCodeResponse.Error, MessageResponse.RequestManagement.HotelApproval.REJECT_FAILED);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "[AdminHotelApprovalRequestService - RejectRequestAsync] Error rejecting hotel registration request with ID {RequestId} by Admin with ID: {AdminId}: {ErrorMessage}", requestId, adminId, ex.Message);
             return ResponseFactory.ServerError<bool>();
         }
     }

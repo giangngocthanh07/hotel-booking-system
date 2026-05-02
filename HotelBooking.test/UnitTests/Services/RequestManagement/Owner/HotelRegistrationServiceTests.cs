@@ -11,6 +11,7 @@ namespace HotelBooking.test.UnitTests.Services.RequestManagement.Owner;
 
 public class HotelRegistrationServiceTests : BaseServiceTest
 {
+    private readonly Mock<IHotelApprovalRequestRepository> _mockApprovalRepo;
     private readonly Mock<IHotelRepository> _mockHotelRepo;
     private readonly Mock<IValidator<HotelRegistrationDTO>> _mockValidator;
     private readonly IHotelRegistrationService _service;
@@ -18,9 +19,10 @@ public class HotelRegistrationServiceTests : BaseServiceTest
 
     public HotelRegistrationServiceTests()
     {
+        _mockApprovalRepo = new Mock<IHotelApprovalRequestRepository>();
         _mockHotelRepo = new Mock<IHotelRepository>();
         _mockValidator = new Mock<IValidator<HotelRegistrationDTO>>();
-        _service = new HotelRegistrationService(_mockHotelRepo.Object, _mockValidator.Object, _mockUnitOfWork.Object);
+        _service = new HotelRegistrationService(_mockApprovalRepo.Object, _mockHotelRepo.Object, _mockValidator.Object, _mockUnitOfWork.Object);
     }
 
     [Fact]
@@ -45,7 +47,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest
         result.StatusCode.Should().Be(StatusCodeResponse.Success);
         result.Message.Should().Be(MessageResponse.RequestManagement.HotelApproval.HOTEL_REQUEST_CREATED_SUCCESS);
 
-        _mockHotelRepo.Verify(r => r.AddAsync(It.IsAny<Hotel>()), Times.Once);
+        _mockApprovalRepo.Verify(r => r.AddAsync(It.IsAny<HotelApprovalRequest>()), Times.Once);
         Verify_Saved(1);
     }
 
@@ -66,8 +68,8 @@ public class HotelRegistrationServiceTests : BaseServiceTest
 
         // Verify steps
         _mockValidator.Verify(r => r.ValidateAsync(It.IsAny<HotelRegistrationDTO>(), default), Times.Never);
-        Verify_Repo_Never_AnyAsync<IHotelRepository, Hotel>(_mockHotelRepo);
-        Verify_Repo_Never_AddAsync<IHotelRepository, Hotel>(_mockHotelRepo);
+        Verify_Repo_Never_AnyAsync<IHotelApprovalRequestRepository, HotelApprovalRequest>(_mockApprovalRepo);
+        Verify_Repo_Never_AddAsync<IHotelApprovalRequestRepository, HotelApprovalRequest>(_mockApprovalRepo);
         Verify_Never_Saved();
     }
 
@@ -95,8 +97,8 @@ public class HotelRegistrationServiceTests : BaseServiceTest
         result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
         result.Message.Should().Be(validationFailures.First().ErrorMessage);
 
-        Verify_Repo_Never_AnyAsync<IHotelRepository, Hotel>(_mockHotelRepo);
-        Verify_Repo_Never_AddAsync<IHotelRepository, Hotel>(_mockHotelRepo);
+        Verify_Repo_Never_AnyAsync<IHotelApprovalRequestRepository, HotelApprovalRequest>(_mockApprovalRepo);
+        Verify_Repo_Never_AddAsync<IHotelApprovalRequestRepository, HotelApprovalRequest>(_mockApprovalRepo);
         Verify_Never_Saved();
     }
 
@@ -123,7 +125,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest
 
         // Verify
         Verify_Repo_AnyAsync<IHotelRepository, Hotel>(_mockHotelRepo);
-        Verify_Repo_Never_AddAsync<IHotelRepository, Hotel>(_mockHotelRepo);
+        Verify_Repo_Never_AddAsync<IHotelApprovalRequestRepository, HotelApprovalRequest>(_mockApprovalRepo);
         Verify_Never_Saved();
     }
 
@@ -150,7 +152,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest
 
         // Verify
         Verify_Repo_AnyAsync<IHotelRepository, Hotel>(_mockHotelRepo);
-        Verify_Repo_Never_AddAsync<IHotelRepository, Hotel>(_mockHotelRepo);
+        Verify_Repo_Never_AddAsync<IHotelApprovalRequestRepository, HotelApprovalRequest>(_mockApprovalRepo);
         Verify_Never_Saved();
     }
 
@@ -167,8 +169,8 @@ public class HotelRegistrationServiceTests : BaseServiceTest
         _mockHotelRepo.Setup(x => x.AnyAsync(It.IsAny<Expression<Func<Hotel, bool>>>()))
             .ReturnsAsync(false);
 
-        // Mock throw exxception at AddAsync
-        _mockHotelRepo.Setup(x => x.AddAsync(It.IsAny<Hotel>()))
+        // Mock throw exception at AddAsync
+        _mockApprovalRepo.Setup(x => x.AddAsync(It.IsAny<HotelApprovalRequest>()))
             .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
 
         // 2. Act
@@ -181,7 +183,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest
 
         // Verify
         Verify_Repo_AnyAsync<IHotelRepository, Hotel>(_mockHotelRepo);
-        Verify_Repo_AddAsync<IHotelRepository, Hotel>(_mockHotelRepo);
+        Verify_Repo_AddAsync<IHotelApprovalRequestRepository, HotelApprovalRequest>(_mockApprovalRepo);
         Verify_Never_Saved();
     }
 
@@ -211,7 +213,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest
 
         // Verify
         Verify_Repo_AnyAsync<IHotelRepository, Hotel>(_mockHotelRepo);
-        Verify_Repo_AddAsync<IHotelRepository, Hotel>(_mockHotelRepo);
+        Verify_Repo_AddAsync<IHotelApprovalRequestRepository, HotelApprovalRequest>(_mockApprovalRepo);
         Verify_Saved(1);
     }
 

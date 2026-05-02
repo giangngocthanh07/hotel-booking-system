@@ -122,6 +122,9 @@ public interface IRequestService : ITokenService
 
     Task<ApiResponse<List<WardVM>>> GetWardsByProvinceAsync(int provinceId);
     Task<ApiResponse<UploadResultVM>> UploadBusinessLicenseAsync(IBrowserFile file);
+
+    /// <summary>Submits a new hotel registration request from an Owner.</summary>
+    Task<ApiResponse<HotelRegistrationDetailVM>> SubmitHotelRegistrationAsync(HotelRegistrationFormPayload payload);
 }
 
 /// <summary>
@@ -240,6 +243,9 @@ public class RequestService : IRequestService
     public Task<ApiResponse<List<PropertyTypeVM>>> GetPropertyTypesAsync()
         => _http.GetApiAsync<List<PropertyTypeVM>>("v1/hotel/get-property-types");
 
+    public Task<ApiResponse<HotelRegistrationDetailVM>> SubmitHotelRegistrationAsync(HotelRegistrationFormPayload payload)
+        => _http.PostApiAsync<HotelRegistrationDetailVM, HotelRegistrationFormPayload>("v1/owner/hotel-registration", payload);
+
     public Task<ApiResponse<List<ProvinceVM>>> GetProvincesAsync(int countryId = 4)
         => _http.GetApiAsync<List<ProvinceVM>>($"v1/location/get-provinces/{countryId}");
 
@@ -259,7 +265,11 @@ public class RequestService : IRequestService
         // Sử dụng cái HTTP wrapper có sẵn của bạn (nó đã được config BaseAddress)
         // Nếu _http của bạn có hàm PostFormAsync hoặc PostAsync, hãy dùng nó. 
         // Ví dụ dưới đây giả định wrapper của bạn tên là PostApiAsync:
-        return await _http.PostApiAsync<UploadResultVM>("v1/file/upload-business-license");
+        var response = await _http.PostAsync("v1/file/upload-business-license", content);
+        var json = await response.Content.ReadAsStringAsync();
+        return System.Text.Json.JsonSerializer.Deserialize<ApiResponse<UploadResultVM>>(json,
+            new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+            ?? new ApiResponse<UploadResultVM> { StatusCode = "Error", Message = "Upload failed." };
     }
 
     // ==========================================

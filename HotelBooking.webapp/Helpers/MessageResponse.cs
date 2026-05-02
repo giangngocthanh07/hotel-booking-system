@@ -259,6 +259,40 @@ public static class MessageResponse
             public const string APPROVE_FAILED = "Failed to approve hotel!";
             public const string REJECTED_SUCCESS = "Hotel rejected successfully!";
             public const string REJECT_FAILED = "Failed to reject hotel!";
+
+            // ── Owner: Registration Wizard ───────────────────────────
+            public static class Registration
+            {
+                // Submit
+                public const string SUBMIT_SUCCESS = "Your property has been submitted for approval! We will review it within 2–3 business days.";
+                public const string SUBMIT_FAILED = "Submission failed. Please try again.";
+
+                // Reset
+                public const string FORM_RESET = "Form has been reset.";
+
+                // Upload
+                public const string UPLOAD_SUCCESS = "Business license uploaded successfully!";
+                public const string UPLOAD_FAILED = "Upload failed.";
+                public const string UPLOAD_FILE_TOO_LARGE = "File is too large or an error occurred.";
+
+                // Step 0 – Basic Info validation
+                public const string INVALID_HOTEL_NAME = "Hotel name must be 2–50 characters.";
+                public const string PROPERTY_TYPE_REQUIRED = "Please select a property type.";
+                public const string INVALID_STAR_RATING = "Star rating must be 1–5.";
+
+                // Step 1 – Contact validation
+                public const string PHONE_REQUIRED = "Public phone is required.";
+                public const string EMAIL_REQUIRED = "Public email is required.";
+
+                // Step 2 – Location validation
+                public const string INVALID_ADDRESS = "Please enter a valid address (min. 5 characters).";
+                public const string PROVINCE_REQUIRED = "Please select a province.";
+                public const string WARD_REQUIRED = "Please select a ward.";
+
+                // Step 3 – Legal validation
+                public const string INVALID_TAX_CODE = "Tax code must be exactly 10 or 13 digits.";
+                public const string LICENSE_URL_REQUIRED = "Business license URL is required.";
+            }
         }
     }
 

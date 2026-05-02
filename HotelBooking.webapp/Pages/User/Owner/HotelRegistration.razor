@@ -533,6 +533,28 @@
 
 @code {
     @inject HttpClient HttpClient
+
+    // Short alias for MessageResponse.RequestManagement.HotelApproval.Registration
+    private static class MR
+    {
+        public const string SUBMIT_SUCCESS        = MessageResponse.RequestManagement.HotelApproval.Registration.SUBMIT_SUCCESS;
+        public const string SUBMIT_FAILED         = MessageResponse.RequestManagement.HotelApproval.Registration.SUBMIT_FAILED;
+        public const string FORM_RESET            = MessageResponse.RequestManagement.HotelApproval.Registration.FORM_RESET;
+        public const string UPLOAD_SUCCESS        = MessageResponse.RequestManagement.HotelApproval.Registration.UPLOAD_SUCCESS;
+        public const string UPLOAD_FAILED         = MessageResponse.RequestManagement.HotelApproval.Registration.UPLOAD_FAILED;
+        public const string UPLOAD_FILE_TOO_LARGE = MessageResponse.RequestManagement.HotelApproval.Registration.UPLOAD_FILE_TOO_LARGE;
+        public const string INVALID_HOTEL_NAME    = MessageResponse.RequestManagement.HotelApproval.Registration.INVALID_HOTEL_NAME;
+        public const string PROPERTY_TYPE_REQUIRED= MessageResponse.RequestManagement.HotelApproval.Registration.PROPERTY_TYPE_REQUIRED;
+        public const string INVALID_STAR_RATING   = MessageResponse.RequestManagement.HotelApproval.Registration.INVALID_STAR_RATING;
+        public const string PHONE_REQUIRED        = MessageResponse.RequestManagement.HotelApproval.Registration.PHONE_REQUIRED;
+        public const string EMAIL_REQUIRED        = MessageResponse.RequestManagement.HotelApproval.Registration.EMAIL_REQUIRED;
+        public const string INVALID_ADDRESS       = MessageResponse.RequestManagement.HotelApproval.Registration.INVALID_ADDRESS;
+        public const string PROVINCE_REQUIRED     = MessageResponse.RequestManagement.HotelApproval.Registration.PROVINCE_REQUIRED;
+        public const string WARD_REQUIRED         = MessageResponse.RequestManagement.HotelApproval.Registration.WARD_REQUIRED;
+        public const string INVALID_TAX_CODE      = MessageResponse.RequestManagement.HotelApproval.Registration.INVALID_TAX_CODE;
+        public const string LICENSE_URL_REQUIRED  = MessageResponse.RequestManagement.HotelApproval.Registration.LICENSE_URL_REQUIRED;
+    }
+
     private readonly string[] _steps = { "Basic Info", "Contact", "Location", "Legal & Submit" };
     private int _activeStep = 0;
     private bool _isSubmitting = false;
@@ -583,7 +605,7 @@
     {
         _form = new HotelRegistrationFormVM();
         _activeStep = 0;
-        Snackbar.Add("Form has been reset.", Severity.Info);
+        Snackbar.Add(MR.FORM_RESET, Severity.Info);
     }
 
     private async Task HandleSubmit()
@@ -593,23 +615,44 @@
 
         try
         {
-            // TODO: map _form → HotelRegistrationDTO and call API
-            await Task.Delay(1500);
-            Snackbar.Add("Your property has been submitted for approval! We will review it within 2–3 business days.",
-            Severity.Success);
-            NavManager.NavigateTo("/owner/dashboard");
-        }
+            var payload = new HotelRegistrationFormPayload
+            {
+                Name               = _form.Name,
+                Description        = string.IsNullOrWhiteSpace(_form.Description) ? null : _form.Description,
+                PropertyTypeId     = _form.PropertyTypeId,
+                StarRating         = _form.StarRating,
+                PublicPhone        = _form.PublicPhone,
+                PublicEmail        = _form.PublicEmail,
+                Address            = _form.Address,
+                CountryId          = 4, // Vietnam default
+                ProvinceId         = _form.ProvinceId,
+                WardId             = _form.WardId,
+                Latitude           = _form.Latitude,
+                Longitude          = _form.Longitude,
+                TaxCode            = _form.TaxCode,
+                BusinessLicenseUrl = _form.BusinessLicenseUrl,
+            };
 
+            var result = await RequestService.SubmitHotelRegistrationAsync(payload);
+
+            if (result != null && result.StatusCode == StatusCodeResponse.Success)
+            {
+                Snackbar.Add(MR.SUBMIT_SUCCESS, Severity.Success);
+                NavManager.NavigateTo("/owner/dashboard");
+            }
+            else
+            {
+                Snackbar.Add(result?.Message ?? MR.SUBMIT_FAILED, Severity.Error);
+            }
+        }
         catch (Exception)
         {
             Snackbar.Add(MessageResponse.Common.ERROR_IN_SERVER, Severity.Error);
         }
-
         finally
         {
             _isSubmitting = false;
         }
-
     }
 
     private bool ValidateCurrentStep() => _activeStep switch
@@ -624,13 +667,13 @@
     private bool ValidateStep0()
     {
         if (string.IsNullOrWhiteSpace(_form.Name) || _form.Name.Length < 2 || _form.Name.Length > 50)
-        { Snackbar.Add("Hotel name must be 2–50 characters.", Severity.Error); return false; }
+        { Snackbar.Add(MR.INVALID_HOTEL_NAME, Severity.Error); return false; }
 
         if (_form.PropertyTypeId <= 0)
-        { Snackbar.Add("Please select a property type.", Severity.Error); return false; }
+        { Snackbar.Add(MR.PROPERTY_TYPE_REQUIRED, Severity.Error); return false; }
 
         if (_form.StarRating.HasValue && (_form.StarRating < 1 || _form.StarRating > 5))
-        { Snackbar.Add("Star rating must be 1–5.", Severity.Error); return false; }
+        { Snackbar.Add(MR.INVALID_STAR_RATING, Severity.Error); return false; }
 
         return true;
 
@@ -639,10 +682,10 @@
     private bool ValidateStep1()
     {
         if (string.IsNullOrWhiteSpace(_form.PublicPhone))
-        { Snackbar.Add("Public phone is required.", Severity.Error); return false; }
+        { Snackbar.Add(MR.PHONE_REQUIRED, Severity.Error); return false; }
 
         if (string.IsNullOrWhiteSpace(_form.PublicEmail))
-        { Snackbar.Add("Public email is required.", Severity.Error); return false; }
+        { Snackbar.Add(MR.EMAIL_REQUIRED, Severity.Error); return false; }
 
         return true;
     }
@@ -650,13 +693,13 @@
     private bool ValidateStep2()
     {
         if (string.IsNullOrWhiteSpace(_form.Address) || _form.Address.Length < 5)
-        { Snackbar.Add("Please enter a valid address (min. 5 characters).", Severity.Error); return false; }
+        { Snackbar.Add(MR.INVALID_ADDRESS, Severity.Error); return false; }
 
         if (_form.ProvinceId <= 0)
-        { Snackbar.Add("Please select a province.", Severity.Error); return false; }
+        { Snackbar.Add(MR.PROVINCE_REQUIRED, Severity.Error); return false; }
 
         if (_form.WardId <= 0)
-        { Snackbar.Add("Please select a ward.", Severity.Error); return false; }
+        { Snackbar.Add(MR.WARD_REQUIRED, Severity.Error); return false; }
 
         return true;
 
@@ -665,10 +708,10 @@
     private bool ValidateStep3()
     {
         if (string.IsNullOrWhiteSpace(_form.TaxCode) || (_form.TaxCode.Length != 10 && _form.TaxCode.Length != 13))
-        { Snackbar.Add("Tax code must be exactly 10 or 13 digits.", Severity.Error); return false; }
+        { Snackbar.Add(MR.INVALID_TAX_CODE, Severity.Error); return false; }
 
         if (string.IsNullOrWhiteSpace(_form.BusinessLicenseUrl))
-        { Snackbar.Add("Business license URL is required.", Severity.Error); return false; }
+        { Snackbar.Add(MR.LICENSE_URL_REQUIRED, Severity.Error); return false; }
 
         return true;
     }
@@ -687,16 +730,16 @@
             {
                 // Gán link trả về vào form
                 _form.BusinessLicenseUrl = apiResult.Content.StoredFileName;
-                Snackbar.Add("Business license uploaded successfully!", Severity.Success);
+                Snackbar.Add(MR.UPLOAD_SUCCESS, Severity.Success);
             }
             else
             {
-                Snackbar.Add(apiResult?.Message ?? "Upload failed.", Severity.Error);
+                Snackbar.Add(apiResult?.Message ?? MR.UPLOAD_FAILED, Severity.Error);
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"File is too large or an error occurred: {ex.Message}", Severity.Error);
+            Snackbar.Add($"{MR.UPLOAD_FILE_TOO_LARGE} {ex.Message}", Severity.Error);
         }
         finally
         {
