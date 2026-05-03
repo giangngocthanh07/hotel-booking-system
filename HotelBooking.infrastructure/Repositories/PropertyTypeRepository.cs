@@ -1,4 +1,5 @@
 using HotelBooking.infrastructure.Models;
+using HotelBooking.infrastructure.Shared;
 
 public interface IPropertyTypeRepository : IRepository<PropertyType>
 {
@@ -7,7 +8,7 @@ public interface IPropertyTypeRepository : IRepository<PropertyType>
 
 public class PropertyTypeRepository : Repository<PropertyType>, IPropertyTypeRepository
 {
-    public PropertyTypeRepository(HotelBookingDBContext context) : base(context)
+    public PropertyTypeRepository(HotelBookingDBContext context, ICancellationTokenProvider tokenProvider) : base(context, tokenProvider)
     {
     }
 }

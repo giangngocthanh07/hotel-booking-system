@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using HotelBooking.infrastructure.Models;
+using HotelBooking.infrastructure.Shared;
 using Microsoft.EntityFrameworkCore;
 
 public interface IUserRepository : IRepository<User>
@@ -13,14 +14,14 @@ public interface IUserRepository : IRepository<User>
 }
 public class UserRepository : Repository<User>, IUserRepository
 {
-    public UserRepository(HotelBookingDBContext context) : base(context) { }
+    public UserRepository(HotelBookingDBContext context, ICancellationTokenProvider tokenProvider) : base(context, tokenProvider) { }
 
     public async Task<User?> GetUserWithRoles(Expression<Func<User, bool>> predicate)
     {
         return await _dbSet
             .Include(u => u.UserRoles)
             .ThenInclude(ur => ur.Role)
-            .FirstOrDefaultAsync(predicate);
+            .FirstOrDefaultAsync(predicate, _cancellationToken);
     }
 
     #region DEMONSTRATES 3 DIFFERENT DATA FILTERING APPROACHES
@@ -45,7 +46,7 @@ public class UserRepository : Repository<User>, IUserRepository
         var result = await _dbSet
             .Include(u => u.UserRoles)
             .ThenInclude(ur => ur.Role)
-            .FirstOrDefaultAsync(predicate); // [OK] Predicate is pushed down to DB
+            .FirstOrDefaultAsync(predicate, _cancellationToken); // [OK] Predicate is pushed down to DB
 
         return result;
     }
@@ -68,7 +69,7 @@ public class UserRepository : Repository<User>, IUserRepository
         var allUsersInRam = await _dbSet
             .Include(u => u.UserRoles)
             .ThenInclude(ur => ur.Role)
-            .ToListAsync(); // [X] Loads everything into RAM
+            .ToListAsync(_cancellationToken); // [X] Loads everything into RAM
 
         // 2. Filter manually in RAM
         // Note: Since predicate is an Expression, it must be compiled into a Func before use on a List

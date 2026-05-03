@@ -1,4 +1,5 @@
 using HotelBooking.infrastructure.Models;
+using HotelBooking.infrastructure.Shared;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -43,7 +44,7 @@ public interface IUpgradeRequestRepository : IRepository<UpgradeRequest>
 
 public class UpgradeRequestRepository : Repository<UpgradeRequest>, IUpgradeRequestRepository
 {
-    public UpgradeRequestRepository(HotelBookingDBContext context) : base(context)
+    public UpgradeRequestRepository(HotelBookingDBContext context, ICancellationTokenProvider tokenProvider) : base(context, tokenProvider)
     {
     }
 
@@ -51,7 +52,7 @@ public class UpgradeRequestRepository : Repository<UpgradeRequest>, IUpgradeRequ
     {
         var requests = await _dbSet.Include(ur => ur.User)
                                   .Where(ur => ur.UserId == id && ur.Status == "Pending")
-                                  .ToListAsync();
+                                  .ToListAsync(_cancellationToken);
         return requests;
     }
 
@@ -59,7 +60,7 @@ public class UpgradeRequestRepository : Repository<UpgradeRequest>, IUpgradeRequ
     {
         return await _dbSet.Include(ur => ur.User)
                            .Where(ur => ur.Status == "Pending")
-                           .ToListAsync();
+                           .ToListAsync(_cancellationToken);
     }
 
     public async Task<(List<UpgradeRequest> Items, int TotalCount)> GetPagedWithUserAsync(
@@ -77,21 +78,21 @@ public class UpgradeRequestRepository : Repository<UpgradeRequest>, IUpgradeRequ
         }
 
         // 3. Count total records (before pagination)
-        int totalCount = await query.CountAsync();
+        int totalCount = await query.CountAsync(_cancellationToken);
 
         // 4. Sort by most recent RequestedAt + paginate
         var items = await query
             .OrderByDescending(r => r.RequestedAt)
             .Skip((pageIndex - 1) * pageSize)
             .Take(pageSize)
-            .ToListAsync();
+            .ToListAsync(_cancellationToken);
 
         return (items, totalCount);
     }
 
     public async Task<UpgradeRequest?> GetByIdWithUserAsync(int id)
     {
-        return await _dbSet.AsNoTracking().Include(ur => ur.User).FirstOrDefaultAsync(ur => ur.Id == id);
+        return await _dbSet.AsNoTracking().Include(ur => ur.User).FirstOrDefaultAsync(ur => ur.Id == id, _cancellationToken);
     }
 
     public async Task<(int Total, int Pending, int Approved, int Rejected, int Cancelled, int Today, int ThisWeek, int ThisMonth)> GetStatsRawAsync()
@@ -100,7 +101,7 @@ public class UpgradeRequestRepository : Repository<UpgradeRequest>, IUpgradeRequ
         var weekStart = today.AddDays(-(int)today.DayOfWeek);
         var monthStart = new DateTime(today.Year, today.Month, 1);
 
-        var allRequests = await _dbSet.AsNoTracking().ToListAsync();
+        var allRequests = await _dbSet.AsNoTracking().ToListAsync(_cancellationToken);
 
         return (
             Total: allRequests.Count,
@@ -121,7 +122,7 @@ public class UpgradeRequestRepository : Repository<UpgradeRequest>, IUpgradeRequ
             .Include(r => r.User)
             .OrderByDescending(r => r.RequestedAt)
             .Take(count)
-            .ToListAsync();
+            .ToListAsync(_cancellationToken);
     }
 
     public async Task<List<string>?> GetDistinctStatusesAsync()
@@ -130,7 +131,7 @@ public class UpgradeRequestRepository : Repository<UpgradeRequest>, IUpgradeRequ
                            .Select(r => r.Status)
                            .Where(s => s != null)
                            .Distinct()
-                           .ToListAsync();
+                           .ToListAsync(_cancellationToken);
     }
 
     public async Task<List<UpgradeRequest>> GetByUserIdAsync(int userId)
@@ -140,6 +141,6 @@ public class UpgradeRequestRepository : Repository<UpgradeRequest>, IUpgradeRequ
             .Include(r => r.User)
             .Where(r => r.UserId == userId)
             .OrderByDescending(r => r.RequestedAt)
-            .ToListAsync();
+            .ToListAsync(_cancellationToken);
     }
 }

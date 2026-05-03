@@ -1,4 +1,5 @@
 using HotelBooking.infrastructure.Models;
+using HotelBooking.infrastructure.Shared;
 
 public interface IRoomViewRepository : IRepository<RoomView>
 {
@@ -7,7 +8,7 @@ public interface IRoomViewRepository : IRepository<RoomView>
 
 public class RoomViewRepository : Repository<RoomView>, IRoomViewRepository
 {
-    public RoomViewRepository(HotelBookingDBContext context) : base(context)
+    public RoomViewRepository(HotelBookingDBContext context, ICancellationTokenProvider tokenProvider) : base(context, tokenProvider)
     {
     }
 }

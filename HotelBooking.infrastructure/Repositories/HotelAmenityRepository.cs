@@ -1,4 +1,5 @@
 using HotelBooking.infrastructure.Models;
+using HotelBooking.infrastructure.Shared;
 
 public interface IHotelAmenityRepository : IRepository<HotelAmenity>
 {
@@ -7,7 +8,7 @@ public interface IHotelAmenityRepository : IRepository<HotelAmenity>
 
 public class HotelAmenityRepository : Repository<HotelAmenity>, IHotelAmenityRepository
 {
-    public HotelAmenityRepository(HotelBookingDBContext context) : base(context)
+    public HotelAmenityRepository(HotelBookingDBContext context, ICancellationTokenProvider tokenProvider) : base(context, tokenProvider)
     {
     }
 }

@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using HotelBooking.infrastructure.Models;
+using HotelBooking.infrastructure.Shared;
 using Microsoft.EntityFrameworkCore;
 
 public interface IHotelApprovalRequestRepository : IRepository<HotelApprovalRequest>
@@ -25,7 +26,7 @@ public interface IHotelApprovalRequestRepository : IRepository<HotelApprovalRequ
 
 public class HotelApprovalRequestRepository : Repository<HotelApprovalRequest>, IHotelApprovalRequestRepository
 {
-    public HotelApprovalRequestRepository(HotelBookingDBContext context) : base(context)
+    public HotelApprovalRequestRepository(HotelBookingDBContext context, ICancellationTokenProvider tokenProvider) : base(context, tokenProvider)
     {
     }
 
@@ -47,7 +48,7 @@ public class HotelApprovalRequestRepository : Repository<HotelApprovalRequest>, 
             .OrderByDescending(r => r.CreatedAt)
             .Skip((pageIndex - 1) * pageSize)
             .Take(pageSize)
-            .ToListAsync();
+            .ToListAsync(_cancellationToken);
 
         return (items, totalCount);
     }
@@ -59,7 +60,7 @@ public class HotelApprovalRequestRepository : Repository<HotelApprovalRequest>, 
                 .IgnoreQueryFilters()
                 .Include(ur => ur.Owner)
                 .Where(ur => ur.OwnerId == ownerId && ur.Status == "Pending")
-                .ToListAsync();
+                .ToListAsync(_cancellationToken);
     }
 
     public async Task<IEnumerable<HotelApprovalRequest>> GetAllPendingRequestsAsync()
@@ -67,7 +68,7 @@ public class HotelApprovalRequestRepository : Repository<HotelApprovalRequest>, 
         // Status == Pending
         return await _dbSet.IgnoreQueryFilters()
                 .Include(h => h.Owner)
-                .Where(h => h.Status == "Pending").ToListAsync();
+                .Where(h => h.Status == "Pending").ToListAsync(_cancellationToken);
     }
 
     public async Task<HotelApprovalRequest?> GetByIdWithOwnerAsync(int id)
@@ -75,7 +76,7 @@ public class HotelApprovalRequestRepository : Repository<HotelApprovalRequest>, 
         return await _dbSet.AsNoTracking()
                     .IgnoreQueryFilters()
                     .Include(h => h.Owner)
-                    .FirstOrDefaultAsync(h => h.Id == id);
+                    .FirstOrDefaultAsync(h => h.Id == id, _cancellationToken);
     }
 
     public async Task<List<string>> GetDistinctStatusesAsync()
@@ -84,7 +85,7 @@ public class HotelApprovalRequestRepository : Repository<HotelApprovalRequest>, 
                            .Where(s => s != null)
                            .Select(r => r.Status!)
                            .Distinct()
-                           .ToListAsync();
+                           .ToListAsync(_cancellationToken);
     }
 
     public async Task<List<HotelApprovalRequest>> GetByUserIdAsync(int userId)
@@ -95,7 +96,7 @@ public class HotelApprovalRequestRepository : Repository<HotelApprovalRequest>, 
             .Include(h => h.Owner)
             .Where(h => h.OwnerId == userId)
             .OrderByDescending(h => h.CreatedAt)
-            .ToListAsync();
+            .ToListAsync(_cancellationToken);
     }
 
     public async Task<List<HotelApprovalRequest>> GetRecentAsync(int count)
@@ -105,7 +106,7 @@ public class HotelApprovalRequestRepository : Repository<HotelApprovalRequest>, 
             .Include(h => h.Owner)
             .OrderByDescending(h => h.CreatedAt)
             .Take(count)
-            .ToListAsync();
+            .ToListAsync(_cancellationToken);
     }
 
     public async Task<(int Total, int Pending, int Approved, int Rejected, int Cancelled, int Today, int ThisWeek, int ThisMonth)> GetStatsRawAsync()
@@ -117,7 +118,7 @@ public class HotelApprovalRequestRepository : Repository<HotelApprovalRequest>, 
         // Tối ưu: Chỉ query những gì cần thiết thay vì lôi toàn bộ data về RAM
         var allRequests = await _dbSet.AsNoTracking()
                                       .Select(r => new { r.Status, r.CreatedAt })
-                                      .ToListAsync();
+                                      .ToListAsync(_cancellationToken);
 
         return (
             Total: allRequests.Count,

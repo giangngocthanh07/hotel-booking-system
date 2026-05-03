@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using HotelBooking.infrastructure.Models;
+using HotelBooking.infrastructure.Shared;
 using Microsoft.EntityFrameworkCore;
 
 public interface IRepository<T> where T : class
@@ -24,18 +25,20 @@ public class Repository<T> : IRepository<T> where T : class     // Dependency In
 {
     protected readonly HotelBookingDBContext _context;
     protected readonly DbSet<T> _dbSet;
+    protected readonly CancellationToken _cancellationToken;
 
-    public Repository(HotelBookingDBContext context)
+    public Repository(HotelBookingDBContext context, ICancellationTokenProvider cancellationTokenProvider)
     {
         _context = context;
         _dbSet = _context.Set<T>();
+        _cancellationToken = cancellationTokenProvider.Token;
     }
 
     public async Task<IEnumerable<T>> GetAllAsync()
-        => await _dbSet.AsNoTracking().ToListAsync();
+        => await _dbSet.AsNoTracking().ToListAsync(_cancellationToken);
 
     public async Task<T?> GetByIdAsync(int id)
-        => await _dbSet.FindAsync(id);
+        => await _dbSet.FindAsync(id, _cancellationToken);
 
     public async Task AddAsync(T entity)
     {
@@ -47,7 +50,7 @@ public class Repository<T> : IRepository<T> where T : class     // Dependency In
             prop.SetValue(entity, 0);
         }
 
-        await _dbSet.AddAsync(entity);
+        await _dbSet.AddAsync(entity, _cancellationToken);
     }
 
     public Task UpdateAsync(T entity)
@@ -58,20 +61,20 @@ public class Repository<T> : IRepository<T> where T : class     // Dependency In
 
     public async Task DeleteAsync(int id)
     {
-        var entity = await _dbSet.FindAsync(id);
+        var entity = await _dbSet.FindAsync(id, _cancellationToken);
         if (entity is not null)
         {
             _dbSet.Remove(entity);
         }
     }
 
-    public async Task<T?> SingleOrDefaultAsync(Expression<Func<T, bool>> predicate) => await _dbSet.AsNoTracking().SingleOrDefaultAsync(predicate);
+    public async Task<T?> SingleOrDefaultAsync(Expression<Func<T, bool>> predicate) => await _dbSet.AsNoTracking().SingleOrDefaultAsync(predicate, _cancellationToken);
 
-    public async Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate) => await _dbSet.AsNoTracking().FirstOrDefaultAsync(predicate);
+    public async Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate) => await _dbSet.AsNoTracking().FirstOrDefaultAsync(predicate, _cancellationToken);
 
-    public async Task<IEnumerable<T>> WhereAsync(Expression<Func<T, bool>> predicate) => await _dbSet.AsNoTracking().Where(predicate).ToListAsync();
+    public async Task<IEnumerable<T>> WhereAsync(Expression<Func<T, bool>> predicate) => await _dbSet.AsNoTracking().Where(predicate).ToListAsync(_cancellationToken);
 
-    public async Task<bool> AnyAsync(Expression<Func<T, bool>> predicate) => await _dbSet.AsNoTracking().AnyAsync(predicate);
+    public async Task<bool> AnyAsync(Expression<Func<T, bool>> predicate) => await _dbSet.AsNoTracking().AnyAsync(predicate, _cancellationToken);
 
     public async Task<(List<T> Items, int TotalCount)> GetPagedAsync(
     Expression<Func<T, bool>> filter,
@@ -108,7 +111,7 @@ public class Repository<T> : IRepository<T> where T : class     // Dependency In
         var items = await query
             .Skip((pageIndex - 1) * pageSize) // Skip previous pages
             .Take(pageSize)                   // Take the requested page size
-            .ToListAsync();
+            .ToListAsync(_cancellationToken);
 
         return (items, totalCount);
     }

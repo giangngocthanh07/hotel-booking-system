@@ -1,4 +1,5 @@
 using HotelBooking.infrastructure.Models;
+using HotelBooking.infrastructure.Shared;
 
 public interface IRoomQualityGroupRepository : IRepository<RoomQualityGroup>
 {
@@ -7,7 +8,7 @@ public interface IRoomQualityGroupRepository : IRepository<RoomQualityGroup>
 
 public class RoomQualityGroupRepository : Repository<RoomQualityGroup>, IRoomQualityGroupRepository
 {
-    public RoomQualityGroupRepository(HotelBookingDBContext context) : base(context)
+    public RoomQualityGroupRepository(HotelBookingDBContext context, ICancellationTokenProvider tokenProvider) : base(context, tokenProvider)
     {
     }
 }

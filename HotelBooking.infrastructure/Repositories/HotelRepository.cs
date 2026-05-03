@@ -1,4 +1,5 @@
 using HotelBooking.infrastructure.Models;
+using HotelBooking.infrastructure.Shared;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -8,7 +9,7 @@ public interface IHotelRepository : IRepository<Hotel>
 }
 public class HotelRepository : Repository<Hotel>, IHotelRepository
 {
-    public HotelRepository(HotelBookingDBContext context) : base(context)
+    public HotelRepository(HotelBookingDBContext context, ICancellationTokenProvider tokenProvider) : base(context, tokenProvider)
     {
     }
 
@@ -23,7 +24,7 @@ public class HotelRepository : Repository<Hotel>, IHotelRepository
                     @Adults={adults}, 
                     @Children={children}, 
                     @Rooms={rooms}")
-            .ToListAsync();
+            .ToListAsync(_cancellationToken);
 
         return results;
     }

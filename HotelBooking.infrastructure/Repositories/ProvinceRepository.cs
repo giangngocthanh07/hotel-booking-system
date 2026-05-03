@@ -1,4 +1,5 @@
 using HotelBooking.infrastructure.Models;
+using HotelBooking.infrastructure.Shared;
 using Microsoft.EntityFrameworkCore;
 
 public interface IProvinceRepository : IRepository<Province>
@@ -9,7 +10,7 @@ public interface IProvinceRepository : IRepository<Province>
 
 public class ProvinceRepository : Repository<Province>, IProvinceRepository
 {
-    public ProvinceRepository(HotelBookingDBContext context) : base(context)
+    public ProvinceRepository(HotelBookingDBContext context, ICancellationTokenProvider tokenProvider) : base(context, tokenProvider)
     {
 
 
@@ -17,6 +18,6 @@ public class ProvinceRepository : Repository<Province>, IProvinceRepository
 
     public async Task<IEnumerable<Province>> GetByCountryIdAsync(int countryId)
     {
-        return await _dbSet.Where(x => x.CountryId == countryId).ToListAsync();
+        return await _dbSet.Where(x => x.CountryId == countryId).ToListAsync(_cancellationToken);
     }
 }

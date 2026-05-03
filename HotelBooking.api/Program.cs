@@ -1,4 +1,5 @@
 using HotelBooking.infrastructure.Models;
+using HotelBooking.infrastructure.Shared;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -32,6 +33,10 @@ try
     builder.Services.AddJwtAuthentication(builder.Configuration);
 
     // 4. Common Services
+    // a) Cancellation Token
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.AddScoped<ICancellationTokenProvider, HttpCancellationTokenProvider>();
+
     builder.Services.AddControllers();
     builder.Services.AddCors(options =>
     {

@@ -1,4 +1,5 @@
 using HotelBooking.infrastructure.Models;
+using HotelBooking.infrastructure.Shared;
 
 public interface IHotelImageRepository : IRepository<HotelImage>
 {
@@ -7,7 +8,7 @@ public interface IHotelImageRepository : IRepository<HotelImage>
 
 public class HotelImageRepository : Repository<HotelImage>, IHotelImageRepository
 {
-    public HotelImageRepository(HotelBookingDBContext context) : base(context)
+    public HotelImageRepository(HotelBookingDBContext context, ICancellationTokenProvider tokenProvider) : base(context, tokenProvider)
     {
     }
 }

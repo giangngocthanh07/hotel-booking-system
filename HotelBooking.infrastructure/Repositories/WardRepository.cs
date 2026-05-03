@@ -1,4 +1,5 @@
 using HotelBooking.infrastructure.Models;
+using HotelBooking.infrastructure.Shared;
 using Microsoft.EntityFrameworkCore;
 
 public interface IWardRepository : IRepository<Ward>
@@ -9,12 +10,12 @@ public interface IWardRepository : IRepository<Ward>
 
 public class WardRepository : Repository<Ward>, IWardRepository
 {
-    public WardRepository(HotelBookingDBContext context) : base(context)
+    public WardRepository(HotelBookingDBContext context, ICancellationTokenProvider tokenProvider) : base(context, tokenProvider)
     {
     }
 
     public async Task<IEnumerable<Ward>> GetByProvinceIdAsync(int provinceId)
     {
-        return await _dbSet.Where(x => x.ProvinceId == provinceId).ToListAsync();
+        return await _dbSet.Where(x => x.ProvinceId == provinceId).ToListAsync(_cancellationToken);
     }
 }

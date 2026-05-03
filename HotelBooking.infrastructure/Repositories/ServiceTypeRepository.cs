@@ -1,4 +1,5 @@
 using HotelBooking.infrastructure.Models;
+using HotelBooking.infrastructure.Shared;
 
 public interface IServiceTypeRepository : IRepository<ServiceType>
 {
@@ -7,7 +8,7 @@ public interface IServiceTypeRepository : IRepository<ServiceType>
 
 public class ServiceTypeRepository : Repository<ServiceType>, IServiceTypeRepository
 {
-    public ServiceTypeRepository(HotelBookingDBContext context) : base(context)
+    public ServiceTypeRepository(HotelBookingDBContext context, ICancellationTokenProvider tokenProvider) : base(context, tokenProvider)
     {
     }
 

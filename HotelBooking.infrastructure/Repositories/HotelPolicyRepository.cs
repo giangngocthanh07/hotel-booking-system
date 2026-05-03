@@ -1,4 +1,5 @@
 using HotelBooking.infrastructure.Models;
+using HotelBooking.infrastructure.Shared;
 
 public interface IHotelPolicyRepository : IRepository<HotelPolicy>
 {
@@ -7,7 +8,7 @@ public interface IHotelPolicyRepository : IRepository<HotelPolicy>
 
 public class HotelPolicyRepository : Repository<HotelPolicy>, IHotelPolicyRepository
 {
-    public HotelPolicyRepository(HotelBookingDBContext context) : base(context)
+    public HotelPolicyRepository(HotelBookingDBContext context, ICancellationTokenProvider tokenProvider) : base(context, tokenProvider)
     {
     }
 }
