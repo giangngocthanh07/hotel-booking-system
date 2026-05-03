@@ -17,10 +17,10 @@ namespace HotelBooking.application.Services.Domains.UserManagement.Login
         private readonly IUserRepository _userRepository;
         private readonly IJwtAuthService _jwtAuthService;
         private readonly IValidator<LoginUserDTO> _loginValidator;
-        private readonly ILogger _logger;
+        private readonly ILogger<LoginService> _logger;
 
 
-        public LoginService(IUserRepository userRepository, IJwtAuthService jwtAuthService, IValidator<LoginUserDTO> loginValidator, ILogger logger)
+        public LoginService(IUserRepository userRepository, IJwtAuthService jwtAuthService, IValidator<LoginUserDTO> loginValidator, ILogger<LoginService> logger)
         {
             _userRepository = userRepository;
             _jwtAuthService = jwtAuthService;

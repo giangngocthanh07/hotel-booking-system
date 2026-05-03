@@ -14,7 +14,7 @@ public class RoomViewService : BaseManage<RoomView, IRoomViewRepository, RoomVie
 {
     private readonly IValidator<PagingRequest> _pagingValidator;
 
-    public RoomViewService(IRoomViewRepository repo, IUnitOfWork dbu, ILogger logger,
+    public RoomViewService(IRoomViewRepository repo, IUnitOfWork dbu, ILogger<RoomViewService> logger,
            IValidator<RoomViewCreateDTO> createVal,
             IValidator<RoomViewUpdateDTO> updateVal, IValidator<PagingRequest> pagingValidator) : base(repo, dbu, logger, createVal, updateVal)
     {

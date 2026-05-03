@@ -15,7 +15,7 @@ public class UnitTypeService : BaseManage<UnitType, IUnitTypeRepository, UnitTyp
 {
     private readonly IValidator<PagingRequest> _pagingValidator;
 
-    public UnitTypeService(IUnitTypeRepository repo, IUnitOfWork dbu, ILogger logger, IValidator<UnitTypeCreateDTO> createVal, IValidator<UnitTypeUpdateDTO> updateVal, IValidator<PagingRequest> pagingValidator) : base(repo, dbu, logger, createVal, updateVal)
+    public UnitTypeService(IUnitTypeRepository repo, IUnitOfWork dbu, ILogger<UnitTypeService> logger, IValidator<UnitTypeCreateDTO> createVal, IValidator<UnitTypeUpdateDTO> updateVal, IValidator<PagingRequest> pagingValidator) : base(repo, dbu, logger, createVal, updateVal)
     {
         _pagingValidator = pagingValidator;
     }

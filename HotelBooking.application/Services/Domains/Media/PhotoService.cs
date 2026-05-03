@@ -15,10 +15,10 @@ namespace HotelBooking.application.Services.Domains.Media
 public class PhotoService : IPhotoService
 {
     private readonly Cloudinary _cloudinary;
-    private readonly ILogger _logger;
+    private readonly ILogger<PhotoService> _logger;
 
 
-    public PhotoService(IConfiguration Configuration, ILogger logger)
+    public PhotoService(IConfiguration Configuration, ILogger<PhotoService> logger)
     {
         var cloudName = Configuration["Cloudinary:CloudName"];
         var apiKey = Configuration["Cloudinary:ApiKey"];

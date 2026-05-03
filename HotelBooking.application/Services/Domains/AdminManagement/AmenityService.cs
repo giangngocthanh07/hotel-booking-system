@@ -22,7 +22,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
             IAmenityRepository repository,
             IAmenityTypeRepository amenityTypeRepository,
             IUnitOfWork unitOfWork,
-            ILogger logger,
+            ILogger<AmenityService> logger,
             IValidator<AmenityCreateDTO> createValidator,
         IValidator<AmenityUpdateDTO> updateValidator)
             : base(repository, unitOfWork, logger, createValidator, updateValidator)

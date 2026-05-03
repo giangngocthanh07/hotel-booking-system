@@ -22,7 +22,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
         public PolicyService(
             IPolicyRepository repository,
             IUnitOfWork unitOfWork,
-            ILogger logger,
+            ILogger<PolicyService> logger,
             IPolicyTypeRepository policyTypeRepo,
             IValidator<PolicyCreateDTO> createVal,
         IValidator<PolicyUpdateDTO> updateVal,

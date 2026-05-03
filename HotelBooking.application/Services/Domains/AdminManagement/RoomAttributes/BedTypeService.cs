@@ -15,7 +15,7 @@ public class BedTypeService : BaseManage<BedType, IBedTypeRepository, BedTypeDTO
 {
     private readonly IValidator<PagingRequest> _pagingValidator;
 
-    public BedTypeService(IBedTypeRepository repo, IUnitOfWork dbu, ILogger logger,
+    public BedTypeService(IBedTypeRepository repo, IUnitOfWork dbu, ILogger<BedTypeService> logger,
            IValidator<BedTypeCreateDTO> createVal,
             IValidator<BedTypeUpdateDTO> updateVal,
             IValidator<PagingRequest> pagingValidator) : base(repo, dbu, logger, createVal, updateVal)

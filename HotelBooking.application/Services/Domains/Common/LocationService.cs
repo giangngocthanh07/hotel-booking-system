@@ -16,9 +16,9 @@ public class LocationService : ILocationService
     private readonly IProvinceRepository _provinceRepository;
     private readonly IWardRepository _wardRepository;
     private readonly IUnitOfWork _dbu;
-    private readonly ILogger _logger;
+    private readonly ILogger<LocationService> _logger;
 
-    public LocationService(ICountryRepository countryRepository, IPropertyTypeRepository propTypeRepository, IProvinceRepository provinceRepository, IWardRepository wardRepository, IUnitOfWork dbu, ILogger logger)
+    public LocationService(ICountryRepository countryRepository, IPropertyTypeRepository propTypeRepository, IProvinceRepository provinceRepository, IWardRepository wardRepository, IUnitOfWork dbu, ILogger<LocationService> logger)
     {
         _countryRepository = countryRepository;
         _propTypeRepository = propTypeRepository;

@@ -21,7 +21,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
         public ServiceService(
             IServiceRepository repository,
             IUnitOfWork unitOfWork,
-            ILogger logger,
+            ILogger<ServiceService> logger,
             IServiceTypeRepository serviceTypeRepo,
             IValidator<ServiceCreateDTO> createVal,
             IValidator<ServiceUpdateDTO> updateVal,

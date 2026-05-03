@@ -32,9 +32,9 @@ public class RoomAttributeFacade : IRoomAttributeFacade
     public IRoomViewService RoomViewService { get; }
     public IRoomQualityService RoomQualityService { get; }
     private readonly IValidator<GetRoomAttributeRequest> _validator;
-    private readonly ILogger _logger;
+    private readonly ILogger<RoomAttributeFacade> _logger;
 
-    public RoomAttributeFacade(IUnitTypeService unitTypeService, IBedTypeService bedTypeService, IRoomViewService roomViewService, IRoomQualityService roomQualityService, IValidator<GetRoomAttributeRequest> validator, ILogger logger)
+    public RoomAttributeFacade(IUnitTypeService unitTypeService, IBedTypeService bedTypeService, IRoomViewService roomViewService, IRoomQualityService roomQualityService, IValidator<GetRoomAttributeRequest> validator, ILogger<RoomAttributeFacade> logger)
     {
         UnitTypeService = unitTypeService;
         BedTypeService = bedTypeService;

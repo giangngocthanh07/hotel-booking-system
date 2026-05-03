@@ -15,7 +15,7 @@ public interface IRoomQualityService : ITypedManage<RoomQualityDTO, RoomQualityG
 public class RoomQualityService : BaseManage<RoomQuality, IRoomQualityRepository, RoomQualityDTO, RoomQualityCreateDTO, RoomQualityUpdateDTO>, IRoomQualityService
 {
     private readonly IRoomQualityGroupRepository _roomQualityTypeRepo;
-    public RoomQualityService(IRoomQualityRepository repository, IUnitOfWork dbo, ILogger logger, IRoomQualityGroupRepository roomQualityTypeRepo, IValidator<RoomQualityCreateDTO> createVal,
+    public RoomQualityService(IRoomQualityRepository repository, IUnitOfWork dbo, ILogger<RoomQualityService> logger, IRoomQualityGroupRepository roomQualityTypeRepo, IValidator<RoomQualityCreateDTO> createVal,
             IValidator<RoomQualityUpdateDTO> updateVal) : base(repository, dbo, logger, createVal, updateVal)
     {
         _roomQualityTypeRepo = roomQualityTypeRepo;

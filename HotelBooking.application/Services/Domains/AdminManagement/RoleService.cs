@@ -13,9 +13,9 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
     {
         private readonly IRoleRepository _roleRepository;
         IUnitOfWork _dbu;
-        ILogger _logger;
+        ILogger<RoleService> _logger;
 
-        public RoleService(IRoleRepository roleRepository, IUnitOfWork dbu, ILogger logger)
+        public RoleService(IRoleRepository roleRepository, IUnitOfWork dbu, ILogger<RoleService> logger)
         {
             _roleRepository = roleRepository;
             _dbu = dbu;

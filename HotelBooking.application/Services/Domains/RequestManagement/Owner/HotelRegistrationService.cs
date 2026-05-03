@@ -19,10 +19,10 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
         private readonly IHotelRepository _hotelRepo;
         private readonly IValidator<HotelRegistrationDTO> _validator;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly ILogger _logger;
+        private readonly ILogger<HotelRegistrationService> _logger;
 
 
-        public HotelRegistrationService(IHotelApprovalRequestRepository approvalRepo, IHotelRepository hotelRepo, IValidator<HotelRegistrationDTO> validator, IUnitOfWork unitOfWork, ILogger logger)
+        public HotelRegistrationService(IHotelApprovalRequestRepository approvalRepo, IHotelRepository hotelRepo, IValidator<HotelRegistrationDTO> validator, IUnitOfWork unitOfWork, ILogger<HotelRegistrationService> logger)
         {
             _approvalRepo = approvalRepo;
             _hotelRepo = hotelRepo;

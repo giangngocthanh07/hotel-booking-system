@@ -19,7 +19,7 @@ public class CustomerUpgradeRequestService : ICustomerUpgradeRequestService
     private readonly IUserRepository _userRepo;
     private readonly IUserRoleRepository _userRoleRepo;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly ILogger _logger;
+    private readonly ILogger<CustomerUpgradeRequestService> _logger;
     private readonly IValidator<CreateUpgradeRequestDTO> _createRequestValidator;
 
     public CustomerUpgradeRequestService(
@@ -27,7 +27,7 @@ public class CustomerUpgradeRequestService : ICustomerUpgradeRequestService
         IUserRepository userRepo,
         IUserRoleRepository userRoleRepo,
         IUnitOfWork unitOfWork,
-        ILogger logger,
+        ILogger<CustomerUpgradeRequestService> logger,
         IValidator<CreateUpgradeRequestDTO> createRequestValidator)
     {
         _upgradeRequestRepo = upgradeRequestRepo;

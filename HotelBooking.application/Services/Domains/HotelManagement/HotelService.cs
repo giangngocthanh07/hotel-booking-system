@@ -25,10 +25,10 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
         private readonly IImageHelper _imageHelper;
         private readonly IPhotoService _photoService;
         public IUnitOfWork _dbu;
-        public ILogger _logger;
+        public ILogger<HotelService> _logger;
 
 
-        public HotelService(IHotelRepository hotelRepository, IHotelImageRepository hotelImageRepository, IHotelAmenityRepository hotelAmenityRepository, IHotelPolicyRepository hotelPolicyRepository, IPropertyTypeRepository propTypeRepository, IImageHelper imageHelper, IPhotoService photoService, IUnitOfWork dbu, ILogger logger)
+        public HotelService(IHotelRepository hotelRepository, IHotelImageRepository hotelImageRepository, IHotelAmenityRepository hotelAmenityRepository, IHotelPolicyRepository hotelPolicyRepository, IPropertyTypeRepository propTypeRepository, IImageHelper imageHelper, IPhotoService photoService, IUnitOfWork dbu, ILogger<HotelService> logger)
         {
             _hotelRepository = hotelRepository;
             _hotelImageRepository = hotelImageRepository;

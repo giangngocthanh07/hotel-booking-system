@@ -23,7 +23,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
         private readonly IRoomQualityGroupRepository _roomQualityRepo;
 
         private readonly IValidator<ManageMenuRequest> _validator;
-        private readonly ILogger _logger;
+        private readonly ILogger<ManagementAdminService> _logger;
 
         // Validation optimization: static HashSet for O(1) lookup
         private static readonly HashSet<ManageModuleEnum> _modulesWithTypeId = new()
@@ -40,7 +40,7 @@ namespace HotelBooking.application.Services.Domains.AdminManagement
             IPolicyTypeRepository policyTypeRepo,
             IRoomQualityGroupRepository roomQualityRepo,
             IValidator<ManageMenuRequest> validator,
-            ILogger logger)
+            ILogger<ManagementAdminService> logger)
         {
             _amenityTypeRepo = amenityTypeRepo;
             _serviceTypeRepo = serviceTypeRepo;

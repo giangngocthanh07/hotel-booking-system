@@ -11,10 +11,10 @@ public interface IFileService
 public class FileService : IFileService
 {
     private readonly Cloudinary _cloudinary;
-    private readonly ILogger _logger;
+    private readonly ILogger<FileService> _logger;
 
 
-    public FileService(IConfiguration Configuration, ILogger logger)
+    public FileService(IConfiguration Configuration, ILogger<FileService> logger)
     {
         var cloudName = Configuration["Cloudinary:CloudName"];
         var apiKey = Configuration["Cloudinary:ApiKey"];

@@ -22,10 +22,10 @@ namespace HotelBooking.application.Services.Domains.UserManagement
         private readonly IUserRepository _userRepository;
         public IRegisterService Register { get; }
         public ILoginService Login { get; }
-        private readonly ILogger _logger;
+        private readonly ILogger<UserService> _logger;
 
 
-        public UserService(IRegisterService register, ILoginService login, IUserRepository userRepository, ILogger logger)
+        public UserService(IRegisterService register, ILoginService login, IUserRepository userRepository, ILogger<UserService> logger)
         {
             Register = register;
             Login = login;

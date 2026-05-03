@@ -18,10 +18,10 @@ namespace HotelBooking.application.Services.Domains.UserManagement.Register
         private readonly IValidator<RegisterCustomerDTO> _registerCustomerValidator;
         private readonly IValidator<RegisterAdminDTO> _registerAdminValidator;
         private readonly IUnitOfWork _dbu;
-        private readonly ILogger _logger;
+        private readonly ILogger<RegisterService> _logger;
 
 
-        public RegisterService(IUserRepository userRepository, IUserRoleRepository userRoleRepository, IValidator<RegisterCustomerDTO> registerCustomerValidator, IValidator<RegisterAdminDTO> registerAdminValidator, IUnitOfWork dbu, ILogger logger)
+        public RegisterService(IUserRepository userRepository, IUserRoleRepository userRoleRepository, IValidator<RegisterCustomerDTO> registerCustomerValidator, IValidator<RegisterAdminDTO> registerAdminValidator, IUnitOfWork dbu, ILogger<RegisterService> logger)
         {
             _userRepository = userRepository;
             _userRoleRepository = userRoleRepository;

@@ -17,10 +17,10 @@ namespace HotelBooking.application.Services.Domains.RequestManagement
     {
         private readonly IUpgradeRequestRepository _upgradeRequestRepo;
         private readonly IHotelApprovalRequestRepository _hotelApprovalRepo;
-        private readonly ILogger _logger;
+        private readonly ILogger<RequestOverviewService> _logger;
 
 
-        public RequestOverviewService(IUpgradeRequestRepository upgradeRequestRepo, IHotelApprovalRequestRepository hotelApprovalRepo, ILogger logger)
+        public RequestOverviewService(IUpgradeRequestRepository upgradeRequestRepo, IHotelApprovalRequestRepository hotelApprovalRepo, ILogger<RequestOverviewService> logger)
         {
             _upgradeRequestRepo = upgradeRequestRepo;
             _hotelApprovalRepo = hotelApprovalRepo;

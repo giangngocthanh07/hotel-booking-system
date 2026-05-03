@@ -13,7 +13,7 @@ namespace HotelBooking.application.Services.Domains.RoomManagement
     {
         private readonly IRoomAttributeFacade _attributeFacade;
         private readonly IValidator<RoomNameSuggestionRequest> _validator;
-        private readonly ILogger _logger;
+        private readonly ILogger<RoomNameSuggestionService> _logger;
 
 
         private const string WITH = "with";
@@ -24,7 +24,7 @@ namespace HotelBooking.application.Services.Domains.RoomManagement
         private const string FEATURE_BATHROOM = "Private Bathroom";
 
 
-        public RoomNameSuggestionService(IRoomAttributeFacade attributeFacade, IValidator<RoomNameSuggestionRequest> validator, ILogger logger)
+        public RoomNameSuggestionService(IRoomAttributeFacade attributeFacade, IValidator<RoomNameSuggestionRequest> validator, ILogger<RoomNameSuggestionService> logger)
         {
             _attributeFacade = attributeFacade;
             _validator = validator;

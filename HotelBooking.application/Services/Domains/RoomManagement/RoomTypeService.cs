@@ -18,10 +18,10 @@ namespace HotelBooking.application.Services.Domains.RoomManagement
         private readonly IRoomTypeBedConfigRepository _bedConfigRepo;
         private readonly IRoomAttributeFacade _attributeFacade;
         private readonly IUnitOfWork _dbu;
-        private readonly ILogger _logger;
+        private readonly ILogger<RoomTypeService> _logger;
         private readonly IValidator<RoomTypeCreateDTO> _validator;
 
-        public RoomTypeService(IHotelRepository hotelRepo, IRoomTypeRepository roomTypeRepo, IRoomTypeBedConfigRepository bedConfigRepo, IValidator<RoomTypeCreateDTO> validator, IRoomAttributeFacade attributeFacade, IUnitOfWork dbu, ILogger logger)
+        public RoomTypeService(IHotelRepository hotelRepo, IRoomTypeRepository roomTypeRepo, IRoomTypeBedConfigRepository bedConfigRepo, IValidator<RoomTypeCreateDTO> validator, IRoomAttributeFacade attributeFacade, IUnitOfWork dbu, ILogger<RoomTypeService> logger)
         {
             _hotelRepo = hotelRepo;
             _roomTypeRepo = roomTypeRepo;
