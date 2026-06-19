@@ -21,6 +21,9 @@ public static class RepositoryServiceExtension
         services.AddScoped<IBedTypeRepository, BedTypeRepository>();
         services.AddScoped<IUnitTypeRepository, UnitTypeRepository>();
         services.AddScoped<IRoomViewRepository, RoomViewRepository>();
+        services.AddScoped<IBookingRepository, BookingRepository>();
+        services.AddScoped<IBookingRoomRepository, BookingRoomRepository>();
+        services.AddScoped<IPaymentRepository, PaymentRepository>();
 
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();

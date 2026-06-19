@@ -163,6 +163,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Admin
 
         public async Task<ApiResponse<bool>> ApproveRequestAsync(int requestId, int adminId)
         {
+            await _unitOfWork.BeginTransactionAsync();
             try
             {
                 if (requestId <= 0)
@@ -173,22 +174,31 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Admin
                 var request = await _upgradeRequestRepo.GetByIdWithUserAsync(requestId);
 
                 if (request == null || request.Status != RequestStatusConst.Pending)
+                {
+                    await _unitOfWork.RollBackTransactionAsync();
                     return ResponseFactory.Failure<bool>(
                         StatusCodeResponse.BadRequest,
                         MessageResponse.RequestManagement.UpgradeRequest.REQUEST_STATUS_INVALID);
+                }
 
                 if (request.User == null)
+                {
+                    await _unitOfWork.RollBackTransactionAsync();
                     return ResponseFactory.Failure<bool>(
                         StatusCodeResponse.NotFound,
                         MessageResponse.RequestManagement.UpgradeRequest.USER_NOT_FOUND);
+                }
 
                 var hasCustomerRole = await _userRoleRepo.AnyAsync(
                     ur => ur.UserId == request.UserId && ur.RoleId == RoleTypeConstDTO.Customer);
 
                 if (!hasCustomerRole)
+                {
+                    await _unitOfWork.RollBackTransactionAsync();
                     return ResponseFactory.Failure<bool>(
                         StatusCodeResponse.Forbidden,
                         MessageResponse.RequestManagement.UpgradeRequest.USER_NOT_CUSTOMER);
+                }
 
                 // User already Owner --> Fail
                 var hasOwnerRole = await _userRoleRepo
@@ -196,6 +206,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Admin
 
                 if (hasOwnerRole)
                 {
+                    await _unitOfWork.RollBackTransactionAsync();
                     return ResponseFactory.Failure<bool>(
                         StatusCodeResponse.Forbidden,
                         MessageResponse.RequestManagement.UpgradeRequest.USER_ALREADY_OWNER);
@@ -218,12 +229,21 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Admin
                 await _upgradeRequestRepo.UpdateAsync(request);
 
                 var saved = await _unitOfWork.SaveChangesAsync() > 0;
-                return saved
-                    ? ResponseFactory.Success(true, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_APPROVED_SUCCESS)
-                    : ResponseFactory.Failure<bool>(StatusCodeResponse.Error, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_APPROVE_FAILED);
+                
+                if (saved)
+                {
+                    await _unitOfWork.CommitTransactionAsync();
+                    return ResponseFactory.Success(true, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_APPROVED_SUCCESS);
+                }
+                else
+                {
+                    await _unitOfWork.RollBackTransactionAsync();
+                    return ResponseFactory.Failure<bool>(StatusCodeResponse.Error, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_APPROVE_FAILED);
+                }
             }
             catch (Exception ex)
             {
+                await _unitOfWork.RollBackTransactionAsync();
                 _logger.LogError(ex, "[AdminUpgradeRequestService - ApproveRequestAsync] Error approving upgrade request with ID {RequestId} by Admin with ID: {AdminId}: {ErrorMessage}", requestId, adminId, ex.Message);
                 return ResponseFactory.ServerError<bool>();
             }

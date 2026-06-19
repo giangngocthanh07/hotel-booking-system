@@ -2,6 +2,7 @@ using HotelBooking.application.Helpers;
 using HotelBooking.application.DTOs.User;
 using HotelBooking.application.Services.Domains.UserManagement.Register;
 using HotelBooking.application.Services.Domains.UserManagement.Login;
+using FluentValidation;
 
 // Note: MessageRegister and MessageLogin are consolidated into MessageResponse in Helpers/Messages/
 // Use MessageResponse.UserManagement.Register.* and MessageResponse.UserManagement.Login.* for new code
@@ -15,22 +16,64 @@ namespace HotelBooking.application.Services.Domains.UserManagement
         ILoginService Login { get; }
 
         Task<ApiResponse<UserDetailDTO>> GetByIdAsync(int id);
+        Task<ApiResponse<UserDetailDTO>> UpdateProfileAsync(int userId, UpdateUserProfileDTO request);
     }
 
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
+        private readonly IValidator<UpdateUserProfileDTO> _updateProfileValidator;
+        private readonly IUnitOfWork _dbu;
         public IRegisterService Register { get; }
         public ILoginService Login { get; }
         private readonly ILogger<UserService> _logger;
 
 
-        public UserService(IRegisterService register, ILoginService login, IUserRepository userRepository, ILogger<UserService> logger)
+        public UserService(IRegisterService register, ILoginService login, IUserRepository userRepository, ILogger<UserService> logger, IValidator<UpdateUserProfileDTO> updateProfileValidator, IUnitOfWork dbu)
         {
             Register = register;
             Login = login;
             _userRepository = userRepository;
             _logger = logger;
+            _updateProfileValidator = updateProfileValidator;
+            _dbu = dbu;
+        }
+
+        public async Task<ApiResponse<UserDetailDTO>> UpdateProfileAsync(int userId, UpdateUserProfileDTO request)
+        {
+            try
+            {
+                var validationResult = await _updateProfileValidator.ValidateAsync(request);
+                if (!validationResult.IsValid)
+                {
+                    return ResponseFactory.Failure<UserDetailDTO>(StatusCodeResponse.BadRequest, validationResult.Errors.First().ErrorMessage);
+                }
+
+                var user = await _userRepository.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    return ResponseFactory.Failure<UserDetailDTO>(StatusCodeResponse.NotFound, MessageResponse.UserManagement.User.NOT_FOUND);
+                }
+
+                user.FullName = request.FullName;
+                user.PhoneNumber = request.PhoneNumber;
+                user.DateOfBirth = request.DateOfBirth.HasValue ? DateOnly.FromDateTime(request.DateOfBirth.Value) : null;
+
+                await _userRepository.UpdateAsync(user);
+                var saved = await _dbu.SaveChangesAsync() > 0;
+
+                if (saved)
+                {
+                    return await GetByIdAsync(userId); // Return the updated profile
+                }
+
+                return ResponseFactory.Failure<UserDetailDTO>(StatusCodeResponse.Error, MessageResponse.Common.UPDATE_FAILED);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating profile for user {UserId}", userId);
+                return ResponseFactory.ServerError<UserDetailDTO>();
+            }
         }
 
         public async Task<ApiResponse<UserDetailDTO>> GetByIdAsync(int id)

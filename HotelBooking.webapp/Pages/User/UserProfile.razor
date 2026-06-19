@@ -1,0 +1,188 @@
+@page "/profile"
+@using HotelBooking.webapp.ViewModels.User
+@using HotelBooking.webapp.ViewModels.Form
+@using HotelBooking.webapp.Services
+@using HotelBooking.webapp.Helpers
+@using Blazored.LocalStorage
+@layout MainLayout
+@attribute [Authorize]
+@inject IUserService UserService
+@inject ISnackbar Snackbar
+@inject ILocalStorageService LocalStorage
+
+<div class="container mt-5">
+    <h2 class="mb-4">My Profile</h2>
+
+    @if (_loading)
+    {
+        <div class="d-flex justify-content-center my-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (_user != null)
+    {
+        <EditForm Model="@_model" OnValidSubmit="HandleValidSubmit">
+            <DataAnnotationsValidator />
+
+            <div class="row justify-content-center">
+                <!-- Main Content -->
+                <div class="col-12 col-sm-10 col-md-8 col-lg-6">
+                    <!-- Avatar Section -->
+                    <div class="text-center mb-5">
+                        <div class="profile-avatar-container mb-3 mx-auto">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow mx-auto"
+                                 style="width: 150px; height: 150px; font-size: 3rem;">
+                                @(_user.FullName.Length > 0 ? _user.FullName.Substring(0, 1).ToUpper() : "?")
+                            </div>
+                        </div>
+                        <h4 class="text-dark fw-bold">@_user.FullName</h4>
+                    </div>
+
+                    <!-- Form Section -->
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Username</label>
+                                <input type="text" class="form-control bg-light" value="@_user.UserName" readonly />
+                                <div class="form-text">Username cannot be changed.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Email</label>
+                                <input type="email" class="form-control bg-light" value="@_user.Email" readonly />
+                                <div class="form-text">Email cannot be changed.</div>
+                            </div>
+
+                            <hr class="my-4" />
+
+                            <div class="mb-3">
+                                <label for="fullName" class="form-label fw-bold">Full Name</label>
+                                <input type="text" id="fullName" class="form-control" @bind="_model.FullName"
+                                       placeholder="Enter your full name" />
+                                <ValidationMessage For="@(() => _model.FullName)" class="text-danger small" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="phoneNumber" class="form-label fw-bold">Phone Number</label>
+                                <input type="text" id="phoneNumber" class="form-control" @bind="_model.PhoneNumber"
+                                       placeholder="Enter your phone number" />
+                                <ValidationMessage For="@(() => _model.PhoneNumber)" class="text-danger small" />
+                            </div>
+
+                            <div class="mb-3">
+                                <MudDatePicker Label="Date of Birth"
+                                               @bind-Date="_model.DateOfBirth"
+                                               MaxDate="DateTime.Today"
+                                               Editable="true"
+                                               DateFormat="dd/MM/yyyy"
+                                               Placeholder="dd/MM/yyyy"
+                                               Variant="Variant.Outlined"
+                                               Class="mud-dob-picker" />
+                                <ValidationMessage For="@(() => _model.DateOfBirth)" class="text-danger small" />
+                            </div>
+
+                            <div class="d-grid gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary px-4 shadow-sm">Save Changes</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </EditForm>
+    }
+    else
+    {
+        <div class="alert alert-danger text-center mt-5" role="alert">
+            <h4 class="alert-heading">Oops!</h4>
+            <p>Không thể tải thông tin người dùng. Vui lòng kiểm tra lại kết nối hoặc đăng nhập lại.</p>
+            <button class="btn btn-primary mt-3" @onclick="LoadProfile">Thử lại</button>
+        </div>
+    }
+</div>
+
+<style>
+    .profile-avatar-container {
+        width: 150px;
+        height: 150px;
+    }
+
+    .form-label {
+        font-size: 0.9rem;
+        color: #4b5563;
+    }
+
+    .card {
+        border: none;
+        border-radius: 12px;
+    }
+</style>
+
+@code {
+    private UserDetailVM? _user;
+    private UpdateUserProfileVM _model = new();
+    private bool _loading = true;
+
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProfile();
+    }
+
+    private async Task LoadProfile()
+    {
+        _loading = true;
+        try
+        {
+            var token = await LocalStorage.GetItemAsync<string>("accessToken");
+
+            UserService.SetToken(token);
+
+            var response = await UserService.GetCurrentUser();
+            if (response.StatusCode == StatusCodeResponse.Success && response.Content != null)
+            {
+                _user = response.Content;
+                _model = new UpdateUserProfileVM
+                {
+                    FullName = _user.FullName,
+                    PhoneNumber = _user.PhoneNumber,
+                    DateOfBirth = _user.DateOfBirth,
+                };
+            }
+            else
+            {
+                Snackbar.Add("Failed to load profile.", Severity.Error);
+            }
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("An error occurred.", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            var response = await UserService.UpdateProfile(_user.Id, _model);
+            if (response.StatusCode == StatusCodeResponse.Success)
+            {
+                Snackbar.Add("Profile updated successfully!", Severity.Success);
+                await LoadProfile();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? "Failed to update profile.", Severity.Error);
+            }
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("An error occurred while saving.", Severity.Error);
+        }
+    }
+}

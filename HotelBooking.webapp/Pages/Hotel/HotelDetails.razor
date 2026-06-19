@@ -1,0 +1,174 @@
+@page "/hotel-details/{Id:int}"
+@using HotelBooking.webapp.ViewModels.Hotel
+@using HotelBooking.webapp.Services
+@using HotelBooking.webapp.Helpers
+@inject IHotelService HotelService
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-8">
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+    }
+    else if (_hotel != null)
+    {
+        <MudGrid>
+            <!-- Header & Rating -->
+            <MudItem xs="12">
+                <div class="d-flex justify-space-between align-end">
+                    <div>
+                        <MudText Typo="Typo.h3">@_hotel.Name</MudText>
+                        <MudText Typo="Typo.subtitle1" Class="mud-text-secondary"><MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" /> @_hotel.Address</MudText>
+                    </div>
+                    <div class="text-right">
+                        <MudText Typo="Typo.h4" Color="Color.Primary">@_hotel.AvgRating.ToString("F1")/10</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@_hotel.ReviewCount Reviews</MudText>
+                    </div>
+                </div>
+            </MudItem>
+
+            <!-- Gallery -->
+            <MudItem xs="12" md="8">
+                @if (_hotel.Gallery.Any())
+                {
+                    <MudCarousel Class="mud-width-full rounded-lg" Style="height:400px;" ShowArrows="true" ShowBullets="true" AutoCycle="true" TData="string">
+                        @foreach (var img in _hotel.Gallery)
+                        {
+                            <MudCarouselItem Transition="Transition.Fade">
+                                <MudImage Src="@img" Alt="@_hotel.Name" ObjectFit="ObjectFit.Cover" Fluid="true" />
+                            </MudCarouselItem>
+                        }
+                    </MudCarousel>
+                }
+                else
+                {
+                    <MudImage Src="@(_hotel.CoverImageUrl ?? "images/hotel-placeholder.jpg")" Alt="@_hotel.Name" Height="400" ObjectFit="ObjectFit.Cover" Class="mud-width-full rounded-lg" />
+                }
+            </MudItem>
+
+            <!-- Amenities -->
+            <MudItem xs="12" md="4">
+                <MudPaper Class="pa-4" Style="height:400px; overflow-y: auto;">
+                    <MudText Typo="Typo.h6" GutterBottom="true">Top Amenities</MudText>
+                    <MudGrid>
+                        @foreach (var am in _hotel.Amenities)
+                        {
+                            <MudItem xs="6">
+                                <div class="d-flex align-center">
+                                    <MudIcon Icon="@Icons.Material.Filled.Check" Color="Color.Success" Size="Size.Small" Class="mr-2" />
+                                    <MudText Typo="Typo.body2">@am.Name</MudText>
+                                </div>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </MudPaper>
+            </MudItem>
+
+            <!-- Description -->
+            <MudItem xs="12">
+                <MudText Typo="Typo.h6">About this hotel</MudText>
+                <MudText Typo="Typo.body1" Class="mt-2">@_hotel.Description</MudText>
+            </MudItem>
+
+            <!-- Room Types -->
+            <MudItem xs="12" Class="mt-8">
+                <MudText Typo="Typo.h5" GutterBottom="true">Available Rooms</MudText>
+                @foreach (var rt in _hotel.RoomTypes)
+                {
+                    <MudCard Elevation="1" Class="mb-4 pa-2">
+                        <MudCardContent>
+                            <MudGrid>
+                                <MudItem xs="12" sm="3">
+                                    <MudImage Src="@(rt.Images.FirstOrDefault() ?? "images/room-placeholder.jpg")" Alt="@rt.Name" Width="200" Height="150" ObjectFit="ObjectFit.Cover" Class="rounded-lg" />
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <MudText Typo="Typo.h6">@rt.Name</MudText>
+                                    <MudText Typo="Typo.body2" Class="mud-text-secondary">@rt.Description</MudText>
+                                    <div class="d-flex gap-4 mt-2">
+                                        <MudText Typo="Typo.caption"><MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Small" /> @rt.AdultCapacity Adults</MudText>
+                                        <MudText Typo="Typo.caption"><MudIcon Icon="@Icons.Material.Filled.SquareFoot" Size="Size.Small" /> @rt.AreaSqm sqm</MudText>
+                                    </div>
+                                    <div class="mt-2">
+                                        @foreach (var ram in rt.Amenities.Take(5))
+                                        {
+                                            <MudChip T="string" Size="Size.Small" Variant="Variant.Text">@ram</MudChip>
+                                        }
+                                    </div>
+                                </MudItem>
+                                <MudItem xs="12" sm="3" Class="d-flex flex-column align-end justify-center">
+                                    <MudText Typo="Typo.h5" Color="Color.Primary">@rt.PricePerNight.ToString("C0", new System.Globalization.CultureInfo("vi-VN"))</MudText>
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">per night</MudText>
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" Size="Size.Large">Book Now</MudButton>
+                                </MudItem>
+                            </MudGrid>
+                        </MudCardContent>
+                    </MudCard>
+                }
+            </MudItem>
+
+            <!-- Reviews -->
+            <MudItem xs="12" Class="mt-8">
+                <MudText Typo="Typo.h5" GutterBottom="true">Guest Reviews</MudText>
+                @foreach (var review in _hotel.RecentReviews)
+                {
+                    <MudPaper Class="pa-4 mb-4" Elevation="0" Outlined="true">
+                        <div class="d-flex justify-space-between align-center">
+                            <div class="d-flex align-center">
+                                <MudAvatar Color="Color.Secondary" Size="Size.Small" Class="mr-3">@review.UserName.Substring(0, 1).ToUpper()</MudAvatar>
+                                <MudText Typo="Typo.subtitle2">@review.UserName</MudText>
+                            </div>
+                            <MudRating ReadOnly="true" SelectedValue="@((int)(review.Rating / 2))" Size="Size.Small" />
+                        </div>
+                        <MudText Typo="Typo.body2" Class="mt-3">@review.Comment</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary mt-2">Posted on @review.CreatedAt.ToShortDateString()</MudText>
+
+                        @if (!string.IsNullOrEmpty(review.OwnerResponse))
+                        {
+                            <div class="ml-8 mt-4 pa-3 rounded mud-background-gray">
+                                <MudText Typo="Typo.subtitle2" Color="Color.Primary">Response from the Owner</MudText>
+                                <MudText Typo="Typo.body2">@review.OwnerResponse</MudText>
+                                <MudText Typo="Typo.caption" Class="mud-text-secondary">@review.OwnerResponseAt?.ToShortDateString()</MudText>
+                            </div>
+                        }
+                    </MudPaper>
+                }
+            </MudItem>
+        </MudGrid>
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private HotelDetailsVM? _hotel;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDetails();
+    }
+
+    private async Task LoadDetails()
+    {
+        _loading = true;
+        try
+        {
+            var response = await HotelService.GetHotelDetails(Id);
+            if (response.StatusCode == StatusCodeResponse.Success && response.Content != null)
+            {
+                _hotel = response.Content;
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? "Hotel not found.", Severity.Error);
+            }
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("An error occurred.", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

@@ -1,6 +1,143 @@
 @page "/admin"
-
+@using HotelBooking.webapp.ViewModels.Admin
+@using HotelBooking.webapp.Services
+@using HotelBooking.webapp.Helpers
 @attribute [Authorize(Roles = "Admin")]
 @layout AdminLayout
+@inject IDashboardService DashboardService
+@inject ISnackbar Snackbar
 
-<h1>Admin Dashboard</h1>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-8">
+    <MudText Typo="Typo.h4" GutterBottom="true">Admin Dashboard</MudText>
+
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+    }
+    else if (_dashboardData != null)
+    {
+        <MudGrid>
+            <!-- Summary Cards -->
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Class="d-flex flex-row pt-6 pb-4" Style="height:100px;">
+                    <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Color="Color.Success" Class="mx-4" Style="width:54px; height:54px;"></MudIcon>
+                    <div>
+                        <MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">Total Revenue</MudText>
+                        <MudText Typo="Typo.h5">@_dashboardData.TotalRevenue.ToString("C0", new System.Globalization.CultureInfo("vi-VN"))</MudText>
+                    </div>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Class="d-flex flex-row pt-6 pb-4" Style="height:100px;">
+                    <MudIcon Icon="@Icons.Material.Filled.Group" Color="Color.Primary" Class="mx-4" Style="width:54px; height:54px;"></MudIcon>
+                    <div>
+                        <MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">Total Users</MudText>
+                        <MudText Typo="Typo.h5">@_dashboardData.TotalUsers</MudText>
+                    </div>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Class="d-flex flex-row pt-6 pb-4" Style="height:100px;">
+                    <MudIcon Icon="@Icons.Material.Filled.Hotel" Color="Color.Warning" Class="mx-4" Style="width:54px; height:54px;"></MudIcon>
+                    <div>
+                        <MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">Total Hotels</MudText>
+                        <MudText Typo="Typo.h5">@_dashboardData.TotalHotels</MudText>
+                    </div>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Class="d-flex flex-row pt-6 pb-4" Style="height:100px;">
+                    <MudIcon Icon="@Icons.Material.Filled.Event" Color="Color.Info" Class="mx-4" Style="width:54px; height:54px;"></MudIcon>
+                    <div>
+                        <MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">Total Bookings</MudText>
+                        <MudText Typo="Typo.h5">@_dashboardData.TotalBookings</MudText>
+                    </div>
+                </MudPaper>
+            </MudItem>
+
+            <!-- Charts -->
+            <MudItem xs="12" md="8">
+                <MudPaper Class="pa-4" Style="height:400px;">
+                    <MudText Typo="Typo.h6" GutterBottom="true">Revenue Trend (Last 6 Months)</MudText>
+                    <MudChart ChartType="ChartType.Line" ChartSeries="@_series" XAxisLabels="@_xAxisLabels" Width="100%" Height="300px" ChartOptions="@_chartOptions" />
+                </MudPaper>
+            </MudItem>
+
+            <!-- Pending Requests -->
+            <MudItem xs="12" md="4">
+                <MudPaper Class="pa-4" Style="height:400px; overflow-y: auto;">
+                    <MudText Typo="Typo.h6" GutterBottom="true">Pending Approvals</MudText>
+                    <MudList T="string">
+                        @foreach (var req in _dashboardData.PendingHotelRequests)
+                        {
+                            <MudListItem Icon="@Icons.Material.Filled.NewReleases" IconColor="Color.Error">
+                                <div class="d-flex flex-column">
+                                    <MudText Typo="Typo.body1">@req.Title</MudText>
+                                    <MudText Typo="Typo.caption">@req.RequesterName • @req.CreatedAt.ToShortDateString()</MudText>
+                                </div>
+                            </MudListItem>
+                        }
+                        @foreach (var req in _dashboardData.PendingUpgradeRequests)
+                        {
+                            <MudListItem Icon="@Icons.Material.Filled.PersonAdd" IconColor="Color.Info">
+                                <div class="d-flex flex-column">
+                                    <MudText Typo="Typo.body1">@req.Title</MudText>
+                                    <MudText Typo="Typo.caption">@req.RequesterName • @req.CreatedAt.ToShortDateString()</MudText>
+                                </div>
+                            </MudListItem>
+                        }
+                        @if (!_dashboardData.PendingHotelRequests.Any() && !_dashboardData.PendingUpgradeRequests.Any())
+                        {
+                            <MudText Class="pa-4 mud-text-secondary">No pending requests.</MudText>
+                        }
+                    </MudList>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    }
+</MudContainer>
+
+@code {
+    private AdminDashboardVM? _dashboardData;
+    private bool _loading = true;
+    private List<ChartSeries> _series = new();
+    private string[] _xAxisLabels = Array.Empty<string>();
+    private ChartOptions _chartOptions = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _loading = true;
+        try
+        {
+            var response = await DashboardService.GetAdminDashboardStats();
+            if (response.StatusCode == StatusCodeResponse.Success && response.Content != null)
+            {
+                _dashboardData = response.Content;
+                
+                // Prepare Chart Data
+                _xAxisLabels = _dashboardData.MonthlyRevenueTrend.Select(t => t.MonthName).ToArray();
+                _series = new List<ChartSeries>
+                {
+                    new ChartSeries { Name = "Revenue", Data = _dashboardData.MonthlyRevenueTrend.Select(t => (double)t.Amount).ToArray() }
+                };
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? "Failed to load dashboard data.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("An unexpected error occurred.", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

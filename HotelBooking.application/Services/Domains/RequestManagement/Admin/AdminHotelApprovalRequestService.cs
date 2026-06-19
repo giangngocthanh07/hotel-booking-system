@@ -247,25 +247,35 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
 
     public async Task<ApiResponse<bool>> ApproveRequestAsync(int requestId, int adminId)
     {
+        await _unitOfWork.BeginTransactionAsync();
         try
         {
             if (requestId <= 0)
+            {
+                await _unitOfWork.RollBackTransactionAsync();
                 return ResponseFactory.Failure<bool>(
                     StatusCodeResponse.BadRequest,
                     MessageResponse.RequestManagement.HotelApproval.HOTEL_INVALID_REQUEST_ID);
+            }
 
             // Load the hotel (tracked – not AsNoTracking)
             var request = await _approvalRepo.GetByIdAsync(requestId);
 
             if (request == null)
+            {
+                await _unitOfWork.RollBackTransactionAsync();
                 return ResponseFactory.Failure<bool>(
                     StatusCodeResponse.NotFound,
                     MessageResponse.RequestManagement.HotelApproval.HOTEL_REQUEST_NOT_FOUND);
+            }
 
             if (request.Status != RequestStatusConst.Pending)
+            {
+                await _unitOfWork.RollBackTransactionAsync();
                 return ResponseFactory.Failure<bool>(
                     StatusCodeResponse.BadRequest,
                     MessageResponse.RequestManagement.HotelApproval.STATUS_INVALID);
+            }
 
             request.Status = RequestStatusConst.Approved;
             request.AdminId = adminId;
@@ -316,12 +326,20 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
 
             var saved = await _unitOfWork.SaveChangesAsync() > 0;
 
-            return saved
-                ? ResponseFactory.Success(true, MessageResponse.RequestManagement.HotelApproval.APPROVED_SUCCESS)
-                : ResponseFactory.Failure<bool>(StatusCodeResponse.Error, MessageResponse.RequestManagement.HotelApproval.APPROVE_FAILED);
+            if (saved)
+            {
+                await _unitOfWork.CommitTransactionAsync();
+                return ResponseFactory.Success(true, MessageResponse.RequestManagement.HotelApproval.APPROVED_SUCCESS);
+            }
+            else
+            {
+                await _unitOfWork.RollBackTransactionAsync();
+                return ResponseFactory.Failure<bool>(StatusCodeResponse.Error, MessageResponse.RequestManagement.HotelApproval.APPROVE_FAILED);
+            }
         }
         catch (Exception ex)
         {
+            await _unitOfWork.RollBackTransactionAsync();
             _logger.LogError(ex, "[AdminHotelApprovalRequestService - ApproveRequestAsync] Error approving hotel registration request with ID {RequestId} by Admin with ID: {AdminId}: {ErrorMessage}", requestId, adminId, ex.Message);
             return ResponseFactory.ServerError<bool>();
         }

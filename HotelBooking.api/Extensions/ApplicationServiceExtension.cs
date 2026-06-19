@@ -12,19 +12,22 @@ using HotelBooking.application.Services.Domains.UserManagement.Login;
 using HotelBooking.application.Services.Domains.RequestManagement.Owner;
 using HotelBooking.application.Services.Domains.Common;
 
+using HotelBooking.application.Services.Domains.BookingManagement;
+using HotelBooking.application.Interfaces;
+
 public static class ApplicationServiceExtension
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        // Core Services
-        services.AddScoped<JwtAuthService>();
-        services.AddScoped<IUserService, UserService>();
-        services.AddScoped<IRoleService, RoleService>();
-        services.AddScoped<IJwtAuthService, JwtAuthService>();
+        // ... (rest of core services)
 
         // Hotel & Business Services
         services.AddScoped<IHotelService, HotelService>();
+        services.AddScoped<IBookingService, BookingService>();
         services.AddScoped<ILocationService, LocationService>();
+        services.AddScoped<IRoomService, RoomService>();
+        services.AddScoped<IReviewService, ReviewService>();
+        services.AddScoped<IPaymentService, PaymentService>();
         services.AddScoped<IPhotoService, PhotoService>();
         services.AddScoped<IFileService, FileService>();
         services.AddScoped<IRoomTypeService, RoomTypeService>();
@@ -32,6 +35,8 @@ public static class ApplicationServiceExtension
 
         // Admin Management
         services.AddScoped<IManagementAdminService, ManagementAdminService>();
+        services.AddScoped<IDashboardService, DashboardService>();
+        services.AddScoped<IOwnerDashboardService, OwnerDashboardService>();
         services.AddScoped<IAmenityService, AmenityService>();
         services.AddScoped<IPolicyService, PolicyService>();
         services.AddScoped<IServiceService, ServiceService>();
@@ -54,7 +59,8 @@ public static class ApplicationServiceExtension
         // User Management
         services.AddScoped<IRegisterService, RegisterService>();
         services.AddScoped<ILoginService, LoginService>();
-
+        services.AddScoped<IJwtAuthService, JwtAuthService>();
+        services.AddScoped<IUserService, UserService>();
 
 
         // Helpers

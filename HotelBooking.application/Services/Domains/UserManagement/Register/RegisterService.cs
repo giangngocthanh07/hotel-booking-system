@@ -33,98 +33,64 @@ namespace HotelBooking.application.Services.Domains.UserManagement.Register
 
         public async Task<ApiResponse<RegisterResponseDTO>> RegisterCustomer(RegisterCustomerDTO newCustomer)
         {
-            // 1. Validate the incoming DTO
             var validationResult = await _registerCustomerValidator.ValidateAsync(newCustomer);
             if (!validationResult.IsValid)
             {
                 return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, validationResult.Errors.First().ErrorMessage);
             }
 
-            try
-            {
-                // 2. Check if the user already exists (by email or username)
-                var existingUser = await _userRepository.SingleOrDefaultAsync(u => u.Email == newCustomer.Email || u.UserName == newCustomer.Username);
-                if (existingUser != null)
-                {
-                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.Conflict, existingUser.UserName == newCustomer.Username ? MessageResponse.UserManagement.Register.USERNAME_EXIST : MessageResponse.UserManagement.Register.EMAIL_EXIST);
-                }
-
-
-                await _dbu.BeginTransactionAsync();
-
-                User newUser = new User
-                {
-                    UserName = newCustomer.Username,
-                    FullName = newCustomer.FullName,
-                    Email = newCustomer.Email,
-                    PhoneNumber = newCustomer.PhoneNumber,
-                    PasswordHash = PasswordHelper.HashPassword(newCustomer.Password),
-                    IsDeleted = false,
-                    CreatedAt = DateTime.Now,
-                    DateOfBirth = null,
-                    IsActive = true
-                };
-
-                await _userRepository.AddAsync(newUser);
-                await _dbu.SaveChangesAsync();
-
-                // Assign the default "Customer" role to the new user
-                UserRole newUserRole = new UserRole
-                {
-                    UserId = newUser.Id,
-                    RoleId = newCustomer.GetRoleId() // This will return the constant RoleId for Customer
-                };
-
-                await _userRoleRepository.AddAsync(newUserRole);
-                await _dbu.SaveChangesAsync();
-
-                await _dbu.CommitTransactionAsync();
-
-                return ResponseFactory.Success(new RegisterResponseDTO
-                {
-                    Username = newUser.UserName,
-                    FullName = newUser.FullName,
-                    Email = newUser.Email
-                }, MessageResponse.UserManagement.Register.SUCCESS);
-
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("RegisterService.RegisterCustomer: {ErrorMessage}", ex.Message);
-                await _dbu.RollBackTransactionAsync();
-                return ResponseFactory.ServerError<RegisterResponseDTO>();
-            }
+            return await ExecuteRegistrationAsync(
+                newCustomer.Username,
+                newCustomer.FullName,
+                newCustomer.Email,
+                newCustomer.PhoneNumber,
+                newCustomer.Password,
+                newCustomer.GetRoleId(),
+                "RegisterCustomer"
+            );
         }
 
         public async Task<ApiResponse<RegisterResponseDTO>> RegisterAdmin(RegisterAdminDTO newAdmin)
         {
-            // 1. Validate the incoming DTO
             var validationResult = await _registerAdminValidator.ValidateAsync(newAdmin);
-            if (validationResult.IsValid == false)
+            if (!validationResult.IsValid)
             {
                 return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.BadRequest, validationResult.Errors.First().ErrorMessage);
             }
 
+            return await ExecuteRegistrationAsync(
+                newAdmin.Username,
+                newAdmin.FullName,
+                newAdmin.Email,
+                newAdmin.PhoneNumber,
+                newAdmin.Password,
+                newAdmin.GetRoleId(),
+                "RegisterAdmin"
+            );
+        }
+
+        private async Task<ApiResponse<RegisterResponseDTO>> ExecuteRegistrationAsync(
+            string username, string fullName, string email, string phoneNumber, string password, int roleId, string methodName)
+        {
             try
             {
-                // 2. Check if the user already exists (by email or username)
-                var existingUser = await _userRepository.SingleOrDefaultAsync(u => u.Email == newAdmin.Email || u.UserName == newAdmin.Username);
+                var existingUser = await _userRepository.SingleOrDefaultAsync(u => u.Email == email || u.UserName == username);
                 if (existingUser != null)
                 {
-                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.Conflict, existingUser.UserName == newAdmin.Username ? MessageResponse.UserManagement.Register.USERNAME_EXIST : MessageResponse.UserManagement.Register.EMAIL_EXIST);
+                    return ResponseFactory.Failure<RegisterResponseDTO>(
+                        StatusCodeResponse.Conflict, 
+                        existingUser.UserName == username ? MessageResponse.UserManagement.Register.USERNAME_EXIST : MessageResponse.UserManagement.Register.EMAIL_EXIST);
                 }
-
-                // 3. If validation passes and user doesn't exist, create new User and UserRole entries in a transaction
 
                 await _dbu.BeginTransactionAsync();
 
                 User newUser = new User
                 {
-                    UserName = newAdmin.Username,
-                    FullName = newAdmin.FullName,
-                    Email = newAdmin.Email,
-                    PhoneNumber = newAdmin.PhoneNumber,
-                    PasswordHash = PasswordHelper.HashPassword(newAdmin.Password),
+                    UserName = username,
+                    FullName = fullName,
+                    Email = email,
+                    PhoneNumber = phoneNumber,
+                    PasswordHash = PasswordHelper.HashPassword(password),
                     IsDeleted = false,
                     CreatedAt = DateTime.Now,
                     DateOfBirth = null,
@@ -134,29 +100,34 @@ namespace HotelBooking.application.Services.Domains.UserManagement.Register
                 await _userRepository.AddAsync(newUser);
                 await _dbu.SaveChangesAsync();
 
-                // Assign the "Admin" role to the new user
                 UserRole newUserRole = new UserRole
                 {
                     UserId = newUser.Id,
-                    RoleId = newAdmin.GetRoleId() // This will return the constant RoleId for Admin
-
+                    RoleId = roleId
                 };
 
                 await _userRoleRepository.AddAsync(newUserRole);
-                await _dbu.SaveChangesAsync();
+                var saved = await _dbu.SaveChangesAsync() > 0;
 
-                await _dbu.CommitTransactionAsync();
-
-                return ResponseFactory.Success(new RegisterResponseDTO
+                if (saved)
                 {
-                    Username = newUser.UserName,
-                    FullName = newUser.FullName,
-                    Email = newUser.Email
-                }, MessageResponse.UserManagement.Register.SUCCESS);
+                    await _dbu.CommitTransactionAsync();
+                    return ResponseFactory.Success(new RegisterResponseDTO
+                    {
+                        Username = newUser.UserName,
+                        FullName = newUser.FullName,
+                        Email = newUser.Email
+                    }, MessageResponse.UserManagement.Register.SUCCESS);
+                }
+                else
+                {
+                    await _dbu.RollBackTransactionAsync();
+                    return ResponseFactory.Failure<RegisterResponseDTO>(StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError("RegisterService.RegisterAdmin: {ErrorMessage}", ex.Message);
+                _logger.LogError("RegisterService.{MethodName}: {ErrorMessage}", methodName, ex.Message);
                 await _dbu.RollBackTransactionAsync();
                 return ResponseFactory.ServerError<RegisterResponseDTO>();
             }

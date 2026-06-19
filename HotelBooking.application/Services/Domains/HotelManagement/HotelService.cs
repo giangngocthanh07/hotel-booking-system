@@ -1,22 +1,93 @@
 
+using FluentValidation;
 using HotelBooking.application.DTOs.Hotel;
 using HotelBooking.application.Services.Domains.Media;
+using HotelBooking.application.Validators.RoomManagement;
 
 namespace HotelBooking.application.Services.Domains.HotelManagement
 {
     public interface IHotelService
     {
         public Task<string> GetOwnerDashBoard(int ownerId);
-        public Task<List<SearchHotelResultDTO>> GetSearchOptionsAsync(string cityName, DateTime? checkIn, DateTime? checkOut,
-        int? adults, int? children, int? rooms);
+        public Task<ApiResponse<IEnumerable<SearchHotelResultDTO>>> SearchHotelsAsync(HotelSearchRequestDTO request);
+        public Task<ApiResponse<HotelDetailsDTO>> GetHotelDetailsAsync(int id);
         public Task<ApiResponse<IEnumerable<PropertyTypeDTO>>> GetPropertyTypesAsync();
-
-
         public Task<ApiResponse<UploadResultDTO>> TestUploadImageToCloudinaryAsync(UploadFileDTO file, int userId);
     }
 
     public class HotelService : IHotelService
     {
+        // ... (existing implementation)
+
+        public async Task<ApiResponse<HotelDetailsDTO>> GetHotelDetailsAsync(int id)
+        {
+            try
+            {
+                var hotel = await _hotelRepository.GetHotelDetailsByIdAsync(id);
+                if (hotel == null)
+                {
+                    return new ApiResponse<HotelDetailsDTO>
+                    {
+                        StatusCode = StatusCodeResponse.Error,
+                        Message = MessageResponse.Common.NOT_FOUND,
+                        Content = null
+                    };
+                }
+
+                var content = new HotelDetailsDTO
+                {
+                    Id = hotel.Id,
+                    Name = hotel.Name,
+                    Address = hotel.Address,
+                    Description = hotel.Description,
+                    CoverImageUrl = hotel.CoverImageUrl,
+                    AvgRating = hotel.Reviews.Any() ? (decimal)hotel.Reviews.Average(r => r.Rating ?? 0) : 0,
+                    ReviewCount = hotel.Reviews.Count,
+                    Gallery = hotel.HotelImages.Select(i => i.ImageUrl).ToList(),
+                    Amenities = hotel.HotelAmenities.Select(ha => new AmenityDTO
+                    {
+                        Id = ha.Amenity.Id,
+                        Name = ha.Amenity.Name
+                    }).ToList(),
+                    RoomTypes = hotel.RoomTypes.Select(rt => new RoomTypeDetailsDTO
+                    {
+                        Id = rt.Id,
+                        Name = rt.Name,
+                        Description = rt.Description,
+                        PricePerNight = rt.PricePerNight,
+                        AdultCapacity = rt.AdultCapacity,
+                        ChildCapacity = rt.ChildCapacity,
+                        AreaSqm = rt.AreaSqm,
+                        Images = rt.RoomImages.Select(ri => ri.ImageUrl).ToList(),
+                        Amenities = rt.RoomAmenities.Select(ra => ra.Amenity.Name).ToList()
+                    }).ToList(),
+                    RecentReviews = hotel.Reviews.OrderByDescending(r => r.CreatedAt).Take(5).Select(r => new ReviewDTO
+                    {
+                        UserName = r.Customer.FullName ?? "Anonymous",
+                        Comment = r.Comment ?? string.Empty,
+                        Rating = r.Rating ?? 0,
+                        CreatedAt = r.CreatedAt ?? DateTime.UtcNow
+                    }).ToList()
+                };
+
+                return new ApiResponse<HotelDetailsDTO>
+                {
+                    StatusCode = StatusCodeResponse.Success,
+                    Message = MessageResponse.Common.GET_SUCCESSFULLY,
+                    Content = content
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting hotel details for ID {Id}", id);
+                return new ApiResponse<HotelDetailsDTO>
+                {
+                    StatusCode = StatusCodeResponse.Error,
+                    Message = MessageResponse.Common.ERROR_IN_SERVER,
+                    Content = null
+                };
+            }
+        }
         private readonly IHotelRepository _hotelRepository;
         private readonly IHotelImageRepository _hotelImageRepository;
         private readonly IHotelAmenityRepository _hotelAmenityRepository;
@@ -24,11 +95,12 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
         private readonly IPropertyTypeRepository _propTypeRepository;
         private readonly IImageHelper _imageHelper;
         private readonly IPhotoService _photoService;
+        private readonly IValidator<HotelSearchRequestDTO> _validator;
         public IUnitOfWork _dbu;
         public ILogger<HotelService> _logger;
 
 
-        public HotelService(IHotelRepository hotelRepository, IHotelImageRepository hotelImageRepository, IHotelAmenityRepository hotelAmenityRepository, IHotelPolicyRepository hotelPolicyRepository, IPropertyTypeRepository propTypeRepository, IImageHelper imageHelper, IPhotoService photoService, IUnitOfWork dbu, ILogger<HotelService> logger)
+        public HotelService(IHotelRepository hotelRepository, IHotelImageRepository hotelImageRepository, IHotelAmenityRepository hotelAmenityRepository, IHotelPolicyRepository hotelPolicyRepository, IPropertyTypeRepository propTypeRepository, IImageHelper imageHelper, IPhotoService photoService, IUnitOfWork dbu, ILogger<HotelService> logger, IValidator<HotelSearchRequestDTO> validator)
         {
             _hotelRepository = hotelRepository;
             _hotelImageRepository = hotelImageRepository;
@@ -39,6 +111,7 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
             _photoService = photoService;
             _dbu = dbu;
             _logger = logger;
+            _validator = validator;
         }
 
         public async Task<string> GetOwnerDashBoard(int ownerId)
@@ -47,27 +120,63 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
         }
 
         // ================= SEARCH HOTELS BY FILTER (SearchForm.razor) =================
-        public async Task<List<SearchHotelResultDTO>> GetSearchOptionsAsync(string cityName, DateTime? checkIn, DateTime? checkOut,
-        int? adults, int? children, int? rooms)
+        public async Task<ApiResponse<IEnumerable<SearchHotelResultDTO>>> SearchHotelsAsync(HotelSearchRequestDTO request)
         {
-            var results = await _hotelRepository.GetSearchHotelsAsync(cityName, checkIn, checkOut, adults, children, rooms);
-
-            return results.Select(r => new SearchHotelResultDTO
+            try
             {
-                Id = r.Id,
-                Name = r.Name,
-                Address = r.Address,
-                Description = string.Empty, // Stored Procedure does not return Description
-                CityName = r.CityName,
-                CountryName = r.CountryName,
-                CoverImageUrl = r.CoverImageUrl ?? string.Empty,
-                PriceFrom = r.PriceFrom,
-                MaxAdultCapacity = r.MaxAdultCapacity,
-                MaxChildCapacity = r.MaxChildCapacity,
-                AvgRating = r.AvgRating,
-                ReviewCount = r.ReviewCount,
-                AvailableRooms = r.AvailableRooms
-            }).ToList();
+                var validationResult = await _validator.ValidateAsync(request);
+                if (!validationResult.IsValid)
+                {
+                    return new ApiResponse<IEnumerable<SearchHotelResultDTO>>
+                    {
+                        StatusCode = StatusCodeResponse.Error,
+                        Message = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage)),
+                        Content = Enumerable.Empty<SearchHotelResultDTO>()
+                    };
+                }
+
+                var results = await _hotelRepository.GetSearchHotelsAsync(
+                    request.CityName ?? string.Empty, 
+                    request.CheckIn, 
+                    request.CheckOut, 
+                    request.Adults, 
+                    request.Children, 
+                    request.Rooms);
+
+                var content = results.Select(r => new SearchHotelResultDTO
+                {
+                    Id = r.Id,
+                    Name = r.Name,
+                    Address = r.Address,
+                    Description = string.Empty,
+                    CityName = r.CityName,
+                    CountryName = r.CountryName,
+                    CoverImageUrl = r.CoverImageUrl ?? string.Empty,
+                    PriceFrom = r.PriceFrom,
+                    MaxAdultCapacity = r.MaxAdultCapacity,
+                    MaxChildCapacity = r.MaxChildCapacity,
+                    AvgRating = r.AvgRating,
+                    ReviewCount = r.ReviewCount,
+                    AvailableRooms = r.AvailableRooms
+                }).ToList();
+
+                return new ApiResponse<IEnumerable<SearchHotelResultDTO>>
+                {
+                    StatusCode = StatusCodeResponse.Success,
+                    Message = MessageResponse.Common.GET_SUCCESSFULLY,
+                    Content = content
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error searching hotels");
+                return new ApiResponse<IEnumerable<SearchHotelResultDTO>>
+                {
+                    StatusCode = StatusCodeResponse.Error,
+                    Message = MessageResponse.Common.ERROR_IN_SERVER,
+                    Content = Enumerable.Empty<SearchHotelResultDTO>()
+                };
+            }
         }
 
         #region PROPERTY TYPE
@@ -224,31 +333,9 @@ namespace HotelBooking.application.Services.Domains.HotelManagement
         [Obsolete]
         public async Task<ApiResponse<UploadResultDTO>> TestUploadImageToCloudinaryAsync(UploadFileDTO file, int userId)
         {
-            var uploadResult = new UploadResultDTO();
-
-            var uploadResponse = await _photoService.UploadPhotoAsync(file, userId);
-            var storedFileName = uploadResponse;
-
-            if (storedFileName == null)
-            {
-                uploadResult.Uploaded = false;
-                uploadResult.FileName = file.FileName;
-                uploadResult.StoredFileName = null;
-            }
-            else
-            {
-                uploadResult.Uploaded = true;
-                uploadResult.FileName = file.FileName;
-                uploadResult.StoredFileName = storedFileName;
-            }
-
-            return new ApiResponse<UploadResultDTO>
-            {
-                StatusCode = StatusCodeResponse.Success,
-                Message = uploadResult.Uploaded ? MessageResponse.UPDATE_SUCCESSFULLY : MessageResponse.UPDATE_FAILED,
-                Content = uploadResult
-            };
+            return await _photoService.UploadPhotoAsync(file, userId);
         }
+
     }
 }
 

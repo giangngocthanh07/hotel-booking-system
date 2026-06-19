@@ -1,73 +1,128 @@
 @page "/searchresult"
-
 @using HotelBooking.webapp.ViewModels.Hotel
-@using System.Net.Http
-@using Microsoft.AspNetCore.WebUtilities
+@using HotelBooking.webapp.Services
+@using HotelBooking.webapp.Helpers
 @inject NavigationManager NavManager
-@inject IHttpClientFactory _httpClientFactory
+@inject IHotelService HotelService
+@inject ISnackbar Snackbar
 
 <PageTitle>Search Results</PageTitle>
 
-<h3>Search Results</h3>
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-8">
+    <MudText Typo="Typo.h4" GutterBottom="true">Search Results</MudText>
 
-@if (Hotels == null)
-{
-    <div class="d-flex align-items-center p-4">
-        <MudProgressCircular Indeterminate="true" Color="Color.Primary" Class="me-3" />
-        <span>Searching for the best deals...</span>
-    </div>
-}
-else if (Hotels.Count == 0)
-{
-    <div class="alert alert-info border-0 shadow-sm mt-4">
-        <i class="fas fa-search-location me-2"></i>
-        No hotels found matching your criteria. Please try different dates or locations.
-    </div>
-}
-else
-{
-    <div class="hotel-list-container mt-4">
-        @foreach (var hotel in Hotels)
-        {
-            <HotelCard Hotel="hotel" />
-        }
-    </div>
-}
+    @if (_loading)
+    {
+        <div class="d-flex align-center p-4">
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary" Class="me-3" />
+            <MudText>Searching for the best deals...</MudText>
+        </div>
+    }
+    else if (_hotels == null || !_hotels.Any())
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Filled" Class="mt-4">
+            No hotels found matching your criteria. Please try different dates or locations.
+        </MudAlert>
+    }
+    else
+    {
+        <MudGrid Class="mt-4">
+            @foreach (var hotel in _hotels)
+            {
+                <MudItem xs="12">
+                    <MudCard Elevation="1" Class="pa-2 clickable-card" @onclick="@(() => NavigateToDetails(hotel.Id))">
+                        <MudCardContent>
+                            <MudGrid>
+                                <MudItem xs="12" sm="3">
+                                    <MudImage Src="@(hotel.CoverImageUrl ?? "images/hotel-placeholder.jpg")" 
+                                              Alt="@hotel.Name" Width="200" Height="150" ObjectFit="ObjectFit.Cover" Class="rounded-lg" />
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <div class="d-flex align-center">
+                                        <MudText Typo="Typo.h6">@hotel.Name</MudText>
+                                        <MudRating ReadOnly="true" SelectedValue="4" Size="Size.Small" Class="ml-2" />
+                                    </div>
+                                    <MudText Typo="Typo.body2" Class="mud-text-secondary"><MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" /> @hotel.Address, @hotel.CityName</MudText>
 
+                                    <div class="d-flex align-center mt-4">
+                                        <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Text">@hotel.AvgRating.ToString("F1")</MudChip>
+                                        <MudText Typo="Typo.caption" Class="ml-2">@hotel.ReviewCount Reviews</MudText>
+                                    </div>
+                                </MudItem>
+                                <MudItem xs="12" sm="3" Class="d-flex flex-column align-end justify-center">
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Starting from</MudText>
+                                    <MudText Typo="Typo.h5" Color="Color.Primary">@hotel.PriceFrom.ToString("C0", new System.Globalization.CultureInfo("vi-VN"))</MudText>
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">per night</MudText>
+
+                                    @if (hotel.AvailableRooms > 0)
+                                    {
+                                        <MudText Typo="Typo.caption" Color="Color.Error" Class="mt-2">Only @hotel.AvailableRooms rooms left!</MudText>
+                                    }
+
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="@(() => NavigateToDetails(hotel.Id))">View Details</MudButton>
+                                </MudItem>
+                            </MudGrid>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+</MudContainer>
+
+<style>
+    .clickable-card { cursor: pointer; transition: transform 0.2s; }
+    .clickable-card:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+</style>
 
 @code {
-    private List<SearchHotelResultDTO>? Hotels;
-    private HttpClient _httpClient = null!;
+    private List<SearchHotelResultDTO>? _hotels;
+    private bool _loading = true;
 
     protected override async Task OnInitializedAsync()
     {
-        _httpClient = _httpClientFactory.CreateClient("HotelBookingAPI");
+        await PerformSearch();
+    }
 
-        // Parse query strings from the URL
-        var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
-        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
-
-        // Extract search parameters
-        var destination = query["destination"];
-        var checkin = query["checkin"];
-        var checkout = query["checkout"];
-        var adults = query["adults"];
-        var children = query["children"];
-        var rooms = query["rooms"];
-
-        // Construct API URL with parameters
-        var apiUrl =
-$"v1/hotel/get-search-options?cityName={destination}&checkin={checkin}&checkout={checkout}&adults={adults}&children={children}&rooms={rooms}";
-
+    private async Task PerformSearch()
+    {
+        _loading = true;
         try
         {
-            Hotels = await _httpClient.GetFromJsonAsync<List<SearchHotelResultDTO>>(apiUrl);
-            Console.WriteLine($"Successfully fetched {Hotels?.Count} hotels.");
+            var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
+            var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+            var destination = query["destination"] ?? "";
+            var checkin = DateTime.TryParse(query["checkin"], out var ci) ? ci : (DateTime?)null;
+            var checkout = DateTime.TryParse(query["checkout"], out var co) ? co : (DateTime?)null;
+            var adults = int.TryParse(query["adults"], out var a) ? a : 1;
+            var children = int.TryParse(query["children"], out var c) ? c : 0;
+            var rooms = int.TryParse(query["rooms"], out var r) ? r : 1;
+
+            var response = await HotelService.SearchHotels(destination, checkin, checkout, adults, children, rooms);
+            if (response.StatusCode == StatusCodeResponse.Success && response.Content != null)
+            {
+                _hotels = response.Content.ToList();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? "Search failed.", Severity.Error);
+                _hotels = new();
+            }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Console.WriteLine($"Error fetching search results: {ex.Message}");
-            Hotels = new List<SearchHotelResultDTO>();
+            Snackbar.Add("An error occurred while searching.", Severity.Error);
+            _hotels = new();
         }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void NavigateToDetails(int hotelId)
+    {
+        NavManager.NavigateTo($"/hotel-details/{hotelId}");
     }
 }

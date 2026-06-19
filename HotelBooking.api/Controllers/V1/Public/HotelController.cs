@@ -3,6 +3,7 @@ using HotelBooking.application.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using HotelBooking.application.Services.Domains.HotelManagement;
+using HotelBooking.application.DTOs.Hotel;
 
 namespace HotelBooking.api.Controllers.V1.Public
 {
@@ -31,15 +32,17 @@ namespace HotelBooking.api.Controllers.V1.Public
         // ================= GET HOTEL SEARCH OPTIONS BY SearchForm.razor FILTER ================
 
         [HttpGet("get-search-options")]
-        public async Task<IActionResult> GetSearchOptionsAsync([FromQuery] string cityName,
-        [FromQuery] DateTime? checkIn,
-        [FromQuery] DateTime? checkOut,
-        [FromQuery] int? adults,
-        [FromQuery] int? children,
-        [FromQuery] int? rooms)
+        public async Task<IActionResult> GetSearchOptionsAsync([FromQuery] HotelSearchRequestDTO request)
         {
-            var response = await _hotelService.GetSearchOptionsAsync(cityName, checkIn, checkOut, adults, children, rooms);
-            return Ok(response);
+            var response = await _hotelService.SearchHotelsAsync(request);
+            return ApiResponseHandlerHelper.HandleResponse(response);
+        }
+
+        [HttpGet("get-hotel-details/{id}")]
+        public async Task<IActionResult> GetHotelDetailsAsync(int id)
+        {
+            var response = await _hotelService.GetHotelDetailsAsync(id);
+            return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
         [HttpGet("get-property-types")]

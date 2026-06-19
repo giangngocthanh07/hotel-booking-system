@@ -26,7 +26,7 @@
 }
 else
 {
-    <MasterDetailLayout @ref="_layoutRef" TItem="AmenityVM" TModel="BaseCreateOrUpdateAdminVM" Items="_items"
+    <MasterDetailLayout @ref="_layoutRef" TItem="HotelBooking.webapp.ViewModels.Admin.AmenityVM" TModel="BaseCreateOrUpdateAdminVM" Items="_items"
                         Model="@GetModel()" PageIndex="_paging.PageIndex ?? 1" TotalPages="_totalPages" TotalCount="_totalCount"
                         OnPageChanged="HandlePageChanged" OnSubmit="SaveData" IsEditMode="_isUpdate" OnEdit="OnEditItem"
                         OnDelete="HandleDelete" OnCancel="ResetForm">
@@ -237,7 +237,7 @@ else
     [Parameter] public int? TypeId { get; set; }
 
     // --- STATE MANAGEMENT ---
-    private List<AmenityVM>? _items;
+    private List<HotelBooking.webapp.ViewModels.Admin.AmenityVM>? _items;
     private AmenityCreateVM _createModel = new AmenityCreateVM();
     private AmenityUpdateVM _updateModel = new AmenityUpdateVM();
     private int _currentEditingId = 0;
@@ -256,7 +256,7 @@ else
     private BaseCreateOrUpdateAdminVM GetModel() => _isUpdate ? (BaseCreateOrUpdateAdminVM)_updateModel :
     (BaseCreateOrUpdateAdminVM)_createModel;
 
-    private MasterDetailLayout<AmenityVM, BaseCreateOrUpdateAdminVM>? _layoutRef;
+    private MasterDetailLayout<HotelBooking.webapp.ViewModels.Admin.AmenityVM, BaseCreateOrUpdateAdminVM>? _layoutRef;
 
     // --- LIFECYCLE ---
     // Override LoadDataAsync from AdminPageBase
@@ -279,7 +279,7 @@ else
                 }
                 else
                 {
-                    _items = new List<AmenityVM>();
+                    _items = new List<HotelBooking.webapp.ViewModels.Admin.AmenityVM>();
                     if (res.StatusCode != StatusCodeResponse.Success)
                         SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
                 }
@@ -288,7 +288,7 @@ else
         catch (Exception ex)
         {
             Logger.LogError(ex, "Error loading amenity data");
-            _items = new List<AmenityVM>();
+            _items = new List<HotelBooking.webapp.ViewModels.Admin.AmenityVM>();
         }
     }
 
@@ -323,7 +323,7 @@ else
     }
 
     // --- CRUD OPERATIONS ---
-    private void OnEditItem(AmenityVM item)
+    private void OnEditItem(HotelBooking.webapp.ViewModels.Admin.AmenityVM item)
     {
         _isUpdate = true;
         _currentEditingId = item.Id;
@@ -338,7 +338,7 @@ else
         _layoutRef?.TriggerValidate();
     }
 
-    private async Task HandleDelete(AmenityVM item)
+    private async Task HandleDelete(HotelBooking.webapp.ViewModels.Admin.AmenityVM item)
     {
         var res = await Service.DeleteAmenity(item.Id);
         SnackbarHelper.Show(_snackbar, res.StatusCode!, res.Message!);
@@ -366,7 +366,7 @@ else
 
     private async Task SaveData()
     {
-        ApiResponse<AmenityVM> res;
+        ApiResponse<HotelBooking.webapp.ViewModels.Admin.AmenityVM> res;
 
         if (_isUpdate)
             res = await Service.UpdateAmenity(_currentEditingId, _updateModel);

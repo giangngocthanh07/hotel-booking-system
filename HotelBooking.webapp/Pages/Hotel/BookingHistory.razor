@@ -1,0 +1,111 @@
+@page "/my-bookings"
+@using HotelBooking.webapp.ViewModels.Booking
+@using HotelBooking.webapp.Services
+@using HotelBooking.webapp.Helpers
+@attribute [Authorize]
+@inject IBookingService BookingService
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-8">
+    <MudText Typo="Typo.h4" GutterBottom="true">My Bookings</MudText>
+
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" @bind-ActivePanelIndex="_activeTab">
+        <MudTabPanel Text="All" OnClick="@(() => LoadHistory("All"))" />
+        <MudTabPanel Text="Upcoming" OnClick="@(() => LoadHistory("Confirmed"))" />
+        <MudTabPanel Text="Completed" OnClick="@(() => LoadHistory("Completed"))" />
+        <MudTabPanel Text="Cancelled" OnClick="@(() => LoadHistory("Cancelled"))" />
+    </MudTabs>
+
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+    }
+    else
+    {
+        <MudGrid Class="mt-4">
+            @foreach (var booking in _bookings)
+            {
+                <MudItem xs="12">
+                    <MudCard Elevation="1" Class="pa-2">
+                        <MudCardContent>
+                            <MudGrid>
+                                <MudItem xs="12" sm="3">
+                                    <MudImage Src="@(booking.HotelCoverImageUrl ?? "images/hotel-placeholder.jpg")" 
+                                              Alt="@booking.HotelName" Width="200" Height="150" ObjectFit="ObjectFit.Cover" Class="rounded-lg" />
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <MudText Typo="Typo.h6">@booking.HotelName</MudText>
+                                    <MudText Typo="Typo.body2" Class="mud-text-secondary">@booking.RoomTypeName</MudText>
+                                    <div class="d-flex align-center mt-2">
+                                        <MudIcon Icon="@Icons.Material.Filled.DateRange" Size="Size.Small" Class="mr-2" />
+                                        <MudText Typo="Typo.body2">@booking.CheckInDate.ToShortDateString() - @booking.CheckOutDate.ToShortDateString()</MudText>
+                                    </div>
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Reference: @booking.BookingReference</MudText>
+                                </MudItem>
+                                <MudItem xs="12" sm="3" Class="d-flex flex-column align-end justify-center">
+                                    <MudText Typo="Typo.h6" Color="Color.Primary">@booking.TotalPrice.ToString("C0", new System.Globalization.CultureInfo("vi-VN"))</MudText>
+                                    <MudChip T="string" Color="@GetStatusColor(booking.Status)" Size="Size.Small" Class="mt-2">@booking.Status</MudChip>
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-4" Size="Size.Small">View Details</MudButton>
+                                </MudItem>
+                            </MudGrid>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            }
+            @if (!_bookings.Any())
+            {
+                <MudItem xs="12" Class="d-flex flex-column align-center py-12">
+                    <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Default" />
+                    <MudText Typo="Typo.h6" Class="mud-text-secondary mt-4">No bookings found.</MudText>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+</MudContainer>
+
+@code {
+    private List<BookingHistoryVM> _bookings = new();
+    private bool _loading = true;
+    private int _activeTab = 0;
+    private string _currentStatus = "All";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadHistory("All");
+    }
+
+    private async Task LoadHistory(string status)
+    {
+        _currentStatus = status;
+        _loading = true;
+        try
+        {
+            var response = await BookingService.GetMyBookingHistory(status == "All" ? null : status);
+            if (response.StatusCode == StatusCodeResponse.Success && response.Content != null)
+            {
+                _bookings = response.Content.ToList();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? "Failed to load bookings.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("An error occurred.", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "Confirmed" => Color.Success,
+        "Pending" => Color.Info,
+        "Completed" => Color.Primary,
+        "Cancelled" => Color.Error,
+        _ => Color.Default
+    };
+}

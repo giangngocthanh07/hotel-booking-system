@@ -33,30 +33,40 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
 
         public async Task<ApiResponse<HotelRegistrationDetailDTO>> CreateRequestAsync(int ownerId, HotelRegistrationDTO request)
         {
+            if (ownerId <= 0)
+            {
+                return ResponseFactory.Failure<HotelRegistrationDetailDTO>(StatusCodeResponse.Unauthorized, MessageResponse.RequestManagement.HotelApproval.OWNER_ID_INVALID);
+            }
+
+            var validation = await _validator.ValidateAsync(request);
+            if (!validation.IsValid)
+            {
+                return ResponseFactory.Failure<HotelRegistrationDetailDTO>(
+                    StatusCodeResponse.BadRequest,
+                    validation.Errors.First().ErrorMessage);
+            }
+
             try
             {
-                // Check ownerId
-                if (ownerId <= 0)
-                {
-                    return ResponseFactory.Failure<HotelRegistrationDetailDTO>(StatusCodeResponse.Unauthorized, MessageResponse.RequestManagement.HotelApproval.OWNER_ID_INVALID);
-                }
-
-                var validation = await _validator.ValidateAsync(request);
-                if (!validation.IsValid)
-                {
-                    return ResponseFactory.Failure<HotelRegistrationDetailDTO>(
-                        StatusCodeResponse.BadRequest,
-                        validation.Errors.First().ErrorMessage);
-                }
-
-                // Check duplicate name
-                var hasDuplicateName = await _hotelRepo.AnyAsync(h => h.Name == request.Name);
-                if (hasDuplicateName)
+                // 1. Check duplicate name in existing Hotels
+                var hasDuplicateInHotels = await _hotelRepo.AnyAsync(h => h.Name == request.Name && h.IsDeleted != true);
+                if (hasDuplicateInHotels)
                 {
                     return ResponseFactory.Failure<HotelRegistrationDetailDTO>(
                         StatusCodeResponse.Conflict,
                         MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_NAME_ALREADY_EXISTS);
                 }
+
+                // 2. Check duplicate name in Pending Requests
+                var hasDuplicateInRequests = await _approvalRepo.AnyAsync(r => r.Name == request.Name && r.Status == RequestStatusConst.Pending);
+                if (hasDuplicateInRequests)
+                {
+                    return ResponseFactory.Failure<HotelRegistrationDetailDTO>(
+                        StatusCodeResponse.Conflict,
+                        "Một yêu cầu đăng ký cho khách sạn này đang chờ xử lý.");
+                }
+
+                await _unitOfWork.BeginTransactionAsync();
 
                 // Add Hotel Request to Hotel with Pending Status
                 var additionalData = new HotelAdditionalInfoForm
@@ -67,29 +77,13 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
                     PublicEmail = request.PublicEmail,
                     Latitude = request.Latitude,
                     Longitude = request.Longitude,
-                    PropType = new PropertyTypeDTO
-                    {
-                        Id = request.PropertyTypeId,
-                        Name = request.PropertyTypeName
-                    },
-                    Country = new CountryDTO
-                    {
-                        Id = request.CountryId,
-                        Name = request.CountryName
-                    },
-                    Province = new ProvinceDTO
-                    {
-                        Id = request.ProvinceId,
-                        Name = request.ProvinceName
-                    },
-                    Ward = new WardDTO
-                    {
-                        Id = request.WardId,
-                        Name = request.WardName
-                    }
+                    PropType = new PropertyTypeDTO { Id = request.PropertyTypeId, Name = request.PropertyTypeName },
+                    Country = new CountryDTO { Id = request.CountryId, Name = request.CountryName },
+                    Province = new ProvinceDTO { Id = request.ProvinceId, Name = request.ProvinceName },
+                    Ward = new WardDTO { Id = request.WardId, Name = request.WardName }
                 };
 
-                var hotel = new HotelApprovalRequest
+                var hotelRequest = new HotelApprovalRequest
                 {
                     OwnerId = ownerId,
                     Name = request.Name,
@@ -101,38 +95,49 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
                     Additional = JsonSerializer.Serialize(additionalData)
                 };
 
-                await _approvalRepo.AddAsync(hotel);
-                var result = await _unitOfWork.SaveChangesAsync();
+                await _approvalRepo.AddAsync(hotelRequest);
+                var saved = await _unitOfWork.SaveChangesAsync() > 0;
 
-                var dto = new HotelRegistrationDetailDTO
+                if (saved)
                 {
-                    RequestId = hotel.Id,
-                    OwnerId = hotel.OwnerId,
-                    Name = hotel.Name,
-                    Address = hotel.Address,
-                    Description = additionalData.Description,
-                    PropertyTypeId = additionalData.PropType.Id,
-                    PropertyTypeName = additionalData.PropType.Name,
-                    CountryId = additionalData.Country.Id,
-                    CountryName = additionalData.Country.Name,
-                    ProvinceId = additionalData.Province.Id,
-                    ProvinceName = additionalData.Province.Name,
-                    WardId = additionalData.Ward.Id,
-                    WardName = additionalData.Ward.Name,
-                    StarRating = additionalData.StarRating,
-                    Status = hotel.Status,
-                    PublicPhone = additionalData.PublicPhone,
-                    PublicEmail = additionalData.PublicEmail,
-                    Latitude = additionalData.Latitude,
-                    Longitude = additionalData.Longitude,
-                    TaxCode = hotel.TaxCode,
-                    BusinessLicenseUrl = hotel.BusinessLicenseUrl
-                };
+                    await _unitOfWork.CommitTransactionAsync();
 
-                return ResponseFactory.Success(dto, MessageResponse.RequestManagement.HotelApproval.HOTEL_REQUEST_CREATED_SUCCESS);
+                    var dto = new HotelRegistrationDetailDTO
+                    {
+                        RequestId = hotelRequest.Id,
+                        OwnerId = hotelRequest.OwnerId,
+                        Name = hotelRequest.Name,
+                        Address = hotelRequest.Address,
+                        Description = additionalData.Description,
+                        PropertyTypeId = additionalData.PropType.Id,
+                        PropertyTypeName = additionalData.PropType.Name,
+                        CountryId = additionalData.Country.Id,
+                        CountryName = additionalData.Country.Name,
+                        ProvinceId = additionalData.Province.Id,
+                        ProvinceName = additionalData.Province.Name,
+                        WardId = additionalData.Ward.Id,
+                        WardName = additionalData.Ward.Name,
+                        StarRating = additionalData.StarRating,
+                        Status = hotelRequest.Status,
+                        PublicPhone = additionalData.PublicPhone,
+                        PublicEmail = additionalData.PublicEmail,
+                        Latitude = additionalData.Latitude,
+                        Longitude = additionalData.Longitude,
+                        TaxCode = hotelRequest.TaxCode,
+                        BusinessLicenseUrl = hotelRequest.BusinessLicenseUrl
+                    };
+
+                    return ResponseFactory.Success(dto, MessageResponse.RequestManagement.HotelApproval.HOTEL_REQUEST_CREATED_SUCCESS);
+                }
+                else
+                {
+                    await _unitOfWork.RollBackTransactionAsync();
+                    return ResponseFactory.Failure<HotelRegistrationDetailDTO>(StatusCodeResponse.Error, "Không thể tạo yêu cầu đăng ký.");
+                }
             }
             catch (Exception ex)
             {
+                await _unitOfWork.RollBackTransactionAsync();
                 _logger.LogError("HotelRegistrationService.CreateRequestAsync: {ErrorMessage}", ex.Message);
                 return ResponseFactory.ServerError<HotelRegistrationDetailDTO>();
             }

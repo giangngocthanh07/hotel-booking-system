@@ -22,7 +22,6 @@ namespace HotelBooking.Tests.Services.AdminManagement
         private readonly Mock<IRoomQualityGroupRepository> _mockRoomQualityTypeRepo;
         private readonly Mock<IValidator<ManageMenuRequest>> _mockValidator;
         private readonly ManagementAdminService _managementAdminService;
-        private readonly Mock<ILogger> _logger;
 
 
 
@@ -39,7 +38,7 @@ namespace HotelBooking.Tests.Services.AdminManagement
                 _mockPolicyTypeRepo.Object,
                 _mockRoomQualityTypeRepo.Object,
                 _mockValidator.Object,
-                _logger!.Object
+                _mockLogger.Object
             );
         }
 

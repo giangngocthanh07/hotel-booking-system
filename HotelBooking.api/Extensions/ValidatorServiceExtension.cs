@@ -13,6 +13,8 @@ using HotelBooking.application.DTOs.Hotel;
 using HotelBooking.application.Validators.RoomManagement;
 using HotelBooking.application.Validators.RequestManagement.Customer;
 using HotelBooking.application.Validators.RequestManagement.Owner;
+using HotelBooking.application.DTOs.User;
+using HotelBooking.application.Validators.UserManagement;
 
 public static class ValidatorServiceExtension
 {
@@ -63,6 +65,7 @@ public static class ValidatorServiceExtension
     {
         services.AddScoped<IValidator<RoomTypeCreateDTO>, RoomTypeCreateValidator>();
         services.AddScoped<IValidator<RoomNameSuggestionRequest>, RoomNameSuggestionValidator>();
+        services.AddScoped<IValidator<HotelSearchRequestDTO>, HotelSearchValidator>();
     }
 
     public static void AddRequestManagementValidators(this IServiceCollection services)
@@ -76,5 +79,6 @@ public static class ValidatorServiceExtension
         services.AddScoped<IValidator<ManageMenuRequest>, ManageMenuRequestValidator>();
         services.AddScoped<IValidator<PagingRequest>, PagingRequestValidator>();
         services.AddScoped<IValidator<GetRoomAttributeRequest>, GetRoomAttributeRequestValidator>();
-    }
-}
+        services.AddScoped<IValidator<UpdateUserProfileDTO>, UpdateUserProfileValidator>();
+        }
+        }

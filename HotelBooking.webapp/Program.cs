@@ -47,6 +47,10 @@ builder.Services.AddHttpClient("HotelBookingAPI", client =>
 builder.Services.AddScoped<HotelFormState>();
 builder.Services.AddScoped<IManagementService, ManagementService>();
 builder.Services.AddScoped<IRequestService, RequestService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IBookingService, BookingService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IHotelService, HotelService>();
 
 // Add this line before builder.Build() to override the default port
 // builder.WebHost.UseUrls("http://0.0.0.0:5001");
