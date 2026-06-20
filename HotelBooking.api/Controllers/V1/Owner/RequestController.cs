@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HotelBooking.api.Controllers.V1.Owner
 {
-    [Route("api/v1/[controller]")]
+    [Route("api/v1/owner")]
     [ApiController]
     [Authorize(Roles = "Owner")]
     [Tags("Owner - Request")]

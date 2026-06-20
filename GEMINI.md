@@ -1,14 +1,20 @@
+@./skills/using-superpowers/SKILL.md
+@./skills/using-superpowers/references/gemini-tools.md
+
 # Hotel Booking Project - SDLC & Standards
 
 ## 1. Project Overview
+
 A hotel booking platform (Booking.com clone) connecting Hotel Owners and Customers.
 
 ## 2. Core Requirements
+
 - **Guest:** Search, View Details, Book, Pay, Review.
 - **Owner:** Register, Manage Hotels/Rooms, Track Bookings, Upgrade Account.
 - **Admin:** Approve Hotels/Owners, Manage Users, System Reports.
 
 ## 3. High-Level Architecture (Clean Architecture)
+
 - **Domain (Infrastructure/Models):** Entities, Value Objects, Domain Exceptions.
 - **Infrastructure:** Data Access (EF Core), Repository Implementations, Unit of Work, External Services (Email, Payment).
 - **Application:** Interfaces, DTOs, Services (Use Cases), Validators (FluentValidation), Mappers.
@@ -16,6 +22,7 @@ A hotel booking platform (Booking.com clone) connecting Hotel Owners and Custome
 - **Web UI:** Blazor WebAssembly/Server.
 
 ## 4. Coding Standards
+
 - **Naming:** PascalCase for Classes/Methods, camelCase for local variables, `_camelCase` for private fields.
 - **SOLID:** Strictly follow SOLID principles.
 - **Clean Code:** Methods < 20 lines, Classes < 300 lines (if possible).
@@ -24,6 +31,7 @@ A hotel booking platform (Booking.com clone) connecting Hotel Owners and Custome
 - **Error Handling:** Use global exception middleware; return structured responses (e.g., `Result<T>` or `ApiResponse<T>`).
 
 ## 5. Definition of Done (DoD)
+
 - [ ] Code is formatted and linted.
 - [ ] All tests (Unit & Integration) pass.
 - [ ] Logic is implemented as per Acceptance Criteria (AC).
@@ -32,6 +40,7 @@ A hotel booking platform (Booking.com clone) connecting Hotel Owners and Custome
 - [ ] Pull Request reviewed and approved.
 
 ## 6. Bad Practices to Avoid
+
 - **Fat Controllers:** Logic must reside in Application Services.
 - **Leaky Abstractions:** Infrastructure details (like SQL/EF) should not leak into Domain/Application.
 - **Anemic Domain Model:** (Optional) Try to put logic in Entities if it makes sense, or keep Services focused.
@@ -42,6 +51,7 @@ A hotel booking platform (Booking.com clone) connecting Hotel Owners and Custome
 - **Hardcoding Secrets:** Never commit API keys or connection strings. Use Environment Variables or KeyVault.
 
 ## 7. Project Rules
+
 - **Result Wrapper:** Always return a `Result<T>` or `ApiResponse<T>` from Services to indicate success/failure with error messages.
 - **Validation First:** No service logic should run until the input DTO is validated via `FluentValidation`.
 - **Repository Only:** Never use `DbContext` directly in the Application layer.

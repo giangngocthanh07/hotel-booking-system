@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using HotelBooking.application.Services.Domains.Media;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 //using V1.Models;
 
@@ -11,6 +12,7 @@ namespace HotelBooking.api.Controllers.V1.Owner
 {
     [Route("api/v1/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Owner")]
     public class FileController : ControllerBase
     {
         private readonly IFileService _fileService;

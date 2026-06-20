@@ -1,11 +1,13 @@
 @page "/owner/hotel-registration"
 @using HotelBooking.webapp.ViewModels.Request.HotelApproval
 @using HotelBooking.webapp.Services.Interface
+@using Blazored.LocalStorage
 @layout OwnerLayout
 
 @inject IRequestService RequestService
 @inject ISnackbar Snackbar
 @inject NavigationManager NavManager
+@inject ILocalStorageService LocalStorage
 
 <PageTitle>Hotel Registration – HotelBooking</PageTitle>
 
@@ -197,41 +199,44 @@
                     <strong>Pending</strong> status until an admin reviews and approves your registration.
                 </MudAlert>
 
-                <div class="hotel-reg-grid-2">
+                <div class="mb-3">
                     <MudTextField @bind-Value="_form.TaxCode" Label="Tax Code *" Variant="Variant.Outlined"
                                   For="@(() => _form.TaxCode)" Placeholder="10 or 13 digits" Adornment="Adornment.Start"
                                   AdornmentIcon="@Icons.Material.Filled.Receipt" HelperText="Must be exactly 10 or 13 digits" />
-
-                    <div>
-                        <div class="hotel-reg-field-label">Business License (PDF/Image) *</div>
-                        <MudFileUpload T="IBrowserFile" FilesChanged="UploadLicenseAsync" Accept=".pdf,.jpg,.jpeg,.png">
-                            <ActivatorContent>
-                                <MudButton Variant="Variant.Outlined" Color="Color.Primary"
-                                           StartIcon="@Icons.Material.Filled.CloudUpload" Disabled="@_isUploadingLicense"
-                                           Style="width: 100%; height: 56px; border-style: dashed; border-width: 2px;">
-                                    @if (_isUploadingLicense)
-                                    {
-                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
-                                        <span>Uploading...</span>
-                                    }
-                                    else
-                                    {
-                                        <span>Click to Upload File</span>
-                                    }
-                                </MudButton>
-                            </ActivatorContent>
-                        </MudFileUpload>
-
-                        @if (!string.IsNullOrEmpty(_form.BusinessLicenseUrl))
-                        {
-                            <MudAlert Severity="Severity.Success" Dense="true" Class="mt-2">
-                                License uploaded successfully!
-                            </MudAlert>
-                        }
-                        <ValidationMessage For="@(() => _form.BusinessLicenseUrl)"
-                                           style="color: #f44336; font-size: 0.75rem; margin-top: 4px; padding-left: 14px;" />
-                    </div>
                 </div>
+
+                <div class="mb-3">
+                    <div class="hotel-reg-upload-label">Business License (PDF/Image) *</div>
+                    <MudFileUpload T="IBrowserFile" FilesChanged="UploadLicenseAsync" Accept=".pdf,.jpg,.jpeg,.png"
+                                   Class="hotel-reg-file-upload">
+                        <ActivatorContent>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.CloudUpload" Disabled="@_isUploadingLicense"
+                                       Class="hotel-reg-upload-btn">
+                                @if (_isUploadingLicense)
+                                {
+                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+                                    <span>Uploading...</span>
+                                }
+                                else
+                                {
+                                    <span>Click to Upload File</span>
+                                }
+                            </MudButton>
+                        </ActivatorContent>
+                    </MudFileUpload>
+
+                    @if (!string.IsNullOrEmpty(_form.BusinessLicenseUrl))
+                    {
+                        <MudAlert Severity="Severity.Success" Dense="true" Class="mt-2">
+                            License uploaded successfully!
+                        </MudAlert>
+                    }
+                    <ValidationMessage For="@(() => _form.BusinessLicenseUrl)"
+                                       style="color: #f44336; font-size: 0.75rem; margin-top: 4px; padding-left: 14px;" />
+                </div>
+
+
 
                 <!-- Review Summary ───────────────────────────────────── -->
                 <div class="hotel-reg-section-title mt-5">
@@ -529,6 +534,37 @@
         padding-top: 1.25rem;
         border-top: 1px solid #f0f0f0;
     }
+
+    /* ── Upload cell — aligns TaxCode & Business License at top ──────── */
+    .hotel-reg-upload-cell {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    /* Label style matching MudTextField's outlined label */
+    .hotel-reg-upload-label {
+        font-size: .75rem;
+        font-weight: 500;
+        color: rgba(0, 0, 0, .6);
+        /* same as MudBlazor outlined label */
+        margin-bottom: .35rem;
+        padding-left: .1rem;
+        line-height: 1;
+    }
+
+    /* Make MudFileUpload fill the cell width */
+    .hotel-reg-file-upload {
+        width: 100%;
+    }
+
+    /* Dashed upload button — same height as MudTextField outlined (56px) */
+    .hotel-reg-upload-btn {
+        width: 100% !important;
+        height: 56px !important;
+        border-style: dashed !important;
+        border-width: 2px !important;
+    }
 </style>
 
 @code {
@@ -537,22 +573,27 @@
     // Short alias for MessageResponse.RequestManagement.HotelApproval.Registration
     private static class MR
     {
-        public const string SUBMIT_SUCCESS        = MessageResponse.RequestManagement.HotelApproval.Registration.SUBMIT_SUCCESS;
-        public const string SUBMIT_FAILED         = MessageResponse.RequestManagement.HotelApproval.Registration.SUBMIT_FAILED;
-        public const string FORM_RESET            = MessageResponse.RequestManagement.HotelApproval.Registration.FORM_RESET;
-        public const string UPLOAD_SUCCESS        = MessageResponse.RequestManagement.HotelApproval.Registration.UPLOAD_SUCCESS;
-        public const string UPLOAD_FAILED         = MessageResponse.RequestManagement.HotelApproval.Registration.UPLOAD_FAILED;
-        public const string UPLOAD_FILE_TOO_LARGE = MessageResponse.RequestManagement.HotelApproval.Registration.UPLOAD_FILE_TOO_LARGE;
-        public const string INVALID_HOTEL_NAME    = MessageResponse.RequestManagement.HotelApproval.Registration.INVALID_HOTEL_NAME;
-        public const string PROPERTY_TYPE_REQUIRED= MessageResponse.RequestManagement.HotelApproval.Registration.PROPERTY_TYPE_REQUIRED;
-        public const string INVALID_STAR_RATING   = MessageResponse.RequestManagement.HotelApproval.Registration.INVALID_STAR_RATING;
-        public const string PHONE_REQUIRED        = MessageResponse.RequestManagement.HotelApproval.Registration.PHONE_REQUIRED;
-        public const string EMAIL_REQUIRED        = MessageResponse.RequestManagement.HotelApproval.Registration.EMAIL_REQUIRED;
-        public const string INVALID_ADDRESS       = MessageResponse.RequestManagement.HotelApproval.Registration.INVALID_ADDRESS;
-        public const string PROVINCE_REQUIRED     = MessageResponse.RequestManagement.HotelApproval.Registration.PROVINCE_REQUIRED;
-        public const string WARD_REQUIRED         = MessageResponse.RequestManagement.HotelApproval.Registration.WARD_REQUIRED;
-        public const string INVALID_TAX_CODE      = MessageResponse.RequestManagement.HotelApproval.Registration.INVALID_TAX_CODE;
-        public const string LICENSE_URL_REQUIRED  = MessageResponse.RequestManagement.HotelApproval.Registration.LICENSE_URL_REQUIRED;
+        public const string SUBMIT_SUCCESS = MessageResponse.RequestManagement.HotelApproval.Registration.SUBMIT_SUCCESS;
+        public const string SUBMIT_FAILED = MessageResponse.RequestManagement.HotelApproval.Registration.SUBMIT_FAILED;
+        public const string FORM_RESET = MessageResponse.RequestManagement.HotelApproval.Registration.FORM_RESET;
+        public const string UPLOAD_SUCCESS = MessageResponse.RequestManagement.HotelApproval.Registration.UPLOAD_SUCCESS;
+        public const string UPLOAD_FAILED = MessageResponse.RequestManagement.HotelApproval.Registration.UPLOAD_FAILED;
+        public const string UPLOAD_FILE_TOO_LARGE =
+MessageResponse.RequestManagement.HotelApproval.Registration.UPLOAD_FILE_TOO_LARGE;
+        public const string INVALID_HOTEL_NAME =
+MessageResponse.RequestManagement.HotelApproval.Registration.INVALID_HOTEL_NAME;
+        public const string PROPERTY_TYPE_REQUIRED =
+MessageResponse.RequestManagement.HotelApproval.Registration.PROPERTY_TYPE_REQUIRED;
+        public const string INVALID_STAR_RATING =
+MessageResponse.RequestManagement.HotelApproval.Registration.INVALID_STAR_RATING;
+        public const string PHONE_REQUIRED = MessageResponse.RequestManagement.HotelApproval.Registration.PHONE_REQUIRED;
+        public const string EMAIL_REQUIRED = MessageResponse.RequestManagement.HotelApproval.Registration.EMAIL_REQUIRED;
+        public const string INVALID_ADDRESS = MessageResponse.RequestManagement.HotelApproval.Registration.INVALID_ADDRESS;
+        public const string PROVINCE_REQUIRED = MessageResponse.RequestManagement.HotelApproval.Registration.PROVINCE_REQUIRED;
+        public const string WARD_REQUIRED = MessageResponse.RequestManagement.HotelApproval.Registration.WARD_REQUIRED;
+        public const string INVALID_TAX_CODE = MessageResponse.RequestManagement.HotelApproval.Registration.INVALID_TAX_CODE;
+        public const string LICENSE_URL_REQUIRED =
+MessageResponse.RequestManagement.HotelApproval.Registration.LICENSE_URL_REQUIRED;
     }
 
     private readonly string[] _steps = { "Basic Info", "Contact", "Location", "Legal & Submit" };
@@ -565,6 +606,9 @@
     private List<WardVM> _wards = new();
     protected override async Task OnInitializedAsync()
     {
+        var token = await LocalStorage.GetItemAsync<string>("accessToken");
+        RequestService.SetToken(token ?? string.Empty);
+
         var ptResponse = await RequestService.GetPropertyTypesAsync();
         if (ptResponse != null && ptResponse.StatusCode == StatusCodeResponse.Success)
         {
@@ -615,21 +659,25 @@
 
         try
         {
+            var selectedProperty = _propertyTypes.FirstOrDefault(p => p.Id == _form.PropertyTypeId);
+            string propertyTypeName = selectedProperty != null ? selectedProperty.Name : string.Empty;
+
             var payload = new HotelRegistrationFormPayload
             {
-                Name               = _form.Name,
-                Description        = string.IsNullOrWhiteSpace(_form.Description) ? null : _form.Description,
-                PropertyTypeId     = _form.PropertyTypeId,
-                StarRating         = _form.StarRating,
-                PublicPhone        = _form.PublicPhone,
-                PublicEmail        = _form.PublicEmail,
-                Address            = _form.Address,
-                CountryId          = 4, // Vietnam default
-                ProvinceId         = _form.ProvinceId,
-                WardId             = _form.WardId,
-                Latitude           = _form.Latitude,
-                Longitude          = _form.Longitude,
-                TaxCode            = _form.TaxCode,
+                Name = _form.Name,
+                Description = string.IsNullOrWhiteSpace(_form.Description) ? null : _form.Description,
+                PropertyTypeId = _form.PropertyTypeId,
+                PropertyTypeName = propertyTypeName,
+                StarRating = _form.StarRating,
+                PublicPhone = _form.PublicPhone,
+                PublicEmail = _form.PublicEmail,
+                Address = _form.Address,
+                CountryId = 4, // Vietnam default
+                ProvinceId = _form.ProvinceId,
+                WardId = _form.WardId,
+                Latitude = _form.Latitude,
+                Longitude = _form.Longitude,
+                TaxCode = _form.TaxCode,
                 BusinessLicenseUrl = _form.BusinessLicenseUrl,
             };
 
@@ -666,7 +714,7 @@
 
     private bool ValidateStep0()
     {
-        if (string.IsNullOrWhiteSpace(_form.Name) || _form.Name.Length < 2 || _form.Name.Length > 50)
+        if (string.IsNullOrWhiteSpace(_form.Name) || _form.Name.Length < 6 || _form.Name.Length > 50)
         { Snackbar.Add(MR.INVALID_HOTEL_NAME, Severity.Error); return false; }
 
         if (_form.PropertyTypeId <= 0)
@@ -692,7 +740,7 @@
 
     private bool ValidateStep2()
     {
-        if (string.IsNullOrWhiteSpace(_form.Address) || _form.Address.Length < 5)
+        if (string.IsNullOrWhiteSpace(_form.Address) || _form.Address.Length < 10)
         { Snackbar.Add(MR.INVALID_ADDRESS, Severity.Error); return false; }
 
         if (_form.ProvinceId <= 0)
@@ -754,7 +802,7 @@
     public class HotelRegistrationFormVM
     {
         [Required(ErrorMessage = "Hotel name is required.")]
-        [StringLength(50, MinimumLength = 2, ErrorMessage = "Hotel name must be 2–50 characters.")]
+        [StringLength(50, MinimumLength = 6, ErrorMessage = "Hotel name must be 6–50 characters.")]
         public string Name { get; set; } = string.Empty;
 
         [MaxLength(500, ErrorMessage = "Description cannot exceed 500 characters.")]
@@ -776,7 +824,7 @@
         public string PublicEmail { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Address is required.")]
-        [StringLength(500, MinimumLength = 5, ErrorMessage = "Please enter a valid address (min. 5 characters).")]
+        [StringLength(500, MinimumLength = 10, ErrorMessage = "Please enter a valid address (min. 10 characters).")]
         public string Address { get; set; } = string.Empty;
 
         [Required]
@@ -798,7 +846,6 @@
         public string TaxCode { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Business license URL is required.")]
-        [Url(ErrorMessage = "Please enter a valid URL (e.g., https://...).")]
         public string BusinessLicenseUrl { get; set; } = string.Empty;
     }
 }

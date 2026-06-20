@@ -51,6 +51,10 @@ try
     /*  =============== BUILD APP =============== */
     var app = builder.Build();
 
+    //use middleware authentication
+    app.UseAuthentication();
+    app.UseAuthorization();
+
     // Add request logging
     app.UseSerilogRequestLogging();
 
@@ -68,9 +72,7 @@ try
         app.UseSwaggerUI();
     }
 
-    //use middleware authentication
-    app.UseAuthentication();
-    app.UseAuthorization();
+
     app.Run();
 }
 catch (Exception ex)

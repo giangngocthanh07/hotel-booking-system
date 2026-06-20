@@ -110,13 +110,13 @@ public class UserServiceTests : BaseServiceTest<UserService>
         
         // Mock GetByIdAsync logic inside the service which calls GetUserWithRoles
         _mockUserRepo.Setup(r => r.GetUserWithRoles(It.IsAny<System.Linq.Expressions.Expression<Func<User, bool>>>()))
-            .ReturnsAsync(new User 
+            .Returns(() => Task.FromResult(new User 
             { 
                 Id = userId, 
                 UserName = "testuser", 
-                AvatarUrl = user.AvatarUrl, // Keep original
+                AvatarUrl = user.AvatarUrl, // Lazily evaluated at invocation time
                 UserRoles = new List<UserRole>() 
-            });
+            }));
 
         // Act
         var result = await _service.UpdateProfileAsync(userId, request);

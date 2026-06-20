@@ -28,7 +28,8 @@ public class HotelRegistrationValidator : AbstractValidator<HotelRegistrationDTO
             .GreaterThan(0).WithMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_INVALID_PROPERTY_TYPEID);
 
         RuleFor(x => x.StarRating)
-            .InclusiveBetween(1, 5).WithMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_INVALID_STARRATING);
+            .InclusiveBetween(1, 5).WithMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_INVALID_STARRATING)
+            .When(x => x.StarRating.HasValue);
 
         RuleFor(x => x.PublicPhone)
             .NotEmpty().WithMessage(MessageResponse.Validation.EMPTY_PHONE_NUMBER)

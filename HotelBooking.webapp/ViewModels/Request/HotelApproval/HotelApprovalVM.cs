@@ -7,7 +7,7 @@ public class HotelRegistrationDetailVM : BaseRequestVM
     public override string RequesterName => Name;
     public override RequestType Type => RequestType.HotelApproval;
 
-    public int HotelId { get; set; }
+    public int? HotelId { get; set; }
     public string Name { get; set; } = string.Empty;
     public int OwnerId { get; set; }
     public string OwnerFullName { get; set; } = string.Empty;
@@ -43,7 +43,7 @@ public class HotelRegistrationFormPayload
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public int PropertyTypeId { get; set; }
-    public string? PropertyTypeName { get; set; }
+    public string PropertyTypeName { get; set; } = string.Empty;
     public int? StarRating { get; set; }
     public string PublicPhone { get; set; } = string.Empty;
     public string PublicEmail { get; set; } = string.Empty;

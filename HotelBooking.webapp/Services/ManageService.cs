@@ -85,95 +85,95 @@ public class ManagementService : IManagementService
         return await _http.GetApiAsync<ManageMenuResultVM>($"{BaseUrl}/get-manage-menu/{module}");
     }
 
-    public Task<ApiResponse<PagedManageResult<ServiceVM>>> GetServicesByType(int? typeId, PagingRequest paging)
-        => GetGenericTyped<ServiceVM>($"{BaseUrl}/get-service-data", typeId, paging);
+    public async Task<ApiResponse<PagedManageResult<ServiceVM>>> GetServicesByType(int? typeId, PagingRequest paging)
+        => await GetGenericTyped<ServiceVM>($"{BaseUrl}/get-service-data", typeId, paging);
 
-    public Task<ApiResponse<PagedManageResult<PolicyVM>>> GetPoliciesByType(int? typeId, PagingRequest paging)
-        => GetGenericTyped<PolicyVM>($"{BaseUrl}/get-policy-data", typeId, paging);
+    public async Task<ApiResponse<PagedManageResult<PolicyVM>>> GetPoliciesByType(int? typeId, PagingRequest paging)
+        => await GetGenericTyped<PolicyVM>($"{BaseUrl}/get-policy-data", typeId, paging);
 
-    public Task<ApiResponse<PagedManageResult<AmenityVM>>> GetAmenitiesByType(int? typeId, PagingRequest paging)
-        => GetGenericTyped<AmenityVM>($"{BaseUrl}/get-amenity-data", typeId, paging);
+    public async Task<ApiResponse<PagedManageResult<AmenityVM>>> GetAmenitiesByType(int? typeId, PagingRequest paging)
+        => await GetGenericTyped<AmenityVM>($"{BaseUrl}/get-amenity-data", typeId, paging);
 
-    public Task<ApiResponse<PagedManageResult<RoomQualityVM>>> GetRoomQualitiesByType(int? typeId, PagingRequest paging)
-        => GetGenericTyped<RoomQualityVM>($"{BaseUrl}/get-room-quality-data", typeId, paging);
+    public async Task<ApiResponse<PagedManageResult<RoomQualityVM>>> GetRoomQualitiesByType(int? typeId, PagingRequest paging)
+        => await GetGenericTyped<RoomQualityVM>($"{BaseUrl}/get-room-quality-data", typeId, paging);
 
     // ==========================================
     // 2. ROOM ATTRIBUTES (NON-TYPED DATA)
     // ==========================================
-    public Task<ApiResponse<PagedManageResult<UnitTypeVM>>> GetUnitTypes(PagingRequest paging)
-        => GetAttributePaged<UnitTypeVM>(RoomAttributeType.UnitType, paging);
+    public async Task<ApiResponse<PagedManageResult<UnitTypeVM>>> GetUnitTypes(PagingRequest paging)
+        => await GetAttributePaged<UnitTypeVM>(RoomAttributeType.UnitType, paging);
 
-    public Task<ApiResponse<PagedManageResult<BedTypeVM>>> GetBedTypes(PagingRequest paging)
-        => GetAttributePaged<BedTypeVM>(RoomAttributeType.BedType, paging);
+    public async Task<ApiResponse<PagedManageResult<BedTypeVM>>> GetBedTypes(PagingRequest paging)
+        => await GetAttributePaged<BedTypeVM>(RoomAttributeType.BedType, paging);
 
-    public Task<ApiResponse<PagedManageResult<RoomViewVM>>> GetRoomViews(PagingRequest paging)
-        => GetAttributePaged<RoomViewVM>(RoomAttributeType.RoomView, paging);
+    public async Task<ApiResponse<PagedManageResult<RoomViewVM>>> GetRoomViews(PagingRequest paging)
+        => await GetAttributePaged<RoomViewVM>(RoomAttributeType.RoomView, paging);
 
     // ==========================================
     // 3. DELETE OPERATIONS
     // ==========================================
-    public Task<ApiResponse<bool>> DeleteService(int id) => DeleteGeneric("delete-service", id);
-    public Task<ApiResponse<bool>> DeletePolicy(int id) => DeleteGeneric("delete-policy", id);
-    public Task<ApiResponse<bool>> DeleteAmenity(int id) => DeleteGeneric("delete-amenity", id);
-    public Task<ApiResponse<bool>> DeleteRoomQuality(int id) => DeleteGeneric("delete-room-quality", id);
-    public Task<ApiResponse<bool>> DeleteRoomView(int id) => DeleteGeneric("delete-room-view", id);
-    public Task<ApiResponse<bool>> DeleteBedType(int id) => DeleteGeneric("delete-bed-type", id);
-    public Task<ApiResponse<bool>> DeleteUnitType(int id) => DeleteGeneric("delete-unit-type", id);
+    public async Task<ApiResponse<bool>> DeleteService(int id) => await DeleteGeneric("delete-service", id);
+    public async Task<ApiResponse<bool>> DeletePolicy(int id) => await DeleteGeneric("delete-policy", id);
+    public async Task<ApiResponse<bool>> DeleteAmenity(int id) => await DeleteGeneric("delete-amenity", id);
+    public async Task<ApiResponse<bool>> DeleteRoomQuality(int id) => await DeleteGeneric("delete-room-quality", id);
+    public async Task<ApiResponse<bool>> DeleteRoomView(int id) => await DeleteGeneric("delete-room-view", id);
+    public async Task<ApiResponse<bool>> DeleteBedType(int id) => await DeleteGeneric("delete-bed-type", id);
+    public async Task<ApiResponse<bool>> DeleteUnitType(int id) => await DeleteGeneric("delete-unit-type", id);
 
     // ==========================================
     // 4. CREATE OPERATIONS
     // ==========================================
-    public Task<ApiResponse<ServiceVM>> CreateService(ServiceCreateVM vm)
-        => PostGenericWithSlug<ServiceVM, ServiceCreateVM>(vm, isService: true);
+    public async Task<ApiResponse<ServiceVM>> CreateService(ServiceCreateVM vm)
+        => await PostGenericWithSlug<ServiceVM, ServiceCreateVM>(vm, isService: true);
 
-    public Task<ApiResponse<PolicyVM>> CreatePolicy(PolicyCreateVM vm)
-        => PostGenericWithSlug<PolicyVM, PolicyCreateVM>(vm, isService: false, isPolicy: true);
+    public async Task<ApiResponse<PolicyVM>> CreatePolicy(PolicyCreateVM vm)
+        => await PostGenericWithSlug<PolicyVM, PolicyCreateVM>(vm, isService: false, isPolicy: true);
 
-    public Task<ApiResponse<AmenityVM>> CreateAmenity(AmenityCreateVM vm)
-        => PostGeneric<AmenityVM, AmenityCreateVM>("create-amenity", vm);
+    public async Task<ApiResponse<AmenityVM>> CreateAmenity(AmenityCreateVM vm)
+        => await PostGeneric<AmenityVM, AmenityCreateVM>("create-amenity", vm);
 
-    public Task<ApiResponse<RoomQualityVM>> CreateRoomQuality(RoomQualityCreateVM vm)
-        => PostGeneric<RoomQualityVM, RoomQualityCreateVM>("create-room-quality", vm);
+    public async Task<ApiResponse<RoomQualityVM>> CreateRoomQuality(RoomQualityCreateVM vm)
+        => await PostGeneric<RoomQualityVM, RoomQualityCreateVM>("create-room-quality", vm);
 
-    public Task<ApiResponse<UnitTypeVM>> CreateUnitType(UnitTypeCreateVM vm)
-        => PostGeneric<UnitTypeVM, UnitTypeCreateVM>("create-unit-type", vm);
+    public async Task<ApiResponse<UnitTypeVM>> CreateUnitType(UnitTypeCreateVM vm)
+        => await PostGeneric<UnitTypeVM, UnitTypeCreateVM>("create-unit-type", vm);
 
-    public Task<ApiResponse<BedTypeVM>> CreateBedType(BedTypeCreateVM vm)
-        => PostGeneric<BedTypeVM, BedTypeCreateVM>("create-bed-type", vm);
+    public async Task<ApiResponse<BedTypeVM>> CreateBedType(BedTypeCreateVM vm)
+        => await PostGeneric<BedTypeVM, BedTypeCreateVM>("create-bed-type", vm);
 
-    public Task<ApiResponse<RoomViewVM>> CreateRoomView(RoomViewCreateVM vm)
-        => PostGeneric<RoomViewVM, RoomViewCreateVM>("create-room-view", vm);
+    public async Task<ApiResponse<RoomViewVM>> CreateRoomView(RoomViewCreateVM vm)
+        => await PostGeneric<RoomViewVM, RoomViewCreateVM>("create-room-view", vm);
 
     // ==========================================
     // 5. UPDATE OPERATIONS
     // ==========================================
-    public Task<ApiResponse<ServiceVM>> UpdateService(int id, ServiceUpdateVM vm)
-        => PutGenericWithSlug<ServiceVM, ServiceUpdateVM>(id, vm, isService: true);
+    public async Task<ApiResponse<ServiceVM>> UpdateService(int id, ServiceUpdateVM vm)
+        => await PutGenericWithSlug<ServiceVM, ServiceUpdateVM>(id, vm, isService: true);
 
-    public Task<ApiResponse<PolicyVM>> UpdatePolicy(int id, PolicyUpdateVM vm)
-        => PutGenericWithSlug<PolicyVM, PolicyUpdateVM>(id, vm, isService: false, isPolicy: true);
+    public async Task<ApiResponse<PolicyVM>> UpdatePolicy(int id, PolicyUpdateVM vm)
+        => await PutGenericWithSlug<PolicyVM, PolicyUpdateVM>(id, vm, isService: false, isPolicy: true);
 
-    public Task<ApiResponse<AmenityVM>> UpdateAmenity(int id, AmenityUpdateVM vm)
-        => PutGeneric<AmenityVM, AmenityUpdateVM>("update-amenity", id, vm);
+    public async Task<ApiResponse<AmenityVM>> UpdateAmenity(int id, AmenityUpdateVM vm)
+        => await PutGeneric<AmenityVM, AmenityUpdateVM>("update-amenity", id, vm);
 
-    public Task<ApiResponse<RoomQualityVM>> UpdateRoomQuality(int id, RoomQualityUpdateVM vm)
-        => PutGeneric<RoomQualityVM, RoomQualityUpdateVM>("update-room-quality", id, vm);
+    public async Task<ApiResponse<RoomQualityVM>> UpdateRoomQuality(int id, RoomQualityUpdateVM vm)
+        => await PutGeneric<RoomQualityVM, RoomQualityUpdateVM>("update-room-quality", id, vm);
 
-    public Task<ApiResponse<UnitTypeVM>> UpdateUnitType(int id, UnitTypeUpdateVM vm)
-        => PutGeneric<UnitTypeVM, UnitTypeUpdateVM>("update-unit-type", id, vm);
+    public async Task<ApiResponse<UnitTypeVM>> UpdateUnitType(int id, UnitTypeUpdateVM vm)
+        => await PutGeneric<UnitTypeVM, UnitTypeUpdateVM>("update-unit-type", id, vm);
 
-    public Task<ApiResponse<BedTypeVM>> UpdateBedType(int id, BedTypeUpdateVM vm)
-        => PutGeneric<BedTypeVM, BedTypeUpdateVM>("update-bed-type", id, vm);
+    public async Task<ApiResponse<BedTypeVM>> UpdateBedType(int id, BedTypeUpdateVM vm)
+        => await PutGeneric<BedTypeVM, BedTypeUpdateVM>("update-bed-type", id, vm);
 
-    public Task<ApiResponse<RoomViewVM>> UpdateRoomView(int id, RoomViewUpdateVM vm)
-        => PutGeneric<RoomViewVM, RoomViewUpdateVM>("update-room-view", id, vm);
+    public async Task<ApiResponse<RoomViewVM>> UpdateRoomView(int id, RoomViewUpdateVM vm)
+        => await PutGeneric<RoomViewVM, RoomViewUpdateVM>("update-room-view", id, vm);
 
     // ==========================================
     // 6. PRIVATE GENERIC HELPERS
     // ==========================================
 
     // Helper: Construct URL for Typed data retrieval
-    private Task<ApiResponse<PagedManageResult<T>>> GetGenericTyped<T>(string endpoint, int? typeId, PagingRequest paging)
+    private async Task<ApiResponse<PagedManageResult<T>>> GetGenericTyped<T>(string endpoint, int? typeId, PagingRequest paging)
     {
         var queryParams = new List<string>();
         if (typeId.HasValue) queryParams.Add($"typeId={typeId}");
@@ -181,11 +181,11 @@ public class ManagementService : IManagementService
         queryParams.Add($"pageSize={paging.PageSize}");
 
         var url = $"{endpoint}?{string.Join("&", queryParams)}";
-        return _http.GetApiAsync<PagedManageResult<T>>(url);
+        return await _http.GetApiAsync<PagedManageResult<T>>(url);
     }
 
     // Helper: Construct URL for Room Attributes (Unified endpoint)
-    private Task<ApiResponse<PagedManageResult<T>>> GetAttributePaged<T>(RoomAttributeType type, PagingRequest paging, int? typeId = null)
+    private async Task<ApiResponse<PagedManageResult<T>>> GetAttributePaged<T>(RoomAttributeType type, PagingRequest paging, int? typeId = null)
     {
         var url = $"{BaseUrl}/room-attribute/get-paged-data" +
                   $"?type={(int)type}" +
@@ -194,7 +194,7 @@ public class ManagementService : IManagementService
 
         if (typeId.HasValue) url += $"&typeId={typeId}";
 
-        return _http.GetApiAsync<PagedManageResult<T>>(url);
+        return await _http.GetApiAsync<PagedManageResult<T>>(url);
     }
 
     // Helper: Dynamic Slug Resolution for polymorphic Services
@@ -223,27 +223,27 @@ public class ManagementService : IManagementService
     }
 
     // Helper: Polymorphic POST with slug support
-    private Task<ApiResponse<TResponse>> PostGenericWithSlug<TResponse, TRequest>(TRequest vm, bool isService = false, bool isPolicy = false)
+    private async Task<ApiResponse<TResponse>> PostGenericWithSlug<TResponse, TRequest>(TRequest vm, bool isService = false, bool isPolicy = false)
     {
         var slug = isService ? GetServiceSlug(vm) : isPolicy ? GetPolicySlug(vm) : "";
         var url = string.IsNullOrEmpty(slug) ? $"{BaseUrl}/create" : $"{BaseUrl}/create-{slug}";
-        return _http.PostApiAsync<TResponse, TRequest>(url, vm);
+        return await _http.PostApiAsync<TResponse, TRequest>(url, vm);
     }
 
     // Helper: Polymorphic PUT with slug support
-    private Task<ApiResponse<TResponse>> PutGenericWithSlug<TResponse, TRequest>(int id, TRequest vm, bool isService = false, bool isPolicy = false)
+    private async Task<ApiResponse<TResponse>> PutGenericWithSlug<TResponse, TRequest>(int id, TRequest vm, bool isService = false, bool isPolicy = false)
     {
         var slug = isService ? GetServiceSlug(vm) : isPolicy ? GetPolicySlug(vm) : "";
         var url = string.IsNullOrEmpty(slug) ? $"{BaseUrl}/update/{id}" : $"{BaseUrl}/update-{slug}/{id}";
-        return _http.PutApiAsync<TResponse, TRequest>(url, vm);
+        return await _http.PutApiAsync<TResponse, TRequest>(url, vm);
     }
 
-    private Task<ApiResponse<TResponse>> PostGeneric<TResponse, TRequest>(string endpoint, TRequest vm)
-     => _http.PostApiAsync<TResponse, TRequest>($"{BaseUrl}/{endpoint}", vm);
+    private async Task<ApiResponse<TResponse>> PostGeneric<TResponse, TRequest>(string endpoint, TRequest vm)
+     => await _http.PostApiAsync<TResponse, TRequest>($"{BaseUrl}/{endpoint}", vm);
 
-    private Task<ApiResponse<TResponse>> PutGeneric<TResponse, TRequest>(string endpoint, int id, TRequest vm)
-     => _http.PutApiAsync<TResponse, TRequest>($"{BaseUrl}/{endpoint}/{id}", vm);
+    private async Task<ApiResponse<TResponse>> PutGeneric<TResponse, TRequest>(string endpoint, int id, TRequest vm)
+     => await _http.PutApiAsync<TResponse, TRequest>($"{BaseUrl}/{endpoint}/{id}", vm);
 
-    private Task<ApiResponse<bool>> DeleteGeneric(string endpoint, int id)
-        => _http.DeleteApiAsync<bool>($"{BaseUrl}/{endpoint}/{id}");
+    private async Task<ApiResponse<bool>> DeleteGeneric(string endpoint, int id)
+        => await _http.DeleteApiAsync<bool>($"{BaseUrl}/{endpoint}/{id}");
 }

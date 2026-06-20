@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using HotelBooking.webapp.Helpers;
 using HotelBooking.webapp.Helpers.Common;
 using HotelBooking.webapp.ViewModels.Hotel;
 using HotelBooking.webapp.ViewModels.Request;
@@ -162,95 +163,96 @@ public class RequestService : IRequestService
     // GENERIC METHODS (Polymorphism Core)
     // ==========================================
 
-    public Task<ApiResponse<PagedResult<T>>> GetRequestsAsync<T>(
+    public async Task<ApiResponse<PagedResult<T>>> GetRequestsAsync<T>(
         RequestType type,
         int pageIndex = 1,
         int pageSize = 10,
         string? status = null) where T : BaseRequestVM
     {
         var url = BuildPaginatedUrl(type.GetApiPath(), pageIndex, pageSize, status);
-        return _http.GetApiAsync<PagedResult<T>>(url);
+        return await _http.GetApiAsync<PagedResult<T>>(url);
     }
 
-    public Task<ApiResponse<T>> GetRequestByIdAsync<T>(RequestType type, int id) where T : BaseRequestVM
+    public async Task<ApiResponse<T>> GetRequestByIdAsync<T>(RequestType type, int id) where T : BaseRequestVM
     {
         var url = $"{BaseUrl}/{type.GetApiPath()}/{id}";
-        return _http.GetApiAsync<T>(url);
+        return await _http.GetApiAsync<T>(url);
     }
 
-    public Task<ApiResponse<bool>> ApproveRequestAsync(RequestType type, int id)
+    public async Task<ApiResponse<bool>> ApproveRequestAsync(RequestType type, int id)
     {
         var url = $"{BaseUrl}/{type.GetApiPath()}/{id}/approve";
-        return _http.PostApiAsync<bool>(url);
+        return await _http.PostApiAsync<bool>(url);
     }
 
-    public Task<ApiResponse<bool>> RejectRequestAsync(RequestType type, int id)
+    public async Task<ApiResponse<bool>> RejectRequestAsync(RequestType type, int id)
     {
         var url = $"{BaseUrl}/{type.GetApiPath()}/{id}/reject";
-        return _http.PostApiAsync<bool>(url);
+        return await _http.PostApiAsync<bool>(url);
     }
 
     // ==========================================
     // OVERVIEW / STATISTICS
     // ==========================================
 
-    public Task<ApiResponse<RequestStatsVM>> GetStatsAsync()
-        => _http.GetApiAsync<RequestStatsVM>($"{BaseUrl}/requests/stats");
+    public async Task<ApiResponse<RequestStatsVM>> GetStatsAsync()
+        => await _http.GetApiAsync<RequestStatsVM>($"{BaseUrl}/requests/stats");
 
-    public Task<ApiResponse<RequestTypeStatsVM>> GetStatsByTypeAsync(RequestType type)
-        => _http.GetApiAsync<RequestTypeStatsVM>($"{BaseUrl}/{type.GetApiPath()}/stats");
+    public async Task<ApiResponse<RequestTypeStatsVM>> GetStatsByTypeAsync(RequestType type)
+        => await _http.GetApiAsync<RequestTypeStatsVM>($"{BaseUrl}/{type.GetApiPath()}/stats");
 
-    public Task<ApiResponse<List<RecentRequestVM>>> GetRecentRequestsAsync(int count = 10)
-        => _http.GetApiAsync<List<RecentRequestVM>>($"{BaseUrl}/requests/recent?count={count}");
+    public async Task<ApiResponse<List<RecentRequestVM>>> GetRecentRequestsAsync(int count = 10)
+        => await _http.GetApiAsync<List<RecentRequestVM>>($"{BaseUrl}/requests/recent?count={count}");
 
     // ==========================================
     // SHORTCUT METHODS (Convenience)
     // ==========================================
 
-    public Task<ApiResponse<PagedResult<UpgradeRequestVM>>> GetUpgradeRequestsAsync(
+    public async Task<ApiResponse<PagedResult<UpgradeRequestVM>>> GetUpgradeRequestsAsync(
         int pageIndex = 1,
         int pageSize = 10,
         string? status = null)
-        => GetRequestsAsync<UpgradeRequestVM>(RequestType.UpgradeOwner, pageIndex, pageSize, status);
+        => await GetRequestsAsync<UpgradeRequestVM>(RequestType.UpgradeOwner, pageIndex, pageSize, status);
 
-    public Task<ApiResponse<UpgradeRequestVM>> GetUpgradeRequestByIdAsync(int id)
-        => GetRequestByIdAsync<UpgradeRequestVM>(RequestType.UpgradeOwner, id);
+    public async Task<ApiResponse<UpgradeRequestVM>> GetUpgradeRequestByIdAsync(int id)
+        => await GetRequestByIdAsync<UpgradeRequestVM>(RequestType.UpgradeOwner, id);
 
-    public Task<ApiResponse<bool>> ApproveUpgradeRequestAsync(int id)
-        => ApproveRequestAsync(RequestType.UpgradeOwner, id);
+    public async Task<ApiResponse<bool>> ApproveUpgradeRequestAsync(int id)
+        => await ApproveRequestAsync(RequestType.UpgradeOwner, id);
 
-    public Task<ApiResponse<bool>> RejectUpgradeRequestAsync(int id)
-        => RejectRequestAsync(RequestType.UpgradeOwner, id);
+    public async Task<ApiResponse<bool>> RejectUpgradeRequestAsync(int id)
+        => await RejectRequestAsync(RequestType.UpgradeOwner, id);
 
-    public Task<ApiResponse<PagedResult<HotelRegistrationDetailVM>>> GetHotelApprovalsAsync(
+    public async Task<ApiResponse<PagedResult<HotelRegistrationDetailVM>>> GetHotelApprovalsAsync(
         int pageIndex = 1,
         int pageSize = 10,
         string? status = null)
-        => GetRequestsAsync<HotelRegistrationDetailVM>(RequestType.HotelApproval, pageIndex, pageSize, status);
+        => await GetRequestsAsync<HotelRegistrationDetailVM>(RequestType.HotelApproval, pageIndex, pageSize, status);
 
-    public Task<ApiResponse<bool>> ApproveHotelApprovalAsync(int id)
-        => ApproveRequestAsync(RequestType.HotelApproval, id);
+    public async Task<ApiResponse<bool>> ApproveHotelApprovalAsync(int id)
+        => await ApproveRequestAsync(RequestType.HotelApproval, id);
 
-    public Task<ApiResponse<bool>> RejectHotelApprovalAsync(int id)
-        => RejectRequestAsync(RequestType.HotelApproval, id);
+    public async Task<ApiResponse<bool>> RejectHotelApprovalAsync(int id)
+        => await RejectRequestAsync(RequestType.HotelApproval, id);
 
     // ==========================================
     // HOTEL REGISTRATION METHODS
     // ==========================================
 
-    public Task<ApiResponse<List<CountryVM>>> GetCountriesAsync()
-        => _http.GetApiAsync<List<CountryVM>>("v1/location/get-countries");
-    public Task<ApiResponse<List<PropertyTypeVM>>> GetPropertyTypesAsync()
-        => _http.GetApiAsync<List<PropertyTypeVM>>("v1/hotel/get-property-types");
+    public async Task<ApiResponse<List<CountryVM>>> GetCountriesAsync()
+        => await _http.GetApiAsync<List<CountryVM>>("v1/location/get-countries");
+    public async Task<ApiResponse<List<PropertyTypeVM>>> GetPropertyTypesAsync()
+        => await _http.GetApiAsync<List<PropertyTypeVM>>("v1/hotel/get-property-types");
 
-    public Task<ApiResponse<HotelRegistrationDetailVM>> SubmitHotelRegistrationAsync(HotelRegistrationFormPayload payload)
-        => _http.PostApiAsync<HotelRegistrationDetailVM, HotelRegistrationFormPayload>("v1/owner/hotel-registration", payload);
+    public async Task<ApiResponse<HotelRegistrationDetailVM>> SubmitHotelRegistrationAsync(HotelRegistrationFormPayload payload)
 
-    public Task<ApiResponse<List<ProvinceVM>>> GetProvincesAsync(int countryId = 4)
-        => _http.GetApiAsync<List<ProvinceVM>>($"v1/location/get-provinces/{countryId}");
+        => await _http.PostApiAsync<HotelRegistrationDetailVM, HotelRegistrationFormPayload>("v1/owner/hotel-registration", payload);
 
-    public Task<ApiResponse<List<WardVM>>> GetWardsByProvinceAsync(int provinceId)
-        => _http.GetApiAsync<List<WardVM>>($"v1/location/get-wards/{provinceId}");
+    public async Task<ApiResponse<List<ProvinceVM>>> GetProvincesAsync(int countryId = 4)
+        => await _http.GetApiAsync<List<ProvinceVM>>($"v1/location/get-provinces/{countryId}");
+
+    public async Task<ApiResponse<List<WardVM>>> GetWardsByProvinceAsync(int provinceId)
+        => await _http.GetApiAsync<List<WardVM>>($"v1/location/get-wards/{provinceId}");
 
     public async Task<ApiResponse<UploadResultVM>> UploadBusinessLicenseAsync(IBrowserFile file)
     {

@@ -63,3 +63,8 @@ TestResults/
 ## ===== Publish Outputs =====
 [Pp]ublish/
 *.Publish.xml
+
+# Cấu hình AI nội bộ (Antigravity/Superpowers)
+GEMINI.md
+AGENTS.md
+.agents/*
