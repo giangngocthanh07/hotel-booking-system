@@ -82,4 +82,51 @@ public class UserServiceTests : BaseServiceTest<UserService>
         Assert.Equal(StatusCodeResponse.BadRequest, result.StatusCode);
         _mockUserRepo.Verify(r => r.UpdateAsync(It.IsAny<User>()), Times.Never);
     }
+
+    [Fact]
+    public async Task UpdateProfileAsync_ValidRequest_DoesNotUpdateAvatarUrl()
+    {
+        // Arrange
+        int userId = 1;
+        string originalAvatarUrl = "https://example.com/avatar.png";
+        var request = new UpdateUserProfileDTO
+        {
+            FullName = "New Name",
+            PhoneNumber = "0123456789",
+            DateOfBirth = new DateTime(1990, 1, 1)
+        };
+
+        var user = new User 
+        { 
+            Id = userId, 
+            UserName = "testuser", 
+            Email = "test@example.com",
+            AvatarUrl = originalAvatarUrl
+        };
+        
+        _mockValidator.Setup(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new FluentValidation.Results.ValidationResult());
+        _mockUserRepo.Setup(r => r.GetByIdAsync(userId)).ReturnsAsync(user);
+        
+        // Mock GetByIdAsync logic inside the service which calls GetUserWithRoles
+        _mockUserRepo.Setup(r => r.GetUserWithRoles(It.IsAny<System.Linq.Expressions.Expression<Func<User, bool>>>()))
+            .ReturnsAsync(new User 
+            { 
+                Id = userId, 
+                UserName = "testuser", 
+                AvatarUrl = user.AvatarUrl, // Keep original
+                UserRoles = new List<UserRole>() 
+            });
+
+        // Act
+        var result = await _service.UpdateProfileAsync(userId, request);
+
+        // Assert
+        Assert.Equal(StatusCodeResponse.Success, result.StatusCode);
+        Assert.Equal(originalAvatarUrl, user.AvatarUrl); // Verify user object kept original AvatarUrl
+        Assert.Equal(originalAvatarUrl, result.Content?.AvatarUrl); // Verify returned DTO has original AvatarUrl
+        _mockUserRepo.Verify(r => r.UpdateAsync(It.IsAny<User>()), Times.Once);
+        _mockUnitOfWork.Verify(u => u.SaveChangesAsync(), Times.Once);
+    }
 }
+
