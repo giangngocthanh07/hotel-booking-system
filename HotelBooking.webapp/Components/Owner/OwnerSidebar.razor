@@ -1,0 +1,96 @@
+@using MudBlazor
+@using HotelBooking.webapp.Shared
+@inject NavigationManager _nav
+
+<div class="d-flex flex-column h-100 w-100 sidebar-theme">
+    @* --- Brand Header --- *@
+    <div class="sidebar-brand-wrapper">
+        <div class="brand-content">
+            <i class="fas fa-hotel fs-3 text-white"></i>
+            <div class="brand-info">
+                <span class="brand-title">Hotel Booking</span>
+                <span class="brand-status" style="color: #4ade80;">Property Owner</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex-grow-1 overflow-auto custom-scrollbar p-3 pt-2">
+        <ul class="nav flex-column gap-1">
+
+            <li class="nav-label mt-2 mb-2">MAIN MENU</li>
+
+            <li class="nav-item">
+                <NavLink class="nav-link-item" href="/owner/dashboard" Match="NavLinkMatch.All">
+                    <i class="bi bi-grid-1x2-fill"></i> <span>Dashboard</span>
+                </NavLink>
+            </li>
+
+            <li class="nav-item">
+                <NavLink class="nav-link-item" href="/owner/bookings">
+                    <i class="bi bi-calendar-check"></i> <span>Reservations</span>
+                </NavLink>
+            </li>
+
+            <li class="nav-label mt-4 mb-2">PROPERTY MANAGEMENT</li>
+
+            <li class="nav-item">
+                <div class="nav-link-item collapsed d-flex justify-content-between cursor-pointer"
+                     data-bs-toggle="collapse" data-bs-target="#property-collapse" aria-expanded="false">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-building"></i> <span>Manage Hotel</span>
+                    </div>
+                    <i class="bi bi-chevron-down small transition-icon"></i>
+                </div>
+
+                <div class="collapse mt-1" id="property-collapse">
+                    <ul class="nav flex-column gap-1 ps-3 border-start border-white border-opacity-10 ms-3">
+                        <li class="nav-item">
+                            <NavLink class="nav-link-item sub-link" href="/owner/property/info">
+                                <i class="bi bi-info-circle"></i><span>General Info</span>
+                            </NavLink>
+                        </li>
+                        <li class="nav-item">
+                            <NavLink class="nav-link-item sub-link" href="/owner/property/rooms">
+                                <i class="bi bi-door-open"></i><span>Room Types</span>
+                            </NavLink>
+                        </li>
+                        <li class="nav-item">
+                            <NavLink class="nav-link-item sub-link" href="/owner/property/photos">
+                                <i class="bi bi-images"></i><span>Gallery</span>
+                            </NavLink>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            <li class="nav-label mt-4 mb-2">GUEST RELATIONS</li>
+
+            <li class="nav-item">
+                <NavLink class="nav-link-item" href="/owner/messages">
+                    <i class="bi bi-chat-dots"></i> <span>Inbox</span>
+                </NavLink>
+            </li>
+
+            <li class="nav-item">
+                <NavLink class="nav-link-item" href="/owner/reviews">
+                    <i class="bi bi-star-half"></i> <span>Reviews</span>
+                </NavLink>
+            </li>
+
+            <li class="nav-label mt-4 mb-2">REPORTING</li>
+
+            <li class="nav-item">
+                <NavLink class="nav-link-item" href="/owner/finance">
+                    <i class="bi bi-wallet2"></i> <span>Finance</span>
+                </NavLink>
+            </li>
+
+            <div class="sidebar-footer mt-auto p-3 d-flex justify-content-center align-items-center">
+                <NavLink class="nav-link-item back-home-btn w-100" href="/" Match="NavLinkMatch.All">
+                    <i class="bi bi-house-door-fill"></i>
+                    <span>Back to Portal</span>
+                </NavLink>
+            </div>
+        </ul>
+    </div>
+</div>

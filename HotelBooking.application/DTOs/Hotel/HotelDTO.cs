@@ -50,7 +50,7 @@ public class HotelAdditionalInfoForm
 
     public double? Latitude { get; set; }
     public double? Longitude { get; set; }
-    
+
     public PropertyTypeDTO PropType { get; set; } = new();
     public CountryDTO Country { get; set; } = new();
     public ProvinceDTO Province { get; set; } = new();

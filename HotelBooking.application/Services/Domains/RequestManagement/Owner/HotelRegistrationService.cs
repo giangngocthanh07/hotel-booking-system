@@ -220,6 +220,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
                     dto.OwnerId = i.OwnerId;
                     dto.Name = i.Name;
                     dto.Address = i.Address;
+                    dto.RequestedAt = i.CreatedAt;
                     dto.Description = additionalInfo.Description;
                     dto.PropertyTypeId = additionalInfo.PropType.Id;
                     dto.PropertyTypeName = additionalInfo.PropType.Name;

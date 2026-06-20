@@ -1,117 +1,209 @@
-@page "/owner-dashboard"
+@page "/owner/dashboard"
 @using HotelBooking.webapp.ViewModels.Hotel
-@using HotelBooking.webapp.Services
+@using HotelBooking.webapp.ViewModels.Request.HotelApproval
+@using HotelBooking.webapp.Services.Interface
 @attribute [Authorize(Roles = "Owner")]
 @layout OwnerLayout
+
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 @inject IDashboardService DashboardService
+@inject IRequestService RequestService
 @inject ISnackbar Snackbar
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-8">
-    <MudText Typo="Typo.h4" GutterBottom="true">Owner Dashboard</MudText>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-8 mb-8">
+    <MudText Typo="Typo.h4" GutterBottom="true" Color="Color.Primary" Style="font-weight: 600;">
+        Owner Dashboard
+    </MudText>
 
     @if (_loading)
     {
         <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
     }
-    else if (_dashboardData != null)
+    else
     {
         <MudGrid>
-            <MudItem xs="12" sm="6" md="3">
-                <MudPaper Class="d-flex flex-row pt-6 pb-4" Style="height:100px;">
-                    <MudIcon Icon="@Icons.Material.Filled.Login" Color="Color.Primary" Class="mx-4" Style="width:54px; height:54px;"></MudIcon>
-                    <div>
-                        <MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">Arrivals Today</MudText>
-                        <MudText Typo="Typo.h5">@_dashboardData.TodayArrivals</MudText>
-                    </div>
-                </MudPaper>
-            </MudItem>
-            <MudItem xs="12" sm="6" md="3">
-                <MudPaper Class="d-flex flex-row pt-6 pb-4" Style="height:100px;">
-                    <MudIcon Icon="@Icons.Material.Filled.Logout" Color="Color.Warning" Class="mx-4" Style="width:54px; height:54px;"></MudIcon>
-                    <div>
-                        <MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">Departures Today</MudText>
-                        <MudText Typo="Typo.h5">@_dashboardData.TodayDepartures</MudText>
-                    </div>
-                </MudPaper>
-            </MudItem>
-            <MudItem xs="12" sm="6" md="3">
-                <MudPaper Class="d-flex flex-row pt-6 pb-4" Style="height:100px;">
-                    <MudIcon Icon="@Icons.Material.Filled.Hotel" Color="Color.Info" Class="mx-4" Style="width:54px; height:54px;"></MudIcon>
-                    <div>
-                        <MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">Occupancy Rate</MudText>
-                        <MudText Typo="Typo.h5">@_dashboardData.OccupancyRate%</MudText>
-                    </div>
-                </MudPaper>
-            </MudItem>
-            <MudItem xs="12" sm="6" md="3">
-                <MudPaper Class="d-flex flex-row pt-6 pb-4" Style="height:100px;">
-                    <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Color="Color.Success" Class="mx-4" Style="width:54px; height:54px;"></MudIcon>
-                    <div>
-                        <MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">Revenue (30d)</MudText>
-                        <MudText Typo="Typo.h5">@_dashboardData.TotalRevenue.ToString("C0", new System.Globalization.CultureInfo("vi-VN"))</MudText>
-                    </div>
-                </MudPaper>
-            </MudItem>
+            @* --- 1. THỐNG KÊ DOANH THU & HOẠT ĐỘNG (US24) --- *@
+            @if (_dashboardData != null)
+            {
+                <MudItem xs="12" sm="6" md="3">
+                    <MudPaper Class="d-flex flex-row pt-6 pb-4" Style="height:100px;">
+                        <MudIcon Icon="@Icons.Material.Filled.Login" Color="Color.Primary" Class="mx-4"
+                                 Style="width:54px; height:54px;"></MudIcon>
+                        <div>
+                            <MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">Arrivals Today</MudText>
+                            <MudText Typo="Typo.h5">@_dashboardData.TodayArrivals</MudText>
+                        </div>
+                    </MudPaper>
+                </MudItem>
 
-            <MudItem xs="12" md="8">
-                <MudPaper Class="pa-4" Style="height:400px;">
-                    <MudText Typo="Typo.h6" GutterBottom="true">Daily Revenue (Last 30 Days)</MudText>
-                    <MudChart ChartType="ChartType.Line" ChartSeries="@_series" XAxisLabels="@_xAxisLabels" Width="100%" Height="300px" ChartOptions="@_chartOptions" />
-                </MudPaper>
-            </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudPaper Class="d-flex flex-row pt-6 pb-4" Style="height:100px;">
+                        <MudIcon Icon="@Icons.Material.Filled.Logout" Color="Color.Warning" Class="mx-4"
+                                 Style="width:54px; height:54px;"></MudIcon>
+                        <div>
+                            <MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">Departures Today</MudText>
+                            <MudText Typo="Typo.h5">@_dashboardData.TodayDepartures</MudText>
+                        </div>
+                    </MudPaper>
+                </MudItem>
 
-            <MudItem xs="12" md="4">
-                <MudPaper Class="pa-4" Style="height:400px; overflow-y: auto;">
-                    <MudText Typo="Typo.h6" GutterBottom="true">Room Availability</MudText>
-                    <MudList T="string">
-                        @foreach (var room in _dashboardData.RoomAvailability)
-                        {
-                            <MudListItem>
-                                <div class="d-flex justify-space-between align-center">
-                                    <MudText>@room.RoomTypeName</MudText>
-                                    <MudChip T="string" Color="@(room.AvailableRooms > 0 ? Color.Success : Color.Error)" Size="Size.Small">
-                                        @room.AvailableRooms / @room.TotalRooms Available
-                                    </MudChip>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudPaper Class="d-flex flex-row pt-6 pb-4" Style="height:100px;">
+                        <MudIcon Icon="@Icons.Material.Filled.Hotel" Color="Color.Info" Class="mx-4"
+                                 Style="width:54px; height:54px;"></MudIcon>
+                        <div>
+                            <MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">Occupancy Rate</MudText>
+                            <MudText Typo="Typo.h5">@_dashboardData.OccupancyRate%</MudText>
+                        </div>
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12" sm="6" md="3">
+                    <MudPaper Class="d-flex flex-row pt-6 pb-4" Style="height:100px;">
+                        <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Color="Color.Success" Class="mx-4"
+                                 Style="width:54px; height:54px;"></MudIcon>
+                        <div>
+                            <MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">Revenue (30d)</MudText>
+                            <MudText Typo="Typo.h5">@_dashboardData.TotalRevenue.ToString("C0", new
+                                                                                        System.Globalization.CultureInfo("vi-VN"))</MudText>
+                            </div>
+                        </MudPaper>
+                    </MudItem>
+
+                    <MudItem xs="12" md="8">
+                        <MudPaper Class="pa-4" Style="height:400px;">
+                            <MudText Typo="Typo.h6" GutterBottom="true">Daily Revenue (Last 30 Days)</MudText>
+                            <MudChart ChartType="ChartType.Line" ChartSeries="@_series" XAxisLabels="@_xAxisLabels" Width="100%"
+                                      Height="300px" ChartOptions="@_chartOptions" />
+                        </MudPaper>
+                    </MudItem>
+
+                    <MudItem xs="12" md="4">
+                        <MudPaper Class="pa-4" Style="height:400px; overflow-y: auto;">
+                            <MudText Typo="Typo.h6" GutterBottom="true">Room Availability</MudText>
+                            <MudList T="string">
+                                @foreach (var room in _dashboardData.RoomAvailability)
+                                {
+                                    <MudListItem>
+                                        <div class="d-flex justify-space-between align-center">
+                                            <MudText>@room.RoomTypeName</MudText>
+                                            <MudChip T="string" Color="@(room.AvailableRooms > 0 ? Color.Success : Color.Error)"
+                                                     Size="Size.Small">
+                                                @room.AvailableRooms / @room.TotalRooms Available
+                                            </MudChip>
+                                        </div>
+                                    </MudListItem>
+                                }
+                            </MudList>
+                        </MudPaper>
+                    </MudItem>
+                }
+
+                @* --- 2. BẢNG THEO DÕI ĐƠN ĐĂNG KÝ KHÁCH SẠN (US04a) --- *@
+                <MudItem xs="12">
+                    <div class="card shadow-sm border-0 rounded-3 mt-4">
+                        <div
+                            class="card-header bg-white border-bottom-0 pt-4 pb-3 px-4 d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 fw-bold text-dark" style="font-family: 'DM Serif Display', serif;">My Hotel
+                                Registrations</h5>
+                                <a href="/owner/hotel-registration"
+                                   class="btn btn-primary btn-sm px-3 py-2 fw-bold rounded-pill shadow-sm"
+                                   style="font-size: 0.85rem;">
+                                    <i class="bi bi-plus-lg me-1"></i> Register New Property
+                                </a>
+                            </div>
+
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="bg-light">
+                                            <tr style="font-size: 0.75rem; letter-spacing: 0.5px; text-transform: uppercase;"
+                                                class="text-secondary fw-bold">
+                                                <th class="ps-4 border-0 text-start" style="width: 25%;">Hotel Name</th>
+                                                <th class="border-0 text-start" style="width: 15%;">Property Type</th>
+                                                <th class="border-0 text-start" style="width: 15%;">Requested Date</th>
+                                                <th class="border-0 text-center" style="width: 15%;">Status</th>
+                                                <th class="border-0 text-start" style="width: 20%;">Admin Remark</th>
+                                                <th class="pe-4 border-0 text-end" style="width: 10%;">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @if (_registrationRequests == null || !_registrationRequests.Any())
+                                            {
+                                                <tr>
+                                                    <td colspan="6" class="text-center py-5 text-muted">
+                                                        <i class="bi bi-inbox fs-1 d-block mb-2 text-light"></i>
+                                                        <span class="fw-medium">No registration requests found.</span>
+                                                    </td>
+                                                </tr>
+                                            }
+                                            else
+                                            {
+                                                @foreach (var item in _registrationRequests)
+                                                {
+                                                    <tr>
+                                                        <td class="ps-4 py-3 text-start">
+                                                            <div class="fw-bold text-dark mb-1">@item.Name</div>
+                                                            <div class="text-danger" style="font-size: 0.85rem;">@item.Address</div>
+                                                        </td>
+                                                        <td class="text-start">
+                                                            <span class="text-secondary fw-medium"
+                                                                  style="font-size: 0.9rem;">@item.PropertyTypeName</span>
+                                                        </td>
+                                                        <td class="text-start">
+                                                            <span class="text-secondary fw-medium" style="font-size: 0.9rem;">
+                                                                @item.RequestedAt.ToString("dd/MM/yyyy HH:mm")
+                                                            </span>
+                                                        </td>
+                                                        <td class="text-center">
+                                                            @if (item.Status == "Approved")
+                                                            {
+                                                                <span class="badge bg-success rounded-pill px-3 py-2 fw-medium">Approved</span>
+                                                            }
+                                                            else if (item.Status == "Rejected")
+                                                            {
+                                                                <span class="badge bg-danger rounded-pill px-3 py-2 fw-medium">Rejected</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span
+                                                                class="badge bg-warning text-dark rounded-pill px-3 py-2 fw-medium">Pending</span>
+                                                            }
+                                                        </td>
+                                                        <td class="text-start">
+                                                            @if (item.Status == "Rejected" && !string.IsNullOrEmpty(item.AdminRemark))
+                                                            {
+                                                                <span class="text-danger fw-medium"
+                                                                      style="font-size: 0.85rem;">@item.AdminRemark</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="text-muted">--</span>
+                                                            }
+                                                        </td>
+                                                        <td class="pe-4 text-end">
+                                                            <button
+                                                                class="btn btn-sm btn-link text-primary text-decoration-none fw-bold p-0">
+                                                                <i class="bi bi-eye me-1"></i> DETAILS
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            }
+                                        </tbody>
+                                    </table>
                                 </div>
-                            </MudListItem>
-                        }
-                    </MudList>
-                </MudPaper>
-            </MudItem>
-
-            <MudItem xs="12">
-                <MudPaper Class="pa-4">
-                    <MudText Typo="Typo.h6" GutterBottom="true">Recent Bookings</MudText>
-                    <MudTable Items="@_dashboardData.RecentBookings" Hover="true" Breakpoint="Breakpoint.Sm" Dense="true" Elevation="0">
-                        <HeaderContent>
-                            <MudTh>ID</MudTh>
-                            <MudTh>Customer</MudTh>
-                            <MudTh>Room Type</MudTh>
-                            <MudTh>Check In</MudTh>
-                            <MudTh>Check Out</MudTh>
-                            <MudTh>Total</MudTh>
-                            <MudTh>Status</MudTh>
-                        </HeaderContent>
-                        <RowTemplate>
-                            <MudTd DataLabel="ID">#BK-@context.Id</MudTd>
-                            <MudTd DataLabel="Customer">@context.CustomerName</MudTd>
-                            <MudTd DataLabel="Room Type">@context.RoomTypeName</MudTd>
-                            <MudTd DataLabel="Check In">@context.CheckIn.ToShortDateString()</MudTd>
-                            <MudTd DataLabel="Check Out">@context.CheckOut.ToShortDateString()</MudTd>
-                            <MudTd DataLabel="Total">@context.TotalPrice.ToString("C0", new System.Globalization.CultureInfo("vi-VN"))</MudTd>
-                            <MudTd DataLabel="Status">
-                                <MudChip T="string" Color="@GetStatusColor(context.Status)" Size="Size.Small">@context.Status</MudChip>
-                            </MudTd>
-                        </RowTemplate>
-                    </MudTable>
-                </MudPaper>
-            </MudItem>
-        </MudGrid>
-    }
-</MudContainer>
+                            </div>
+                        </div>
+                    </MudItem>
+                </MudGrid>
+            }
+        </MudContainer>
 
 @code {
     private OwnerDashboardVM? _dashboardData;
+    private List<HotelRegistrationDetailVM> _registrationRequests = new();
+
     private bool _loading = true;
     private List<ChartSeries> _series = new();
     private string[] _xAxisLabels = Array.Empty<string>();
@@ -119,6 +211,12 @@
 
     protected override async Task OnInitializedAsync()
     {
+        var token = await LocalStorage.GetItemAsync<string>("accessToken");
+        var jwt = token ?? string.Empty;
+
+        RequestService.SetToken(jwt);
+        DashboardService.SetToken(jwt);
+
         await LoadData();
     }
 
@@ -127,39 +225,44 @@
         _loading = true;
         try
         {
-            var response = await DashboardService.GetOwnerDashboardStats();
-            if (response.StatusCode == StatusCodeResponse.Success && response.Content != null)
+            var statsTask = DashboardService.GetOwnerDashboardStats();
+            var requestsTask = RequestService.GetMyHotelRequestsAsync();
+
+            await Task.WhenAll(statsTask, requestsTask);
+
+            var statsResponse = statsTask.Result;
+            var requestsResponse = requestsTask.Result;
+
+            if (statsResponse.StatusCode == StatusCodeResponse.Success && statsResponse.Content != null)
             {
-                _dashboardData = response.Content;
-                
-                // Prepare Chart Data (Sample every 5 days for clarity)
+                _dashboardData = statsResponse.Content;
                 var trend = _dashboardData.DailyRevenueTrend;
-                _xAxisLabels = trend.Where((x, i) => i % 5 == 0).Select(t => t.DateLabel).ToArray();
-                _series = new List<ChartSeries>
+                if (trend != null && trend.Any())
                 {
-                    new ChartSeries { Name = "Revenue", Data = trend.Select(t => (double)t.Amount).ToArray() }
-                };
+                    _xAxisLabels = trend.Where((x, i) => i % 5 == 0).Select(t => t.DateLabel).ToArray();
+                    _series = new List<ChartSeries>
+                    {
+                        new ChartSeries { Name = "Revenue", Data = trend.Select(t => (double)t.Amount).ToArray() }
+                    };
+                }
             }
-            else
+
+            if (requestsResponse.StatusCode == StatusCodeResponse.Success && requestsResponse.Content != null)
             {
-                Snackbar.Add(response.Message ?? "Failed to load dashboard data.", Severity.Error);
+                _registrationRequests = requestsResponse.Content;
+            }
+            else if (requestsResponse.StatusCode != StatusCodeResponse.Success)
+            {
+                Snackbar.Add($"Lỗi tải danh sách: {requestsResponse.Message}", Severity.Warning);
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add("An unexpected error occurred.", Severity.Error);
+            Snackbar.Add("An unexpected error occurred while loading dashboard.", Severity.Error);
         }
         finally
         {
             _loading = false;
         }
     }
-
-    private Color GetStatusColor(string status) => status switch
-    {
-        "Confirmed" => Color.Success,
-        "Pending" => Color.Info,
-        "Cancelled" => Color.Error,
-        _ => Color.Default
-    };
 }

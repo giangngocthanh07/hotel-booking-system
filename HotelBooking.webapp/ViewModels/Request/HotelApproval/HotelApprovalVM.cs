@@ -31,6 +31,7 @@ public class HotelRegistrationDetailVM : BaseRequestVM
     public double? Longitude { get; set; }
     public string TaxCode { get; set; } = string.Empty;
     public string BusinessLicenseUrl { get; set; } = string.Empty;
+    public string? AdminRemark { get; set; }
 
 }
 

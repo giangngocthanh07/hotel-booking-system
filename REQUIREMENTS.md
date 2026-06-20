@@ -49,17 +49,45 @@
 
 ## Group 3: Hotel Owner (Management)
 
-### US04: Register a Hotel
+### US04: Submit Hotel Registration Request
 
-**As a** Hotel Owner  
-**I want to** register my hotel on the platform  
-**So that** I can start receiving bookings.
+**As a** Hotel Owner
+
+**I want to** submit a comprehensive hotel registration request including property details and legal documents
+
+**So that** the Admin can verify and approve my property to be listed on the platform.
 
 **Acceptance Criteria:**
 
-- [ ] Provide hotel name, address, contact info, and legal documents.
-- [ ] Upload hotel images and select amenities.
-- [ ] Status is set to "Pending Approval" upon submission.
+- [ ] Owner can fill out a structured registration form (Basic Info, Contact, Location, Legal Documents).
+
+- [ ] Owner must upload a valid Business License file (PDF/Image) and provide a valid Tax Code.
+
+- [ ] System validates all required fields, data types, and formats (e.g., 10-13 digit tax code) before allowing submission.
+
+- [ ] Upon successful submission, a new request is created with the status set to "Pending" and the Owner is redirected to the tracking page.
+
+---
+
+### US04a: Track Own Hotel Registration Requests
+
+**As a** Hotel Owner
+
+**I want to** view the history and current status of all my hotel registration requests
+
+**So that** I can track the approval progress and check if any of my properties were rejected.
+
+**Acceptance Criteria:**
+
+- [ ] Owner can view a list/table of all their submitted hotel registration requests on their Dashboard or a dedicated Requests page.
+
+- [ ] The list displays key information: Hotel Name, Requested Date, and current Status (Pending, Approved, Rejected).
+
+- [ ] Visual indicators (e.g., color-coded badges) are used to distinguish the request statuses.
+
+- [ ] Owner can click on a specific request to view the details they submitted.
+
+- [ ] If a request is "Rejected", the Owner can view the "Admin Remark" explaining the exact reason for rejection.
 
 ---
 

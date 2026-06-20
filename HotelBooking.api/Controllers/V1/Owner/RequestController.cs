@@ -27,5 +27,19 @@ namespace HotelBooking.api.Controllers.V1.Owner
             var result = await _hotelRegistrationService.CreateRequestAsync(ownerId, request);
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
+
+        [HttpGet("my-hotel-requests")]
+        [Authorize(Roles = "Owner")]
+        public async Task<IActionResult> GetMyHotelRequests()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int ownerId))
+            {
+                return Unauthorized();
+            }
+
+            var result = await _hotelRegistrationService.GetMyRequestsAsync(ownerId);
+            return ApiResponseHandlerHelper.HandleResponse(result);
+        }
     }
 }

@@ -1,11 +1,181 @@
 @inherits LayoutComponentBase
+@using MudBlazor
 
 <MudThemeProvider />
+<MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
-<MudPopoverProvider />
 
-<OwnerHeader />
-<main>
-    @Body
-</main>
+<div class="app-layout-wrapper">
+
+    @* --- TOPBAR SECTION (Bộ chuyển đổi ngữ cảnh) --- *@
+    <header class="app-header">
+        <OwnerTopbar />
+    </header>
+
+    <div class="app-body">
+
+        @* --- SIDEBAR SECTION (Menu chính) --- *@
+        <aside class="app-sidebar">
+            <OwnerSidebar />
+        </aside>
+
+        @* --- MAIN CONTENT AREA --- *@
+        <main class="app-main">
+            <div class="main-content-inner">
+                @Body
+            </div>
+        </main>
+    </div>
+</div>
+
+<style>
+    :root {
+        --sidebar-bg: #1e293b;
+        --primary-blue: #0060e6;
+        --app-bg-light: #f8fafc;
+        /* Đổi nhẹ màu nền cho Owner tươi sáng hơn chút */
+    }
+
+    /* Main Wrapper: Vertical Flex Layout */
+    .app-layout-wrapper {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+        background-color: var(--app-bg-light);
+    }
+
+    /* Header: Chứa OwnerTopbar */
+    .app-header {
+        flex: 0 0 auto;
+        height: 64px;
+        background: #ffffff;
+        z-index: 100;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    /* Body (Sidebar + Main) */
+    .app-body {
+        display: flex;
+        flex: 1 1 auto;
+        overflow: hidden;
+    }
+
+    /* Sidebar: */
+    .app-sidebar {
+        width: 260px;
+        min-width: 260px;
+        background-color: var(--sidebar-bg);
+        flex-direction: column;
+        border-right: 1px solid rgba(255, 255, 255, 0.05);
+        display: none;
+        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Main Content Area: */
+    .app-main {
+        flex: 1;
+        background-color: var(--app-bg-light);
+        /* Giữ animation background cho sinh động */
+        background-image:
+            radial-gradient(at 0% 0%, hsla(190, 100%, 92%, 1) 0px, transparent 50%),
+            radial-gradient(at 100% 0%, hsla(205, 100%, 88%, 1) 0px, transparent 50%),
+            radial-gradient(at 100% 100%, hsla(195, 100%, 93%, 1) 0px, transparent 50%),
+            radial-gradient(at 0% 100%, hsla(188, 100%, 95%, 1) 0px, transparent 50%);
+        background-size: 150% 150%;
+        animation: adminGradientShift 15s ease infinite;
+        overflow-y: auto;
+        overflow-x: hidden;
+        position: relative;
+    }
+
+    /* Content Inner: */
+    .main-content-inner {
+        padding: 1.5rem;
+        min-height: 100%;
+    }
+
+    /* Container Limited: */
+    .container-limited {
+        max-width: 1440px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.7);
+        /* Tăng độ sáng form cho dễ nhìn */
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        padding: 20px;
+    }
+
+    /* Custom Scrollbar */
+    .app-main::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .app-main::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .app-main::-webkit-scrollbar-thumb {
+        background: rgba(0, 96, 230, 0.2);
+        border-radius: 10px;
+    }
+
+    .app-main::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 96, 230, 0.4);
+    }
+
+    /* Desktop View */
+    @@media
+    (min-width: 992px) {
+        .app-sidebar {
+            display: flex !important;
+            position: relative;
+            z-index: 1;
+        }
+    }
+
+    /* Mobile View */
+    @@media
+    (max-width: 991.98px) {
+        .app-sidebar.mobile-show {
+            display: flex;
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            z-index: 1050;
+            box-shadow: 10px 0 25px rgba(0, 0, 0, 0.1);
+            animation: slideIn 0.3s forwards;
+        }
+    }
+
+    @@keyframes
+    adminGradientShift {
+        0% {
+            background-position: 0% 0%;
+        }
+
+        50% {
+            background-position: 100% 100%;
+        }
+
+        100% {
+            background-position: 0% 0%;
+        }
+    }
+
+    @@keyframes
+    slideIn {
+        from {
+            transform: translateX(-100%);
+        }
+
+        to {
+            transform: translateX(0);
+        }
+    }
+</style>

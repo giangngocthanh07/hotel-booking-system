@@ -22,6 +22,7 @@ public interface IHotelApprovalRequestRepository : IRepository<HotelApprovalRequ
 
     // Cập nhật lại kiểu trả về cho phù hợp với trạng thái số nguyên
     Task<(int Total, int Pending, int Approved, int Rejected, int Cancelled, int Today, int ThisWeek, int ThisMonth)> GetStatsRawAsync();
+
 }
 
 public class HotelApprovalRequestRepository : Repository<HotelApprovalRequest>, IHotelApprovalRequestRepository

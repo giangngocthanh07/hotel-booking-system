@@ -126,6 +126,11 @@ public interface IRequestService : ITokenService
 
     /// <summary>Submits a new hotel registration request from an Owner.</summary>
     Task<ApiResponse<HotelRegistrationDetailVM>> SubmitHotelRegistrationAsync(HotelRegistrationFormPayload payload);
+
+    /// <summary>
+    /// Retrieves all hotel registration requests for the currently logged-in owner.
+    /// </summary>
+    Task<ApiResponse<List<HotelRegistrationDetailVM>>> GetMyHotelRequestsAsync();
 }
 
 /// <summary>
@@ -272,6 +277,12 @@ public class RequestService : IRequestService
         return System.Text.Json.JsonSerializer.Deserialize<ApiResponse<UploadResultVM>>(json,
             new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true })
             ?? new ApiResponse<UploadResultVM> { StatusCode = "Error", Message = "Upload failed." };
+    }
+
+    public async Task<ApiResponse<List<HotelRegistrationDetailVM>>> GetMyHotelRequestsAsync()
+    {
+        // Gọi tới endpoint [HttpGet("my-hotel-requests")] mà bạn vừa tạo ở Backend
+        return await _http.GetApiAsync<List<HotelRegistrationDetailVM>>("v1/owner/my-hotel-requests");
     }
 
     // ==========================================
