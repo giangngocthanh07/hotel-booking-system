@@ -1,31 +1,36 @@
-## ===== Build outputs =====
+# Build outputs
 bin/
 obj/
 [Bb]uild/
+artifacts/
 [Ll]og/
 [Ll]ogs/
 
-## ===== Visual Studio / VS Code =====
+# Visual Studio and VS Code
 .vs/
 .vscode/
+.history/
 *.user
 *.suo
 *.userosscache
 *.sln.docstates
 
-## ===== JetBrains Rider =====
+# JetBrains Rider
 .idea/
 *.iml
 
-## ===== ASP.NET Core specific =====
+# Local AI-agent tooling
+.agents/
+.superpowers/
+
+# ASP.NET Core local configuration
 appsettings.Development.json
 appsettings.*.json
 
-## ===== Entity Framework Core (Database First) =====
-# Không cần migrations khi DB First
+# Entity Framework Core database-first workflow
 migrations/
 
-## ===== NuGet =====
+# NuGet
 *.nupkg
 *.snupkg
 *.nuspec
@@ -37,7 +42,7 @@ project.assets.json
 *.nuget.targets
 *.nuget.cache
 
-## ===== Cache & temporary =====
+# Cache and temporary files
 *.dbmdl
 *.bak
 *.log
@@ -45,26 +50,29 @@ project.assets.json
 *.tmp
 *.temp
 *.cache
+*.binlog
+*.orig
+*.rej
 *.vspscc
 *.vssscc
 *.vshost.exe*
 *.pdb
 *.mdb
 
-## ===== Others =====
-*.DS_Store
-Thumbs.db
-
-## ===== Test & Coverage =====
+# Test, coverage, benchmark, and analysis outputs
 TestResults/
+coverage/
+coverage-report/
 *.coverage
 *.coveragexml
+BenchmarkDotNet.Artifacts/
+.sonarqube/
 
-## ===== Publish Outputs =====
+# Publish outputs
 [Pp]ublish/
 *.Publish.xml
 
-# Cấu hình AI nội bộ (Antigravity/Superpowers)
-GEMINI.md
-AGENTS.md
-.agents/*
+# Operating-system files
+.DS_Store
+Thumbs.db
+Desktop.ini

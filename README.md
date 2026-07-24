@@ -68,11 +68,14 @@ HotelBooking.sln
 | 💻 **`HotelBooking.webapp`**         | Blazor Server frontend divided into role-based layouts (`AdminLayout`, `OwnerLayout`, `AuthLayout`, `MainLayout`). Communicates with the backend API via scoped HttpClient services.                                    |
 | 🧪 **`HotelBooking.test`**           | xUnit-based Unit Tests covering Services, Validators, and Helpers per domain. Integration tests use a dedicated `appsettings.test.json` and connect to a real test database.                                           |
 
-> 📖 **Detailed structure documentation:**
+> 📖 **Project documentation:**
 >
-> - [Backend & API Folder Structure](PROJECT_STRUCTURE.md)
-> - [Frontend (Blazor) Folder Structure](PROJECT_STRUCTURE_WEBAPP.md)
-> - [Test Layer Architecture](PROJECT_STRUCTURE_TEST.md)
+> - [Documentation Index](docs/README.md)
+> - [Authoritative High-Level Design](docs/architecture/high-level-design.md)
+> - [Backend & Application Structure](docs/reference/project-structure/backend-and-application.md)
+> - [Frontend (Blazor) Structure](docs/reference/project-structure/webapp.md)
+> - [Test Structure](docs/reference/project-structure/tests.md)
+> - [Legacy Requirements — Historical Only](docs/archive/requirements/legacy-user-stories.md)
 
 ---
 
