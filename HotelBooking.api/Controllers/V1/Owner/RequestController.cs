@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HotelBooking.api.Controllers.V1.Owner
 {
-    [Route("api/v1/owner")]
+    [Route("api/v1/owner/hotel-registrations")]
     [ApiController]
     [Authorize(Roles = "Owner")]
     [Tags("Owner - Request")]
@@ -19,7 +19,7 @@ namespace HotelBooking.api.Controllers.V1.Owner
             _hotelRegistrationService = hotelRegistrationService;
         }
 
-        [HttpPost("hotel-registration")]
+        [HttpPost]
         public async Task<IActionResult> HotelRegistration([FromBody] HotelRegistrationDTO request)
         {
             var ownerId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
@@ -28,7 +28,7 @@ namespace HotelBooking.api.Controllers.V1.Owner
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
-        [HttpGet("my-hotel-requests")]
+        [HttpGet("me")]
         [Authorize(Roles = "Owner")]
         public async Task<IActionResult> GetMyHotelRequests()
         {

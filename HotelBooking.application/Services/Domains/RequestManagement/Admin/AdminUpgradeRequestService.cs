@@ -258,7 +258,12 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Admin
                     return ResponseFactory.Failure<bool>(StatusCodeResponse.BadRequest, MessageResponse.RequestManagement.UpgradeRequest.REQUEST_ID_INVALID);
                 }
                 var request = await _upgradeRequestRepo.GetByIdAsync(requestId);
-                if (request == null || request.Status != RequestStatusConst.Pending)
+                if (request == null)
+                    return ResponseFactory.Failure<bool>(
+                        StatusCodeResponse.NotFound,
+                        MessageResponse.RequestManagement.UpgradeRequest.REQUEST_NOT_FOUND);
+
+                if (request.Status != RequestStatusConst.Pending)
                     return ResponseFactory.Failure<bool>(
                         StatusCodeResponse.BadRequest,
                         MessageResponse.RequestManagement.UpgradeRequest.REQUEST_STATUS_INVALID);

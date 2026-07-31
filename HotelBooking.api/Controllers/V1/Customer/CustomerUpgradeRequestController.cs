@@ -26,7 +26,7 @@ namespace HotelBooking.api.Controllers.V1.Public
         /// <summary>
         /// Get user info and current request status
         /// </summary>
-        [HttpGet("my-info")]
+        [HttpGet("me/info")]
         public async Task<IActionResult> GetMyInfo()
         {
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -42,7 +42,7 @@ namespace HotelBooking.api.Controllers.V1.Public
         /// <summary>
         /// Get user's request history
         /// </summary>
-        [HttpGet("my-requests")]
+        [HttpGet("me")]
         [Authorize(Roles = "Customer,Owner")]
         public async Task<IActionResult> GetMyRequests()
         {
@@ -56,7 +56,7 @@ namespace HotelBooking.api.Controllers.V1.Public
         /// <summary>
         /// Create upgrade request (Customer only)
         /// </summary>
-        [HttpPost("create-request")]
+        [HttpPost]
         public async Task<IActionResult> CreateRequestAsync([FromBody] CreateUpgradeRequestDTO request)
         {
             var userId = GetUserId();

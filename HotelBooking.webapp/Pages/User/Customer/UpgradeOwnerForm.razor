@@ -423,7 +423,7 @@
 
         try
         {
-            userInfo = await _httpClient.GetFromJsonAsync<ApiResponse<UserForUpgradeVM?>>("v1/upgrade-requests/my-info");
+            userInfo = await _httpClient.GetFromJsonAsync<ApiResponse<UserForUpgradeVM?>>("v1/upgrade-requests/me/info");
             if (userInfo?.Content != null)
             {
                 requestStatus = userInfo.Content.RequestStatus ?? RequestStatusConst.None;
@@ -431,7 +431,7 @@
                 pendingRequestId = userInfo.Content.RequestId ?? 0;
 
                 isFormReadOnly = requestStatus == RequestStatusConst.Pending || requestStatus == RequestStatusConst.Approved;
-                if (requestStatus == RequestStatusConst.Approved) NavigationManager.NavigateTo("/owner-dashboard");
+                if (requestStatus == RequestStatusConst.Approved) NavigationManager.NavigateTo("/owner/dashboard");
             }
         }
         catch (Exception ex) { message = $"Error: {ex.Message}"; }
@@ -444,7 +444,7 @@
 
         try
         {
-            var response = await _httpClient.PostAsJsonAsync("v1/upgrade-requests/create-request", requestModel);
+            var response = await _httpClient.PostAsJsonAsync("v1/upgrade-requests", requestModel);
             var apiResp = await response.Content.ReadFromJsonAsync<ApiResponse<UpgradeRequestVM>>();
 
             if (apiResp?.StatusCode == StatusCodeResponse.Success)

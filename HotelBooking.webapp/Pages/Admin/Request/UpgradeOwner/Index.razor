@@ -54,7 +54,7 @@
     <ConfirmModal @ref="_confirmModal" Title="@modalTitle" Message="@modalMessage"
                   ConfirmText="@(actionType == "approve" ? "Confirm Approve" : "Confirm Reject")"
                   ConfirmIcon="@(actionType == "approve" ? "fa-check" : "fa-trash-can")"
-                  ConfirmButtonClass="@(actionType == "approve" ? "btn-success glass-btn-confirm text-white" : "btn-glass-confirm-danger")"
+                  ConfirmButtonClass="@(actionType == "approve" ? "btn-glass-confirm-success" : "btn-glass-confirm-danger")"
                   IsProcessing="@isProcessing" OnConfirm="ConfirmAction">
 
 

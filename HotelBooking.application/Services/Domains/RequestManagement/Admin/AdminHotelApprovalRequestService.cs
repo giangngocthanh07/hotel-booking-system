@@ -110,14 +110,14 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
 
                 Description = additionalInfo?.Description,
 
-                PropertyTypeId = additionalInfo!.PropType.Id,
-                PropertyTypeName = additionalInfo!.PropType.Name,
-                CountryId = additionalInfo.Country.Id,
-                CountryName = additionalInfo.Country.Name,
-                ProvinceId = additionalInfo.Province.Id,
-                ProvinceName = additionalInfo.Province.Name,
-                WardId = additionalInfo.Ward.Id,
-                WardName = additionalInfo.Ward.Name,
+                PropertyTypeId = additionalInfo?.PropType?.Id ?? 0,
+                PropertyTypeName = additionalInfo?.PropType?.Name ?? string.Empty,
+                CountryId = additionalInfo?.Country?.Id ?? 4,
+                CountryName = additionalInfo?.Country?.Name ?? string.Empty,
+                ProvinceId = additionalInfo?.Province?.Id ?? 0,
+                ProvinceName = additionalInfo?.Province?.Name ?? string.Empty,
+                WardId = additionalInfo?.Ward?.Id ?? 0,
+                WardName = additionalInfo?.Ward?.Name ?? string.Empty,
 
                 StarRating = additionalInfo?.StarRating,
                 PublicPhone = additionalInfo!.PublicPhone,
@@ -177,7 +177,7 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
             }
             else
             {
-                filter = r => r.Status != null && validRequestStatuses.Contains(r.Status);
+                filter = null;
             }
 
             var (items, totalCount) = await _approvalRepo.GetPagedWithUserAsync(
@@ -211,14 +211,14 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
 
                     Description = additionalInfo.Description,
 
-                    PropertyTypeId = additionalInfo.PropType.Id,
-                    PropertyTypeName = additionalInfo.PropType.Name,
-                    CountryId = additionalInfo.Country.Id,
-                    CountryName = additionalInfo.Country.Name,
-                    ProvinceId = additionalInfo.Province.Id,
-                    ProvinceName = additionalInfo.Province.Name,
-                    WardId = additionalInfo.Ward.Id,
-                    WardName = additionalInfo.Ward.Name,
+                    PropertyTypeId = additionalInfo.PropType?.Id ?? 0,
+                    PropertyTypeName = additionalInfo.PropType?.Name ?? string.Empty,
+                    CountryId = additionalInfo.Country?.Id ?? 4,
+                    CountryName = additionalInfo.Country?.Name ?? string.Empty,
+                    ProvinceId = additionalInfo.Province?.Id ?? 0,
+                    ProvinceName = additionalInfo.Province?.Name ?? string.Empty,
+                    WardId = additionalInfo.Ward?.Id ?? 0,
+                    WardName = additionalInfo.Ward?.Name ?? string.Empty,
 
                     Latitude = additionalInfo.Latitude,
                     Longitude = additionalInfo.Longitude,
@@ -306,17 +306,17 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
                 OwnerId = request.OwnerId,
                 Address = request.Address,
                 Description = additionalInfo.Description,
-                PropertyTypeId = additionalInfo.PropType.Id,
-                CountryId = additionalInfo.Country.Id,
-                ProvinceId = additionalInfo.Province.Id,
-                WardId = additionalInfo.Ward.Id,
+                PropertyTypeId = additionalInfo.PropType?.Id ?? 0,
+                CountryId = additionalInfo.Country?.Id ?? 4,
+                ProvinceId = additionalInfo.Province?.Id ?? 0,
+                WardId = additionalInfo.Ward?.Id ?? 0,
 
                 Additional = hotelAdditionalJson,
 
                 CreatedAt = DateTime.Now,
                 IsVerified = true,
                 IsDeleted = false,
-                Status = "Active",
+                Status = HotelStatus.Active,
                 CoverImageUrl = string.Empty
 
             };
