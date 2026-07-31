@@ -15,7 +15,7 @@ public interface IUserService : ITokenService
 public class UserService : IUserService
 {
     private readonly HttpClient _http;
-    private const string BaseUrl = "v1/Authentication";
+    private const string BaseUrl = "v1/auth";
 
     public UserService(IHttpClientFactory httpClientFactory)
     {
@@ -39,6 +39,6 @@ public class UserService : IUserService
 
     public async Task<ApiResponse<UserDetailVM>> UpdateProfile(int userId, UpdateUserProfileVM vm)
     {
-        return await _http.PutApiAsync<UserDetailVM, UpdateUserProfileVM>($"{BaseUrl}/update-profile/{userId}", vm);
+        return await _http.PutApiAsync<UserDetailVM, UpdateUserProfileVM>($"{BaseUrl}/profile", vm);
     }
 }

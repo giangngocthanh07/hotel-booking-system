@@ -245,19 +245,19 @@ public class RequestService : IRequestService
     // ==========================================
 
     public async Task<ApiResponse<List<CountryVM>>> GetCountriesAsync()
-        => await _http.GetApiAsync<List<CountryVM>>("v1/location/get-countries");
+        => await _http.GetApiAsync<List<CountryVM>>("v1/locations/countries");
     public async Task<ApiResponse<List<PropertyTypeVM>>> GetPropertyTypesAsync()
-        => await _http.GetApiAsync<List<PropertyTypeVM>>("v1/hotel/get-property-types");
+        => await _http.GetApiAsync<List<PropertyTypeVM>>("v1/hotels/property-types");
 
     public async Task<ApiResponse<HotelRegistrationDetailVM>> SubmitHotelRegistrationAsync(HotelRegistrationFormPayload payload)
 
-        => await _http.PostApiAsync<HotelRegistrationDetailVM, HotelRegistrationFormPayload>("v1/owner/hotel-registration", payload);
+        => await _http.PostApiAsync<HotelRegistrationDetailVM, HotelRegistrationFormPayload>("v1/owner/hotel-registrations", payload);
 
     public async Task<ApiResponse<List<ProvinceVM>>> GetProvincesAsync(int countryId = 4)
-        => await _http.GetApiAsync<List<ProvinceVM>>($"v1/location/get-provinces/{countryId}");
+        => await _http.GetApiAsync<List<ProvinceVM>>($"v1/locations/countries/{countryId}/provinces");
 
     public async Task<ApiResponse<List<WardVM>>> GetWardsByProvinceAsync(int provinceId)
-        => await _http.GetApiAsync<List<WardVM>>($"v1/location/get-wards/{provinceId}");
+        => await _http.GetApiAsync<List<WardVM>>($"v1/locations/provinces/{provinceId}/wards");
 
     public async Task<ApiResponse<UploadResultVM>> UploadBusinessLicenseAsync(IBrowserFile file)
     {
@@ -272,7 +272,7 @@ public class RequestService : IRequestService
         // Sử dụng cái HTTP wrapper có sẵn của bạn (nó đã được config BaseAddress)
         // Nếu _http của bạn có hàm PostFormAsync hoặc PostAsync, hãy dùng nó. 
         // Ví dụ dưới đây giả định wrapper của bạn tên là PostApiAsync:
-        var response = await _http.PostAsync("v1/file/upload-business-license", content);
+        var response = await _http.PostAsync("v1/files/business-licenses", content);
         var json = await response.Content.ReadAsStringAsync();
         return System.Text.Json.JsonSerializer.Deserialize<ApiResponse<UploadResultVM>>(json,
             new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true })
@@ -282,7 +282,7 @@ public class RequestService : IRequestService
     public async Task<ApiResponse<List<HotelRegistrationDetailVM>>> GetMyHotelRequestsAsync()
     {
         // Gọi tới endpoint [HttpGet("my-hotel-requests")] mà bạn vừa tạo ở Backend
-        return await _http.GetApiAsync<List<HotelRegistrationDetailVM>>("v1/owner/my-hotel-requests");
+        return await _http.GetApiAsync<List<HotelRegistrationDetailVM>>("v1/owner/hotel-registrations/me");
     }
 
     // ==========================================

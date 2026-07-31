@@ -286,7 +286,7 @@
         {
             if (_httpClient == null) { errorMessage = "System error: Service unavailable."; return; }
 
-            var response = await _httpClient.PostAsJsonAsync("v1/authentication/login", userLogin);
+            var response = await _httpClient.PostAsJsonAsync("v1/auth/login", userLogin);
             var loginResponse = await response.Content.ReadFromJsonAsync<ApiResponse<LoginResponseVM>>();
 
             if (response.IsSuccessStatusCode && loginResponse?.Content?.AccessToken != null)

@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HotelBooking.api.Controllers.V1.Owner;
 
-[Route("api/v1/[controller]")]
+[Route("api/v1/rooms")]
 [ApiController]
 [Authorize(Roles = "Owner")]
 [Tags("Owner - Rooms")]
@@ -19,15 +19,15 @@ public class RoomController : ControllerBase
         _roomService = roomService;
     }
 
-    [HttpPost("batch-add")]
+    [HttpPost("batch")]
     public async Task<IActionResult> BatchAddRooms([FromBody] BatchAddRoomsRequestDTO request)
     {
         var result = await _roomService.BatchAddRoomsAsync(request);
         return ApiResponseHandlerHelper.HandleResponse(result);
     }
 
-    [HttpGet("by-room-type/{roomTypeId}")]
-    public async Task<IActionResult> GetRoomsByRoomType(int roomTypeId)
+    [HttpGet]
+    public async Task<IActionResult> GetRoomsByRoomType([FromQuery] int roomTypeId)
     {
         var result = await _roomService.GetRoomsByRoomTypeAsync(roomTypeId);
         return ApiResponseHandlerHelper.HandleResponse(result);

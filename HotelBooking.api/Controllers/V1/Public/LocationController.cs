@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HotelBooking.api.Controllers.V1.Public
 {
-    [Route("api/v1/[controller]")]
+    [Route("api/v1/locations")]
     [ApiController]
     public class LocationController : ControllerBase
     {
@@ -14,21 +14,21 @@ namespace HotelBooking.api.Controllers.V1.Public
             _locationService = locationService;
         }
 
-        [HttpGet("get-countries")]
+        [HttpGet("countries")]
         public async Task<IActionResult> GetAllCountries()
         {
             var response = await _locationService.GetCountriesAsync();
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
-        [HttpGet("get-provinces/{countryId}")]
+        [HttpGet("countries/{countryId}/provinces")]
         public async Task<IActionResult> GetProvincesByCountryId(int countryId)
         {
             var result = await _locationService.GetProvincesAsync(countryId);
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
-        [HttpGet("get-wards/{provinceId}")]
+        [HttpGet("provinces/{provinceId}/wards")]
         public async Task<IActionResult> GetWardsByProvinceId(int provinceId)
         {
             var result = await _locationService.GetWardsByProvinceAsync(provinceId);

@@ -4,13 +4,14 @@ This directory contains architecture, requirements, workflow, reference, histori
 
 ## Source of Truth
 
-| Area | Authoritative source |
-|---|---|
-| High-Level Architecture | [High-Level Design](architecture/high-level-design.md) |
-| Architecture Diagrams | [Platform HLD draw.io source](architecture/diagrams/01-platform-hld.drawio) |
-| Detailed Requirements | No authoritative detailed catalog exists yet |
+| Area                                 | Authoritative source                                                                       |
+| ------------------------------------ | ------------------------------------------------------------------------------------------ |
+| High-Level Architecture              | [High-Level Design](architecture/high-level-design.md)                                     |
+| Architecture Diagrams                | [Platform HLD draw.io source](architecture/diagrams/01-platform-hld.drawio)                |
+| Software Requirements                | [Software Requirements Specification](requirements/software-requirements-specification.md) |
+| User Stories and Acceptance Criteria | Not started; produced after SRS approval                                                   |
 
-The target User Story and Acceptance Criteria catalog is planned work following approval of the HLD. The archived requirements are historical input only.
+The SRS is the current requirements review baseline. The target User Story and Acceptance Criteria catalog is planned work following SRS approval. Archived requirements remain historical input only.
 
 ## Workflow Specifications and Plans
 

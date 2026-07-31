@@ -224,11 +224,12 @@
         try
         {
             var client = HttpClientFactory.CreateClient("HotelBookingAPI");
-            var response = await client.PostAsJsonAsync("v1/authentication/register", new
+            var response = await client.PostAsJsonAsync("v1/auth/register", new
             {
                 Username = userRegister.Username,
                 Email = userRegister.Email,
                 Password = userRegister.Password,
+                ConfirmPassword = userRegister.ConfirmPassword,
                 FullName = userRegister.FullName,
                 PhoneNumber = userRegister.PhoneNumber,
                 ReceiveEmail = userRegister.ReceiveEmail

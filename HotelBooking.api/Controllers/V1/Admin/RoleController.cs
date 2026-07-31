@@ -13,7 +13,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
     /// Admin Roles Controller - Role management in the system
     /// </summary>
 
-    [Route("api/v1/admin/[controller]")]
+    [Route("api/v1/admin/roles")]
     [ApiController]
     [Authorize(Roles = "Admin")]
     public class RoleController : ControllerBase
@@ -24,7 +24,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
             _roleService = roleService;
         }
 
-        [HttpPost("AddRole")]
+        [HttpPost]
         public async Task<IActionResult> AddRole([FromBody] RoleDTO newRole)
         {
             var response = await _roleService.AddAsync(newRole);

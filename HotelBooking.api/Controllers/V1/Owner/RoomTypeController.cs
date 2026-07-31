@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace HotelBooking.API.Controllers.V1.Owner
 {
-    [Route("api/v1/[controller]")]
+    [Route("api/v1/room-types")]
     [ApiController]
     [Authorize(Roles = "Owner")]
     [Tags("Owner - Room Types")]
@@ -27,7 +27,7 @@ namespace HotelBooking.API.Controllers.V1.Owner
         /// <summary>
         /// Generate room name suggestions based on selected attributes
         /// </summary>
-        [HttpPost("suggest-names")]
+        [HttpPost("name-suggestions")]
         public async Task<IActionResult> SuggestRoomNames([FromBody] RoomNameSuggestionRequest request)
         {
             // Call the service layer to get data
@@ -41,7 +41,7 @@ namespace HotelBooking.API.Controllers.V1.Owner
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
-        [HttpPost("roomtype-create")]
+        [HttpPost]
         public async Task<IActionResult> CreateRoomType([FromBody] RoomTypeCreateDTO request)
         {
             // Call the service layer to create a new room type

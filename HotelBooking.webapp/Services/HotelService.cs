@@ -14,7 +14,7 @@ public interface IHotelService : ITokenService
 public class HotelService : IHotelService
 {
     private readonly HttpClient _http;
-    private const string BaseUrl = "v1/Hotel";
+    private const string BaseUrl = "v1/hotels";
 
     public HotelService(IHttpClientFactory httpClientFactory)
     {
@@ -33,12 +33,12 @@ public class HotelService : IHotelService
 
     public async Task<ApiResponse<IEnumerable<SearchHotelResultDTO>>> SearchHotels(string destination, DateTime? checkin, DateTime? checkout, int adults, int children, int rooms)
     {
-        var url = $"{BaseUrl}/get-search-options?cityName={destination}&checkin={checkin:yyyy-MM-dd}&checkout={checkout:yyyy-MM-dd}&adults={adults}&children={children}&rooms={rooms}";
+        var url = $"{BaseUrl}/search?cityName={destination}&checkin={checkin:yyyy-MM-dd}&checkout={checkout:yyyy-MM-dd}&adults={adults}&children={children}&rooms={rooms}";
         return await _http.GetApiAsync<IEnumerable<SearchHotelResultDTO>>(url);
     }
 
     public async Task<ApiResponse<HotelDetailsVM>> GetHotelDetails(int id)
     {
-        return await _http.GetApiAsync<HotelDetailsVM>($"{BaseUrl}/get-hotel-details/{id}");
+        return await _http.GetApiAsync<HotelDetailsVM>($"{BaseUrl}/{id}");
     }
 }

@@ -8,7 +8,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
     /// <summary>
     /// Admin Management Controller - Manage modules (Amenity, Policy, Service)
     /// </summary>
-    [Route("api/v1/admin/[controller]")]
+    [Route("api/v1/admin/management")]
     [ApiController]
     [Authorize(Roles = "Admin")]
     [Tags("Admin - Management")]
@@ -47,7 +47,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         // ==========================================
         // URL: api/hotel/manage/menu/Service
         // Purpose: Returns the list of Types for the Frontend to render a Dropdown
-        [HttpGet("get-manage-menu/{module}")]
+        [HttpGet("menus/{module}")]
         public async Task<IActionResult> GetManageMenu(ManageModuleEnum module)
         {
             // Wrap parameters into a Request Object to pass down to Service (so FluentValidation runs inside Service)
@@ -70,7 +70,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         /// Get list of amenity types
         /// </summary>
         /// 
-        [HttpGet("get-all-amenity-types")]
+        [HttpGet("amenity-types")]
         public async Task<IActionResult> GetAmenityTypes()
         {
             var result = await _amenityService.GetTypeDataAsync();
@@ -82,7 +82,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         /// </summary>
         /// 
         // URL: api/hotel/get-amenity-data?typeId=1
-        [HttpGet("get-amenity-data")]
+        [HttpGet("amenities")]
         public async Task<IActionResult> GetAmenitiesByType(
             [FromQuery] int? typeId,
             [FromQuery] int pageIndex = 1,
@@ -97,7 +97,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         /// Create new amenity
         /// </summary>
         /// 
-        [HttpPost("create-amenity")]
+        [HttpPost("amenities")]
         public async Task<IActionResult> CreateAmenity([FromBody] AmenityCreateDTO dto)
         {
             var result = await _amenityService.CreateAsync(dto);
@@ -108,7 +108,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         /// Update amenity
         /// </summary>
         /// 
-        [HttpPut("update-amenity/{id}")]
+        [HttpPut("amenities/{id}")]
         public async Task<IActionResult> UpdateAmenity(int id, [FromBody] AmenityUpdateDTO dto)
         {
             var result = await _amenityService.UpdateAsync(id, dto);
@@ -119,7 +119,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         /// Delete amenity
         /// </summary>
         /// 
-        [HttpDelete("delete-amenity/{id}")]
+        [HttpDelete("amenities/{id}")]
         public async Task<IActionResult> DeleteAmenity(int id)
         {
             var result = await _amenityService.DeleteAsync(id);
@@ -134,7 +134,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         /// Get list of policy types
         /// </summary>
         /// 
-        [HttpGet("get-all-policy-types")]
+        [HttpGet("policy-types")]
         public async Task<IActionResult> GetPolicyTypes()
         {
             var result = await _policyService.GetTypeDataAsync();
@@ -145,7 +145,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         /// Get list of policies by type (paginated)
         /// </summary>
         /// 
-        [HttpGet("get-policy-data")]
+        [HttpGet("policies")]
         public async Task<IActionResult> GetPoliciesByType(
             [FromQuery] int? typeId,
             [FromQuery] int pageIndex = 1,
@@ -160,28 +160,28 @@ namespace HotelBooking.api.Controllers.V1.Admin
         /// Create new policy
         /// </summary>
         /// 
-        [HttpPost("create-check-in-out-policy")]
+        [HttpPost("policies/check-in-out")]
         public async Task<IActionResult> CreateCheckInCheckOutPolicy([FromBody] CheckInOutPolicyCreateDTO dto)
         {
             var result = await _policyService.CreateAsync(dto);
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
-        [HttpPost("create-cancellation-policy")]
+        [HttpPost("policies/cancellation")]
         public async Task<IActionResult> CreateCancellationPolicy([FromBody] CancellationPolicyCreateDTO dto)
         {
             var result = await _policyService.CreateAsync(dto);
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
-        [HttpPost("create-pet-policy")]
+        [HttpPost("policies/pet")]
         public async Task<IActionResult> CreatePetPolicy([FromBody] PetPolicyCreateDTO dto)
         {
             var result = await _policyService.CreateAsync(dto);
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
-        [HttpPost("create-children-policy")]
+        [HttpPost("policies/children")]
         public async Task<IActionResult> CreateChildrenPolicy([FromBody] ChildrenPolicyCreateDTO dto)
         {
             var result = await _policyService.CreateAsync(dto);
@@ -192,28 +192,28 @@ namespace HotelBooking.api.Controllers.V1.Admin
         /// Update policy
         /// </summary>
         /// 
-        [HttpPut("update-check-in-out-policy/{id}")]
+        [HttpPut("policies/check-in-out/{id}")]
         public async Task<IActionResult> UpdateCheckInOutPolicy(int id, [FromBody] CheckInOutPolicyUpdateDTO dto)
         {
             var result = await _policyService.UpdateAsync(id, dto);
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
-        [HttpPut("update-cancellation-policy/{id}")]
+        [HttpPut("policies/cancellation/{id}")]
         public async Task<IActionResult> UpdateCancellationPolicy(int id, [FromBody] CancellationPolicyUpdateDTO dto)
         {
             var result = await _policyService.UpdateAsync(id, dto);
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
-        [HttpPut("update-pet-policy/{id}")]
+        [HttpPut("policies/pet/{id}")]
         public async Task<IActionResult> UpdatePetPolicy(int id, [FromBody] PetPolicyUpdateDTO dto)
         {
             var result = await _policyService.UpdateAsync(id, dto);
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
-        [HttpPut("update-children-policy/{id}")]
+        [HttpPut("policies/children/{id}")]
         public async Task<IActionResult> UpdateChildrenPolicy(int id, [FromBody] ChildrenPolicyUpdateDTO dto)
         {
             var result = await _policyService.UpdateAsync(id, dto);
@@ -224,7 +224,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         /// Delete policy
         /// </summary>
         /// 
-        [HttpDelete("delete-policy/{id}")]
+        [HttpDelete("policies/{id}")]
         public async Task<IActionResult> DeletePolicy(int id)
         {
             var result = await _policyService.DeleteAsync(id);
@@ -239,7 +239,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         /// Get list of service types
         /// </summary>
         /// 
-        [HttpGet("get-all-service-types")]
+        [HttpGet("service-types")]
         public async Task<IActionResult> GetServiceTypes()
         {
             var result = await _serviceService.GetTypeDataAsync();
@@ -251,7 +251,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         /// </summary>
         /// 
         // URL: api/hotel/get-service-data?typeId=1
-        [HttpGet("get-service-data")]
+        [HttpGet("services")]
         public async Task<IActionResult> GetServicesByType(
             [FromQuery] int? typeId,
             [FromQuery] int pageIndex = 1,
@@ -265,14 +265,14 @@ namespace HotelBooking.api.Controllers.V1.Admin
         /// <summary>
         /// Create new service
         /// </summary>
-        [HttpPost("create-standard-service")]
+        [HttpPost("services/standard")]
         public async Task<IActionResult> CreateStandardServiceAsync([FromBody] ServiceStandardCreateDTO newService)
         {
             var result = await _serviceService.CreateAsync(newService);
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
-        [HttpPost("create-airport-transfer-service")]
+        [HttpPost("services/airport-transfer")]
         public async Task<IActionResult> CreateAirportTransferServiceAsync([FromBody] ServiceAirportCreateDTO newService)
         {
             var result = await _serviceService.CreateAsync(newService);
@@ -283,14 +283,14 @@ namespace HotelBooking.api.Controllers.V1.Admin
         /// Update service
         /// </summary>
 
-        [HttpPut("update-standard-service/{id}")]
+        [HttpPut("services/standard/{id}")]
         public async Task<IActionResult> UpdateStandardServiceAsync(int id, [FromBody] ServiceStandardUpdateDTO updatedService)
         {
             var result = await _serviceService.UpdateAsync(id, updatedService);
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
-        [HttpPut("update-airport-transfer-service/{id}")]
+        [HttpPut("services/airport-transfer/{id}")]
         public async Task<IActionResult> UpdateAirportTransferServiceAsync(int id, [FromBody] ServiceAirportUpdateDTO updatedService)
         {
             var result = await _serviceService.UpdateAsync(id, updatedService);
@@ -301,7 +301,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         /// Delete service
         /// </summary>
         /// 
-        [HttpDelete("delete-service/{id}")]
+        [HttpDelete("services/{id}")]
         public async Task<IActionResult> DeleteService(int id)
         {
             var result = await _serviceService.DeleteAsync(id);
@@ -311,7 +311,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         #endregion
 
         #region MANAGE ROOM QUALITY
-        [HttpGet("get-room-quality-data")]
+        [HttpGet("room-qualities")]
         public async Task<IActionResult> GetRoomQualityData([FromQuery] int? typeId, [FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
         {
             var request = new PagingRequest { PageIndex = pageIndex, PageSize = pageSize };
@@ -320,14 +320,14 @@ namespace HotelBooking.api.Controllers.V1.Admin
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
-        [HttpPost("create-room-quality")]
+        [HttpPost("room-qualities")]
         public async Task<IActionResult> CreateRoomQualityAsync([FromBody] RoomQualityCreateDTO newRoomQuality)
         {
             var result = await _roomQualityService.CreateAsync(newRoomQuality);
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
-        [HttpPut("update-room-quality/{id}")]
+        [HttpPut("room-qualities/{id}")]
         public async Task<IActionResult> UpdateRoomQualityAsync(int id, [FromBody] RoomQualityUpdateDTO rq)
         {
 
@@ -335,7 +335,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
-        [HttpDelete("delete-room-quality/{id}")]
+        [HttpDelete("room-qualities/{id}")]
         public async Task<IActionResult> DeleteRoomQualityAsync(int id)
         {
             var result = await _roomQualityService.DeleteAsync(id);
@@ -343,7 +343,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
         }
         #endregion
 
-        [HttpGet("room-attribute/get-paged-data")]
+        [HttpGet("room-attributes")]
         public async Task<IActionResult> GetPagedData(
             [FromQuery] RoomAttributeType type, // Enum: UnitType, BedType, RoomView...
             [FromQuery] int pageIndex = 1,
@@ -373,21 +373,21 @@ namespace HotelBooking.api.Controllers.V1.Admin
 
         #region MANAGE UNIT TYPE
 
-        [HttpGet("get-unit-type-data")]
+        [HttpGet("unit-types")]
         public async Task<IActionResult> GetUnitTypeData()
         {
             var result = await _roomAttributeFacade.UnitTypeService.GetAllAsync();
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
-        [HttpPost("create-unit-type")]
+        [HttpPost("unit-types")]
         public async Task<IActionResult> CreateUnitTypeAsync([FromBody] UnitTypeCreateDTO newUnitType)
         {
             var result = await _roomAttributeFacade.UnitTypeService.CreateAsync(newUnitType);
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
-        [HttpPut("update-unit-type/{id}")]
+        [HttpPut("unit-types/{id}")]
         public async Task<IActionResult> UpdateUnitTypeAsync(int id, [FromBody] UnitTypeUpdateDTO ut)
         {
 
@@ -395,7 +395,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
-        [HttpDelete("delete-unit-type/{id}")]
+        [HttpDelete("unit-types/{id}")]
         public async Task<IActionResult> DeleteUnitTypeAsync(int id)
         {
             var result = await _roomAttributeFacade.UnitTypeService.DeleteAsync(id);
@@ -405,21 +405,21 @@ namespace HotelBooking.api.Controllers.V1.Admin
 
         #region MANAGE BED TYPE
 
-        [HttpGet("get-bed-type-data")]
+        [HttpGet("bed-types")]
         public async Task<IActionResult> GetBedTypeData()
         {
             var result = await _roomAttributeFacade.BedTypeService.GetAllAsync();
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
-        [HttpPost("create-bed-type")]
+        [HttpPost("bed-types")]
         public async Task<IActionResult> CreateBedTypeAsync([FromBody] BedTypeCreateDTO newBedType)
         {
             var result = await _roomAttributeFacade.BedTypeService.CreateAsync(newBedType);
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
-        [HttpPut("update-bed-type/{id}")]
+        [HttpPut("bed-types/{id}")]
         public async Task<IActionResult> UpdateBedTypeAsync(int id, [FromBody] BedTypeUpdateDTO bt)
         {
 
@@ -427,7 +427,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
-        [HttpDelete("delete-bed-type/{id}")]
+        [HttpDelete("bed-types/{id}")]
         public async Task<IActionResult> DeleteBedTypeAsync(int id)
         {
             var result = await _roomAttributeFacade.BedTypeService.DeleteAsync(id);
@@ -438,21 +438,21 @@ namespace HotelBooking.api.Controllers.V1.Admin
 
         #region MANAGE ROOM VIEW
 
-        [HttpGet("get-room-view-data")]
+        [HttpGet("room-views")]
         public async Task<IActionResult> GetRoomView()
         {
             var result = await _roomAttributeFacade.RoomViewService.GetAllAsync();
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
-        [HttpPost("create-room-view")]
+        [HttpPost("room-views")]
         public async Task<IActionResult> CreateRoomViewAsync([FromBody] RoomViewCreateDTO newRoomView)
         {
             var result = await _roomAttributeFacade.RoomViewService.CreateAsync(newRoomView);
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
-        [HttpPut("update-room-view/{id}")]
+        [HttpPut("room-views/{id}")]
         public async Task<IActionResult> UpdateRoomViewAsync(int id, [FromBody] RoomViewUpdateDTO rv)
         {
 
@@ -460,7 +460,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
-        [HttpDelete("delete-room-view/{id}")]
+        [HttpDelete("room-views/{id}")]
         public async Task<IActionResult> DeleteRoomViewAsync(int id)
         {
             var result = await _roomAttributeFacade.RoomViewService.DeleteAsync(id);

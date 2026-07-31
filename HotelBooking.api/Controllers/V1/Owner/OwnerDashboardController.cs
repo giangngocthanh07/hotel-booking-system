@@ -6,7 +6,7 @@ using System.Security.Claims;
 
 namespace HotelBooking.api.Controllers.V1.Owner;
 
-[Route("api/v1/[controller]")]
+[Route("api/v1/owner-dashboard")]
 [ApiController]
 [Authorize(Roles = "Owner")]
 [Tags("Owner - Dashboard")]

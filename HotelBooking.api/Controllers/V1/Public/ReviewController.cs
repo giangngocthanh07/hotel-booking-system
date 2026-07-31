@@ -7,7 +7,7 @@ using HotelBooking.application.Helpers;
 
 namespace HotelBooking.api.Controllers.V1.Public;
 
-[Route("api/v1/[controller]")]
+[Route("api/v1/reviews")]
 [ApiController]
 public class ReviewController : ControllerBase
 {
@@ -19,7 +19,7 @@ public class ReviewController : ControllerBase
     }
 
     [Authorize]
-    [HttpPost("submit")]
+    [HttpPost]
     public async Task<IActionResult> SubmitReview([FromBody] ReviewRequestDTO request)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);

@@ -42,7 +42,7 @@ namespace HotelBooking.application.Services.Domains.UserManagement.Login
                 var user = await _userRepository.GetUserWithRoles(u => u.UserName == userLogin.UsernameOrEmail || u.Email == userLogin.UsernameOrEmail);
 
                 // If user not found or password does not match -> return Unauthorized
-                if (user == null || !PasswordHelper.VerifyPassword(userLogin.Password, user.PasswordHash))
+                if (user == null || !PasswordHelper.VerifyPassword(userLogin.Password, user.PasswordHash) || user.IsActive == false || user.IsDeleted == true)
                 {
                     return ResponseFactory.Failure<LoginResponseDTO>(
                         StatusCodeResponse.Unauthorized,

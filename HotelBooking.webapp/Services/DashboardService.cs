@@ -33,11 +33,11 @@ public class DashboardService : IDashboardService
 
     public async Task<ApiResponse<AdminDashboardVM>> GetAdminDashboardStats()
     {
-        return await _http.GetApiAsync<AdminDashboardVM>("v1/Dashboard/stats");
+        return await _http.GetApiAsync<AdminDashboardVM>("v1/dashboard/stats");
     }
 
     public async Task<ApiResponse<OwnerDashboardVM>> GetOwnerDashboardStats()
     {
-        return await _http.GetApiAsync<OwnerDashboardVM>("v1/OwnerDashboard/stats");
+        return await _http.GetApiAsync<OwnerDashboardVM>("v1/owner-dashboard/stats");
     }
 }

@@ -7,7 +7,7 @@ using HotelBooking.application.Helpers;
 
 namespace HotelBooking.api.Controllers.V1.Public;
 
-[Route("api/v1/[controller]")]
+[Route("api/v1/bookings")]
 [ApiController]
 public class BookingController : ControllerBase
 {
@@ -19,7 +19,7 @@ public class BookingController : ControllerBase
     }
 
     [Authorize]
-    [HttpPost("post-booking")]
+    [HttpPost]
     public async Task<IActionResult> CreateBookingAsync([FromBody] BookingRequestDTO request)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -34,7 +34,7 @@ public class BookingController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("my-history")]
+    [HttpGet("me")]
     public async Task<IActionResult> GetMyBookingHistory([FromQuery] string? status)
     {
         var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
@@ -43,7 +43,7 @@ public class BookingController : ControllerBase
     }
 
     [Authorize(Roles = "Owner")]
-    [HttpGet("owner-management")]
+    [HttpGet("owner")]
     public async Task<IActionResult> GetOwnerBookingManagement([FromQuery] string? status, [FromQuery] string? searchTerm)
     {
         var ownerId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");

@@ -1,12 +1,12 @@
 # Hotel Booking Platform — High-Level Design
 
-| Field | Value |
-|---|---|
-| Status | Approved baseline |
-| Date | 2026-07-25 |
-| Architecture style | Project-specific Clean Architecture — Layered Modular Monolith |
-| Product stage | Graduation project with a small-production design baseline |
-| Diagram source | [`diagrams/01-platform-hld.drawio`](diagrams/01-platform-hld.drawio) |
+| Field              | Value                                                                |
+| ------------------ | -------------------------------------------------------------------- |
+| Status             | Approved baseline                                                    |
+| Date               | 2026-07-25                                                           |
+| Architecture style | Project-specific Clean Architecture — Layered Modular Monolith       |
+| Product stage      | Graduation project with a small-production design baseline           |
+| Diagram source     | [`diagrams/01-platform-hld.drawio`](diagrams/01-platform-hld.drawio) |
 
 ## 1. Purpose
 
@@ -25,15 +25,15 @@ The platform connects travelers, hotel owners, and platform administrators.
 
 ### 2.1 Actors
 
-| Actor | Responsibility |
-|---|---|
-| Guest | Searches and views hotels without signing in |
-| Customer | Manages a profile, books rooms, pays, cancels, and reviews completed stays |
-| Hotel Owner | Registers and manages hotels, rooms, inventory, bookings, and performance |
-| Admin | Approves requests, manages users and master data, moderates content, and monitors the platform |
-| VNPay | Processes online payments and sends signed callbacks |
-| Cloudinary | Stores and serves hotel and room media |
-| Email Provider | Delivers transactional notifications |
+| Actor          | Responsibility                                                                                 |
+| -------------- | ---------------------------------------------------------------------------------------------- |
+| Guest          | Searches and views hotels without signing in                                                   |
+| Customer       | Manages a profile, books rooms, pays, cancels, and reviews completed stays                     |
+| Hotel Owner    | Registers and manages hotels, rooms, inventory, bookings, and performance                      |
+| Admin          | Approves requests, manages users and master data, moderates content, and monitors the platform |
+| VNPay          | Processes online payments and sends signed callbacks                                           |
+| Cloudinary     | Stores and serves hotel and room media                                                         |
+| Email Provider | Delivers transactional notifications                                                           |
 
 The Hotel Staff/Receptionist role is a future extension. Hotel Owners perform operational booking actions in the current target scope.
 
@@ -132,21 +132,21 @@ External providers are accessed through abstractions so their implementations ca
 
 ## 5. Platform Modules
 
-| Module | Responsibility |
-|---|---|
-| Identity & Access | Registration, login, JWT issuance, password management, and RBAC |
-| User Profile | Customer and Owner profile management |
-| Partner Onboarding | Owner upgrade and hotel approval workflows |
-| Hotel Catalog | Hotel descriptions, amenities, policies, location, and property details |
-| Media Management | Hotel and Room Type image metadata and Cloudinary integration |
-| Room & Inventory | Room Types, physical rooms, capacity, attributes, and maintenance blocks |
-| Search & Discovery | Hotel search, filtering, availability, and public details |
-| Booking | Reservations, inventory holds, snapshots, assignment, and booking lifecycle |
-| Payment & Refund | VNPay, pay-at-hotel, callbacks, idempotency, and refunds |
-| Reviews | Guest reviews, Owner responses, and Admin moderation |
-| Administration | Master data, user management, request queues, and dashboards |
-| Notifications | Email and in-application notifications |
-| Reporting | Owner and Admin operational and business metrics |
+| Module             | Responsibility                                                              |
+| ------------------ | --------------------------------------------------------------------------- |
+| Identity & Access  | Registration, login, JWT issuance, password management, and RBAC            |
+| User Profile       | Customer and Owner profile management                                       |
+| Partner Onboarding | Owner upgrade and hotel approval workflows                                  |
+| Hotel Catalog      | Hotel descriptions, amenities, policies, location, and property details     |
+| Media Management   | Hotel and Room Type image metadata and Cloudinary integration               |
+| Room & Inventory   | Room Types, physical rooms, capacity, attributes, and maintenance blocks    |
+| Search & Discovery | Hotel search, filtering, availability, and public details                   |
+| Booking            | Reservations, inventory holds, snapshots, assignment, and booking lifecycle |
+| Payment & Refund   | VNPay, pay-at-hotel, callbacks, idempotency, and refunds                    |
+| Reviews            | Guest reviews, Owner responses, and Admin moderation                        |
+| Administration     | Master data, user management, request queues, and dashboards                |
+| Notifications      | Email and in-application notifications                                      |
+| Reporting          | Owner and Admin operational and business metrics                            |
 
 ### 5.1 Module ownership rules
 
@@ -211,16 +211,16 @@ Every Acceptance Criterion must be observable, unambiguous, and testable. A User
 
 ### 6.3 Test mapping
 
-| Acceptance Criterion category | Primary test type |
-|---|---|
-| Validation and calculations | Unit test |
-| Application business rules | Unit test |
-| Repository queries and transactions | Integration test |
-| API contract and authorization | API integration test |
-| Blazor interaction and forms | Component or UI test |
-| VNPay and Cloudinary integration | Contract or sandbox integration test |
-| Complete critical journey | End-to-end test |
-| Purely visual presentation | Manual test with screenshot evidence |
+| Acceptance Criterion category       | Primary test type                    |
+| ----------------------------------- | ------------------------------------ |
+| Validation and calculations         | Unit test                            |
+| Application business rules          | Unit test                            |
+| Repository queries and transactions | Integration test                     |
+| API contract and authorization      | API integration test                 |
+| Blazor interaction and forms        | Component or UI test                 |
+| VNPay and Cloudinary integration    | Contract or sandbox integration test |
+| Complete critical journey           | End-to-end test                      |
+| Purely visual presentation          | Manual test with screenshot evidence |
 
 Critical flows must cover happy paths, validation failures, authorization failures, duplicate requests, concurrency, and external-provider failures.
 
@@ -420,15 +420,15 @@ A VNPay callback must:
 
 ### 10.3 Error contract
 
-| HTTP status | Meaning |
-|---|---|
-| `400` | Invalid format or validation |
-| `401` | Missing or invalid authentication |
-| `403` | Authenticated identity without permission |
-| `404` | Resource missing or not visible |
-| `409` | Duplicate data, invalid state, or availability conflict |
-| `422` | Valid input that violates a business rule |
-| `500` | Unexpected system failure |
+| HTTP status | Meaning                                                 |
+| ----------- | ------------------------------------------------------- |
+| `400`       | Invalid format or validation                            |
+| `401`       | Missing or invalid authentication                       |
+| `403`       | Authenticated identity without permission               |
+| `404`       | Resource missing or not visible                         |
+| `409`       | Duplicate data, invalid state, or availability conflict |
+| `422`       | Valid input that violates a business rule               |
+| `500`       | Unexpected system failure                               |
 
 API failures include a stable error code and correlation ID. Stack traces and internal exception details are not returned to clients.
 
@@ -451,18 +451,18 @@ CorrelationId
 
 ### 11.1 Logical ownership
 
-| Module | Primary data |
-|---|---|
-| Identity & Access | `User`, `Role`, `UserRole` |
-| Partner Onboarding | `UpgradeRequest`, `HotelApprovalRequest` |
-| Hotel Catalog | `Hotel`, amenities, policies, and location data |
-| Media Management | `HotelImage`, `RoomImage` |
-| Room & Inventory | `RoomType`, `Room`, `RoomBlock`, room attributes |
-| Booking | `Booking`, `BookingRoom`, `BookingService` |
-| Payment & Refund | `Payment`, `Refund` |
-| Reviews | `Review`, `ReviewResponse` |
-| Notifications | `Notification`, delivery attempts |
-| Audit | `AuditLog` |
+| Module             | Primary data                                     |
+| ------------------ | ------------------------------------------------ |
+| Identity & Access  | `User`, `Role`, `UserRole`                       |
+| Partner Onboarding | `UpgradeRequest`, `HotelApprovalRequest`         |
+| Hotel Catalog      | `Hotel`, amenities, policies, and location data  |
+| Media Management   | `HotelImage`, `RoomImage`                        |
+| Room & Inventory   | `RoomType`, `Room`, `RoomBlock`, room attributes |
+| Booking            | `Booking`, `BookingRoom`, `BookingService`       |
+| Payment & Refund   | `Payment`, `Refund`                              |
+| Reviews            | `Review`, `ReviewResponse`                       |
+| Notifications      | `Notification`, delivery attempts                |
+| Audit              | `AuditLog`                                       |
 
 ### 11.2 Integrity rules
 
@@ -499,14 +499,14 @@ Generated entity files do not contain custom business logic.
 
 ### 12.1 Performance
 
-| ID | Requirement |
-|---|---|
-| `NFR-PERF-01` | Search API p95 is at most 2 seconds |
-| `NFR-PERF-02` | Hotel details API p95 is at most 1.5 seconds |
+| ID            | Requirement                                                           |
+| ------------- | --------------------------------------------------------------------- |
+| `NFR-PERF-01` | Search API p95 is at most 2 seconds                                   |
+| `NFR-PERF-02` | Hotel details API p95 is at most 1.5 seconds                          |
 | `NFR-PERF-03` | Booking creation p95 is at most 2 seconds, excluding payment redirect |
-| `NFR-PERF-04` | Payment callback processing p95 is at most 1 second |
-| `NFR-PERF-05` | Paginated Admin and Owner lists p95 are at most 2 seconds |
-| `NFR-PERF-06` | The platform supports 200 concurrent users |
+| `NFR-PERF-04` | Payment callback processing p95 is at most 1 second                   |
+| `NFR-PERF-05` | Paginated Admin and Owner lists p95 are at most 2 seconds             |
+| `NFR-PERF-06` | The platform supports 200 concurrent users                            |
 
 Pagination and filtering execute in the database. Performance tests use a dataset representative of the design baseline.
 
@@ -518,11 +518,11 @@ The initial deployment may use in-memory caching. Distributed caching is a scale
 
 ### 12.3 Reliability
 
-| Metric | Target |
-|---|---|
-| Availability | 99.5% monthly |
-| Recovery Point Objective | 1 hour |
-| Recovery Time Objective | 4 hours |
+| Metric                   | Target        |
+| ------------------------ | ------------- |
+| Availability             | 99.5% monthly |
+| Recovery Point Objective | 1 hour        |
+| Recovery Time Objective  | 4 hours       |
 
 SQL Server requires scheduled backups and a documented restore procedure. External calls use explicit timeouts and safe retry policies. Payment commands are never retried without idempotency protection.
 
@@ -654,7 +654,9 @@ The editable draw.io source contains:
 
 1. `System Context`
 2. `Container Architecture`
-3. `Application Modules`
+3. `API Components`
 4. `Deployment View`
+5. `Booking Code Diagram` — C4 Level 4, current implementation
+6. `Payment Code Diagram` — C4 Level 4, current implementation
 
 See [`diagrams/01-platform-hld.drawio`](diagrams/01-platform-hld.drawio).

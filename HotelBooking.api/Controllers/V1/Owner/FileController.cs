@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HotelBooking.api.Controllers.V1.Owner
 {
-    [Route("api/v1/[controller]")]
+    [Route("api/v1/files")]
     [ApiController]
     [Authorize(Roles = "Owner")]
     public class FileController : ControllerBase
@@ -22,7 +22,7 @@ namespace HotelBooking.api.Controllers.V1.Owner
             _fileService = fileService;
         }
 
-        [HttpPost("upload-business-license")]
+        [HttpPost("business-licenses")]
         public async Task<IActionResult> UploadBusinessLicense(IFormFile file)
         {
             var claim = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");

@@ -5,7 +5,7 @@ using HotelBooking.application.Helpers;
 
 namespace HotelBooking.api.Controllers.V1.Admin;
 
-[Route("api/v1/[controller]")]
+[Route("api/v1/dashboard")]
 [ApiController]
 [Authorize(Roles = "Admin")]
 [Tags("Admin - Dashboard")]

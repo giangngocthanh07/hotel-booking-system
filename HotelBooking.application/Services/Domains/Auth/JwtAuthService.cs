@@ -35,9 +35,6 @@ public class JwtAuthService : IJwtAuthService
         {
             new Claim(ClaimTypes.NameIdentifier, userAfterVerifyPass.Id.ToString()), // Default claim for userId
             new Claim(ClaimTypes.Name, userAfterVerifyPass.UserName),               // Default claim for username
-            new Claim("Email", userAfterVerifyPass.Email),                           // Custom claim for email
-            new Claim("FullName", userAfterVerifyPass.FullName ?? string.Empty),                     // Custom claim for fullName
-            new Claim("Avatar", userAfterVerifyPass.AvatarUrl ?? string.Empty),      // Custom claim for avatar
             // new Claim(ClaimTypes.Role, userLogin.Role),                            // Default claim for Role
             new Claim(JwtRegisteredClaimNames.Sub, userAfterVerifyPass.UserName),   // Token subject
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),       // Unique token ID

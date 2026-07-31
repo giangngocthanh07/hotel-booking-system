@@ -7,7 +7,7 @@ using HotelBooking.application.Helpers;
 
 namespace HotelBooking.api.Controllers.V1.Public;
 
-[Route("api/v1/[controller]")]
+[Route("api/v1/payments")]
 [ApiController]
 public class PaymentController : ControllerBase
 {
@@ -22,7 +22,7 @@ public class PaymentController : ControllerBase
     /// Create a payment URL for a specific booking.
     /// </summary>
     [Authorize]
-    [HttpPost("create-url")]
+    [HttpPost]
     public async Task<IActionResult> CreatePaymentUrl([FromBody] CreatePaymentRequestDTO request)
     {
         var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");

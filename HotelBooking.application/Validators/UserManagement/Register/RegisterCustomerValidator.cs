@@ -29,7 +29,7 @@ namespace HotelBooking.application.Validators.UserManagement.Register
 
             RuleFor(x => x.Password)
                 .NotEmpty().WithMessage(MessageResponse.UserManagement.Register.EMPTY_PASSWORD)
-                .MinimumLength(8).WithMessage(MessageResponse.UserManagement.Register.SHORT_PASSWORD)
+                .Length(8, 64).WithMessage(MessageResponse.UserManagement.Register.SHORT_PASSWORD)
                 .Matches("[A-Z]").WithMessage(MessageResponse.UserManagement.Register.UPPERCASE_LETTER_PASSWORD)
                 .Matches("[a-z]").WithMessage(MessageResponse.UserManagement.Register.LOWERCASE_LETTER_PASSWORD)
                 .Matches("[0-9]").WithMessage(MessageResponse.UserManagement.Register.NUMBER_PASSWORD)

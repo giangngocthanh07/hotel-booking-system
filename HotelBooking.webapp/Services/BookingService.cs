@@ -14,7 +14,7 @@ public interface IBookingService : ITokenService
 public class BookingService : IBookingService
 {
     private readonly HttpClient _http;
-    private const string BaseUrl = "v1/Booking";
+    private const string BaseUrl = "v1/bookings";
 
     public BookingService(IHttpClientFactory httpClientFactory)
     {
@@ -33,7 +33,7 @@ public class BookingService : IBookingService
 
     public async Task<ApiResponse<IEnumerable<BookingHistoryVM>>> GetMyBookingHistory(string? status = null)
     {
-        var url = $"{BaseUrl}/my-history";
+        var url = $"{BaseUrl}/me";
         if (!string.IsNullOrEmpty(status)) url += $"?status={status}";
         return await _http.GetApiAsync<IEnumerable<BookingHistoryVM>>(url);
     }
@@ -44,7 +44,7 @@ public class BookingService : IBookingService
         if (!string.IsNullOrEmpty(status)) queryParams.Add($"status={status}");
         if (!string.IsNullOrEmpty(searchTerm)) queryParams.Add($"searchTerm={searchTerm}");
 
-        var url = $"{BaseUrl}/owner-management";
+        var url = $"{BaseUrl}/owner";
         if (queryParams.Any()) url += "?" + string.Join("&", queryParams);
 
         return await _http.GetApiAsync<IEnumerable<BookingHistoryVM>>(url);

@@ -13,7 +13,7 @@ namespace HotelBooking.api.Controllers.V1.Public
     /// <summary>
     /// Public Authentication Controller - Registration, login, user information management
     /// </summary>
-    [Route("api/v1/[controller]")]
+    [Route("api/v1/auth")]
     [ApiController]
     public class AuthenticationController : ControllerBase
     {
@@ -65,9 +65,9 @@ namespace HotelBooking.api.Controllers.V1.Public
         /// <summary>
         /// Update current user profile (Requires authentication)
         /// </summary>
-        [HttpPut("update-profile/{id}")]
+        [HttpPut("profile")]
         [Authorize]
-        public async Task<IActionResult> UpdateProfile(int id, [FromBody] UpdateUserProfileDTO request)
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateUserProfileDTO request)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
             if (userId == 0)
@@ -75,13 +75,7 @@ namespace HotelBooking.api.Controllers.V1.Public
                 return Unauthorized();
             }
 
-            // Security check: user can only update their own profile
-            if (userId != id)
-            {
-                return Forbid();
-            }
-
-            var response = await _userService.UpdateProfileAsync(id, request);
+            var response = await _userService.UpdateProfileAsync(userId, request);
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 

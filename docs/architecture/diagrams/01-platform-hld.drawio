@@ -1,294 +1,1085 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<mxfile host="app.diagrams.net" modified="2026-07-25T00:00:00.000Z" agent="Codex" version="24.7.17" type="device">
+<mxfile host="app.diagrams.net" agent="Codex" pages="6">
   <diagram id="system-context" name="System Context">
-    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+    <mxGraphModel dx="3254" dy="974" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
       <root>
-        <mxCell id="0"/>
-        <mxCell id="1" parent="0"/>
-        <mxCell id="ctx-title" value="Hotel Booking Platform — System Context" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=24;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="450" y="30" width="700" height="40" as="geometry"/>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="ctx-title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=24;fontStyle=1;" value="Hotel Booking Platform — System Context" vertex="1">
+          <mxGeometry height="40" width="700" x="450" y="30" as="geometry" />
         </mxCell>
-        <mxCell id="ctx-guest" value="Guest / Customer&#xa;Searches, books, pays, and reviews" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="90" y="170" width="250" height="90" as="geometry"/>
+        <mxCell id="ctx-guest" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=15;" value="Guest / Customer&#xa;Searches, books, pays, and reviews" vertex="1">
+          <mxGeometry height="90" width="250" x="90" y="170" as="geometry" />
         </mxCell>
-        <mxCell id="ctx-owner" value="Hotel Owner&#xa;Manages hotels, inventory, and bookings" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="90" y="360" width="250" height="90" as="geometry"/>
+        <mxCell id="ctx-owner" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=15;" value="Hotel Owner&#xa;Manages hotels, inventory, and bookings" vertex="1">
+          <mxGeometry height="90" width="250" x="-70" y="390" as="geometry" />
         </mxCell>
-        <mxCell id="ctx-admin" value="Admin&#xa;Approves, configures, moderates, and reports" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="90" y="550" width="250" height="90" as="geometry"/>
+        <mxCell id="ctx-admin" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=15;" value="Admin&#xa;Approves, configures, moderates, and reports" vertex="1">
+          <mxGeometry height="90" width="250" x="90" y="550" as="geometry" />
         </mxCell>
-        <mxCell id="ctx-system" value="Hotel Booking Platform&#xa;&#xa;Connects travelers and Hotel Owners through search, booking, payment, operations, reviews, and administration." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0050b3;strokeColor=#003a8c;fontColor=#ffffff;fontSize=17;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="570" y="285" width="430" height="210" as="geometry"/>
+        <mxCell id="ctx-system" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0050b3;strokeColor=#003a8c;fontColor=#ffffff;fontSize=17;fontStyle=1;" value="Hotel Booking Platform&#xa;&#xa;Connects travelers and Hotel Owners through search, booking, payment, operations, reviews, and administration." vertex="1">
+          <mxGeometry height="210" width="430" x="570" y="285" as="geometry" />
         </mxCell>
-        <mxCell id="ctx-vnpay" value="VNPay&#xa;Online payment gateway" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="1230" y="170" width="250" height="80" as="geometry"/>
+        <mxCell id="ctx-vnpay" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=15;" value="VNPay&#xa;Online payment gateway" vertex="1">
+          <mxGeometry height="80" width="250" x="1400" y="180" as="geometry" />
         </mxCell>
-        <mxCell id="ctx-cloudinary" value="Cloudinary&#xa;Media storage and delivery" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="1230" y="350" width="250" height="80" as="geometry"/>
+        <mxCell id="ctx-cloudinary" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=15;" value="Cloudinary&#xa;Media storage and delivery" vertex="1">
+          <mxGeometry height="80" width="250" x="1740" y="350" as="geometry" />
         </mxCell>
-        <mxCell id="ctx-email" value="Email Provider&#xa;Transactional email delivery" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="1230" y="530" width="250" height="80" as="geometry"/>
+        <mxCell id="ctx-email" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=15;" value="Email Provider&#xa;Transactional email delivery" vertex="1">
+          <mxGeometry height="80" width="250" x="1400" y="430" as="geometry" />
         </mxCell>
-        <mxCell id="ctx-e1" value="Uses" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="ctx-guest" target="ctx-system">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="ctx-e1" edge="1" parent="1" source="ctx-guest" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" target="ctx-system" value="Uses">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="ctx-e2" value="Operates properties" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="ctx-owner" target="ctx-system">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="ctx-e2" edge="1" parent="1" source="ctx-owner" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" target="ctx-system" value="Operates properties">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="ctx-e3" value="Administers" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="ctx-admin" target="ctx-system">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="ctx-e3" edge="1" parent="1" source="ctx-admin" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" target="ctx-system" value="Administers">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="ctx-e4" value="Creates signed payment requests" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="ctx-system" target="ctx-vnpay">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="ctx-e4" edge="1" parent="1" source="ctx-system" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.25;exitDx=0;exitDy=0;" target="ctx-vnpay" value="Creates signed payment requests">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="ctx-e4-callback" value="Sends signed callbacks" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;dashed=1;" edge="1" parent="1" source="ctx-vnpay" target="ctx-system">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="ctx-e4-callback" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;dashed=1;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" target="ctx-system" value="Sends signed callbacks">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1400" y="200" as="sourcePoint" />
+            <mxPoint x="892.5" y="275" as="targetPoint" />
+          </mxGeometry>
         </mxCell>
-        <mxCell id="ctx-e5" value="Uploads and retrieves media" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="ctx-system" target="ctx-cloudinary">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="ctx-e5" edge="1" parent="1" source="ctx-system" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="ctx-cloudinary" value="Uploads and retrieves media">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+            <mxPoint x="985" y="385" as="sourcePoint" />
+            <mxPoint x="1705" y="415" as="targetPoint" />
+          </mxGeometry>
         </mxCell>
-        <mxCell id="ctx-e6" value="Sends transactional email" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="ctx-system" target="ctx-email">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="ctx-e6" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="ctx-email" value="Sends transactional email">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1000" y="470" />
+            </Array>
+            <mxPoint x="1000" y="470" as="sourcePoint" />
+            <mxPoint x="1310" y="575" as="targetPoint" />
+          </mxGeometry>
         </mxCell>
-        <mxCell id="ctx-note" value="Scope: target product&#xa;Architecture: layered modular monolith&#xa;Deployment target: small production baseline" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="585" y="610" width="400" height="120" as="geometry"/>
+        <mxCell id="ctx-note" parent="1" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;" value="Scope: target product&#xa;Architecture: layered modular monolith&#xa;Deployment target: small production baseline" vertex="1">
+          <mxGeometry height="120" width="400" x="585" y="610" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
   <diagram id="container-architecture" name="Container Architecture">
-    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1050" math="0" shadow="0">
+    <mxGraphModel dx="2652" dy="502" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1050" math="0" shadow="0">
       <root>
-        <mxCell id="0"/>
-        <mxCell id="1" parent="0"/>
-        <mxCell id="con-title" value="Hotel Booking Platform — Container Architecture" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=24;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="500" y="30" width="800" height="40" as="geometry"/>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="con-title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=24;fontStyle=1;" value="Hotel Booking Platform — C4 Level 2 Container Diagram" vertex="1">
+          <mxGeometry height="40" width="900" x="450" y="25" as="geometry" />
         </mxCell>
-        <mxCell id="con-browser" value="Web Browser&#xa;Guest, Customer, Owner, Admin" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="60" y="380" width="240" height="90" as="geometry"/>
+        <mxCell id="con-subtitle" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=13;fontColor=#666666;" value="Runtime and deployable units — internal code layers are intentionally excluded" vertex="1">
+          <mxGeometry height="30" width="900" x="450" y="65" as="geometry" />
         </mxCell>
-        <mxCell id="con-boundary" value="Hotel Booking Platform" style="swimlane;whiteSpace=wrap;html=1;startSize=32;horizontal=1;rounded=1;fillColor=none;strokeColor=#0050b3;fontStyle=1;fontSize=16;" vertex="1" parent="1">
-          <mxGeometry x="370" y="110" width="930" height="740" as="geometry"/>
+        <mxCell id="con-users" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#08427b;strokeColor=#052e56;fontColor=#ffffff;fontSize=15;fontStyle=1;" value="Platform Users&#xa;[Person]&#xa;&#xa;Guest • Customer&#xa;Hotel Owner • Admin" vertex="1">
+          <mxGeometry height="140" width="250" x="-40" y="270" as="geometry" />
         </mxCell>
-        <mxCell id="con-webapp" value="Blazor Server Web App&#xa;&#xa;Pages, ViewModels, Components, UI state, API clients" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=15;" vertex="1" parent="con-boundary">
-          <mxGeometry x="60" y="110" width="260" height="130" as="geometry"/>
+        <mxCell id="con-boundary" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=36;horizontal=1;rounded=1;fillColor=none;strokeColor=#0050b3;strokeWidth=2;fontStyle=1;fontSize=16;" value="Hotel Booking Platform [Software System]" vertex="1">
+          <mxGeometry height="780" width="1040" x="350" y="120" as="geometry" />
         </mxCell>
-        <mxCell id="con-api" value="ASP.NET Core Web API&#xa;&#xa;REST endpoints, JWT, authorization, exception boundary" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0050b3;strokeColor=#003a8c;fontColor=#ffffff;fontSize=15;" vertex="1" parent="con-boundary">
-          <mxGeometry x="400" y="110" width="300" height="130" as="geometry"/>
+        <mxCell id="con-webapp" parent="con-boundary" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#438dd5;strokeColor=#2e6295;fontColor=#ffffff;fontSize=15;" value="Blazor Server Web App&#xa;[Container: .NET 9 / Blazor Server]&#xa;&#xa;Server-rendered UI, SignalR circuits, Pages, Components, ViewModels, UI state, and API clients" vertex="1">
+          <mxGeometry height="180" width="310" x="50" y="130" as="geometry" />
         </mxCell>
-        <mxCell id="con-app" value="Application Layer&#xa;&#xa;Use cases, DTOs, validators, business rules, module contracts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=15;" vertex="1" parent="con-boundary">
-          <mxGeometry x="400" y="320" width="300" height="130" as="geometry"/>
+        <mxCell id="con-api" parent="con-boundary" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168bd;strokeColor=#0b4884;fontColor=#ffffff;fontSize=15;" value="ASP.NET Core Web API&#xa;[Container: .NET 9 / ASP.NET Core]&#xa;&#xa;REST endpoints, JWT/RBAC, use cases, business rules, persistence adapters, provider integrations, and scheduled background jobs" vertex="1">
+          <mxGeometry height="200" width="370" x="500" y="120" as="geometry" />
         </mxCell>
-        <mxCell id="con-infra" value="Infrastructure Layer&#xa;&#xa;Repositories, Unit of Work, EF Core, provider adapters" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=15;" vertex="1" parent="con-boundary">
-          <mxGeometry x="400" y="530" width="300" height="130" as="geometry"/>
+        <mxCell id="con-db" parent="con-boundary" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#1168bd;strokeColor=#0b4884;fontColor=#ffffff;fontSize=15;" value="SQL Server&#xa;[Container: Database]&#xa;&#xa;Hotels, inventory, bookings, payments, reviews, audit data, and outbox records" vertex="1">
+          <mxGeometry height="190" width="280" x="545" y="430" as="geometry" />
         </mxCell>
-        <mxCell id="con-db" value="SQL Server&#xa;&#xa;Transactional source of truth" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=15;" vertex="1" parent="con-boundary">
-          <mxGeometry x="750" y="520" width="140" height="150" as="geometry"/>
+        <mxCell id="con-e2" edge="1" parent="con-boundary" source="con-webapp" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="con-api" value="Calls REST APIs&#xa;HTTPS / JSON / JWT">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="con-vnpay" value="VNPay" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="1450" y="210" width="220" height="70" as="geometry"/>
+        <mxCell id="con-e3" edge="1" parent="con-boundary" source="con-api" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="con-db" value="Reads and writes&#xa;EF Core / T-SQL">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="con-cloudinary" value="Cloudinary" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="1450" y="390" width="220" height="70" as="geometry"/>
+        <mxCell id="con-note" parent="con-boundary" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;" value="C4 Level 2 rule&#xa;Each element in this boundary is a separately runnable/deployable application or data store. Application and Infrastructure remain internal code layers of the API container and belong in a Level 3 view." vertex="1">
+          <mxGeometry height="100" width="940" x="50" y="650" as="geometry" />
         </mxCell>
-        <mxCell id="con-email" value="Email Provider" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="1450" y="570" width="220" height="70" as="geometry"/>
+        <mxCell id="con-e4-callback" edge="1" parent="con-boundary" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;dashed=1;strokeColor=#b85450;strokeWidth=2;" value="Sends signed payment callback&#xa;HTTPS">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1480" y="70.00999999999999" />
+              <mxPoint x="770" y="70.00999999999999" />
+              <mxPoint x="770" y="120.00999999999999" />
+            </Array>
+            <mxPoint x="1479.9999999999995" y="130" as="sourcePoint" />
+            <mxPoint x="770" y="120.00999999999999" as="targetPoint" />
+          </mxGeometry>
         </mxCell>
-        <mxCell id="con-e1" value="HTTPS" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="con-browser" target="con-webapp">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="con-vnpay" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#999999;strokeColor=#666666;fontColor=#ffffff;fontSize=15;" value="VNPay&#xa;[External Software System]&#xa;Online payment gateway" vertex="1">
+          <mxGeometry height="105" width="280" x="1690" y="240" as="geometry" />
         </mxCell>
-        <mxCell id="con-e2" value="HTTPS / JSON" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="con-boundary" source="con-webapp" target="con-api">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="con-cloudinary" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#999999;strokeColor=#666666;fontColor=#ffffff;fontSize=15;" value="Cloudinary&#xa;[External Software System]&#xa;Media storage and delivery" vertex="1">
+          <mxGeometry height="105" width="280" x="1690" y="473" as="geometry" />
         </mxCell>
-        <mxCell id="con-e3" value="Delegates use cases" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="con-boundary" source="con-api" target="con-app">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="con-email" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#999999;strokeColor=#666666;fontColor=#ffffff;fontSize=15;" value="Email Provider&#xa;[External Software System]&#xa;Transactional email delivery" vertex="1">
+          <mxGeometry height="105" width="280" x="1690" y="710" as="geometry" />
         </mxCell>
-        <mxCell id="con-e4" value="Repository and provider contracts" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="con-boundary" source="con-app" target="con-infra">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="con-e1" edge="1" parent="1" source="con-users" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeWidth=2;" target="con-webapp" value="Uses&#xa;HTTPS / SignalR">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="con-e5" value="EF Core / SQL" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="con-boundary" source="con-infra" target="con-db">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="con-e4" edge="1" parent="1" source="con-api" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeWidth=2;exitX=1;exitY=0.25;exitDx=0;exitDy=0;" target="con-vnpay" value="Creates signed payment requests&#xa;HTTPS">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="con-e6" value="Creates signed payment requests" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="con-infra" target="con-vnpay">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="con-e5" edge="1" parent="1" source="con-api" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeWidth=2;exitX=1;exitY=0.55;exitDx=0;exitDy=0;" target="con-cloudinary" value="Uploads and manages media&#xa;HTTPS">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="con-e6-callback" value="Signed callback enters API trust boundary" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;dashed=1;strokeColor=#b85450;" edge="1" parent="1" source="con-vnpay" target="con-api">
-          <mxGeometry relative="1" as="geometry"/>
-        </mxCell>
-        <mxCell id="con-e7" value="Media upload and delivery" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="con-infra" target="con-cloudinary">
-          <mxGeometry relative="1" as="geometry"/>
-        </mxCell>
-        <mxCell id="con-e8" value="Transactional email" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="con-infra" target="con-email">
-          <mxGeometry relative="1" as="geometry"/>
-        </mxCell>
-        <mxCell id="con-note" value="Cross-cutting concerns&#xa;Validation • Result contract • Correlation ID • Structured logging • CancellationToken • Audit" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="480" y="900" width="720" height="90" as="geometry"/>
+        <mxCell id="con-e6" edge="1" parent="1" source="con-api" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeWidth=2;exitX=1;exitY=0.85;exitDx=0;exitDy=0;" target="con-email" value="Sends transactional email&#xa;HTTPS / SMTP">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1435" y="400" />
+              <mxPoint x="1435" y="772" />
+            </Array>
+          </mxGeometry>
         </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
-  <diagram id="application-modules" name="Application Modules">
-    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1100" math="0" shadow="0">
+  <diagram id="api-components" name="API Components">
+    <mxGraphModel dx="1654" dy="974" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="4500" pageHeight="2950" math="0" shadow="0">
       <root>
-        <mxCell id="0"/>
-        <mxCell id="1" parent="0"/>
-        <mxCell id="mod-title" value="Hotel Booking Platform — Logical Application Modules" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=24;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="450" y="30" width="900" height="40" as="geometry"/>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cmp-title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=24;fontStyle=1;" value="Hotel Booking Platform — C4 Level 3 API Component Diagram" vertex="1">
+          <mxGeometry height="40" width="1500" x="1500" y="20" as="geometry" />
         </mxCell>
-        <mxCell id="mod-identity" value="Identity &amp; Access&#xa;Credentials • JWT • RBAC" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0050b3;strokeColor=#003a8c;fontColor=#ffffff;fontSize=15;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="80" y="120" width="260" height="90" as="geometry"/>
+        <mxCell id="cmp-subtitle" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=13;fontColor=#666666;" value="Zoom-in of the ASP.NET Core Web API container — components are logical boundaries inside one deployable process" vertex="1">
+          <mxGeometry height="30" width="1700" x="1400" y="60" as="geometry" />
         </mxCell>
-        <mxCell id="mod-profile" value="User Profile&#xa;Personal data" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="400" y="120" width="220" height="90" as="geometry"/>
+        <mxCell id="cmp-webapp" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168bd;strokeColor=#0b4884;fontColor=#ffffff;fontSize=15;" value="Blazor Server Web App&#xa;[Container]&#xa;&#xa;Invokes authenticated REST endpoints" vertex="1">
+          <mxGeometry height="150" width="320" x="20" y="260" as="geometry" />
         </mxCell>
-        <mxCell id="mod-onboarding" value="Partner Onboarding&#xa;Owner and Hotel approvals" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="680" y="120" width="260" height="90" as="geometry"/>
+        <mxCell id="cmp-api-boundary" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=38;horizontal=1;rounded=1;fillColor=none;strokeColor=#0050b3;strokeWidth=2;fontStyle=1;fontSize=16;" value="ASP.NET Core Web API [Container: .NET 9]" vertex="1">
+          <mxGeometry height="2450" width="3400" x="400" y="120" as="geometry" />
         </mxCell>
-        <mxCell id="mod-admin" value="Administration&#xa;Master data • Users • Queues" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="1000" y="120" width="260" height="90" as="geometry"/>
+        <mxCell id="cmp-api-entry" parent="cmp-api-boundary" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168bd;strokeColor=#0b4884;fontColor=#ffffff;fontSize=15;" value="API Boundary &amp; Security&#xa;[Component]&#xa;Controllers • Request binding • JWT/RBAC • Validation boundary • Global exception handling • Correlation ID" vertex="1">
+          <mxGeometry height="120" width="3240" x="80" y="60" as="geometry" />
         </mxCell>
-        <mxCell id="mod-hotel" value="Hotel Catalog&#xa;Property details • Policies" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="230" y="330" width="260" height="90" as="geometry"/>
+        <mxCell id="cmp-access-group" parent="cmp-api-boundary" style="swimlane;whiteSpace=wrap;html=1;startSize=28;horizontal=1;rounded=1;fillColor=#f5f5f5;strokeColor=#9673a6;fontStyle=1;fontSize=14;" value="Access &amp; Governance Components" vertex="1">
+          <mxGeometry height="1400" width="650" x="80" y="250" as="geometry" />
         </mxCell>
-        <mxCell id="mod-media" value="Media Management&#xa;Cloudinary metadata" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="550" y="330" width="240" height="90" as="geometry"/>
+        <mxCell id="cmp-identity" parent="cmp-access-group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=13;" value="Identity &amp; Access&#xa;[Component]&#xa;Registration • Login • JWT • Passwords • RBAC" vertex="1">
+          <mxGeometry height="140" width="500" x="75" y="80" as="geometry" />
         </mxCell>
-        <mxCell id="mod-room" value="Room &amp; Inventory&#xa;Types • Rooms • Blocks" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="850" y="330" width="260" height="90" as="geometry"/>
+        <mxCell id="cmp-profile" parent="cmp-access-group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=13;" value="User Profile&#xa;[Component]&#xa;Customer and Owner profile management" vertex="1">
+          <mxGeometry height="140" width="500" x="75" y="400" as="geometry" />
         </mxCell>
-        <mxCell id="mod-search" value="Search &amp; Discovery&#xa;Search • Filters • Availability" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="1160" y="330" width="270" height="90" as="geometry"/>
+        <mxCell id="cmp-onboarding" parent="cmp-access-group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=13;" value="Partner Onboarding&#xa;[Component]&#xa;Owner upgrade • Hotel approval workflows" vertex="1">
+          <mxGeometry height="140" width="500" x="75" y="720" as="geometry" />
         </mxCell>
-        <mxCell id="mod-booking" value="Booking&#xa;Holds • Snapshots • Lifecycle" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0050b3;strokeColor=#003a8c;fontColor=#ffffff;fontSize=16;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="680" y="550" width="300" height="110" as="geometry"/>
+        <mxCell id="cmp-admin" parent="cmp-access-group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=13;" value="Administration&#xa;[Component]&#xa;Master data • Users • Queues • Moderation" vertex="1">
+          <mxGeometry height="140" width="500" x="75" y="1040" as="geometry" />
         </mxCell>
-        <mxCell id="mod-payment" value="Payment &amp; Refund&#xa;VNPay • Pay at Hotel • Idempotency" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="300" y="760" width="300" height="90" as="geometry"/>
+        <mxCell id="cmp-supply-group" parent="cmp-api-boundary" style="swimlane;whiteSpace=wrap;html=1;startSize=28;horizontal=1;rounded=1;fillColor=#f5f5f5;strokeColor=#82b366;fontStyle=1;fontSize=14;" value="Property, Inventory &amp; Discovery Components" vertex="1">
+          <mxGeometry height="1400" width="650" x="900" y="250" as="geometry" />
         </mxCell>
-        <mxCell id="mod-review" value="Reviews&#xa;Eligibility • Response • Moderation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="680" y="760" width="300" height="90" as="geometry"/>
+        <mxCell id="cmp-hotel" parent="cmp-supply-group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" value="Hotel Catalog&#xa;[Component]&#xa;Descriptions • Amenities • Policies • Location" vertex="1">
+          <mxGeometry height="140" width="500" x="75" y="80" as="geometry" />
         </mxCell>
-        <mxCell id="mod-notification" value="Notifications&#xa;In-app • Email" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="1060" y="760" width="240" height="90" as="geometry"/>
+        <mxCell id="cmp-media" parent="cmp-supply-group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" value="Media Management&#xa;[Component]&#xa;Hotel/Room Type images • Cloudinary metadata" vertex="1">
+          <mxGeometry height="140" width="500" x="75" y="400" as="geometry" />
         </mxCell>
-        <mxCell id="mod-reporting" value="Reporting&#xa;Owner and Admin metrics" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="1380" y="760" width="240" height="90" as="geometry"/>
+        <mxCell id="cmp-room" parent="cmp-supply-group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" value="Room &amp; Inventory&#xa;[Component]&#xa;Room Types • Physical rooms • Capacity • Blocks" vertex="1">
+          <mxGeometry height="140" width="500" x="75" y="720" as="geometry" />
         </mxCell>
-        <mxCell id="mod-e1" value="Identity and roles" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="mod-identity" target="mod-onboarding">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="cmp-search" parent="cmp-supply-group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" value="Search &amp; Discovery&#xa;[Component]&#xa;Search • Filters • Availability • Public details" vertex="1">
+          <mxGeometry height="140" width="500" x="75" y="1040" as="geometry" />
         </mxCell>
-        <mxCell id="mod-e2" value="Approved property" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="mod-onboarding" target="mod-hotel">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="cmp-commerce-group" parent="cmp-api-boundary" style="swimlane;whiteSpace=wrap;html=1;startSize=28;horizontal=1;rounded=1;fillColor=#f5f5f5;strokeColor=#d79b00;fontStyle=1;fontSize=14;" value="Booking &amp; Commerce Components" vertex="1">
+          <mxGeometry height="1400" width="650" x="1720" y="250" as="geometry" />
         </mxCell>
-        <mxCell id="mod-e3" value="Reference data" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="mod-admin" target="mod-hotel">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="cmp-booking" parent="cmp-commerce-group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;fontStyle=1;" value="Booking&#xa;[Component]&#xa;Reservations • Inventory holds • Snapshots • Assignment • Lifecycle" vertex="1">
+          <mxGeometry height="150" width="500" x="75" y="200" as="geometry" />
         </mxCell>
-        <mxCell id="mod-e4" value="Media" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="mod-hotel" target="mod-media">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="cmp-payment" parent="cmp-commerce-group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" value="Payment &amp; Refund&#xa;[Component]&#xa;VNPay • Pay at Hotel • Callbacks • Idempotency • Refunds" vertex="1">
+          <mxGeometry height="150" width="500" x="75" y="600" as="geometry" />
         </mxCell>
-        <mxCell id="mod-e5" value="Room Types" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="mod-hotel" target="mod-room">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="cmp-review" parent="cmp-commerce-group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" value="Reviews&#xa;[Component]&#xa;Eligibility • Guest review • Owner response • Admin moderation" vertex="1">
+          <mxGeometry height="150" width="500" x="75" y="1000" as="geometry" />
         </mxCell>
-        <mxCell id="mod-e6" value="Catalog and availability" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="mod-room" target="mod-search">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="cmp-e-payment-booking" edge="1" parent="cmp-commerce-group" source="cmp-payment" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;dashed=1;exitX=0.999;exitY=0.198;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.995;entryY=0.745;entryDx=0;entryDy=0;entryPerimeter=0;" target="cmp-booking" value="Confirms after callback">
+          <mxGeometry relative="1" x="0.2816" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="590" y="629.72" />
+              <mxPoint x="725.12" y="630" />
+              <mxPoint x="725.12" y="311.8" />
+            </Array>
+            <mxPoint x="590" y="637.5" as="sourcePoint" />
+            <mxPoint x="590" y="312.5" as="targetPoint" />
+          </mxGeometry>
         </mxCell>
-        <mxCell id="mod-e7" value="Selection" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="mod-search" target="mod-booking">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="cmp-support-group" parent="cmp-api-boundary" style="swimlane;whiteSpace=wrap;html=1;startSize=28;horizontal=1;rounded=1;fillColor=#f5f5f5;strokeColor=#6c8ebf;fontStyle=1;fontSize=14;" value="Supporting Business Components" vertex="1">
+          <mxGeometry height="1400" width="650" x="2540" y="250" as="geometry" />
         </mxCell>
-        <mxCell id="mod-e8" value="Inventory reservation" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="mod-room" target="mod-booking">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="cmp-notification" parent="cmp-support-group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;" value="Notifications&#xa;[Component]&#xa;In-application notifications • Transactional email" vertex="1">
+          <mxGeometry height="150" width="500" x="75" y="350" as="geometry" />
         </mxCell>
-        <mxCell id="mod-e9" value="Financial state" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="mod-booking" target="mod-payment">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="cmp-reporting" parent="cmp-support-group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;" value="Reporting&#xa;[Component]&#xa;Owner and Admin operational/business metrics" vertex="1">
+          <mxGeometry height="150" width="500" x="75" y="850" as="geometry" />
         </mxCell>
-        <mxCell id="mod-e10" value="Completed-stay eligibility" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="mod-booking" target="mod-review">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="cmp-technical-group" parent="cmp-api-boundary" style="swimlane;whiteSpace=wrap;html=1;startSize=28;horizontal=1;rounded=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=14;" value="Technical Components" vertex="1">
+          <mxGeometry height="400" width="3240" x="80" y="1750" as="geometry" />
         </mxCell>
-        <mxCell id="mod-e11" value="Post-commit events" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="mod-booking" target="mod-notification">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="cmp-persistence" parent="cmp-technical-group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#666666;strokeColor=#333333;fontColor=#ffffff;fontSize=13;" value="Persistence &amp; Transactions&#xa;[Component]&#xa;Repositories • Unit of Work • EF Core • SQL locking • Atomic commits" vertex="1">
+          <mxGeometry height="150" width="850" x="80" y="90" as="geometry" />
         </mxCell>
-        <mxCell id="mod-e12" value="Read-only metrics" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="mod-booking" target="mod-reporting">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="cmp-providers" parent="cmp-technical-group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#666666;strokeColor=#333333;fontColor=#ffffff;fontSize=13;" value="External Provider Adapters&#xa;[Component]&#xa;VNPay signing/verification • Cloudinary API • Email API/SMTP" vertex="1">
+          <mxGeometry height="150" width="850" x="2310" y="90" as="geometry" />
         </mxCell>
-        <mxCell id="mod-note" value="Each module spans Web App, API, Application, Infrastructure, and Test artifacts.&#xa;Modules are logical boundaries, not independent deployments." style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="600" y="940" width="600" height="100" as="geometry"/>
+        <mxCell id="cmp-jobs" parent="cmp-technical-group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#666666;strokeColor=#333333;fontColor=#ffffff;fontSize=13;" value="Background Job Runner&#xa;[Component]&#xa;Outbox dispatch • Inventory-hold expiry • Scheduled maintenance" vertex="1">
+          <mxGeometry height="150" width="850" x="1195" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="cmp-note" parent="cmp-api-boundary" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" value="C4 Level 3 scope: components inside the API container. Solid arrows show architecture-significant runtime dependencies; the dashed red arrow is the inbound VNPay callback. Repeated controller-to-module and module-to-persistence relationships are intentionally omitted for readability." vertex="1">
+          <mxGeometry height="120" width="2120" x="1200" y="2200" as="geometry" />
+        </mxCell>
+        <mxCell id="cmp-e-entry-identity" edge="1" parent="cmp-api-boundary" source="cmp-api-entry" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;strokeColor=#6c8ebf;" target="cmp-identity" value="Authentication use cases">
+          <mxGeometry relative="1" x="-0.4122" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1650" y="220" />
+              <mxPoint x="405" y="220" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cmp-e-entry-hotel" edge="1" parent="cmp-api-boundary" source="cmp-api-entry" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;strokeColor=#6c8ebf;" target="cmp-hotel" value="Property use cases">
+          <mxGeometry relative="1" x="-0.3719" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1680" y="300" />
+              <mxPoint x="1225" y="300" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cmp-e-entry-booking" edge="1" parent="cmp-api-boundary" source="cmp-api-entry" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;strokeColor=#6c8ebf;" target="cmp-booking" value="Booking use cases">
+          <mxGeometry relative="1" y="-20" as="geometry">
+            <Array as="points">
+              <mxPoint x="1710" y="315" />
+              <mxPoint x="2045" y="315" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cmp-e-entry-payment" edge="1" parent="cmp-api-boundary" source="cmp-api-entry" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;strokeColor=#6c8ebf;" target="cmp-payment" value="Payment and callback use cases">
+          <mxGeometry relative="1" x="0.2" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="2400" y="910" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cmp-e-profile-identity" edge="1" parent="cmp-api-boundary" source="cmp-profile" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;" target="cmp-identity" value="Authenticated identity">
+          <mxGeometry relative="1" y="-18" as="geometry" />
+        </mxCell>
+        <mxCell id="cmp-e-onboarding-identity" edge="1" parent="cmp-api-boundary" source="cmp-onboarding" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;" target="cmp-identity" value="Roles">
+          <mxGeometry relative="1" x="-0.1972" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="120" y="1040" />
+              <mxPoint x="120" y="400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cmp-e-admin-onboarding" edge="1" parent="cmp-api-boundary" source="cmp-admin" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;" target="cmp-onboarding" value="Approvals">
+          <mxGeometry relative="1" x="0.2222" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cmp-e-onboarding-hotel" edge="1" parent="cmp-api-boundary" source="cmp-onboarding" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;" target="cmp-hotel" value="Approved properties">
+          <mxGeometry relative="1" x="-0.0104" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="840" y="1040" />
+              <mxPoint x="840" y="400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cmp-e-hotel-media" edge="1" parent="cmp-api-boundary" source="cmp-hotel" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;" target="cmp-media" value="Media">
+          <mxGeometry relative="1" y="18" as="geometry" />
+        </mxCell>
+        <mxCell id="cmp-e-room-hotel" edge="1" parent="cmp-api-boundary" source="cmp-room" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;" target="cmp-hotel" value="Property catalog">
+          <mxGeometry relative="1" x="-0.1918" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="930" y="1040" />
+              <mxPoint x="930" y="440" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cmp-e-search-hotel" edge="1" parent="cmp-api-boundary" source="cmp-search" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;" target="cmp-hotel" value="Catalog data">
+          <mxGeometry relative="1" x="0.1367" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1580" y="1360" />
+              <mxPoint x="1580" y="400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cmp-e-search-room" edge="1" parent="cmp-api-boundary" source="cmp-search" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;" target="cmp-room" value="Availability">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cmp-e-booking-room" edge="1" parent="cmp-api-boundary" source="cmp-booking" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;" target="cmp-room" value="Locks inventory">
+          <mxGeometry relative="1" x="-0.0181" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1600" y="525" />
+              <mxPoint x="1600" y="1040" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cmp-e-booking-payment" edge="1" parent="cmp-api-boundary" source="cmp-booking" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;" target="cmp-payment" value="Payment state">
+          <mxGeometry relative="1" x="-0.2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cmp-e-review-booking" edge="1" parent="cmp-api-boundary" source="cmp-review" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;" target="cmp-booking" value="Stay eligibility">
+          <mxGeometry relative="1" x="0.1964" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1660.04" y="1325.04" />
+              <mxPoint x="1660.04" y="560" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cmp-e-booking-notification" edge="1" parent="cmp-api-boundary" source="cmp-booking" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;" target="cmp-notification" value="Post-commit events">
+          <mxGeometry relative="1" x="0.0638" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="2510" y="525" />
+              <mxPoint x="2510" y="675" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cmp-e-payment-notification" edge="1" parent="cmp-api-boundary" source="cmp-payment" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;exitX=1.001;exitY=0.634;exitDx=0;exitDy=0;exitPerimeter=0;" target="cmp-notification" value="Payment events">
+          <mxGeometry relative="1" x="0.2" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="cmp-e-booking-persistence" edge="1" parent="cmp-api-boundary" source="cmp-booking" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;" target="cmp-persistence" value="Atomic transaction">
+          <mxGeometry relative="1" x="-0.3028" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1640.04" y="540" />
+              <mxPoint x="1640.04" y="1680" />
+              <mxPoint x="930.04" y="1680" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cmp-e-reporting-persistence" edge="1" parent="cmp-api-boundary" source="cmp-reporting" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;" target="cmp-persistence" value="Read models">
+          <mxGeometry relative="1" x="0.2991" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="3260.04" y="1175.04" />
+              <mxPoint x="3260.04" y="1690" />
+              <mxPoint x="960.04" y="1690" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cmp-e-media-providers" edge="1" parent="cmp-api-boundary" source="cmp-media" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;" target="cmp-providers" value="Media adapter">
+          <mxGeometry relative="1" x="-0.2983" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1620" y="720" />
+              <mxPoint x="1620" y="1700" />
+              <mxPoint x="2450" y="1700" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cmp-e-payment-providers" edge="1" parent="cmp-api-boundary" source="cmp-payment" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;exitX=0.999;exitY=0.732;exitDx=0;exitDy=0;exitPerimeter=0;" target="cmp-providers" value="Payment adapter">
+          <mxGeometry relative="1" x="0.0053" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="2480.04" y="959.84" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cmp-e-notification-providers" edge="1" parent="cmp-api-boundary" source="cmp-notification" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;" target="cmp-providers" value="Delivery adapter">
+          <mxGeometry relative="1" x="0.2956" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="3320" y="675" />
+              <mxPoint x="3320" y="1710" />
+              <mxPoint x="3100" y="1710" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cmp-e-jobs-persistence" edge="1" parent="cmp-api-boundary" source="cmp-jobs" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;" target="cmp-persistence" value="Claims outbox and expired holds">
+          <mxGeometry relative="1" y="-18" as="geometry" />
+        </mxCell>
+        <mxCell id="cmp-e-jobs-booking" edge="1" parent="cmp-api-boundary" source="cmp-jobs" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;" target="cmp-booking" value="Expires holds">
+          <mxGeometry relative="1" x="0.2029" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1680.04" y="580" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cmp-vnpay" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#999999;strokeColor=#666666;fontColor=#ffffff;fontSize=14;" value="VNPay&#xa;[External Software System]&#xa;Payments and signed callbacks" vertex="1">
+          <mxGeometry height="130" width="340" x="4100" y="450" as="geometry" />
+        </mxCell>
+        <mxCell id="cmp-cloudinary" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#999999;strokeColor=#666666;fontColor=#ffffff;fontSize=14;" value="Cloudinary&#xa;[External Software System]&#xa;Media storage and delivery" vertex="1">
+          <mxGeometry height="130" width="340" x="4100" y="1050" as="geometry" />
+        </mxCell>
+        <mxCell id="cmp-email" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#999999;strokeColor=#666666;fontColor=#ffffff;fontSize=14;" value="Email Provider&#xa;[External Software System]&#xa;Transactional email delivery" vertex="1">
+          <mxGeometry height="130" width="340" x="4100" y="1650" as="geometry" />
+        </mxCell>
+        <mxCell id="cmp-db" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#1168bd;strokeColor=#0b4884;fontColor=#ffffff;fontSize=14;" value="SQL Server&#xa;[Container: Database]&#xa;Transactional source of truth" vertex="1">
+          <mxGeometry height="180" width="360" x="805" y="2700" as="geometry" />
+        </mxCell>
+        <mxCell id="cmp-e-web" edge="1" parent="1" source="cmp-webapp" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;strokeWidth=2;" target="cmp-api-entry" value="Invokes REST endpoints&#xa;HTTPS / JSON / JWT">
+          <mxGeometry relative="1" x="-0.1055" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cmp-e-persistence-db" edge="1" parent="1" source="cmp-persistence" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;strokeWidth=2;" target="cmp-db" value="Reads and writes&#xa;EF Core / T-SQL">
+          <mxGeometry relative="1" x="0.0508" as="geometry">
+            <mxPoint y="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cmp-e-providers-vnpay" edge="1" parent="1" source="cmp-providers" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;strokeWidth=2;" target="cmp-vnpay" value="Signed payment requests">
+          <mxGeometry relative="1" x="-0.3009" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="3900" y="2015" />
+              <mxPoint x="3900" y="515" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cmp-e-vnpay-callback" edge="1" parent="1" source="cmp-vnpay" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;dashed=1;strokeColor=#b85450;strokeWidth=2;" target="cmp-api-entry" value="Signed callback">
+          <mxGeometry relative="1" x="0.129" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="4020.04" y="480" />
+              <mxPoint x="4020.04" y="340" />
+              <mxPoint x="3750.04" y="340" />
+              <mxPoint x="3750.04" y="240" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cmp-e-providers-cloudinary" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;strokeWidth=2;" target="cmp-cloudinary" value="Media API">
+          <mxGeometry relative="1" x="-0.0035" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="3639.19" y="2060" />
+              <mxPoint x="3940.03" y="2060" />
+              <mxPoint x="3940.03" y="1115.03" />
+            </Array>
+            <mxPoint x="3640" y="2060" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cmp-e-providers-email" edge="1" parent="1" source="cmp-providers" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;strokeWidth=2;" target="cmp-email" value="Email API / SMTP">
+          <mxGeometry relative="1" x="0.2995" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="4000.04" y="2040" />
+              <mxPoint x="4000.04" y="1715.04" />
+            </Array>
+          </mxGeometry>
         </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
   <diagram id="deployment-view" name="Deployment View">
-    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1050" math="0" shadow="0">
+    <mxGraphModel dx="2343" dy="1380" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2500" pageHeight="1400" math="0" shadow="0">
       <root>
-        <mxCell id="0"/>
-        <mxCell id="1" parent="0"/>
-        <mxCell id="dep-title" value="Hotel Booking Platform — Deployment View" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=24;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="500" y="30" width="800" height="40" as="geometry"/>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="dep-title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=26;fontStyle=1;" value="Hotel Booking Platform — Deployment View" vertex="1">
+          <mxGeometry height="50" width="1000" x="750" y="30" as="geometry" />
         </mxCell>
-        <mxCell id="dep-client" value="Client Device" style="swimlane;whiteSpace=wrap;html=1;startSize=30;horizontal=1;rounded=1;fillColor=none;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="60" y="250" width="280" height="260" as="geometry"/>
+        <mxCell id="dep-subtitle" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=14;fontColor=#666666;" value="Initial deployment topology and communication paths" vertex="1">
+          <mxGeometry height="30" width="900" x="800" y="80" as="geometry" />
         </mxCell>
-        <mxCell id="dep-browser" value="Web Browser&#xa;HTML • CSS • JavaScript • SignalR client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=15;" vertex="1" parent="dep-client">
-          <mxGeometry x="30" y="80" width="220" height="100" as="geometry"/>
+        <mxCell id="dep-client" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=38;horizontal=1;rounded=1;fillColor=#f7faff;strokeColor=#6c8ebf;strokeWidth=2;fontStyle=1;fontSize=15;" value="&amp;laquo;device&amp;raquo; Client Device" vertex="1">
+          <mxGeometry height="330" width="340" x="70" y="330" as="geometry" />
         </mxCell>
-        <mxCell id="dep-apphost" value="Application Host" style="swimlane;whiteSpace=wrap;html=1;startSize=30;horizontal=1;rounded=1;fillColor=none;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="450" y="120" width="560" height="650" as="geometry"/>
+        <mxCell id="dep-browser" parent="dep-client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=15;" value="&lt;b&gt;Web Browser&lt;/b&gt;&#xa;&#xa;HTML • CSS • JavaScript&#xa;SignalR client" vertex="1">
+          <mxGeometry height="150" width="270" x="35" y="95" as="geometry" />
         </mxCell>
-        <mxCell id="dep-blazor" value="Blazor Server Process&#xa;&#xa;Server-side UI and circuits" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=15;" vertex="1" parent="dep-apphost">
-          <mxGeometry x="100" y="90" width="350" height="110" as="geometry"/>
+        <mxCell id="dep-apphost" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=42;horizontal=1;rounded=1;fillColor=#f8fff6;strokeColor=#82b366;strokeWidth=2;fontStyle=1;fontSize=15;" value="&amp;laquo;execution environment&amp;raquo; Application Host" vertex="1">
+          <mxGeometry height="820" width="1000" x="540" y="150" as="geometry" />
         </mxCell>
-        <mxCell id="dep-api" value="ASP.NET Core API Process&#xa;&#xa;API + Application + Infrastructure" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0050b3;strokeColor=#003a8c;fontColor=#ffffff;fontSize=15;" vertex="1" parent="dep-apphost">
-          <mxGeometry x="100" y="280" width="350" height="120" as="geometry"/>
+        <mxCell id="dep-blazor" parent="dep-apphost" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;fontSize=15;" value="&lt;b&gt;Blazor Server Process&lt;/b&gt;&#xa;&#xa;Server-side UI • Circuits • Authentication state" vertex="1">
+          <mxGeometry height="140" width="600" x="200" y="90" as="geometry" />
         </mxCell>
-        <mxCell id="dep-worker" value="API-hosted BackgroundService&#xa;&#xa;Expires holds and delivers pending notifications using atomic database claims" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=15;" vertex="1" parent="dep-apphost">
-          <mxGeometry x="100" y="480" width="350" height="100" as="geometry"/>
+        <mxCell id="dep-api" parent="dep-apphost" style="swimlane;whiteSpace=wrap;html=1;startSize=42;horizontal=1;rounded=1;fillColor=#f2f7ff;strokeColor=#0050b3;strokeWidth=2;fontStyle=1;fontSize=15;" value="&amp;laquo;process&amp;raquo; ASP.NET Core API Process" vertex="1">
+          <mxGeometry height="500" width="760" x="120" y="280" as="geometry" />
         </mxCell>
-        <mxCell id="dep-dbhost" value="Database Host" style="swimlane;whiteSpace=wrap;html=1;startSize=30;horizontal=1;rounded=1;fillColor=none;strokeColor=#9673a6;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="1130" y="270" width="300" height="300" as="geometry"/>
+        <mxCell id="dep-api-runtime" parent="dep-api" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0050b3;strokeColor=#003a8c;fontColor=#ffffff;fontSize=15;" value="&lt;b&gt;Web API Runtime&lt;/b&gt;&#xa;&#xa;Controllers • Application Services&#xa;Infrastructure Adapters" vertex="1">
+          <mxGeometry height="150" width="650" x="55" y="70" as="geometry" />
         </mxCell>
-        <mxCell id="dep-sql" value="SQL Server&#xa;&#xa;Primary transactional database" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=15;" vertex="1" parent="dep-dbhost">
-          <mxGeometry x="60" y="80" width="180" height="140" as="geometry"/>
+        <mxCell id="dep-worker" parent="dep-api" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=15;" value="&lt;b&gt;API-hosted BackgroundService&lt;/b&gt;&#xa;&#xa;Expires inventory holds • Claims pending work&#xa;Delivers transactional notifications" vertex="1">
+          <mxGeometry height="140" width="650" x="55" y="290" as="geometry" />
         </mxCell>
-        <mxCell id="dep-external" value="External Cloud Services" style="swimlane;whiteSpace=wrap;html=1;startSize=30;horizontal=1;rounded=1;fillColor=none;strokeColor=#d79b00;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="1510" y="140" width="240" height="560" as="geometry"/>
+        <mxCell id="dep-e3" edge="1" parent="dep-api" source="dep-api-runtime" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;dashed=1;strokeColor=#999999;labelBackgroundColor=#ffffff;" target="dep-worker" value="Same process / shared application contracts">
+          <mxGeometry relative="1" y="-16" as="geometry" />
         </mxCell>
-        <mxCell id="dep-vnpay" value="VNPay" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=15;" vertex="1" parent="dep-external">
-          <mxGeometry x="35" y="80" width="170" height="70" as="geometry"/>
+        <mxCell id="dep-e2" edge="1" parent="dep-apphost" source="dep-blazor" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;" target="dep-api-runtime" value="HTTPS / JSON">
+          <mxGeometry relative="1" x="-0.5" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
         </mxCell>
-        <mxCell id="dep-cloudinary" value="Cloudinary" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=15;" vertex="1" parent="dep-external">
-          <mxGeometry x="35" y="230" width="170" height="70" as="geometry"/>
+        <mxCell id="dep-external" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=42;horizontal=1;rounded=1;fillColor=#fffaf2;strokeColor=#d79b00;strokeWidth=2;fontStyle=1;fontSize=15;" value="External Cloud Services" vertex="1">
+          <mxGeometry height="820" width="470" x="1920" y="150" as="geometry" />
         </mxCell>
-        <mxCell id="dep-email" value="Email Provider" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=15;" vertex="1" parent="dep-external">
-          <mxGeometry x="35" y="380" width="170" height="70" as="geometry"/>
+        <mxCell id="dep-vnpay" parent="dep-external" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=15;" value="&lt;b&gt;VNPay&lt;/b&gt;&#xa;Online payment gateway" vertex="1">
+          <mxGeometry height="100" width="360" x="55" y="110" as="geometry" />
         </mxCell>
-        <mxCell id="dep-e1" value="HTTPS + SignalR" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="dep-browser" target="dep-blazor">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="dep-cloudinary" parent="dep-external" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=15;" value="&lt;b&gt;Cloudinary&lt;/b&gt;&#xa;Media storage and delivery" vertex="1">
+          <mxGeometry height="100" width="360" x="55" y="355" as="geometry" />
         </mxCell>
-        <mxCell id="dep-e2" value="HTTPS / JSON" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="dep-apphost" source="dep-blazor" target="dep-api">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="dep-email" parent="dep-external" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=15;" value="&lt;b&gt;Email Provider&lt;/b&gt;&#xa;Transactional email delivery" vertex="1">
+          <mxGeometry height="100" width="360" x="55" y="600" as="geometry" />
         </mxCell>
-        <mxCell id="dep-e3" value="Hosted inside API process" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;dashed=1;" edge="1" parent="dep-apphost" source="dep-api" target="dep-worker">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="dep-dbhost" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=42;horizontal=1;rounded=1;fillColor=#fbf8ff;strokeColor=#9673a6;strokeWidth=2;fontStyle=1;fontSize=15;" value="&amp;laquo;execution environment&amp;raquo; Database Host" vertex="1">
+          <mxGeometry height="300" width="480" x="800" y="1050" as="geometry" />
         </mxCell>
-        <mxCell id="dep-e4" value="TLS database connection" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="dep-api" target="dep-sql">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="dep-sql" parent="dep-dbhost" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=15;" value="&lt;b&gt;SQL Server&lt;/b&gt;&#xa;&#xa;Primary transactional database" vertex="1">
+          <mxGeometry height="150" width="280" x="100" y="85" as="geometry" />
         </mxCell>
-        <mxCell id="dep-worker-db" value="Atomic claims and state updates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;dashed=1;" edge="1" parent="1" source="dep-worker" target="dep-sql">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="dep-note" parent="1" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;align=left;spacingLeft=14;" value="&lt;b&gt;Scale-out path&lt;/b&gt;&#xa;Load balancer • Multiple API instances • Sticky sessions or managed SignalR • Distributed cache • Shared SQL Server • Database-coordinated workers" vertex="1">
+          <mxGeometry height="140" width="850" x="1450" y="1110" as="geometry" />
         </mxCell>
-        <mxCell id="dep-e5" value="Creates signed payment requests" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="dep-api" target="dep-vnpay">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="dep-legend" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#999999;dashed=1;fontSize=12;align=left;spacingLeft=12;" value="&lt;b&gt;Relationship notation&lt;/b&gt;&#xa;Solid line: outbound connection&#xa;Red dashed line: provider callback&#xa;Gray dashed line: background database work" vertex="1">
+          <mxGeometry height="110" width="390" x="70" y="1040" as="geometry" />
         </mxCell>
-        <mxCell id="dep-e5-callback" value="Signed HTTPS callback" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;dashed=1;strokeColor=#b85450;" edge="1" parent="1" source="dep-vnpay" target="dep-api">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="dep-e1" edge="1" parent="1" source="dep-browser" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;" target="dep-blazor" value="HTTPS + SignalR">
+          <mxGeometry relative="1" x="0.054" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
         </mxCell>
-        <mxCell id="dep-e6" value="HTTPS" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="dep-api" target="dep-cloudinary">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="dep-e4" edge="1" parent="1" source="dep-api-runtime" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;entryPerimeter=0;" target="dep-sql" value="TLS / EF Core">
+          <mxGeometry relative="1" x="0.1236" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="680" y="575" />
+              <mxPoint x="680" y="1210" />
+            </Array>
+          </mxGeometry>
         </mxCell>
-        <mxCell id="dep-e7" value="HTTPS / SMTP API" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="dep-api" target="dep-email">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="dep-worker-db" edge="1" parent="1" source="dep-worker" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;dashed=1;strokeColor=#666666;entryX=1;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;entryPerimeter=0;exitX=0.747;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;" target="dep-sql" value="Atomic claims and state updates">
+          <mxGeometry relative="1" x="-0.1294" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1200.6" y="1210" />
+            </Array>
+            <mxPoint x="1160" y="860" as="sourcePoint" />
+          </mxGeometry>
         </mxCell>
-        <mxCell id="dep-note" value="Scale-out path&#xa;Load balancer • Multiple API instances • Sticky sessions or managed SignalR • Distributed cache • Shared SQL Server • Database-coordinated workers" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="550" y="850" width="700" height="100" as="geometry"/>
+        <mxCell id="dep-e5" edge="1" parent="1" source="dep-api-runtime" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.2;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;" target="dep-vnpay" value="Creates signed payment request">
+          <mxGeometry relative="1" x="-0.1099" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1364.98" y="560.02" />
+              <mxPoint x="1660" y="560.02" />
+              <mxPoint x="1660" y="290.02" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="dep-e5-callback" edge="1" parent="1" source="dep-vnpay" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;dashed=1;strokeColor=#b85450;exitX=0;exitY=0.75;exitDx=0;exitDy=0;labelBackgroundColor=#ffffff;" target="dep-api-runtime" value="Signed HTTPS callback">
+          <mxGeometry relative="1" x="0.3873" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1730" y="335" />
+              <mxPoint x="1730" y="590.02" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="dep-e6" edge="1" parent="1" source="dep-api-runtime" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=0.947;exitY=1.019;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;exitPerimeter=0;" target="dep-cloudinary" value="HTTPS media API">
+          <mxGeometry relative="1" x="-0.0025" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1330.51" y="670.02" />
+              <mxPoint x="1790" y="670.02" />
+              <mxPoint x="1790" y="555" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="dep-e7" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;" target="dep-email" value="HTTPS / SMTP API">
+          <mxGeometry relative="1" x="0.0656" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1365" y="800" />
+            </Array>
+            <mxPoint x="1365" y="800" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="booking-code" name="Booking Code Diagram">
+    <mxGraphModel dx="2009" dy="1183" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3600" pageHeight="2200" math="0" shadow="0">
+      <root>
+        <mxCell id="l4b-0" />
+        <mxCell id="l4b-1" parent="l4b-0" />
+        <mxCell id="l4b-title" parent="l4b-1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=26;fontStyle=1;" value="Booking Component — C4 Level 4 Code Diagram (Current Implementation)" vertex="1">
+          <mxGeometry height="50" width="1700" x="950" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-subtitle" parent="l4b-1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=14;fontColor=#666666;" value="Key code elements and compile-time dependencies. This is not a runtime sequence diagram." vertex="1">
+          <mxGeometry height="30" width="1300" x="1150" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-api-band" parent="l4b-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;verticalAlign=top;align=left;spacingTop=12;spacingLeft=16;fontSize=17;fontStyle=1;" value="API Layer" vertex="1">
+          <mxGeometry height="280" width="3360" x="120" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-app-band" parent="l4b-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2f8;strokeColor=#6c8ebf;dashed=1;verticalAlign=top;align=left;spacingTop=12;spacingLeft=16;fontSize=17;fontStyle=1;" value="Application Layer" vertex="1">
+          <mxGeometry height="530" width="3360" x="120" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-infra-band" parent="l4b-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#edf7ed;strokeColor=#82b366;dashed=1;verticalAlign=top;align=left;spacingTop=12;spacingLeft=16;fontSize=17;fontStyle=1;" value="Infrastructure Layer" vertex="1">
+          <mxGeometry height="700" width="3360" x="120" y="1000" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-data-band" parent="l4b-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff7e6;strokeColor=#d6b656;dashed=1;verticalAlign=top;align=left;spacingTop=12;spacingLeft=16;fontSize=17;fontStyle=1;" value="EF Core Persistence" vertex="1">
+          <mxGeometry height="330" width="3360" x="120" y="1730" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-controller" parent="l4b-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;align=left;spacingLeft=14;" value="&lt;b&gt;BookingController&lt;/b&gt;&#xa;────────────────────────&#xa;+ CreateBookingAsync(request)&#xa;+ GetMyBookingHistory(status)&#xa;+ GetOwnerBookingManagement(status, searchTerm)" vertex="1">
+          <mxGeometry height="160" width="760" x="300" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-api-helper" parent="l4b-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;align=left;spacingLeft=14;" value="&lt;b&gt;ApiResponseHandlerHelper&lt;/b&gt;&#xa;────────────────────────&#xa;+ HandleResponse(response)" vertex="1">
+          <mxGeometry height="105" width="520" x="2700" y="225" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-service-interface" parent="l4b-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;align=left;spacingLeft=14;" value="&lt;b&gt;&amp;laquo;interface&amp;raquo; IBookingService&lt;/b&gt;&#xa;────────────────────────&#xa;+ CreateBookingAsync(request, userId)&#xa;+ GetGuestBookingsAsync(userId, status)&#xa;+ GetOwnerBookingsAsync(ownerId, status, searchTerm)" vertex="1">
+          <mxGeometry height="150" width="780" x="1180" y="510" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-service" parent="l4b-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#cce5ff;strokeColor=#0050b3;strokeWidth=2;fontSize=14;align=left;spacingLeft=14;" value="&lt;b&gt;BookingService&lt;/b&gt;&#xa;────────────────────────&#xa;- repository contracts&#xa;- IUnitOfWork&#xa;- ILogger&amp;lt;BookingService&amp;gt;&#xa;────────────────────────&#xa;+ CreateBookingAsync(...)&#xa;+ GetGuestBookingsAsync(...)&#xa;+ GetOwnerBookingsAsync(...)" vertex="1">
+          <mxGeometry height="225" width="900" x="1120" y="700" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-dtos" parent="l4b-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=14;align=left;spacingLeft=14;" value="&lt;b&gt;Booking DTOs&lt;/b&gt;&#xa;────────────────────────&#xa;BookingRequestDTO&#xa;BookingResponseDTO&#xa;BookingHistoryDTO&#xa;ApiResponse&amp;lt;T&amp;gt;" vertex="1">
+          <mxGeometry height="170" width="560" x="270" y="727.5" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-logger" parent="l4b-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=14;" value="&amp;laquo;framework&amp;raquo;&#xa;ILogger&amp;lt;BookingService&amp;gt;" vertex="1">
+          <mxGeometry height="90" width="480" x="2710" y="770" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-irt" parent="l4b-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" value="&amp;laquo;interface&amp;raquo;&#xa;&lt;b&gt;IRoomTypeRepository&lt;/b&gt;&#xa;extends IRepository&amp;lt;RoomType&amp;gt;" vertex="1">
+          <mxGeometry height="105" width="440" x="180" y="1080" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-ir" parent="l4b-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" value="&amp;laquo;interface&amp;raquo;&#xa;&lt;b&gt;IRoomRepository&lt;/b&gt;&#xa;+ GetAvailableRoomsAsync(...)&#xa;+ GetRoomsByHotelsAsync(...)" vertex="1">
+          <mxGeometry height="120" width="440" x="720" y="1080" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-ib" parent="l4b-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" value="&amp;laquo;interface&amp;raquo;&#xa;&lt;b&gt;IBookingRepository&lt;/b&gt;&#xa;+ GetBookingsByHotelsAsync(hotelIds)" vertex="1">
+          <mxGeometry height="105" width="440" x="1260" y="1080" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-ibr" parent="l4b-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" value="&amp;laquo;interface&amp;raquo;&#xa;&lt;b&gt;IBookingRoomRepository&lt;/b&gt;&#xa;extends IRepository&amp;lt;BookingRoom&amp;gt;" vertex="1">
+          <mxGeometry height="105" width="440" x="1800" y="1080" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-ih" parent="l4b-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" value="&amp;laquo;interface&amp;raquo;&#xa;&lt;b&gt;IHotelRepository&lt;/b&gt;&#xa;extends IRepository&amp;lt;Hotel&amp;gt;" vertex="1">
+          <mxGeometry height="105" width="440" x="2340" y="1080" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-iuow" parent="l4b-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" value="&amp;laquo;interface&amp;raquo;&#xa;&lt;b&gt;IUnitOfWork&lt;/b&gt;&#xa;+ BeginTransactionAsync()&#xa;+ SaveChangesAsync()&#xa;+ CommitTransactionAsync()&#xa;+ RollBackTransactionAsync()" vertex="1">
+          <mxGeometry height="150" width="440" x="2880" y="1060" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-rt-repo" parent="l4b-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e2f0d9;strokeColor=#82b366;fontSize=13;" value="&lt;b&gt;RoomTypeRepository&lt;/b&gt;&#xa;extends Repository&amp;lt;RoomType&amp;gt;" vertex="1">
+          <mxGeometry height="90" width="440" x="180" y="1390" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-r-repo" parent="l4b-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e2f0d9;strokeColor=#82b366;fontSize=13;" value="&lt;b&gt;RoomRepository&lt;/b&gt;&#xa;extends Repository&amp;lt;Room&amp;gt;&#xa;EF Core availability query" vertex="1">
+          <mxGeometry height="105" width="440" x="720" y="1380" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-b-repo" parent="l4b-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e2f0d9;strokeColor=#82b366;fontSize=13;" value="&lt;b&gt;BookingRepository&lt;/b&gt;&#xa;extends Repository&amp;lt;Booking&amp;gt;&#xa;EF Core owner-booking query" vertex="1">
+          <mxGeometry height="105" width="440" x="1260" y="1380" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-br-repo" parent="l4b-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e2f0d9;strokeColor=#82b366;fontSize=13;" value="&lt;b&gt;BookingRoomRepository&lt;/b&gt;&#xa;extends Repository&amp;lt;BookingRoom&amp;gt;" vertex="1">
+          <mxGeometry height="90" width="440" x="1800" y="1390" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-h-repo" parent="l4b-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e2f0d9;strokeColor=#82b366;fontSize=13;" value="&lt;b&gt;HotelRepository&lt;/b&gt;&#xa;extends Repository&amp;lt;Hotel&amp;gt;" vertex="1">
+          <mxGeometry height="90" width="440" x="2340" y="1390" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-uow" parent="l4b-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e2f0d9;strokeColor=#82b366;fontSize=13;" value="&lt;b&gt;UnitOfWork&lt;/b&gt;&#xa;────────────────────────&#xa;- HotelBookingDBContext&#xa;+ transaction lifecycle&#xa;+ SaveChangesAsync()" vertex="1">
+          <mxGeometry height="125" width="440" x="2880" y="1370" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-repository-base" parent="l4b-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" value="&lt;b&gt;Repository&amp;lt;T&amp;gt;&lt;/b&gt;&#xa;implements IRepository&amp;lt;T&amp;gt;&#xa;Uses DbSet&amp;lt;T&amp;gt; and request CancellationToken" vertex="1">
+          <mxGeometry height="105" width="720" x="520" y="1550" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-dbcontext" parent="l4b-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=14;" value="&lt;b&gt;HotelBookingDBContext&lt;/b&gt;&#xa;EF Core DbContext / transaction boundary" vertex="1">
+          <mxGeometry height="100" width="700" x="1450" y="1800" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-entities" parent="l4b-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=14;align=left;spacingLeft=18;" value="&lt;b&gt;Persisted entities used by BookingService&lt;/b&gt;&#xa;────────────────────────────────&#xa;Booking • BookingRoom • Room • RoomType • Hotel" vertex="1">
+          <mxGeometry height="115" width="1050" x="450" y="1930" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-sql" parent="l4b-1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=14;fontStyle=1;" value="SQL Server" vertex="1">
+          <mxGeometry height="120" width="360" x="2500" y="1790" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-note" parent="l4b-1" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;align=left;spacingLeft=12;" value="Current-to-target observations&#xa;• Physical rooms are assigned during booking creation.&#xa;• CreateBookingAsync calls SaveChangesAsync twice.&#xa;• No dedicated booking FluentValidator is present.&#xa;• Target HLD replaces this with an atomic inventory-hold workflow and one save." vertex="1">
+          <mxGeometry height="170" width="560" x="2880" y="1875" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-e1" edge="1" parent="l4b-1" source="l4b-controller" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;labelBackgroundColor=#ffffff;" target="l4b-service-interface" value="uses">
+          <mxGeometry relative="1" x="-0.1944" as="geometry">
+            <mxPoint x="-1" as="offset" />
+            <Array as="points">
+              <mxPoint x="1570" y="300" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4b-e2" edge="1" parent="l4b-1" source="l4b-controller" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;labelBackgroundColor=#ffffff;" target="l4b-api-helper" value="maps ApiResponse to IActionResult">
+          <mxGeometry relative="1" y="-14" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-e3" edge="1" parent="l4b-1" source="l4b-service" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=block;endFill=0;labelBackgroundColor=#ffffff;" target="l4b-service-interface" value="implements">
+          <mxGeometry relative="1" x="0.3" y="-14" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-e4" edge="1" parent="l4b-1" source="l4b-controller" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;labelBackgroundColor=#ffffff;" target="l4b-dtos" value="accepts / returns">
+          <mxGeometry relative="1" x="-0.2381" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="550" y="460" />
+              <mxPoint x="550" y="460" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4b-e5" edge="1" parent="l4b-1" source="l4b-service" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;labelBackgroundColor=#ffffff;" target="l4b-dtos" value="maps">
+          <mxGeometry relative="1" x="0.0345" as="geometry">
+            <mxPoint x="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4b-e6" edge="1" parent="l4b-1" source="l4b-service" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;labelBackgroundColor=#ffffff;" target="l4b-logger" value="logs failures">
+          <mxGeometry relative="1" y="-14" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b-e7" edge="1" parent="l4b-1" source="l4b-service" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;exitX=0.055;exitY=0.996;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;exitPerimeter=0;" target="l4b-irt" value="loads RoomType">
+          <mxGeometry relative="1" x="-0.114" as="geometry">
+            <mxPoint x="1" as="offset" />
+            <Array as="points">
+              <mxPoint x="1169.52" y="980" />
+              <mxPoint x="400" y="980" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4b-e8" edge="1" parent="l4b-1" source="l4b-service" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;" target="l4b-ir" value="checks availability">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1345" y="1030" />
+              <mxPoint x="940" y="1030" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4b-e9" edge="1" parent="l4b-1" source="l4b-service" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;exitX=0.401;exitY=0.999;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;exitPerimeter=0;" target="l4b-ib" value="creates / queries bookings">
+          <mxGeometry relative="1" x="0.2313" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1480" y="924.8" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4b-e10" edge="1" parent="l4b-1" source="l4b-service" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;exitX=0.58;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;" target="l4b-ibr" value="assigns rooms">
+          <mxGeometry relative="1" x="0.0244" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1642" y="1020" />
+              <mxPoint x="2020" y="1020" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4b-e11" edge="1" parent="l4b-1" source="l4b-service" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;" target="l4b-ih" value="loads owned hotels">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1795" y="1010" />
+              <mxPoint x="2560" y="1010" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4b-e12" edge="1" parent="l4b-1" source="l4b-service" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;exitX=0.92;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;" target="l4b-iuow" value="controls transaction">
+          <mxGeometry relative="1" x="0.0871" y="3" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1948" y="980" />
+              <mxPoint x="3100" y="980" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4b-e13" edge="1" parent="l4b-1" source="l4b-rt-repo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=block;endFill=0;labelBackgroundColor=#ffffff;" target="l4b-irt" value="implements">
+          <mxGeometry relative="1" x="0.2683" as="geometry">
+            <mxPoint y="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4b-e14" edge="1" parent="l4b-1" source="l4b-r-repo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=block;endFill=0;labelBackgroundColor=#ffffff;" target="l4b-ir" value="implements">
+          <mxGeometry relative="1" x="0.2222" as="geometry">
+            <mxPoint y="-1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4b-e15" edge="1" parent="l4b-1" source="l4b-b-repo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=block;endFill=0;labelBackgroundColor=#ffffff;" target="l4b-ib" value="implements">
+          <mxGeometry relative="1" x="0.2308" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4b-e16" edge="1" parent="l4b-1" source="l4b-br-repo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=block;endFill=0;labelBackgroundColor=#ffffff;" target="l4b-ibr" value="implements">
+          <mxGeometry relative="1" x="0.2683" as="geometry">
+            <mxPoint y="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4b-e17" edge="1" parent="l4b-1" source="l4b-h-repo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=block;endFill=0;labelBackgroundColor=#ffffff;" target="l4b-ih" value="implements">
+          <mxGeometry relative="1" x="0.2683" as="geometry">
+            <mxPoint y="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4b-e18" edge="1" parent="l4b-1" source="l4b-uow" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=block;endFill=0;labelBackgroundColor=#ffffff;" target="l4b-iuow" value="implements">
+          <mxGeometry relative="1" x="0.375" as="geometry">
+            <mxPoint y="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4b-e19" edge="1" parent="l4b-1" source="l4b-rt-repo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=0;labelBackgroundColor=#ffffff;" target="l4b-repository-base" value="inherits">
+          <mxGeometry relative="1" x="-0.1346" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="400" y="1515" />
+              <mxPoint x="850" y="1515" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4b-e20" edge="1" parent="l4b-1" source="l4b-r-repo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=0;labelBackgroundColor=#ffffff;" target="l4b-repository-base" value="inherits">
+          <mxGeometry relative="1" x="0.0003" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4b-e21" edge="1" parent="l4b-1" source="l4b-repository-base" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;entryX=0.08;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;" target="l4b-dbcontext" value="uses DbSet&amp;lt;T&amp;gt;">
+          <mxGeometry relative="1" x="0.3527" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4b-e22" edge="1" parent="l4b-1" source="l4b-b-repo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;entryX=0.28;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;" target="l4b-dbcontext" value="executes EF Core query">
+          <mxGeometry relative="1" x="-0.1429" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1646" y="1570" />
+              <mxPoint x="1646" y="1570" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4b-e23" edge="1" parent="l4b-1" source="l4b-br-repo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;entryX=0.48;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;" target="l4b-dbcontext" value="tracks BookingRoom">
+          <mxGeometry relative="1" x="-0.1336" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4b-e24" edge="1" parent="l4b-1" source="l4b-h-repo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;entryX=0.565;entryY=-0.01;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;entryPerimeter=0;" target="l4b-dbcontext" value="queries Hotel">
+          <mxGeometry relative="1" x="-0.3501" as="geometry">
+            <mxPoint x="1" as="offset" />
+            <Array as="points">
+              <mxPoint x="2560" y="1520.03" />
+              <mxPoint x="1845.52" y="1520.03" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4b-e25" edge="1" parent="l4b-1" source="l4b-uow" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;entryX=0.9;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;" target="l4b-dbcontext" value="saves / commits">
+          <mxGeometry relative="1" x="0.0038" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="3100" y="1560" />
+              <mxPoint x="2080" y="1560" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4b-e26" edge="1" parent="l4b-1" source="l4b-dbcontext" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=0;labelBackgroundColor=#ffffff;" target="l4b-entities" value="maps">
+          <mxGeometry relative="1" x="0.0877" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4b-e27" edge="1" parent="l4b-1" source="l4b-dbcontext" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" target="l4b-sql" value="EF Core / SQL">
+          <mxGeometry relative="1" x="0.0286" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="payment-code" name="Payment Code Diagram">
+    <mxGraphModel dx="2009" dy="1183" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3400" pageHeight="2100" math="0" shadow="0">
+      <root>
+        <mxCell id="l4p-0" />
+        <mxCell id="l4p-1" parent="l4p-0" />
+        <mxCell id="l4p-title" parent="l4p-1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=26;fontStyle=1;" value="Payment Component — C4 Level 4 Code Diagram (Current Implementation)" vertex="1">
+          <mxGeometry height="50" width="1700" x="850" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-subtitle" parent="l4p-1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=14;fontColor=#666666;" value="Key code elements, compile-time dependencies, and the two public entry paths." vertex="1">
+          <mxGeometry height="30" width="1300" x="1050" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-api-band" parent="l4p-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;verticalAlign=top;align=left;spacingTop=12;spacingLeft=16;fontSize=17;fontStyle=1;" value="API Layer" vertex="1">
+          <mxGeometry height="290" width="3160" x="120" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-app-band" parent="l4p-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2f8;strokeColor=#6c8ebf;dashed=1;verticalAlign=top;align=left;spacingTop=12;spacingLeft=16;fontSize=17;fontStyle=1;" value="Application Layer" vertex="1">
+          <mxGeometry height="590" width="3160" x="120" y="450" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-infra-band" parent="l4p-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#edf7ed;strokeColor=#82b366;dashed=1;verticalAlign=top;align=left;spacingTop=12;spacingLeft=16;fontSize=17;fontStyle=1;" value="Infrastructure Layer" vertex="1">
+          <mxGeometry height="520" width="3160" x="120" y="1070" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-data-band" parent="l4p-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff7e6;strokeColor=#d6b656;dashed=1;verticalAlign=top;align=left;spacingTop=12;spacingLeft=16;fontSize=17;fontStyle=1;" value="EF Core Persistence and External Boundary" vertex="1">
+          <mxGeometry height="350" width="3160" x="120" y="1620" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-gateway-caller" parent="l4p-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=14;" value="Payment Gateway / Client&#xa;POST callback payload" vertex="1">
+          <mxGeometry height="95" width="480" x="210" y="225" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-controller" parent="l4p-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;align=left;spacingLeft=14;" value="&lt;b&gt;PaymentController&lt;/b&gt;&#xa;────────────────────────&#xa;+ CreatePaymentUrl(request)&#xa;+ PaymentCallback(callback)" vertex="1">
+          <mxGeometry height="130" width="700" x="1320" y="205" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-api-helper" parent="l4p-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;align=left;spacingLeft=14;" value="&lt;b&gt;ApiResponseHandlerHelper&lt;/b&gt;&#xa;────────────────────────&#xa;+ HandleResponse(response)" vertex="1">
+          <mxGeometry height="105" width="520" x="2550" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-service-interface" parent="l4p-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;align=left;spacingLeft=14;" value="&lt;b&gt;&amp;laquo;interface&amp;raquo; IPaymentService&lt;/b&gt;&#xa;────────────────────────&#xa;+ CreatePaymentUrlAsync(request, userId)&#xa;+ ProcessPaymentCallbackAsync(callback)" vertex="1">
+          <mxGeometry height="130" width="760" x="1320" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-service" parent="l4p-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#cce5ff;strokeColor=#0050b3;strokeWidth=2;fontSize=14;align=left;spacingLeft=14;" value="&lt;b&gt;PaymentService&lt;/b&gt;&#xa;────────────────────────&#xa;- IPaymentRepository&#xa;- IBookingRepository&#xa;- IUnitOfWork&#xa;- ILogger&amp;lt;PaymentService&amp;gt;&#xa;────────────────────────&#xa;+ CreatePaymentUrlAsync(...)&#xa;+ ProcessPaymentCallbackAsync(...)" vertex="1">
+          <mxGeometry height="225" width="900" x="1250" y="740" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-dtos" parent="l4p-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=14;align=left;spacingLeft=14;" value="&lt;b&gt;Payment DTOs&lt;/b&gt;&#xa;────────────────────────&#xa;CreatePaymentRequestDTO&#xa;PaymentResponseDTO&#xa;PaymentCallbackDTO&#xa;ApiResponse&amp;lt;T&amp;gt;" vertex="1">
+          <mxGeometry height="170" width="580" x="260" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-logger" parent="l4p-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=14;" value="&amp;laquo;framework&amp;raquo;&#xa;ILogger&amp;lt;PaymentService&amp;gt;" vertex="1">
+          <mxGeometry height="90" width="480" x="2630" y="790" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-ipaymentrepo" parent="l4p-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" value="&amp;laquo;interface&amp;raquo;&#xa;&lt;b&gt;IPaymentRepository&lt;/b&gt;&#xa;+ GetPaymentsByHotelsAsync(hotelIds)" vertex="1">
+          <mxGeometry height="105" width="570" x="380" y="1140" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-ibookingrepo" parent="l4p-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" value="&amp;laquo;interface&amp;raquo;&#xa;&lt;b&gt;IBookingRepository&lt;/b&gt;&#xa;+ GetBookingsByHotelsAsync(hotelIds)" vertex="1">
+          <mxGeometry height="105" width="570" x="1150" y="1140" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-iuow" parent="l4p-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" value="&amp;laquo;interface&amp;raquo;&#xa;&lt;b&gt;IUnitOfWork&lt;/b&gt;&#xa;+ BeginTransactionAsync()&#xa;+ SaveChangesAsync()&#xa;+ CommitTransactionAsync()&#xa;+ RollBackTransactionAsync()" vertex="1">
+          <mxGeometry height="150" width="570" x="1920" y="1120" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-mock-url" parent="l4p-1" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;align=left;spacingLeft=12;" value="Current URL generation&#xa;PaymentService constructs a mock-gateway URL directly. There is no IVNPayGateway or provider adapter in the current code." vertex="1">
+          <mxGeometry height="130" width="560" x="2650" y="1125" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-paymentrepo" parent="l4p-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e2f0d9;strokeColor=#82b366;fontSize=13;" value="&lt;b&gt;PaymentRepository&lt;/b&gt;&#xa;extends Repository&amp;lt;Payment&amp;gt;&#xa;EF Core payment reporting query" vertex="1">
+          <mxGeometry height="110" width="570" x="380" y="1390" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-bookingrepo" parent="l4p-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e2f0d9;strokeColor=#82b366;fontSize=13;" value="&lt;b&gt;BookingRepository&lt;/b&gt;&#xa;extends Repository&amp;lt;Booking&amp;gt;&#xa;EF Core owner-booking query" vertex="1">
+          <mxGeometry height="110" width="570" x="1150" y="1390" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-uow" parent="l4p-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e2f0d9;strokeColor=#82b366;fontSize=13;" value="&lt;b&gt;UnitOfWork&lt;/b&gt;&#xa;────────────────────────&#xa;- HotelBookingDBContext&#xa;+ transaction lifecycle&#xa;+ SaveChangesAsync()" vertex="1">
+          <mxGeometry height="125" width="570" x="1920" y="1380" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-dbcontext" parent="l4p-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=14;" value="&lt;b&gt;HotelBookingDBContext&lt;/b&gt;&#xa;EF Core DbContext / transaction boundary" vertex="1">
+          <mxGeometry height="100" width="720" x="970" y="1700" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-entities" parent="l4p-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=14;align=left;spacingLeft=18;" value="&lt;b&gt;Persisted entities&lt;/b&gt;&#xa;────────────────────────&#xa;Payment • Booking&#xa;Payment.BookingId → Booking.Id" vertex="1">
+          <mxGeometry height="120" width="650" x="250" y="1810" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-sql" parent="l4p-1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=14;fontStyle=1;" value="SQL Server" vertex="1">
+          <mxGeometry height="120" width="360" x="1870" y="1720" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-mock-gateway" parent="l4p-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=14;" value="Mock Payment Gateway&#xa;Browser follows returned URL;&#xa;callback posts to PaymentController" vertex="1">
+          <mxGeometry height="120" width="620" x="2500" y="1730" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-note" parent="l4p-1" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;align=left;spacingLeft=12;" value="Current-to-target observations&#xa;• Callback has no VNPay signature verification.&#xa;• No unique gateway-reference/idempotency guard is shown in code.&#xa;• Target HLD introduces a provider adapter and atomic, idempotent callback processing." vertex="1">
+          <mxGeometry height="165" width="760" x="2450" y="1870" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-e1" edge="1" parent="l4p-1" source="l4p-gateway-caller" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" target="l4p-controller" value="calls callback endpoint">
+          <mxGeometry relative="1" y="-14" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-e2" edge="1" parent="l4p-1" source="l4p-controller" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;labelBackgroundColor=#ffffff;" target="l4p-service-interface" value="uses">
+          <mxGeometry relative="1" x="-0.2973" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1700" y="380" />
+              <mxPoint x="1700" y="380" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4p-e3" edge="1" parent="l4p-1" source="l4p-controller" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;labelBackgroundColor=#ffffff;" target="l4p-api-helper" value="maps ApiResponse to IActionResult">
+          <mxGeometry relative="1" y="-14" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-e4" edge="1" parent="l4p-1" source="l4p-service" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=block;endFill=0;labelBackgroundColor=#ffffff;" target="l4p-service-interface" value="implements">
+          <mxGeometry relative="1" x="0.1111" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4p-e5" edge="1" parent="l4p-1" source="l4p-controller" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;labelBackgroundColor=#ffffff;" target="l4p-dtos" value="accepts">
+          <mxGeometry relative="1" x="-0.101" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1670" y="380" />
+              <mxPoint x="550" y="380" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4p-e6" edge="1" parent="l4p-1" source="l4p-service" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;labelBackgroundColor=#ffffff;" target="l4p-dtos" value="maps">
+          <mxGeometry relative="1" x="-0.0616" as="geometry">
+            <mxPoint y="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4p-e7" edge="1" parent="l4p-1" source="l4p-service" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;labelBackgroundColor=#ffffff;" target="l4p-logger" value="logs failures">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="2390" y="810" />
+              <mxPoint x="2390" y="810" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4p-e8" edge="1" parent="l4p-1" source="l4p-service" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;exitX=0.18;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;" target="l4p-ipaymentrepo" value="creates / updates payment">
+          <mxGeometry relative="1" x="-0.1117" as="geometry">
+            <mxPoint x="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4p-e9" edge="1" parent="l4p-1" source="l4p-service" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;" target="l4p-ibookingrepo" value="loads / updates booking">
+          <mxGeometry relative="1" x="-0.1023" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4p-e10" edge="1" parent="l4p-1" source="l4p-service" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;exitX=0.82;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;" target="l4p-iuow" value="controls transaction">
+          <mxGeometry relative="1" x="0.1" y="-14" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-e11" edge="1" parent="l4p-1" source="l4p-service" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;labelBackgroundColor=#ffffff;" target="l4p-mock-url" value="constructs redirect URL">
+          <mxGeometry relative="1" x="-0.5439" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="2930" y="920" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4p-e12" edge="1" parent="l4p-1" source="l4p-paymentrepo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=block;endFill=0;labelBackgroundColor=#ffffff;" target="l4p-ipaymentrepo" value="implements">
+          <mxGeometry relative="1" x="0.2414" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4p-e13" edge="1" parent="l4p-1" source="l4p-bookingrepo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=block;endFill=0;labelBackgroundColor=#ffffff;" target="l4p-ibookingrepo" value="implements">
+          <mxGeometry relative="1" x="0.2414" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4p-e14" edge="1" parent="l4p-1" source="l4p-uow" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=block;endFill=0;labelBackgroundColor=#ffffff;" target="l4p-iuow" value="implements">
+          <mxGeometry relative="1" x="0.2727" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4p-e15" edge="1" parent="l4p-1" source="l4p-paymentrepo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;entryX=0.2;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;" target="l4p-dbcontext" value="tracks Payment">
+          <mxGeometry relative="1" x="0.3317" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4p-e16" edge="1" parent="l4p-1" source="l4p-bookingrepo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;" target="l4p-dbcontext" value="tracks Booking">
+          <mxGeometry relative="1" x="-0.3" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1330" y="1550" />
+              <mxPoint x="1330" y="1550" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4p-e17" edge="1" parent="l4p-1" source="l4p-uow" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;entryX=0.82;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;" target="l4p-dbcontext" value="saves / commits">
+          <mxGeometry relative="1" x="0.0481" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="2205" y="1540" />
+              <mxPoint x="1560.4" y="1540" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4p-e18" edge="1" parent="l4p-1" source="l4p-dbcontext" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=0;labelBackgroundColor=#ffffff;" target="l4p-entities" value="maps">
+          <mxGeometry relative="1" y="-14" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-e19" edge="1" parent="l4p-1" source="l4p-dbcontext" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" target="l4p-sql" value="EF Core / SQL">
+          <mxGeometry relative="1" y="-14" as="geometry" />
+        </mxCell>
+        <mxCell id="l4p-e20" edge="1" parent="l4p-1" source="l4p-mock-url" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=open;endFill=0;labelBackgroundColor=#ffffff;" target="l4p-mock-gateway" value="URL points to">
+          <mxGeometry relative="1" x="0.0737" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="2810" y="1380" />
+              <mxPoint x="2810" y="1380" />
+            </Array>
+          </mxGeometry>
         </mxCell>
       </root>
     </mxGraphModel>

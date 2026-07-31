@@ -7,7 +7,7 @@ using HotelBooking.application.DTOs.Hotel;
 
 namespace HotelBooking.api.Controllers.V1.Public
 {
-    [Route("api/v1/[controller]")]
+    [Route("api/v1/hotels")]
     [ApiController]
     public class HotelController : ControllerBase
     {
@@ -20,7 +20,7 @@ namespace HotelBooking.api.Controllers.V1.Public
         }
 
         [Authorize(Roles = "Owner")]
-        [HttpGet("get-owner-dashboard")]
+        [HttpGet("owner-dashboard")]
         public async Task<IActionResult> GetOwnerDashboardAsync()
         {
             var ownerId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
@@ -31,21 +31,21 @@ namespace HotelBooking.api.Controllers.V1.Public
 
         // ================= GET HOTEL SEARCH OPTIONS BY SearchForm.razor FILTER ================
 
-        [HttpGet("get-search-options")]
+        [HttpGet("search")]
         public async Task<IActionResult> GetSearchOptionsAsync([FromQuery] HotelSearchRequestDTO request)
         {
             var response = await _hotelService.SearchHotelsAsync(request);
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
-        [HttpGet("get-hotel-details/{id}")]
+        [HttpGet("{id}")]
         public async Task<IActionResult> GetHotelDetailsAsync(int id)
         {
             var response = await _hotelService.GetHotelDetailsAsync(id);
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 
-        [HttpGet("get-property-types")]
+        [HttpGet("property-types")]
         public async Task<IActionResult> GetAllPropertyTypes()
         {
             var response = await _hotelService.GetPropertyTypesAsync();
@@ -96,7 +96,7 @@ namespace HotelBooking.api.Controllers.V1.Public
         // }
 
         [Authorize(Roles = "Owner")]
-        [HttpPost("test-upload-photo-cloudinary")]
+        [HttpPost("test-upload")]
         public async Task<IActionResult> TestUploadPhotoCloudinaryAsync(IFormFile file)
         {
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);

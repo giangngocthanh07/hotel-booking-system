@@ -12,7 +12,7 @@ namespace HotelBooking.api.Controllers.V1.Admin
     /// <summary>
     /// Admin Account Controller - Account Management, Admin Registration
     /// </summary>
-    [Route("api/v1/admin/[controller]")]
+    [Route("api/v1/admin/accounts")]
     [ApiController]
     [Authorize(Roles = "Admin")]
     [Tags("Admin - Account Management")]
