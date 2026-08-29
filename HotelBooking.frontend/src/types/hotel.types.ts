@@ -27,3 +27,10 @@ export interface SearchHotelResult {
   reviewCount: number;
   availableRooms: number;
 }
+
+export interface Province {
+  id: number;
+  name: string;
+}
+
+export type SearchCriteria = HotelSearchRequest;
