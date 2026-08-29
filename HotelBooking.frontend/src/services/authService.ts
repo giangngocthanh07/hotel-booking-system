@@ -66,6 +66,10 @@ export function getStoredRoles(): string[] {
   return roles.split(",");
 }
 
+export function getAuthToken(): string | null {
+  return localStorage.getItem("accessToken");
+}
+
 export function isLoggedIn(): boolean {
   return localStorage.getItem("accessToken") !== null;
 }

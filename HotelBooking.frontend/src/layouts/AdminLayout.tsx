@@ -18,11 +18,11 @@ function AdminLayout() {
           </NavLink>
           
           <NavLink 
-            to="/admin/users" 
+            to="/admin/users/upgrade-requests" 
             className={({ isActive }) => isActive ? "admin-sidebar__link active" : "admin-sidebar__link"}
           >
             <span className="admin-sidebar__icon">👥</span>
-            Users Management
+            Owner Requests
           </NavLink>
           
           <NavLink 

@@ -9,6 +9,8 @@ import HomePage from "./pages/HomePage";
 import SearchResultsPage from "./pages/SearchResultsPage";
 import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
+import AdminHotelsApprovalPage from "./pages/admin/AdminHotelsApprovalPage";
+import AdminOwnerRequestsPage from "./pages/admin/AdminOwnerRequestsPage";
 
 function App() {
   return (
@@ -30,6 +32,8 @@ function App() {
         {/* Admin section */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route path="dashboard" element={<AdminDashboardPage />} />
+          <Route path="hotels" element={<AdminHotelsApprovalPage />} />
+          <Route path="users/upgrade-requests" element={<AdminOwnerRequestsPage />} />
           {/* Add more admin pages here later, e.g. users, hotels, etc. */}
         </Route>
 
