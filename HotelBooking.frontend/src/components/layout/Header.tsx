@@ -63,7 +63,7 @@ function Header() {
       <nav className="site-header__nav">
         <span className="site-header__currency">VND • 🇻🇳</span>
         {!roles.includes("Owner") && !roles.includes("Admin") && (
-          <a href="#" className="site-header__link site-header__link--accent">
+          <a href="/become-partner" className="site-header__link site-header__link--accent">
             List your property
           </a>
         )}
@@ -96,6 +96,12 @@ function Header() {
                   User profile
                 </a>
                 
+                {!roles.includes("Owner") && !roles.includes("Admin") && (
+                  <a href="/become-partner" className="site-header__menu-item">
+                    Become Partner
+                  </a>
+                )}
+
                 {roles.includes("Owner") && (
                   <a href="/owner/dashboard" className="site-header__menu-item">
                     Owner dashboard
@@ -110,7 +116,7 @@ function Header() {
                 
                 <button
                   type="button"
-                  className="site-header__menu-item"
+                  className="site-header__menu-item site-header__menu-item--signout"
                   onClick={handleSignOut}
                 >
                   Sign out

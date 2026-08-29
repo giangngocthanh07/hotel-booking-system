@@ -10,6 +10,7 @@ import SearchResultsPage from "./pages/SearchResultsPage";
 import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminRequestsPage from "./pages/admin/AdminRequestsPage";
+import BecomePartnerPage from "./pages/customer/BecomePartnerPage";
 
 function App() {
   return (
@@ -27,6 +28,9 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
 
         <Route path="/search-results" element={<SearchResultsPage />} />
+
+        {/* Customer section */}
+        <Route path="/become-partner" element={<BecomePartnerPage />} />
 
         {/* Admin section */}
         <Route path="/admin" element={<AdminLayout />}>
