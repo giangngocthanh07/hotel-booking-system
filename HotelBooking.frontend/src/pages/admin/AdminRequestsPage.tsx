@@ -9,6 +9,7 @@ import {
   getRequestStats
 } from "../../services/adminService";
 import type { HotelApprovalRequest, UpgradeRequest, BaseRequest, RequestStats } from "../../types/admin.types";
+import "./AdminRequestsPage.css"; // Implemented Sunset Theme
 
 type RequestType = "Hotel" | "Upgrade";
 
@@ -37,13 +38,11 @@ function AdminRequestsPage() {
     setLoading(true);
     setError("");
     try {
-      // 1. Fetch Stats
       const statsRes = await getRequestStats();
       if (statsRes.statusCode === "Success" && statsRes.content) {
         setStats(statsRes.content);
       }
 
-      // 2. Fetch List
       const status = statusFilter === "All" ? undefined : statusFilter;
       if (requestType === "Hotel") {
         const res = await getHotelApprovals(pageIndex, pageSize, status);
@@ -71,13 +70,11 @@ function AdminRequestsPage() {
     }
   }
 
-  // Refetch when filters or pagination change
   useEffect(() => {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requestType, statusFilter, pageIndex, pageSize]);
 
-  // Reset page number when changing type or status filter
   function handleTypeChange(newType: RequestType) {
     setRequestType(newType);
     setPageIndex(1);
@@ -89,13 +86,11 @@ function AdminRequestsPage() {
     setPageIndex(1);
   }
 
-  // Filter requests locally based on searchTerm
   const filteredRequests = useMemo(() => {
     if (!searchTerm.trim()) return requests;
     
     const lowerSearch = searchTerm.toLowerCase();
     return requests.filter(req => {
-      // Search by ID
       if (req.requestId.toString().includes(lowerSearch)) return true;
       
       if (requestType === "Hotel") {
@@ -118,7 +113,6 @@ function AdminRequestsPage() {
     });
   }, [requests, searchTerm, requestType]);
 
-  // Actions
   async function handleApprove(id: number) {
     if (!window.confirm("Are you sure you want to approve this request?")) return;
     try {
@@ -151,54 +145,10 @@ function AdminRequestsPage() {
     }
   }
 
-  // Render Helpers
-  function renderHotelRow(req: HotelApprovalRequest) {
-    return (
-      <tr key={req.requestId} style={{ borderBottom: "1px solid #F1F5F9", cursor: "pointer" }} onClick={() => setSelectedRequest(req)}>
-        <td style={{ padding: "16px", fontSize: "14px", color: "#0F172A" }}>#{req.requestId}</td>
-        <td style={{ padding: "16px", fontSize: "14px", color: "#0F172A", fontWeight: 500 }}>
-          {req.name}
-          <div style={{ fontSize: "12px", color: "#64748B", fontWeight: 400, marginTop: "4px" }}>{req.address}</div>
-        </td>
-        <td style={{ padding: "16px", fontSize: "14px", color: "#0F172A" }}>
-          {req.ownerFullName}
-          <div style={{ fontSize: "12px", color: "#64748B", marginTop: "4px" }}>{req.ownerEmail}</div>
-        </td>
-        <td style={{ padding: "16px", fontSize: "14px", color: "#0F172A" }}>{new Date(req.requestedAt).toLocaleDateString()}</td>
-        <td style={{ padding: "16px", fontSize: "14px" }}>{renderStatusBadge(req.status)}</td>
-        <td style={{ padding: "16px", textAlign: "right" }} onClick={(e) => e.stopPropagation()}>{renderActionButtons(req)}</td>
-      </tr>
-    );
-  }
-
-  function renderUpgradeRow(req: UpgradeRequest) {
-    return (
-      <tr key={req.requestId} style={{ borderBottom: "1px solid #F1F5F9", cursor: "pointer" }} onClick={() => setSelectedRequest(req)}>
-        <td style={{ padding: "16px", fontSize: "14px", color: "#0F172A" }}>#{req.requestId}</td>
-        <td style={{ padding: "16px", fontSize: "14px", color: "#0F172A", fontWeight: 500 }}>
-          {req.fullName}
-          <div style={{ fontSize: "12px", color: "#64748B", fontWeight: 400, marginTop: "4px" }}>@{req.userName}</div>
-        </td>
-        <td style={{ padding: "16px", fontSize: "14px", color: "#0F172A" }}>
-          {req.email}
-          <div style={{ fontSize: "12px", color: "#64748B", marginTop: "4px" }}>{req.phoneNumber}</div>
-        </td>
-        <td style={{ padding: "16px", fontSize: "14px", color: "#0F172A" }}>{req.taxCode}</td>
-        <td style={{ padding: "16px", fontSize: "14px" }}>{renderStatusBadge(req.status)}</td>
-        <td style={{ padding: "16px", textAlign: "right" }} onClick={(e) => e.stopPropagation()}>{renderActionButtons(req)}</td>
-      </tr>
-    );
-  }
-
   function renderStatusBadge(status: string) {
-    let bg = "#F3F4F6", color = "#374151";
-    if (status === "Approved") { bg = "#D1FAE5"; color = "#065F46"; }
-    else if (status === "Rejected") { bg = "#FEE2E2"; color = "#991B1B"; }
-    else if (status === "Pending") { bg = "#FEF3C7"; color = "#92400E"; }
-    else if (status === "Cancelled") { bg = "#E5E7EB"; color = "#4B5563"; }
-    
+    const statusClass = status.toLowerCase();
     return (
-      <span style={{ padding: "4px 8px", borderRadius: "9999px", fontSize: "12px", fontWeight: 600, backgroundColor: bg, color }}>
+      <span className={`req-badge ${statusClass}`}>
         {status}
       </span>
     );
@@ -206,18 +156,56 @@ function AdminRequestsPage() {
 
   function renderActionButtons(req: BaseRequest) {
     return (
-      <>
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
         {req.canApprove && (
-          <button onClick={() => handleApprove(req.requestId)} style={{ padding: "6px 12px", backgroundColor: "#10B981", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "13px", fontWeight: 600, marginRight: "8px" }}>
+          <button onClick={() => handleApprove(req.requestId)} className="req-action-btn approve">
             Approve
           </button>
         )}
         {req.canReject && (
-          <button onClick={() => handleReject(req.requestId)} style={{ padding: "6px 12px", backgroundColor: "#EF4444", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "13px", fontWeight: 600 }}>
+          <button onClick={() => handleReject(req.requestId)} className="req-action-btn reject">
             Reject
           </button>
         )}
-      </>
+      </div>
+    );
+  }
+
+  function renderHotelRow(req: HotelApprovalRequest) {
+    return (
+      <tr key={req.requestId} style={{ cursor: "pointer" }} onClick={() => setSelectedRequest(req)}>
+        <td>#{req.requestId}</td>
+        <td>
+          <div style={{ fontWeight: 600, color: "#0F172A", marginBottom: "4px" }}>{req.name}</div>
+          <div style={{ fontSize: "12px", color: "#64748B" }}>{req.address}</div>
+        </td>
+        <td>
+          <div style={{ color: "#0F172A", marginBottom: "4px" }}>{req.ownerFullName}</div>
+          <div style={{ fontSize: "12px", color: "#64748B" }}>{req.ownerEmail}</div>
+        </td>
+        <td>{new Date(req.requestedAt).toLocaleDateString()}</td>
+        <td>{renderStatusBadge(req.status)}</td>
+        <td onClick={(e) => e.stopPropagation()}>{renderActionButtons(req)}</td>
+      </tr>
+    );
+  }
+
+  function renderUpgradeRow(req: UpgradeRequest) {
+    return (
+      <tr key={req.requestId} style={{ cursor: "pointer" }} onClick={() => setSelectedRequest(req)}>
+        <td>#{req.requestId}</td>
+        <td>
+          <div style={{ fontWeight: 600, color: "#0F172A", marginBottom: "4px" }}>{req.fullName}</div>
+          <div style={{ fontSize: "12px", color: "#64748B" }}>@{req.userName}</div>
+        </td>
+        <td>
+          <div style={{ color: "#0F172A", marginBottom: "4px" }}>{req.email}</div>
+          <div style={{ fontSize: "12px", color: "#64748B" }}>{req.phoneNumber}</div>
+        </td>
+        <td>{req.taxCode}</td>
+        <td>{renderStatusBadge(req.status)}</td>
+        <td onClick={(e) => e.stopPropagation()}>{renderActionButtons(req)}</td>
+      </tr>
     );
   }
 
@@ -225,67 +213,70 @@ function AdminRequestsPage() {
     if (!selectedRequest) return null;
 
     return (
-      <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000 }}>
-        <div style={{ backgroundColor: "#fff", borderRadius: "12px", width: "100%", maxWidth: "600px", maxHeight: "90vh", overflowY: "auto", padding: "24px", position: "relative" }}>
-          <button onClick={() => setSelectedRequest(null)} style={{ position: "absolute", top: "16px", right: "16px", background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "#64748B" }}>✕</button>
+      <div className="req-modal-overlay">
+        <div className="req-modal-content">
+          <div className="req-modal-header">
+            <h2 className="req-modal-title sunset-gradient-text">
+              {requestType === "Hotel" ? "Hotel Approval Details" : "Upgrade Request Details"}
+            </h2>
+            <button onClick={() => setSelectedRequest(null)} className="req-modal-close">✕</button>
+          </div>
           
-          <h2 style={{ fontSize: "20px", color: "#0F172A", marginBottom: "16px", paddingBottom: "12px", borderBottom: "1px solid #E2E8F0" }}>
-            {requestType === "Hotel" ? "Hotel Approval Details" : "Upgrade Request Details"}
-          </h2>
-          
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>
-            <div>
-              <div style={{ fontSize: "12px", color: "#64748B", textTransform: "uppercase", fontWeight: 600, marginBottom: "4px" }}>Request ID</div>
-              <div style={{ fontSize: "15px", color: "#0F172A" }}>#{selectedRequest.requestId}</div>
-            </div>
-            <div>
-              <div style={{ fontSize: "12px", color: "#64748B", textTransform: "uppercase", fontWeight: 600, marginBottom: "4px" }}>Status</div>
-              <div>{renderStatusBadge(selectedRequest.status)}</div>
-            </div>
-            <div>
-              <div style={{ fontSize: "12px", color: "#64748B", textTransform: "uppercase", fontWeight: 600, marginBottom: "4px" }}>Requested At</div>
-              <div style={{ fontSize: "15px", color: "#0F172A" }}>{new Date(selectedRequest.requestedAt).toLocaleString()}</div>
-            </div>
-            {selectedRequest.processedAt && (
+          <div className="req-modal-body">
+            <div className="req-modal-grid">
               <div>
-                <div style={{ fontSize: "12px", color: "#64748B", textTransform: "uppercase", fontWeight: 600, marginBottom: "4px" }}>Processed At</div>
-                <div style={{ fontSize: "15px", color: "#0F172A" }}>{new Date(selectedRequest.processedAt).toLocaleString()}</div>
+                <div style={{ fontSize: "12px", color: "#64748B", textTransform: "uppercase", fontWeight: 700, marginBottom: "4px" }}>Request ID</div>
+                <div style={{ fontSize: "16px", color: "#0F172A", fontWeight: 600 }}>#{selectedRequest.requestId}</div>
               </div>
-            )}
-          </div>
+              <div>
+                <div style={{ fontSize: "12px", color: "#64748B", textTransform: "uppercase", fontWeight: 700, marginBottom: "4px" }}>Status</div>
+                <div>{renderStatusBadge(selectedRequest.status)}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: "12px", color: "#64748B", textTransform: "uppercase", fontWeight: 700, marginBottom: "4px" }}>Requested At</div>
+                <div style={{ fontSize: "15px", color: "#0F172A" }}>{new Date(selectedRequest.requestedAt).toLocaleString()}</div>
+              </div>
+              {selectedRequest.processedAt && (
+                <div>
+                  <div style={{ fontSize: "12px", color: "#64748B", textTransform: "uppercase", fontWeight: 700, marginBottom: "4px" }}>Processed At</div>
+                  <div style={{ fontSize: "15px", color: "#0F172A" }}>{new Date(selectedRequest.processedAt).toLocaleString()}</div>
+                </div>
+              )}
+            </div>
 
-          <h3 style={{ fontSize: "16px", color: "#0F172A", marginBottom: "12px" }}>Specific Information</h3>
-          <div style={{ backgroundColor: "#F8FAFC", padding: "16px", borderRadius: "8px", border: "1px solid #E2E8F0" }}>
-            {requestType === "Hotel" ? (
-              <div style={{ display: "grid", gap: "12px" }}>
-                <div><strong>Hotel Name:</strong> {(selectedRequest as HotelApprovalRequest).name}</div>
-                <div><strong>Address:</strong> {(selectedRequest as HotelApprovalRequest).address}</div>
-                <div><strong>Location:</strong> {(selectedRequest as HotelApprovalRequest).wardName}, {(selectedRequest as HotelApprovalRequest).provinceName}, {(selectedRequest as HotelApprovalRequest).countryName}</div>
-                <div><strong>Type:</strong> {(selectedRequest as HotelApprovalRequest).propertyTypeName}</div>
-                <div><strong>Tax Code:</strong> {(selectedRequest as HotelApprovalRequest).taxCode}</div>
-                <div><strong>Business License:</strong> <a href={(selectedRequest as HotelApprovalRequest).businessLicenseUrl} target="_blank" rel="noreferrer" style={{color:"#3B82F6"}}>View Document</a></div>
-                <hr style={{ borderColor: "#E2E8F0", margin: "12px 0" }} />
-                <div><strong>Owner:</strong> {(selectedRequest as HotelApprovalRequest).ownerFullName} (ID: {(selectedRequest as HotelApprovalRequest).ownerId})</div>
-                <div><strong>Owner Email:</strong> {(selectedRequest as HotelApprovalRequest).ownerEmail}</div>
-                <div><strong>Owner Phone:</strong> {(selectedRequest as HotelApprovalRequest).ownerPhoneNumber}</div>
-              </div>
-            ) : (
-              <div style={{ display: "grid", gap: "12px" }}>
-                <div><strong>Customer:</strong> {(selectedRequest as UpgradeRequest).fullName} (@{(selectedRequest as UpgradeRequest).userName})</div>
-                <div><strong>User ID:</strong> {(selectedRequest as UpgradeRequest).userId}</div>
-                <div><strong>Email:</strong> {(selectedRequest as UpgradeRequest).email}</div>
-                <div><strong>Phone:</strong> {(selectedRequest as UpgradeRequest).phoneNumber}</div>
-                <div><strong>Address:</strong> {(selectedRequest as UpgradeRequest).address}</div>
-                <div><strong>Tax Code:</strong> {(selectedRequest as UpgradeRequest).taxCode}</div>
-              </div>
-            )}
-          </div>
+            <h3 style={{ fontSize: "18px", color: "#0F172A", marginBottom: "16px", fontWeight: 700 }}>Specific Information</h3>
+            <div className="req-info-box">
+              {requestType === "Hotel" ? (
+                <div style={{ display: "grid", gap: "12px" }}>
+                  <div><strong style={{ color: "#475569" }}>Hotel Name:</strong> {(selectedRequest as HotelApprovalRequest).name}</div>
+                  <div><strong style={{ color: "#475569" }}>Address:</strong> {(selectedRequest as HotelApprovalRequest).address}</div>
+                  <div><strong style={{ color: "#475569" }}>Location:</strong> {(selectedRequest as HotelApprovalRequest).wardName}, {(selectedRequest as HotelApprovalRequest).provinceName}, {(selectedRequest as HotelApprovalRequest).countryName}</div>
+                  <div><strong style={{ color: "#475569" }}>Type:</strong> {(selectedRequest as HotelApprovalRequest).propertyTypeName}</div>
+                  <div><strong style={{ color: "#475569" }}>Tax Code:</strong> {(selectedRequest as HotelApprovalRequest).taxCode}</div>
+                  <div><strong style={{ color: "#475569" }}>Business License:</strong> <a href={(selectedRequest as HotelApprovalRequest).businessLicenseUrl} target="_blank" rel="noreferrer" style={{color:"#EC4899", fontWeight: 600}}>View Document</a></div>
+                  <hr style={{ borderColor: "#E2E8F0", margin: "16px 0" }} />
+                  <div><strong style={{ color: "#475569" }}>Owner:</strong> {(selectedRequest as HotelApprovalRequest).ownerFullName} (ID: {(selectedRequest as HotelApprovalRequest).ownerId})</div>
+                  <div><strong style={{ color: "#475569" }}>Owner Email:</strong> {(selectedRequest as HotelApprovalRequest).ownerEmail}</div>
+                  <div><strong style={{ color: "#475569" }}>Owner Phone:</strong> {(selectedRequest as HotelApprovalRequest).ownerPhoneNumber}</div>
+                </div>
+              ) : (
+                <div style={{ display: "grid", gap: "12px" }}>
+                  <div><strong style={{ color: "#475569" }}>Customer:</strong> {(selectedRequest as UpgradeRequest).fullName} (@{(selectedRequest as UpgradeRequest).userName})</div>
+                  <div><strong style={{ color: "#475569" }}>User ID:</strong> {(selectedRequest as UpgradeRequest).userId}</div>
+                  <div><strong style={{ color: "#475569" }}>Email:</strong> {(selectedRequest as UpgradeRequest).email}</div>
+                  <div><strong style={{ color: "#475569" }}>Phone:</strong> {(selectedRequest as UpgradeRequest).phoneNumber}</div>
+                  <div><strong style={{ color: "#475569" }}>Address:</strong> {(selectedRequest as UpgradeRequest).address}</div>
+                  <div><strong style={{ color: "#475569" }}>Tax Code:</strong> {(selectedRequest as UpgradeRequest).taxCode}</div>
+                </div>
+              )}
+            </div>
 
-          <div style={{ marginTop: "24px", display: "flex", justifyContent: "flex-end", gap: "12px" }}>
-            {renderActionButtons(selectedRequest)}
-            <button onClick={() => setSelectedRequest(null)} style={{ padding: "6px 16px", backgroundColor: "#E2E8F0", color: "#475569", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "14px", fontWeight: 600 }}>
-              Close
-            </button>
+            <div style={{ marginTop: "32px", display: "flex", justifyContent: "flex-end", gap: "12px" }}>
+              {renderActionButtons(selectedRequest)}
+              <button onClick={() => setSelectedRequest(null)} style={{ padding: "8px 20px", backgroundColor: "#F1F5F9", color: "#475569", border: "1px solid #E2E8F0", borderRadius: "9999px", cursor: "pointer", fontSize: "14px", fontWeight: 600 }}>
+                Close
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -296,27 +287,19 @@ function AdminRequestsPage() {
 
   return (
     <div className="admin-page">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
+      <div className="req-header-top">
         <div>
-          <h1 style={{ fontSize: "24px", color: "#0F172A", margin: "0 0 16px 0" }}>Requests Management</h1>
-          <div style={{ display: "flex", gap: "12px" }}>
+          <h1 className="sunset-gradient-text" style={{ fontSize: "28px", margin: "0 0 20px 0" }}>Requests Management</h1>
+          <div className="req-tabs">
             <button 
               onClick={() => handleTypeChange("Hotel")}
-              style={{ 
-                padding: "8px 16px", borderRadius: "8px", fontWeight: 600, cursor: "pointer", border: "none",
-                backgroundColor: requestType === "Hotel" ? "#3B82F6" : "#E2E8F0",
-                color: requestType === "Hotel" ? "white" : "#475569"
-              }}
+              className={`req-tab-btn ${requestType === "Hotel" ? "active" : "inactive"}`}
             >
               🏨 Hotel Approvals
             </button>
             <button 
               onClick={() => handleTypeChange("Upgrade")}
-              style={{ 
-                padding: "8px 16px", borderRadius: "8px", fontWeight: 600, cursor: "pointer", border: "none",
-                backgroundColor: requestType === "Upgrade" ? "#3B82F6" : "#E2E8F0",
-                color: requestType === "Upgrade" ? "white" : "#475569"
-              }}
+              className={`req-tab-btn ${requestType === "Upgrade" ? "active" : "inactive"}`}
             >
               👤 Owner Upgrades
             </button>
@@ -326,55 +309,48 @@ function AdminRequestsPage() {
 
       {/* Stats Cards */}
       {currentStats && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "16px", marginBottom: "24px" }}>
-          <div style={{ backgroundColor: "#fff", padding: "16px", borderRadius: "12px", border: "1px solid #E2E8F0", borderLeft: "4px solid #3B82F6" }}>
-            <div style={{ fontSize: "13px", color: "#64748B", fontWeight: 600, textTransform: "uppercase" }}>Total</div>
-            <div style={{ fontSize: "24px", fontWeight: 700, color: "#0F172A" }}>{currentStats.total}</div>
+        <div className="req-stats-grid">
+          <div className="req-stat-card total">
+            <div className="req-stat-title">Total</div>
+            <div className="req-stat-value sunset-gradient-text">{currentStats.total}</div>
           </div>
-          <div style={{ backgroundColor: "#fff", padding: "16px", borderRadius: "12px", border: "1px solid #E2E8F0", borderLeft: "4px solid #F59E0B" }}>
-            <div style={{ fontSize: "13px", color: "#64748B", fontWeight: 600, textTransform: "uppercase" }}>Pending</div>
-            <div style={{ fontSize: "24px", fontWeight: 700, color: "#0F172A" }}>{currentStats.pending}</div>
+          <div className="req-stat-card pending">
+            <div className="req-stat-title">Pending</div>
+            <div className="req-stat-value" style={{ color: "#F59E0B" }}>{currentStats.pending}</div>
           </div>
-          <div style={{ backgroundColor: "#fff", padding: "16px", borderRadius: "12px", border: "1px solid #E2E8F0", borderLeft: "4px solid #10B981" }}>
-            <div style={{ fontSize: "13px", color: "#64748B", fontWeight: 600, textTransform: "uppercase" }}>Approved</div>
-            <div style={{ fontSize: "24px", fontWeight: 700, color: "#0F172A" }}>{currentStats.approved}</div>
+          <div className="req-stat-card approved">
+            <div className="req-stat-title">Approved</div>
+            <div className="req-stat-value" style={{ color: "#10B981" }}>{currentStats.approved}</div>
           </div>
-          <div style={{ backgroundColor: "#fff", padding: "16px", borderRadius: "12px", border: "1px solid #E2E8F0", borderLeft: "4px solid #EF4444" }}>
-            <div style={{ fontSize: "13px", color: "#64748B", fontWeight: 600, textTransform: "uppercase" }}>Rejected</div>
-            <div style={{ fontSize: "24px", fontWeight: 700, color: "#0F172A" }}>{currentStats.rejected}</div>
+          <div className="req-stat-card rejected">
+            <div className="req-stat-title">Rejected</div>
+            <div className="req-stat-value" style={{ color: "#EF4444" }}>{currentStats.rejected}</div>
           </div>
-          <div style={{ backgroundColor: "#fff", padding: "16px", borderRadius: "12px", border: "1px solid #E2E8F0", borderLeft: "4px solid #9CA3AF" }}>
-            <div style={{ fontSize: "13px", color: "#64748B", fontWeight: 600, textTransform: "uppercase" }}>Cancelled</div>
-            <div style={{ fontSize: "24px", fontWeight: 700, color: "#0F172A" }}>{currentStats.cancelled}</div>
+          <div className="req-stat-card cancelled">
+            <div className="req-stat-title">Cancelled</div>
+            <div className="req-stat-value" style={{ color: "#9CA3AF" }}>{currentStats.cancelled}</div>
           </div>
         </div>
       )}
 
       {/* Filter and Search Bar */}
-      <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", marginBottom: "16px", flexWrap: "wrap" }}>
-        
-        {/* Search Bar */}
-        <div style={{ display: "flex", flex: 1, minWidth: "250px", position: "relative" }}>
-          <span style={{ position: "absolute", left: "12px", top: "9px", color: "#94A3B8" }}>🔍</span>
+      <div className="req-controls">
+        <div className="req-search-wrapper">
+          <span className="req-search-icon">🔍</span>
           <input 
             type="text" 
             placeholder={requestType === "Hotel" ? "Search by Hotel Name, Owner, Email or Tax Code..." : "Search by Name, Username, Email or Tax Code..."}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ 
-              width: "100%", padding: "8px 12px 8px 36px", 
-              borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "14px",
-              outline: "none"
-            }}
+            className="req-search-input"
           />
         </div>
 
-        {/* Filters */}
         <div style={{ display: "flex", gap: "12px" }}>
           <select 
             value={statusFilter} 
             onChange={(e) => handleStatusChange(e.target.value)}
-            style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "14px", backgroundColor: "#fff" }}
+            className="req-filter-select"
           >
             <option value="All">All Statuses</option>
             <option value="Pending">Pending</option>
@@ -385,7 +361,7 @@ function AdminRequestsPage() {
           <select 
             value={pageSize} 
             onChange={(e) => { setPageSize(Number(e.target.value)); setPageIndex(1); }}
-            style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "14px", backgroundColor: "#fff" }}
+            className="req-filter-select"
           >
             <option value={10}>10 per page</option>
             <option value={20}>20 per page</option>
@@ -394,36 +370,36 @@ function AdminRequestsPage() {
         </div>
       </div>
 
-      {error && <div style={{ padding: "12px", backgroundColor: "#FEE2E2", color: "#B91C1C", borderRadius: "8px", marginBottom: "16px" }}>{error}</div>}
+      {error && <div style={{ padding: "16px", backgroundColor: "#FEF2F2", color: "#DC2626", borderRadius: "12px", marginBottom: "20px", border: "1px solid #FCA5A5" }}>{error}</div>}
 
       {loading ? (
-        <div style={{ padding: "40px", textAlign: "center", color: "#64748B" }}>Loading requests...</div>
+        <div style={{ padding: "60px", textAlign: "center", color: "#64748B", fontSize: "16px" }}>Loading requests...</div>
       ) : filteredRequests.length === 0 ? (
-        <div style={{ padding: "40px", textAlign: "center", backgroundColor: "#fff", borderRadius: "12px", border: "1px solid #E2E8F0", color: "#64748B" }}>
+        <div style={{ padding: "60px", textAlign: "center", backgroundColor: "#fff", borderRadius: "16px", border: "1px solid #F1F5F9", color: "#64748B", fontSize: "16px" }}>
           {searchTerm ? "No matching requests found for your search." : `No ${requestType.toLowerCase()} requests found.`}
         </div>
       ) : (
-        <div style={{ backgroundColor: "#fff", borderRadius: "12px", border: "1px solid #E2E8F0", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <div className="req-table-container">
           <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
-              <thead style={{ backgroundColor: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+            <table className="req-table">
+              <thead>
                 <tr>
-                  <th style={{ padding: "16px", color: "#64748B", fontWeight: 600, fontSize: "13px", textTransform: "uppercase" }}>ID</th>
+                  <th>ID</th>
                   {requestType === "Hotel" ? (
                     <>
-                      <th style={{ padding: "16px", color: "#64748B", fontWeight: 600, fontSize: "13px", textTransform: "uppercase" }}>Hotel Name</th>
-                      <th style={{ padding: "16px", color: "#64748B", fontWeight: 600, fontSize: "13px", textTransform: "uppercase" }}>Owner</th>
-                      <th style={{ padding: "16px", color: "#64748B", fontWeight: 600, fontSize: "13px", textTransform: "uppercase" }}>Date</th>
+                      <th>Hotel Name</th>
+                      <th>Owner</th>
+                      <th>Date</th>
                     </>
                   ) : (
                     <>
-                      <th style={{ padding: "16px", color: "#64748B", fontWeight: 600, fontSize: "13px", textTransform: "uppercase" }}>Customer</th>
-                      <th style={{ padding: "16px", color: "#64748B", fontWeight: 600, fontSize: "13px", textTransform: "uppercase" }}>Contact</th>
-                      <th style={{ padding: "16px", color: "#64748B", fontWeight: 600, fontSize: "13px", textTransform: "uppercase" }}>Tax Code</th>
+                      <th>Customer</th>
+                      <th>Contact</th>
+                      <th>Tax Code</th>
                     </>
                   )}
-                  <th style={{ padding: "16px", color: "#64748B", fontWeight: 600, fontSize: "13px", textTransform: "uppercase" }}>Status</th>
-                  <th style={{ padding: "16px", color: "#64748B", fontWeight: 600, fontSize: "13px", textTransform: "uppercase", textAlign: "right" }}>Actions</th>
+                  <th>Status</th>
+                  <th style={{ textAlign: "right" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -435,24 +411,23 @@ function AdminRequestsPage() {
             </table>
           </div>
           
-          {/* Pagination Controls */}
-          <div style={{ padding: "16px", borderTop: "1px solid #E2E8F0", display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#F8FAFC" }}>
+          <div className="req-pagination">
             <div style={{ fontSize: "14px", color: "#64748B" }}>
-              Showing {filteredRequests.length} results on this page {totalCount > 0 ? `(out of ${totalCount} total)` : ""}
+              Showing <strong>{filteredRequests.length}</strong> results on this page {totalCount > 0 ? `(out of ${totalCount} total)` : ""}
             </div>
             <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
               <button 
                 disabled={pageIndex === 1}
                 onClick={() => setPageIndex(p => p - 1)}
-                style={{ padding: "6px 12px", border: "1px solid #CBD5E1", borderRadius: "6px", backgroundColor: pageIndex === 1 ? "#F1F5F9" : "#fff", cursor: pageIndex === 1 ? "not-allowed" : "pointer", color: "#0F172A" }}
+                className="req-page-btn"
               >
                 Previous
               </button>
-              <span style={{ fontSize: "14px", color: "#0F172A", margin: "0 8px" }}>Page {pageIndex} of {totalPages}</span>
+              <span style={{ fontSize: "14px", color: "#0F172A", margin: "0 8px", fontWeight: 600 }}>Page {pageIndex} of {totalPages}</span>
               <button 
                 disabled={pageIndex >= totalPages}
                 onClick={() => setPageIndex(p => p + 1)}
-                style={{ padding: "6px 12px", border: "1px solid #CBD5E1", borderRadius: "6px", backgroundColor: pageIndex >= totalPages ? "#F1F5F9" : "#fff", cursor: pageIndex >= totalPages ? "not-allowed" : "pointer", color: "#0F172A" }}
+                className="req-page-btn"
               >
                 Next
               </button>

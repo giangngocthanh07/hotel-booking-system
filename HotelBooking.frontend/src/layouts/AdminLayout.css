@@ -53,10 +53,15 @@
   color: #0F172A;
 }
 
-/* Active link style */
+/* Active link style - Sunset Theme */
 .admin-sidebar__link.active {
-  background-color: rgba(59, 130, 246, 0.1);
-  color: #2563EB;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(236, 72, 153, 0.1));
+  color: #EC4899;
+  border-right: 3px solid #EC4899;
+  border-radius: 8px 0 0 8px;
+}
+.admin-sidebar__link.active .admin-sidebar__icon {
+  color: #3B82F6;
 }
 
 /* Main Content Area */
