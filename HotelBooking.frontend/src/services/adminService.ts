@@ -72,3 +72,11 @@ export async function rejectUpgrade(id: number): Promise<ApiResponse<boolean>> {
   });
   return response.json();
 }
+
+// === DASHBOARD STATS ===
+import type { AdminDashboardStats } from "../types/adminDashboard.types";
+
+export async function getDashboardOverview(): Promise<ApiResponse<AdminDashboardStats>> {
+  const response = await fetch(`${BASE_URL}/dashboard/stats`, { headers: getHeaders() });
+  return response.json();
+}
