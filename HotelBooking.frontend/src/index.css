@@ -204,3 +204,56 @@ body {
   color: var(--color-blue-dark) !important;
   text-decoration: none !important;
 }
+
+/* ============================================================
+   Home Page — Hero Section
+   ============================================================ */
+
+.home-page {
+  min-height: 100vh;
+}
+
+.hero-section {
+  position: relative;
+  min-height: 480px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1E3A8A 0%, #1E293B 50%, #4C1D6E 100%);
+  overflow: hidden;
+}
+
+/* Subtle animated glow overlay */
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(59, 130, 246, 0.25) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 30%, rgba(236, 72, 153, 0.2) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 60px 24px 80px;
+  width: 100%;
+  max-width: 960px;
+}
+
+.hero-title {
+  font-size: 42px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.3);
+}
+
+.hero-subtitle {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.75);
+  margin-bottom: 32px;
+  font-weight: 400;
+}

@@ -41,21 +41,16 @@ function RegisterForm(props: RegisterFormProps) {
 
       <div className="auth-title-block">
         <h2 className="auth-title">Create your account</h2>
-        <p className="auth-subtitle">Fill in the details below to get started</p>
       </div>
 
       {/* Show error alert */}
       {props.errorMessage !== "" && (
-        <div className="alert alert-error">
-          {props.errorMessage}
-        </div>
+        <div className="alert alert-error">{props.errorMessage}</div>
       )}
 
       {/* Show success alert */}
       {props.successMessage !== "" && (
-        <div className="alert alert-success">
-          {props.successMessage}
-        </div>
+        <div className="alert alert-success">{props.successMessage}</div>
       )}
 
       <form onSubmit={handleSubmit}>
@@ -138,7 +133,9 @@ function RegisterForm(props: RegisterFormProps) {
       {/* Link to the login page */}
       <div className="auth-footer">
         Already have an account?{" "}
-        <a href="/login" className="auth-footer-link">Sign in →</a>
+        <a href="/login" className="auth-footer-link">
+          Sign in →
+        </a>
       </div>
     </div>
   );

@@ -1,0 +1,249 @@
+/* ============================================================
+   SearchBar.css — Hotels.com style search bar
+   ============================================================ */
+
+/* ── Wrapper (positions the dropdown relative to the bar) ── */
+.searchbar-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* ── Main row ── */
+.searchbar-row {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  padding: 8px 8px 8px 0;
+  gap: 0;
+}
+
+/* ── Individual field slot ── */
+.searchbar-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.searchbar-field--location {
+  flex: 1 1 220px;
+}
+
+.searchbar-field--date {
+  flex: 0 0 140px;
+}
+
+.searchbar-field--guests {
+  flex: 1 1 180px;
+  user-select: none;
+}
+
+/* ── Icon ── */
+.searchbar-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* ── Text inputs ── */
+.searchbar-input {
+  border: none;
+  outline: none;
+  font-family: "Roboto", sans-serif;
+  font-size: 15px;
+  color: #1E293B;
+  background: transparent;
+  width: 100%;
+}
+
+.searchbar-input::placeholder {
+  color: #94A3B8;
+}
+
+/* ── Date input: hide native icon, show clean text ── */
+.searchbar-input--date {
+  font-size: 14px;
+  cursor: pointer;
+  min-width: 120px;
+}
+
+.searchbar-date-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.searchbar-date-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94A3B8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ── Arrow between dates ── */
+.searchbar-date-arrow {
+  font-size: 16px;
+  color: #CBD5E1;
+  flex-shrink: 0;
+}
+
+/* ── Vertical divider ── */
+.searchbar-divider {
+  width: 1px;
+  height: 36px;
+  background: #E2E8F0;
+  flex-shrink: 0;
+}
+
+/* ── Guests label + chevron ── */
+.searchbar-guests-label {
+  font-size: 15px;
+  color: #1E293B;
+  flex: 1;
+}
+
+.searchbar-chevron {
+  font-size: 10px;
+  color: #94A3B8;
+}
+
+/* ── Search button ── */
+.searchbar-btn {
+  flex-shrink: 0;
+  margin-left: 8px;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #3B82F6 0%, #EC4899 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-family: "Roboto", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+  letter-spacing: 0.3px;
+}
+
+.searchbar-btn:hover {
+  opacity: 0.9;
+}
+
+.searchbar-btn:active {
+  transform: scale(0.97);
+}
+
+.searchbar-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   Guest / Rooms Dropdown Panel
+   ============================================================ */
+.guest-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 320px;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  padding: 20px 24px;
+  z-index: 100;
+}
+
+.guest-panel__header {
+  font-size: 14px;
+  font-weight: 700;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 16px;
+}
+
+.guest-panel__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.guest-panel__row:last-of-type {
+  border-bottom: none;
+}
+
+.guest-panel__row-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: #1E293B;
+}
+
+.guest-panel__row-sub {
+  font-size: 12px;
+  color: #94A3B8;
+  margin-top: 2px;
+}
+
+/* ── +/- counter ── */
+.guest-counter {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.guest-counter__btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid #CBD5E1;
+  background: #ffffff;
+  font-size: 18px;
+  font-weight: 400;
+  color: #3B82F6;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s, background 0.15s;
+  line-height: 1;
+}
+
+.guest-counter__btn:hover {
+  border-color: #3B82F6;
+  background: #EFF6FF;
+}
+
+.guest-counter__value {
+  min-width: 20px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1E293B;
+}
+
+/* ── Done button ── */
+.guest-panel__done {
+  width: 100%;
+  margin-top: 16px;
+  padding: 11px;
+  background: linear-gradient(135deg, #3B82F6 0%, #EC4899 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-family: "Roboto", sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.guest-panel__done:hover {
+  opacity: 0.9;
+}
