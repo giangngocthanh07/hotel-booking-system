@@ -38,19 +38,19 @@ function AdminRequestsPage() {
       
       if (requestType === "Hotel") {
         const res = await getHotelApprovals(pageIndex, pageSize, status);
-        if (res.statusCode === "Success" && res.data) {
-          setRequests(res.data.items || []);
-          setTotalPages(res.data.totalPages || 1);
-          setTotalCount(res.data.totalCount || 0);
+        if (res.statusCode === "Success" && res.content) {
+          setRequests(res.content.items || []);
+          setTotalPages(res.content.totalPages || 1);
+          setTotalCount(res.content.totalCount || 0);
         } else {
           setError(res.message || "Failed to load requests.");
         }
       } else {
         const res = await getUpgradeRequests(pageIndex, pageSize, status);
-        if (res.statusCode === "Success" && res.data) {
-          setRequests(res.data.items || []);
-          setTotalPages(res.data.totalPages || 1);
-          setTotalCount(res.data.totalCount || 0);
+        if (res.statusCode === "Success" && res.content) {
+          setRequests(res.content.items || []);
+          setTotalPages(res.content.totalPages || 1);
+          setTotalCount(res.content.totalCount || 0);
         } else {
           setError(res.message || "Failed to load requests.");
         }
