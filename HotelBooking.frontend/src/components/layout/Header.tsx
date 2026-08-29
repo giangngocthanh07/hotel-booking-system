@@ -62,7 +62,7 @@ function Header() {
 
       <nav className="site-header__nav">
         <span className="site-header__currency">VND • 🇻🇳</span>
-        {!roles.includes("Owner") && (
+        {!roles.includes("Owner") && !roles.includes("Admin") && (
           <a href="#" className="site-header__link site-header__link--accent">
             List your property
           </a>
@@ -99,6 +99,12 @@ function Header() {
                 {roles.includes("Owner") && (
                   <a href="/owner/dashboard" className="site-header__menu-item">
                     List your properties
+                  </a>
+                )}
+
+                {roles.includes("Admin") && (
+                  <a href="/admin/dashboard" className="site-header__menu-item">
+                    Admin dashboard
                   </a>
                 )}
                 
