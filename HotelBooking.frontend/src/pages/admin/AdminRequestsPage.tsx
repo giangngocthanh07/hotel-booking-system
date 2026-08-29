@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { 
   getHotelApprovals, 
   approveHotel, 
@@ -15,6 +15,7 @@ type RequestType = "Hotel" | "Upgrade";
 function AdminRequestsPage() {
   const [requestType, setRequestType] = useState<RequestType>("Hotel");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [searchTerm, setSearchTerm] = useState("");
   
   // Pagination State
   const [pageIndex, setPageIndex] = useState(1);
@@ -80,12 +81,42 @@ function AdminRequestsPage() {
   function handleTypeChange(newType: RequestType) {
     setRequestType(newType);
     setPageIndex(1);
+    setSearchTerm("");
   }
 
   function handleStatusChange(newStatus: string) {
     setStatusFilter(newStatus);
     setPageIndex(1);
   }
+
+  // Filter requests locally based on searchTerm
+  const filteredRequests = useMemo(() => {
+    if (!searchTerm.trim()) return requests;
+    
+    const lowerSearch = searchTerm.toLowerCase();
+    return requests.filter(req => {
+      // Search by ID
+      if (req.requestId.toString().includes(lowerSearch)) return true;
+      
+      if (requestType === "Hotel") {
+        const hReq = req as HotelApprovalRequest;
+        return (
+          hReq.name.toLowerCase().includes(lowerSearch) ||
+          hReq.ownerFullName.toLowerCase().includes(lowerSearch) ||
+          hReq.ownerEmail.toLowerCase().includes(lowerSearch) ||
+          hReq.taxCode.toLowerCase().includes(lowerSearch)
+        );
+      } else {
+        const uReq = req as UpgradeRequest;
+        return (
+          uReq.fullName.toLowerCase().includes(lowerSearch) ||
+          uReq.userName.toLowerCase().includes(lowerSearch) ||
+          uReq.email.toLowerCase().includes(lowerSearch) ||
+          uReq.taxCode.toLowerCase().includes(lowerSearch)
+        );
+      }
+    });
+  }, [requests, searchTerm, requestType]);
 
   // Actions
   async function handleApprove(id: number) {
@@ -319,37 +350,57 @@ function AdminRequestsPage() {
         </div>
       )}
 
-      {/* Filter Bar */}
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginBottom: "16px" }}>
-        <select 
-          value={statusFilter} 
-          onChange={(e) => handleStatusChange(e.target.value)}
-          style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "14px" }}
-        >
-          <option value="All">All Statuses</option>
-          <option value="Pending">Pending</option>
-          <option value="Approved">Approved</option>
-          <option value="Rejected">Rejected</option>
-          <option value="Cancelled">Cancelled</option>
-        </select>
-        <select 
-          value={pageSize} 
-          onChange={(e) => { setPageSize(Number(e.target.value)); setPageIndex(1); }}
-          style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "14px" }}
-        >
-          <option value={10}>10 per page</option>
-          <option value={20}>20 per page</option>
-          <option value={50}>50 per page</option>
-        </select>
+      {/* Filter and Search Bar */}
+      <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", marginBottom: "16px", flexWrap: "wrap" }}>
+        
+        {/* Search Bar */}
+        <div style={{ display: "flex", flex: 1, minWidth: "250px", position: "relative" }}>
+          <span style={{ position: "absolute", left: "12px", top: "9px", color: "#94A3B8" }}>🔍</span>
+          <input 
+            type="text" 
+            placeholder={requestType === "Hotel" ? "Search by Hotel Name, Owner, Email or Tax Code..." : "Search by Name, Username, Email or Tax Code..."}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ 
+              width: "100%", padding: "8px 12px 8px 36px", 
+              borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "14px",
+              outline: "none"
+            }}
+          />
+        </div>
+
+        {/* Filters */}
+        <div style={{ display: "flex", gap: "12px" }}>
+          <select 
+            value={statusFilter} 
+            onChange={(e) => handleStatusChange(e.target.value)}
+            style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "14px", backgroundColor: "#fff" }}
+          >
+            <option value="All">All Statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="Approved">Approved</option>
+            <option value="Rejected">Rejected</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+          <select 
+            value={pageSize} 
+            onChange={(e) => { setPageSize(Number(e.target.value)); setPageIndex(1); }}
+            style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "14px", backgroundColor: "#fff" }}
+          >
+            <option value={10}>10 per page</option>
+            <option value={20}>20 per page</option>
+            <option value={50}>50 per page</option>
+          </select>
+        </div>
       </div>
 
       {error && <div style={{ padding: "12px", backgroundColor: "#FEE2E2", color: "#B91C1C", borderRadius: "8px", marginBottom: "16px" }}>{error}</div>}
 
       {loading ? (
         <div style={{ padding: "40px", textAlign: "center", color: "#64748B" }}>Loading requests...</div>
-      ) : requests.length === 0 ? (
+      ) : filteredRequests.length === 0 ? (
         <div style={{ padding: "40px", textAlign: "center", backgroundColor: "#fff", borderRadius: "12px", border: "1px solid #E2E8F0", color: "#64748B" }}>
-          No {requestType.toLowerCase()} requests found.
+          {searchTerm ? "No matching requests found for your search." : `No ${requestType.toLowerCase()} requests found.`}
         </div>
       ) : (
         <div style={{ backgroundColor: "#fff", borderRadius: "12px", border: "1px solid #E2E8F0", overflow: "hidden", display: "flex", flexDirection: "column" }}>
@@ -377,8 +428,8 @@ function AdminRequestsPage() {
               </thead>
               <tbody>
                 {requestType === "Hotel" 
-                  ? (requests as HotelApprovalRequest[]).map(renderHotelRow)
-                  : (requests as UpgradeRequest[]).map(renderUpgradeRow)
+                  ? (filteredRequests as HotelApprovalRequest[]).map(renderHotelRow)
+                  : (filteredRequests as UpgradeRequest[]).map(renderUpgradeRow)
                 }
               </tbody>
             </table>
@@ -387,7 +438,7 @@ function AdminRequestsPage() {
           {/* Pagination Controls */}
           <div style={{ padding: "16px", borderTop: "1px solid #E2E8F0", display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#F8FAFC" }}>
             <div style={{ fontSize: "14px", color: "#64748B" }}>
-              Showing {requests.length} of {totalCount} results
+              Showing {filteredRequests.length} results on this page {totalCount > 0 ? `(out of ${totalCount} total)` : ""}
             </div>
             <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
               <button 
