@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import {
   AUTH_CHANGED_EVENT,
   getStoredFullName,
+  getStoredRoles,
   isLoggedIn,
   logout,
 } from "../../services/authService";
@@ -14,6 +15,7 @@ import "./Header.css";
 
 function Header() {
   const [fullName, setFullName] = useState<string | null>(getStoredFullName());
+  const [roles, setRoles] = useState<string[]>(getStoredRoles());
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -22,6 +24,7 @@ function Header() {
   useEffect(() => {
     function refreshSession() {
       setFullName(getStoredFullName());
+      setRoles(getStoredRoles());
     }
     window.addEventListener(AUTH_CHANGED_EVENT, refreshSession);
     window.addEventListener("storage", refreshSession);
@@ -59,9 +62,11 @@ function Header() {
 
       <nav className="site-header__nav">
         <span className="site-header__currency">VND • 🇻🇳</span>
-        <a href="#" className="site-header__link site-header__link--accent">
-          List your property
-        </a>
+        {!roles.includes("Owner") && (
+          <a href="#" className="site-header__link site-header__link--accent">
+            List your property
+          </a>
+        )}
         <a href="#" className="site-header__link">
           Support
         </a>
@@ -85,6 +90,18 @@ function Header() {
             {isMenuOpen && (
               <div className="site-header__menu">
                 <div className="site-header__menu-name">{fullName}</div>
+                <div className="site-header__menu-divider"></div>
+                
+                <a href="/profile" className="site-header__menu-item">
+                  User profile
+                </a>
+                
+                {roles.includes("Owner") && (
+                  <a href="/owner/dashboard" className="site-header__menu-item">
+                    List your properties
+                  </a>
+                )}
+                
                 <button
                   type="button"
                   className="site-header__menu-item"

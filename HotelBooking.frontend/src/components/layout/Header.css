@@ -140,3 +140,14 @@
 .site-header__menu-item:hover {
   background: #eff6ff;
 }
+
+.site-header__menu-divider {
+  height: 1px;
+  background-color: #E2E8F0;
+  margin: 4px 0;
+}
+
+a.site-header__menu-item {
+  display: block;
+  text-decoration: none;
+}

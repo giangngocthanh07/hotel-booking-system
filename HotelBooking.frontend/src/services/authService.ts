@@ -60,6 +60,12 @@ export function getStoredFullName(): string | null {
   return localStorage.getItem("fullName");
 }
 
+export function getStoredRoles(): string[] {
+  const roles = localStorage.getItem("roles");
+  if (!roles) return [];
+  return roles.split(",");
+}
+
 export function isLoggedIn(): boolean {
   return localStorage.getItem("accessToken") !== null;
 }
