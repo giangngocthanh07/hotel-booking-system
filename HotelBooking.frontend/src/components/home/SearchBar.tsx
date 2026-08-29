@@ -3,14 +3,15 @@
 // Uses TWO MUI DateCalendar side-by-side to mimic a date range picker (free tier).
 
 import { useState } from "react";
-import type { HotelSearchRequest } from "../../types/hotel.types";
+import type { HotelSearchRequest, Province } from "../../types/hotel.types";
+import ProvinceAutocomplete from "./ProvinceAutocomplete";
 import "./SearchBar.css";
 
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
-import { PickersDay } from "@mui/x-date-pickers/PickersDay";
-import type { PickersDayProps } from "@mui/x-date-pickers/PickersDay";
+import { PickerDay } from "@mui/x-date-pickers/PickerDay";
+import type { PickerDayProps } from "@mui/x-date-pickers/PickerDay";
 import dayjs from "dayjs";
 import type { Dayjs } from "dayjs";
 
@@ -24,6 +25,13 @@ interface SearchBarProps {
   onRoomsChange: (value: number) => void;
   onSearch: () => void;
   isLoading: boolean;
+  provinces: Province[];
+  selectedProvince: Province | null;
+  onProvinceSelect: (province: Province) => void;
+  provinceLoading: boolean;
+  provinceLoadError?: string;
+  onProvinceRetry: () => void;
+  cityValidationError?: string;
 }
 
 function SearchBar(props: SearchBarProps) {
@@ -36,8 +44,12 @@ function SearchBar(props: SearchBarProps) {
   // Month shown on left calendar (right is always +1)
   const [leftMonth, setLeftMonth] = useState<Dayjs>(dayjs().startOf("month"));
 
-  const checkIn = props.searchForm.checkIn ? dayjs(props.searchForm.checkIn) : null;
-  const checkOut = props.searchForm.checkOut ? dayjs(props.searchForm.checkOut) : null;
+  const checkIn = props.searchForm.checkIn
+    ? dayjs(props.searchForm.checkIn)
+    : null;
+  const checkOut = props.searchForm.checkOut
+    ? dayjs(props.searchForm.checkOut)
+    : null;
 
   // Date trigger label
   function buildDateLabel(): string {
@@ -88,7 +100,7 @@ function SearchBar(props: SearchBarProps) {
   }
 
   // Custom day renderer: adds range-highlight classes
-  function CustomDay(dayProps: PickersDayProps<Dayjs>) {
+  function CustomDay(dayProps: PickerDayProps) {
     const { day, outsideCurrentMonth, ...rest } = dayProps;
     const inRange = !outsideCurrentMonth && isInRange(day);
     const start = !outsideCurrentMonth && isStart(day);
@@ -100,11 +112,13 @@ function SearchBar(props: SearchBarProps) {
     else if (inRange) extraClass = "cal-day--in-range";
 
     return (
-      <PickersDay
+      <PickerDay
         {...rest}
         day={day}
         outsideCurrentMonth={outsideCurrentMonth}
-        onClick={() => { if (!outsideCurrentMonth) handleDayClick(day); }}
+        onClick={() => {
+          if (!outsideCurrentMonth) handleDayClick(day);
+        }}
         className={`${rest.className ?? ""} ${extraClass}`}
         selected={false}
         disableRipple
@@ -113,7 +127,13 @@ function SearchBar(props: SearchBarProps) {
   }
 
   // +/- counter helper
-  function changeCount(current: number, delta: number, min: number, max: number, onChange: (v: number) => void) {
+  function changeCount(
+    current: number,
+    delta: number,
+    min: number,
+    max: number,
+    onChange: (v: number) => void,
+  ) {
     const next = current + delta;
     if (next < min || next > max) return;
     onChange(next);
@@ -124,20 +144,28 @@ function SearchBar(props: SearchBarProps) {
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <div className="searchbar-wrapper">
-
         {/* ── Main search row ── */}
         <div className="searchbar-row">
-
           {/* WHERE TO */}
-          <div className="searchbar-field searchbar-field--location">
+          <div
+            className={`searchbar-field searchbar-field--location${props.cityValidationError ? " searchbar-field--invalid" : ""}`}
+          >
             <span className="searchbar-icon">📍</span>
-            <input
-              className="searchbar-input"
-              type="text"
-              placeholder="Where to?"
+            <ProvinceAutocomplete
               value={props.searchForm.cityName}
-              onChange={(e) => props.onCityChange(e.target.value)}
+              provinces={props.provinces}
+              selectedProvince={props.selectedProvince}
+              onInputChange={props.onCityChange}
+              onSelect={props.onProvinceSelect}
+              isLoading={props.provinceLoading}
+              error={props.provinceLoadError}
+              onRetry={props.onProvinceRetry}
             />
+            {props.cityValidationError && (
+              <span className="searchbar-location-error" role="alert">
+                {props.cityValidationError}
+              </span>
+            )}
           </div>
 
           <div className="searchbar-divider" />
@@ -145,10 +173,15 @@ function SearchBar(props: SearchBarProps) {
           {/* DATE TRIGGER */}
           <div
             className="searchbar-field searchbar-field--date-trigger"
-            onClick={() => { setIsCalendarOpen(!isCalendarOpen); setIsGuestPanelOpen(false); }}
+            onClick={() => {
+              setIsCalendarOpen(!isCalendarOpen);
+              setIsGuestPanelOpen(false);
+            }}
           >
             <span className="searchbar-icon">📅</span>
-            <span className="searchbar-date-label-text">{buildDateLabel()}</span>
+            <span className="searchbar-date-label-text">
+              {buildDateLabel()}
+            </span>
           </div>
 
           <div className="searchbar-divider" />
@@ -156,15 +189,24 @@ function SearchBar(props: SearchBarProps) {
           {/* GUESTS TRIGGER */}
           <div
             className="searchbar-field searchbar-field--guests"
-            onClick={() => { setIsGuestPanelOpen(!isGuestPanelOpen); setIsCalendarOpen(false); }}
+            onClick={() => {
+              setIsGuestPanelOpen(!isGuestPanelOpen);
+              setIsCalendarOpen(false);
+            }}
           >
             <span className="searchbar-icon">👤</span>
             <span className="searchbar-guests-label">{buildGuestLabel()}</span>
-            <span className="searchbar-chevron">{isGuestPanelOpen ? "▲" : "▼"}</span>
+            <span className="searchbar-chevron">
+              {isGuestPanelOpen ? "▲" : "▼"}
+            </span>
           </div>
 
           {/* SEARCH BUTTON */}
-          <button className="searchbar-btn" onClick={props.onSearch} disabled={props.isLoading}>
+          <button
+            className="searchbar-btn"
+            onClick={props.onSearch}
+            disabled={props.isLoading}
+          >
             {props.isLoading ? "..." : "Search"}
           </button>
         </div>
@@ -173,13 +215,15 @@ function SearchBar(props: SearchBarProps) {
         {isCalendarOpen && (
           <div className="calendar-panel">
             <div className="calendar-panel__hint">
-              {selecting === "start" ? "Select check-in date" : "Select check-out date"}
+              {selecting === "start"
+                ? "Select check-in date"
+                : "Select check-out date"}
             </div>
             <div className="calendar-panel__months">
-
-              {/* Left month */}
+              {/* Left month — key forces remount so referenceDate actually applies on navigation */}
               <DateCalendar
-                value={checkIn}
+                key={`left-${leftMonth.format("YYYY-MM")}`}
+                value={null}
                 onChange={() => {}}
                 referenceDate={leftMonth}
                 onMonthChange={(m) => setLeftMonth(m.startOf("month"))}
@@ -190,10 +234,13 @@ function SearchBar(props: SearchBarProps) {
 
               {/* Right month (always leftMonth + 1, navigation locked) */}
               <DateCalendar
-                value={checkOut}
+                key={`right-${rightMonth.format("YYYY-MM")}`}
+                value={null}
                 onChange={() => {}}
                 referenceDate={rightMonth}
-                onMonthChange={(m) => setLeftMonth(m.subtract(1, "month").startOf("month"))}
+                onMonthChange={(m) =>
+                  setLeftMonth(m.subtract(1, "month").startOf("month"))
+                }
                 disablePast
                 slots={{ day: CustomDay }}
                 sx={calendarSx}
@@ -208,11 +255,41 @@ function SearchBar(props: SearchBarProps) {
             <div className="guest-panel__header">Guests &amp; Rooms</div>
 
             <div className="guest-panel__row">
-              <div><div className="guest-panel__row-title">Adults</div></div>
+              <div>
+                <div className="guest-panel__row-title">Adults</div>
+              </div>
               <div className="guest-counter">
-                <button className="guest-counter__btn" onClick={() => changeCount(props.searchForm.adults, -1, 1, 30, props.onAdultsChange)}>−</button>
-                <span className="guest-counter__value">{props.searchForm.adults}</span>
-                <button className="guest-counter__btn" onClick={() => changeCount(props.searchForm.adults, +1, 1, 30, props.onAdultsChange)}>+</button>
+                <button
+                  className="guest-counter__btn"
+                  onClick={() =>
+                    changeCount(
+                      props.searchForm.adults,
+                      -1,
+                      1,
+                      30,
+                      props.onAdultsChange,
+                    )
+                  }
+                >
+                  −
+                </button>
+                <span className="guest-counter__value">
+                  {props.searchForm.adults}
+                </span>
+                <button
+                  className="guest-counter__btn"
+                  onClick={() =>
+                    changeCount(
+                      props.searchForm.adults,
+                      +1,
+                      1,
+                      30,
+                      props.onAdultsChange,
+                    )
+                  }
+                >
+                  +
+                </button>
               </div>
             </div>
 
@@ -222,25 +299,87 @@ function SearchBar(props: SearchBarProps) {
                 <div className="guest-panel__row-sub">Ages 0 to 17</div>
               </div>
               <div className="guest-counter">
-                <button className="guest-counter__btn" onClick={() => changeCount(props.searchForm.children, -1, 0, 10, props.onChildrenChange)}>−</button>
-                <span className="guest-counter__value">{props.searchForm.children}</span>
-                <button className="guest-counter__btn" onClick={() => changeCount(props.searchForm.children, +1, 0, 10, props.onChildrenChange)}>+</button>
+                <button
+                  className="guest-counter__btn"
+                  onClick={() =>
+                    changeCount(
+                      props.searchForm.children,
+                      -1,
+                      0,
+                      10,
+                      props.onChildrenChange,
+                    )
+                  }
+                >
+                  −
+                </button>
+                <span className="guest-counter__value">
+                  {props.searchForm.children}
+                </span>
+                <button
+                  className="guest-counter__btn"
+                  onClick={() =>
+                    changeCount(
+                      props.searchForm.children,
+                      +1,
+                      0,
+                      10,
+                      props.onChildrenChange,
+                    )
+                  }
+                >
+                  +
+                </button>
               </div>
             </div>
 
             <div className="guest-panel__row">
-              <div><div className="guest-panel__row-title">Rooms</div></div>
+              <div>
+                <div className="guest-panel__row-title">Rooms</div>
+              </div>
               <div className="guest-counter">
-                <button className="guest-counter__btn" onClick={() => changeCount(props.searchForm.rooms, -1, 1, 9, props.onRoomsChange)}>−</button>
-                <span className="guest-counter__value">{props.searchForm.rooms}</span>
-                <button className="guest-counter__btn" onClick={() => changeCount(props.searchForm.rooms, +1, 1, 9, props.onRoomsChange)}>+</button>
+                <button
+                  className="guest-counter__btn"
+                  onClick={() =>
+                    changeCount(
+                      props.searchForm.rooms,
+                      -1,
+                      1,
+                      9,
+                      props.onRoomsChange,
+                    )
+                  }
+                >
+                  −
+                </button>
+                <span className="guest-counter__value">
+                  {props.searchForm.rooms}
+                </span>
+                <button
+                  className="guest-counter__btn"
+                  onClick={() =>
+                    changeCount(
+                      props.searchForm.rooms,
+                      +1,
+                      1,
+                      9,
+                      props.onRoomsChange,
+                    )
+                  }
+                >
+                  +
+                </button>
               </div>
             </div>
 
-            <button className="guest-panel__done" onClick={() => setIsGuestPanelOpen(false)}>Done</button>
+            <button
+              className="guest-panel__done"
+              onClick={() => setIsGuestPanelOpen(false)}
+            >
+              Done
+            </button>
           </div>
         )}
-
       </div>
     </LocalizationProvider>
   );
@@ -272,7 +411,7 @@ const calendarSx = {
     color: "#1E3A8A !important",
   },
   // Remove default selected style so our custom overrides work
-  "& .MuiPickersDay-root.Mui-selected": {
+  "& .MuiPickerDay-root.Mui-selected": {
     backgroundColor: "transparent",
   },
 };

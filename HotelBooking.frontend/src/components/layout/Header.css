@@ -1,0 +1,142 @@
+/* ============================================================
+   Header.css — Hotels.com style top navigation bar
+   ============================================================ */
+
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  padding: 0 32px;
+  background: #14213d;
+  font-family: "Roboto", sans-serif;
+  position: relative;
+  z-index: 10;
+}
+
+.site-header__logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.site-header__logo-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #3b82f6 0%, #ec4899 100%);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.site-header__nav {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.site-header__currency {
+  font-size: 14px;
+  color: #e2e8f0;
+  white-space: nowrap;
+}
+
+.site-header__link {
+  font-size: 14px;
+  font-weight: 500;
+  color: #e2e8f0;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.site-header__link:hover {
+  color: #ffffff;
+}
+
+.site-header__link--accent {
+  color: #f472b6;
+  font-weight: 700;
+}
+
+.site-header__link--accent:hover {
+  color: #f9a8d4;
+}
+
+.site-header__link--signin {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: 1.5px solid #e2e8f0;
+  font-weight: 700;
+}
+
+.site-header__icon-link {
+  font-size: 16px;
+  text-decoration: none;
+  line-height: 1;
+}
+
+/* ── Avatar (shown when logged in) ── */
+.site-header__avatar-wrapper {
+  position: relative;
+}
+
+.site-header__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #3b82f6 0%, #ec4899 100%);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.site-header__menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 180px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  padding: 8px;
+  z-index: 20;
+}
+
+.site-header__menu-name {
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 4px;
+}
+
+.site-header__menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1e293b;
+  cursor: pointer;
+}
+
+.site-header__menu-item:hover {
+  background: #eff6ff;
+}

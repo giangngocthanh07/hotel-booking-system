@@ -38,10 +38,10 @@ export interface RegisterResponseData {
 }
 
 // Generic wrapper for ALL responses from the backend.
-// T is the inner data type (e.g. LoginResponseData, RegisterResponseData)
+// Matches HotelBooking.application/DTOs/Base/ApiResponse.cs — { statusCode, message, content }.
+// statusCode is the string "Success" on success (see StatusCodeResponse.cs), anything else means failure.
 export interface ApiResponse<T> {
-  data: T;
-  isSuccess: boolean;
+  content: T;
   message: string;
-  statusCode: number;
+  statusCode: string;
 }

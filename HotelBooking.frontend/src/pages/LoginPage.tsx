@@ -5,7 +5,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import LoginForm from "../components/auth/LoginForm";
-import { loginUser } from "../services/authService";
+import {
+  loginUser,
+  isApiSuccess,
+  AUTH_CHANGED_EVENT,
+} from "../services/authService";
 import type { LoginRequest } from "../types/auth.types";
 
 function LoginPage() {
@@ -52,20 +56,23 @@ function LoginPage() {
     try {
       const response = await loginUser(request);
 
-      if (response.isSuccess) {
+      if (isApiSuccess(response)) {
         // Save token and user info to localStorage
-        localStorage.setItem("accessToken", response.data.accessToken);
-        localStorage.setItem("fullName", response.data.fullName);
+        localStorage.setItem("accessToken", response.content.accessToken);
+        localStorage.setItem("fullName", response.content.fullName);
 
         // Save roles list using a for loop (no map/join)
         let rolesString = "";
-        for (let i = 0; i < response.data.roles.length; i++) {
+        for (let i = 0; i < response.content.roles.length; i++) {
           if (i > 0) {
             rolesString = rolesString + ",";
           }
-          rolesString = rolesString + response.data.roles[i];
+          rolesString = rolesString + response.content.roles[i];
         }
         localStorage.setItem("roles", rolesString);
+
+        // Let the Header (and any other listener) know the session changed
+        window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
 
         // Redirect to home page
         navigate("/");
@@ -73,7 +80,9 @@ function LoginPage() {
         setErrorMessage(response.message || "Login failed. Please try again.");
       }
     } catch {
-      setErrorMessage("Connection error. Please check your network and try again.");
+      setErrorMessage(
+        "Connection error. Please check your network and try again.",
+      );
     } finally {
       setIsLoading(false);
     }

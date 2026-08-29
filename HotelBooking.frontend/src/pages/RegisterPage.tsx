@@ -5,7 +5,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import RegisterForm from "../components/auth/RegisterForm";
-import { registerUser } from "../services/authService";
+import { registerUser, isApiSuccess } from "../services/authService";
 import type { RegisterRequest } from "../types/auth.types";
 
 function RegisterPage() {
@@ -77,17 +77,23 @@ function RegisterPage() {
     try {
       const response = await registerUser(request);
 
-      if (response.isSuccess) {
-        setSuccessMessage("Account created successfully! Redirecting to sign in...");
+      if (isApiSuccess(response)) {
+        setSuccessMessage(
+          "Account created successfully! Redirecting to sign in...",
+        );
         // Wait 2 seconds then redirect to login page
         setTimeout(() => {
           navigate("/login");
         }, 2000);
       } else {
-        setErrorMessage(response.message || "Registration failed. Please try again.");
+        setErrorMessage(
+          response.message || "Registration failed. Please try again.",
+        );
       }
     } catch {
-      setErrorMessage("Connection error. Please check your network and try again.");
+      setErrorMessage(
+        "Connection error. Please check your network and try again.",
+      );
     } finally {
       setIsLoading(false);
     }

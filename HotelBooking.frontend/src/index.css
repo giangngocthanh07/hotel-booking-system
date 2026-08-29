@@ -1,30 +1,37 @@
 /* ===== CSS Variables - Sunset Theme (Xanh Duong + Hong + Trang) ===== */
 :root {
-  --color-blue: #3B82F6;
-  --color-blue-dark: #2563EB;
-  --color-blue-light: #EFF6FF;
-  --color-pink: #EC4899;
-  --color-pink-light: #FDF2F8;
-  --color-white: #FFFFFF;
-  --color-text: #1E293B;
-  --color-text-muted: #64748B;
-  --color-error: #EF4444;
-  --color-success: #22C55E;
-  --color-border: #E2E8F0;
-  --bg-gradient: linear-gradient(135deg, #EFF6FF 0%, #FDF2F8 100%);
+  --color-blue: #3b82f6;
+  --color-blue-dark: #2563eb;
+  --color-blue-light: #eff6ff;
+  --color-pink: #ec4899;
+  --color-pink-light: #fdf2f8;
+  --color-white: #ffffff;
+  --color-text: #1e293b;
+  --color-text-muted: #64748b;
+  --color-error: #ef4444;
+  --color-success: #22c55e;
+  --color-border: #e2e8f0;
+  --bg-gradient: linear-gradient(135deg, #eff6ff 0%, #fdf2f8 100%);
   --border-radius: 12px;
   --shadow-card: 0 4px 24px rgba(59, 130, 246, 0.1);
 }
 
 /* ===== Reset ===== */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
 body {
-  font-family: "Roboto", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family:
+    "Roboto",
+    "Segoe UI",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
   background: var(--bg-gradient);
   min-height: 100vh;
   color: var(--color-text);
@@ -58,7 +65,11 @@ body {
 .auth-logo h1 {
   font-size: 28px;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--color-blue) 0%, var(--color-pink) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-blue) 0%,
+    var(--color-pink) 100%
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -78,7 +89,11 @@ body {
   font-weight: 500;
   letter-spacing: 0.4px;
   color: var(--color-blue-dark);
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(59, 130, 246, 0.1) 0%,
+    rgba(236, 72, 153, 0.1) 100%
+  );
   border: 1px solid rgba(59, 130, 246, 0.25);
   border-radius: 20px;
 }
@@ -112,7 +127,9 @@ body {
   font-size: 15px;
   color: var(--color-text);
   background: var(--color-white);
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
   outline: none;
 }
 
@@ -125,14 +142,20 @@ body {
 .btn-primary {
   width: 100%;
   padding: 13px;
-  background: linear-gradient(135deg, var(--color-blue) 0%, var(--color-pink) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-blue) 0%,
+    var(--color-pink) 100%
+  );
   color: var(--color-white);
   border: none;
   border-radius: 8px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.1s;
+  transition:
+    opacity 0.2s,
+    transform 0.1s;
   margin-top: 8px;
 }
 
@@ -158,15 +181,15 @@ body {
 }
 
 .alert-error {
-  background: #FEF2F2;
-  color: #B91C1C;
-  border: 1px solid #FECACA;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
 }
 
 .alert-success {
-  background: #F0FDF4;
-  color: #15803D;
-  border: 1px solid #BBF7D0;
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
 }
 
 /* ===== Footer link ===== */
@@ -196,7 +219,9 @@ body {
   font-weight: 600 !important;
   padding: 3px 10px;
   border-radius: 6px;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .auth-footer-link:hover {
@@ -219,8 +244,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1E3A8A 0%, #1E293B 50%, #4C1D6E 100%);
-  overflow: hidden;
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e293b 50%, #4c1d6e 100%);
 }
 
 /* Subtle animated glow overlay */
@@ -228,8 +252,16 @@ body {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse at 20% 50%, rgba(59, 130, 246, 0.25) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 30%, rgba(236, 72, 153, 0.2) 0%, transparent 55%);
+    radial-gradient(
+      ellipse at 20% 50%,
+      rgba(59, 130, 246, 0.25) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse at 80% 30%,
+      rgba(236, 72, 153, 0.2) 0%,
+      transparent 55%
+    );
   pointer-events: none;
 }
 
@@ -248,7 +280,7 @@ body {
   color: #ffffff;
   margin-bottom: 12px;
   letter-spacing: -0.5px;
-  text-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
 }
 
 .hero-subtitle {
