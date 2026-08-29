@@ -1,5 +1,3 @@
-// admin.types.ts
-
 export interface PagedResponse<T> {
   items: T[];
   totalCount: number;
@@ -51,4 +49,23 @@ export interface UpgradeRequest extends BaseRequest {
   phoneNumber: string;
   address: string;
   taxCode: string;
+}
+
+export interface RequestTypeStats {
+  total: number;
+  pending: number;
+  approved: number;
+  rejected: number;
+  cancelled: number;
+  today: number;
+  thisWeek: number;
+  thisMonth: number;
+}
+
+export interface RequestStats {
+  overall: RequestTypeStats;
+  upgradeRequest: RequestTypeStats;
+  hotelApproval?: RequestTypeStats;
+  totalPending: number;
+  totalToday: number;
 }

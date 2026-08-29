@@ -1,4 +1,4 @@
-import type { HotelApprovalRequest, UpgradeRequest, PagedResponse } from "../types/admin.types";
+import type { HotelApprovalRequest, UpgradeRequest, PagedResponse, RequestStats } from "../types/admin.types";
 import type { ApiResponse } from "../types/auth.types";
 import { getAuthToken } from "./authService";
 
@@ -10,6 +10,13 @@ function getHeaders() {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
+}
+
+// === REQUEST STATS ===
+
+export async function getRequestStats(): Promise<ApiResponse<RequestStats>> {
+  const response = await fetch(`${BASE_URL}/admin/requests/stats`, { headers: getHeaders() });
+  return response.json();
 }
 
 // === HOTEL APPROVALS ===

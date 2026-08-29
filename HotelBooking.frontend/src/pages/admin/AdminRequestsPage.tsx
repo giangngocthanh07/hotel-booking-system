@@ -5,15 +5,16 @@ import {
   rejectHotel,
   getUpgradeRequests,
   approveUpgrade,
-  rejectUpgrade 
+  rejectUpgrade,
+  getRequestStats
 } from "../../services/adminService";
-import type { HotelApprovalRequest, UpgradeRequest, BaseRequest } from "../../types/admin.types";
+import type { HotelApprovalRequest, UpgradeRequest, BaseRequest, RequestStats } from "../../types/admin.types";
 
 type RequestType = "Hotel" | "Upgrade";
 
 function AdminRequestsPage() {
   const [requestType, setRequestType] = useState<RequestType>("Hotel");
-  const [statusFilter, setStatusFilter] = useState("Pending");
+  const [statusFilter, setStatusFilter] = useState("All");
   
   // Pagination State
   const [pageIndex, setPageIndex] = useState(1);
@@ -23,6 +24,7 @@ function AdminRequestsPage() {
 
   // Data State
   const [requests, setRequests] = useState<(HotelApprovalRequest | UpgradeRequest)[]>([]);
+  const [stats, setStats] = useState<RequestStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -30,12 +32,18 @@ function AdminRequestsPage() {
   const [selectedRequest, setSelectedRequest] = useState<HotelApprovalRequest | UpgradeRequest | null>(null);
 
   // Fetch Data
-  async function fetchRequests() {
+  async function fetchData() {
     setLoading(true);
     setError("");
     try {
+      // 1. Fetch Stats
+      const statsRes = await getRequestStats();
+      if (statsRes.statusCode === "Success" && statsRes.content) {
+        setStats(statsRes.content);
+      }
+
+      // 2. Fetch List
       const status = statusFilter === "All" ? undefined : statusFilter;
-      
       if (requestType === "Hotel") {
         const res = await getHotelApprovals(pageIndex, pageSize, status);
         if (res.statusCode === "Success" && res.content) {
@@ -64,7 +72,7 @@ function AdminRequestsPage() {
 
   // Refetch when filters or pagination change
   useEffect(() => {
-    fetchRequests();
+    fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requestType, statusFilter, pageIndex, pageSize]);
 
@@ -87,7 +95,7 @@ function AdminRequestsPage() {
       if (res.statusCode === "Success") {
         alert("Request approved successfully!");
         if (selectedRequest?.requestId === id) setSelectedRequest(null);
-        fetchRequests();
+        fetchData();
       } else {
         alert("Failed: " + res.message);
       }
@@ -103,7 +111,7 @@ function AdminRequestsPage() {
       if (res.statusCode === "Success") {
         alert("Request rejected successfully!");
         if (selectedRequest?.requestId === id) setSelectedRequest(null);
-        fetchRequests();
+        fetchData();
       } else {
         alert("Failed: " + res.message);
       }
@@ -152,15 +160,14 @@ function AdminRequestsPage() {
   }
 
   function renderStatusBadge(status: string) {
+    let bg = "#F3F4F6", color = "#374151";
+    if (status === "Approved") { bg = "#D1FAE5"; color = "#065F46"; }
+    else if (status === "Rejected") { bg = "#FEE2E2"; color = "#991B1B"; }
+    else if (status === "Pending") { bg = "#FEF3C7"; color = "#92400E"; }
+    else if (status === "Cancelled") { bg = "#E5E7EB"; color = "#4B5563"; }
+    
     return (
-      <span style={{ 
-        padding: "4px 8px", 
-        borderRadius: "9999px", 
-        fontSize: "12px", 
-        fontWeight: 600,
-        backgroundColor: status === "Approved" ? "#D1FAE5" : status === "Rejected" ? "#FEE2E2" : "#FEF3C7",
-        color: status === "Approved" ? "#065F46" : status === "Rejected" ? "#991B1B" : "#92400E"
-      }}>
+      <span style={{ padding: "4px 8px", borderRadius: "9999px", fontSize: "12px", fontWeight: 600, backgroundColor: bg, color }}>
         {status}
       </span>
     );
@@ -254,6 +261,8 @@ function AdminRequestsPage() {
     );
   }
 
+  const currentStats = requestType === "Hotel" ? stats?.hotelApproval : stats?.upgradeRequest;
+
   return (
     <div className="admin-page">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
@@ -282,28 +291,56 @@ function AdminRequestsPage() {
             </button>
           </div>
         </div>
+      </div>
 
-        <div style={{ display: "flex", gap: "12px" }}>
-          <select 
-            value={statusFilter} 
-            onChange={(e) => handleStatusChange(e.target.value)}
-            style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "14px" }}
-          >
-            <option value="All">All Statuses</option>
-            <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
-            <option value="Rejected">Rejected</option>
-          </select>
-          <select 
-            value={pageSize} 
-            onChange={(e) => { setPageSize(Number(e.target.value)); setPageIndex(1); }}
-            style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "14px" }}
-          >
-            <option value={10}>10 per page</option>
-            <option value={20}>20 per page</option>
-            <option value={50}>50 per page</option>
-          </select>
+      {/* Stats Cards */}
+      {currentStats && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "16px", marginBottom: "24px" }}>
+          <div style={{ backgroundColor: "#fff", padding: "16px", borderRadius: "12px", border: "1px solid #E2E8F0", borderLeft: "4px solid #3B82F6" }}>
+            <div style={{ fontSize: "13px", color: "#64748B", fontWeight: 600, textTransform: "uppercase" }}>Total</div>
+            <div style={{ fontSize: "24px", fontWeight: 700, color: "#0F172A" }}>{currentStats.total}</div>
+          </div>
+          <div style={{ backgroundColor: "#fff", padding: "16px", borderRadius: "12px", border: "1px solid #E2E8F0", borderLeft: "4px solid #F59E0B" }}>
+            <div style={{ fontSize: "13px", color: "#64748B", fontWeight: 600, textTransform: "uppercase" }}>Pending</div>
+            <div style={{ fontSize: "24px", fontWeight: 700, color: "#0F172A" }}>{currentStats.pending}</div>
+          </div>
+          <div style={{ backgroundColor: "#fff", padding: "16px", borderRadius: "12px", border: "1px solid #E2E8F0", borderLeft: "4px solid #10B981" }}>
+            <div style={{ fontSize: "13px", color: "#64748B", fontWeight: 600, textTransform: "uppercase" }}>Approved</div>
+            <div style={{ fontSize: "24px", fontWeight: 700, color: "#0F172A" }}>{currentStats.approved}</div>
+          </div>
+          <div style={{ backgroundColor: "#fff", padding: "16px", borderRadius: "12px", border: "1px solid #E2E8F0", borderLeft: "4px solid #EF4444" }}>
+            <div style={{ fontSize: "13px", color: "#64748B", fontWeight: 600, textTransform: "uppercase" }}>Rejected</div>
+            <div style={{ fontSize: "24px", fontWeight: 700, color: "#0F172A" }}>{currentStats.rejected}</div>
+          </div>
+          <div style={{ backgroundColor: "#fff", padding: "16px", borderRadius: "12px", border: "1px solid #E2E8F0", borderLeft: "4px solid #9CA3AF" }}>
+            <div style={{ fontSize: "13px", color: "#64748B", fontWeight: 600, textTransform: "uppercase" }}>Cancelled</div>
+            <div style={{ fontSize: "24px", fontWeight: 700, color: "#0F172A" }}>{currentStats.cancelled}</div>
+          </div>
         </div>
+      )}
+
+      {/* Filter Bar */}
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginBottom: "16px" }}>
+        <select 
+          value={statusFilter} 
+          onChange={(e) => handleStatusChange(e.target.value)}
+          style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "14px" }}
+        >
+          <option value="All">All Statuses</option>
+          <option value="Pending">Pending</option>
+          <option value="Approved">Approved</option>
+          <option value="Rejected">Rejected</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+        <select 
+          value={pageSize} 
+          onChange={(e) => { setPageSize(Number(e.target.value)); setPageIndex(1); }}
+          style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "14px" }}
+        >
+          <option value={10}>10 per page</option>
+          <option value={20}>20 per page</option>
+          <option value={50}>50 per page</option>
+        </select>
       </div>
 
       {error && <div style={{ padding: "12px", backgroundColor: "#FEE2E2", color: "#B91C1C", borderRadius: "8px", marginBottom: "16px" }}>{error}</div>}
