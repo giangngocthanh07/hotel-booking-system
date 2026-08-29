@@ -187,3 +187,20 @@ body {
   color: var(--color-pink);
   text-decoration: underline;
 }
+
+.auth-footer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-blue) !important;
+  font-weight: 600 !important;
+  padding: 3px 10px;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.auth-footer-link:hover {
+  background: var(--color-blue-light);
+  color: var(--color-blue-dark) !important;
+  text-decoration: none !important;
+}

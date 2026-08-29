@@ -36,10 +36,13 @@ function RegisterForm(props: RegisterFormProps) {
       {/* App logo and tagline */}
       <div className="auth-logo">
         <h1>HotelBooking</h1>
-        <p>Create a free account</p>
+        <p className="auth-tagline">🎉 It&apos;s free — join us today!</p>
       </div>
 
-      <h2 className="auth-title">Sign Up</h2>
+      <div className="auth-title-block">
+        <h2 className="auth-title">Create your account</h2>
+        <p className="auth-subtitle">Fill in the details below to get started</p>
+      </div>
 
       {/* Show error alert */}
       {props.errorMessage !== "" && (
@@ -135,7 +138,7 @@ function RegisterForm(props: RegisterFormProps) {
       {/* Link to the login page */}
       <div className="auth-footer">
         Already have an account?{" "}
-        <a href="/login">Sign in</a>
+        <a href="/login" className="auth-footer-link">Sign in →</a>
       </div>
     </div>
   );
