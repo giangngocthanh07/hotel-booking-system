@@ -7,6 +7,8 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import HomePage from "./pages/HomePage";
 import SearchResultsPage from "./pages/SearchResultsPage";
+import AdminLayout from "./layouts/AdminLayout";
+import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 
 function App() {
   return (
@@ -24,6 +26,12 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
 
         <Route path="/search-results" element={<SearchResultsPage />} />
+
+        {/* Admin section */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route path="dashboard" element={<AdminDashboardPage />} />
+          {/* Add more admin pages here later, e.g. users, hotels, etc. */}
+        </Route>
 
         {/* Any unmatched URL redirects to home */}
         <Route path="*" element={<Navigate to="/" replace />} />
