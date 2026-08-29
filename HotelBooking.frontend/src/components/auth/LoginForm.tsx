@@ -27,7 +27,7 @@ function LoginForm(props: LoginFormProps) {
       {/* App logo and tagline */}
       <div className="auth-logo">
         <h1>HotelBooking</h1>
-        <p>Find your perfect stay</p>
+        <p className="auth-tagline">✨ Find your perfect stay</p>
       </div>
 
       <h2 className="auth-title">Sign In</h2>
