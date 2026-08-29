@@ -9,7 +9,19 @@ import {
   getRequestStats
 } from "../../services/adminService";
 import type { HotelApprovalRequest, UpgradeRequest, BaseRequest, RequestStats } from "../../types/admin.types";
-import "./AdminRequestsPage.css"; // Implemented Sunset Theme
+import "./AdminRequestsPage.css"; 
+
+// --- MUI Imports ---
+import { 
+  Dialog, DialogTitle, DialogContent, DialogActions, 
+  Button, Typography, Box, Grid, Divider, Chip, IconButton, Paper
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
+import BusinessIcon from "@mui/icons-material/Business";
+import PersonIcon from "@mui/icons-material/Person";
+import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
 
 type RequestType = "Hotel" | "Upgrade";
 
@@ -153,6 +165,13 @@ function AdminRequestsPage() {
       </span>
     );
   }
+  
+  function getMuiStatusColor(status: string): "default" | "success" | "error" | "warning" {
+    if (status === "Approved") return "success";
+    if (status === "Rejected") return "error";
+    if (status === "Pending") return "warning";
+    return "default";
+  }
 
   function renderActionButtons(req: BaseRequest) {
     return (
@@ -209,77 +228,225 @@ function AdminRequestsPage() {
     );
   }
 
-  function renderModal() {
+  // --- MUI Dialog Modal ---
+  function renderMuiModal() {
     if (!selectedRequest) return null;
 
+    const isHotel = requestType === "Hotel";
+    const hotelReq = selectedRequest as HotelApprovalRequest;
+    const upgradeReq = selectedRequest as UpgradeRequest;
+
     return (
-      <div className="req-modal-overlay">
-        <div className="req-modal-content">
-          <div className="req-modal-header">
-            <h2 className="req-modal-title sunset-gradient-text">
-              {requestType === "Hotel" ? "Hotel Approval Details" : "Upgrade Request Details"}
-            </h2>
-            <button onClick={() => setSelectedRequest(null)} className="req-modal-close">✕</button>
-          </div>
-          
-          <div className="req-modal-body">
-            <div className="req-modal-grid">
-              <div>
-                <div style={{ fontSize: "12px", color: "#64748B", textTransform: "uppercase", fontWeight: 700, marginBottom: "4px" }}>Request ID</div>
-                <div style={{ fontSize: "16px", color: "#0F172A", fontWeight: 600 }}>#{selectedRequest.requestId}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: "12px", color: "#64748B", textTransform: "uppercase", fontWeight: 700, marginBottom: "4px" }}>Status</div>
-                <div>{renderStatusBadge(selectedRequest.status)}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: "12px", color: "#64748B", textTransform: "uppercase", fontWeight: 700, marginBottom: "4px" }}>Requested At</div>
-                <div style={{ fontSize: "15px", color: "#0F172A" }}>{new Date(selectedRequest.requestedAt).toLocaleString()}</div>
-              </div>
+      <Dialog 
+        open={!!selectedRequest} 
+        onClose={() => setSelectedRequest(null)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: { borderRadius: 3, boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }
+        }}
+      >
+        <DialogTitle sx={{ 
+          m: 0, p: 3, pb: 2, 
+          background: 'linear-gradient(135deg, rgba(59,130,246,0.05), rgba(236,72,153,0.05))',
+          borderBottom: '1px solid #F1F5F9'
+        }}>
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Typography variant="h5" fontWeight="800" sx={{ 
+              background: 'linear-gradient(135deg, #3B82F6, #EC4899)', 
+              WebkitBackgroundClip: 'text', 
+              WebkitTextFillColor: 'transparent' 
+            }}>
+              {isHotel ? "🏨 Hotel Registration Approval" : "👤 Owner Upgrade Request"}
+            </Typography>
+            <IconButton onClick={() => setSelectedRequest(null)} sx={{ color: 'text.secondary', '&:hover': { color: 'error.main', bgcolor: 'error.lighter' } }}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+
+        <DialogContent sx={{ p: 0 }}>
+          {/* Overview Section */}
+          <Box sx={{ p: 3, bgcolor: '#F8FAFC' }}>
+            <Grid container spacing={3}>
+              <Grid item xs={6} sm={3}>
+                <Typography variant="overline" color="text.secondary" fontWeight="700">Request ID</Typography>
+                <Typography variant="h6" fontWeight="700" color="text.primary">#{selectedRequest.requestId}</Typography>
+              </Grid>
+              <Grid item xs={6} sm={3}>
+                <Typography variant="overline" color="text.secondary" fontWeight="700">Status</Typography>
+                <Box mt={0.5}>
+                  <Chip 
+                    label={selectedRequest.status} 
+                    color={getMuiStatusColor(selectedRequest.status)} 
+                    size="small" 
+                    sx={{ fontWeight: 'bold', px: 1 }} 
+                  />
+                </Box>
+              </Grid>
+              <Grid item xs={6} sm={3}>
+                <Typography variant="overline" color="text.secondary" fontWeight="700">Requested At</Typography>
+                <Typography variant="body1" fontWeight="500">{new Date(selectedRequest.requestedAt).toLocaleString()}</Typography>
+              </Grid>
               {selectedRequest.processedAt && (
-                <div>
-                  <div style={{ fontSize: "12px", color: "#64748B", textTransform: "uppercase", fontWeight: 700, marginBottom: "4px" }}>Processed At</div>
-                  <div style={{ fontSize: "15px", color: "#0F172A" }}>{new Date(selectedRequest.processedAt).toLocaleString()}</div>
-                </div>
+                <Grid item xs={6} sm={3}>
+                  <Typography variant="overline" color="text.secondary" fontWeight="700">Processed At</Typography>
+                  <Typography variant="body1" fontWeight="500">{new Date(selectedRequest.processedAt).toLocaleString()}</Typography>
+                </Grid>
               )}
-            </div>
+            </Grid>
+          </Box>
 
-            <h3 style={{ fontSize: "18px", color: "#0F172A", marginBottom: "16px", fontWeight: 700 }}>Specific Information</h3>
-            <div className="req-info-box">
-              {requestType === "Hotel" ? (
-                <div style={{ display: "grid", gap: "12px" }}>
-                  <div><strong style={{ color: "#475569" }}>Hotel Name:</strong> {(selectedRequest as HotelApprovalRequest).name}</div>
-                  <div><strong style={{ color: "#475569" }}>Address:</strong> {(selectedRequest as HotelApprovalRequest).address}</div>
-                  <div><strong style={{ color: "#475569" }}>Location:</strong> {(selectedRequest as HotelApprovalRequest).wardName}, {(selectedRequest as HotelApprovalRequest).provinceName}, {(selectedRequest as HotelApprovalRequest).countryName}</div>
-                  <div><strong style={{ color: "#475569" }}>Type:</strong> {(selectedRequest as HotelApprovalRequest).propertyTypeName}</div>
-                  <div><strong style={{ color: "#475569" }}>Tax Code:</strong> {(selectedRequest as HotelApprovalRequest).taxCode}</div>
-                  <div><strong style={{ color: "#475569" }}>Business License:</strong> <a href={(selectedRequest as HotelApprovalRequest).businessLicenseUrl} target="_blank" rel="noreferrer" style={{color:"#EC4899", fontWeight: 600}}>View Document</a></div>
-                  <hr style={{ borderColor: "#E2E8F0", margin: "16px 0" }} />
-                  <div><strong style={{ color: "#475569" }}>Owner:</strong> {(selectedRequest as HotelApprovalRequest).ownerFullName} (ID: {(selectedRequest as HotelApprovalRequest).ownerId})</div>
-                  <div><strong style={{ color: "#475569" }}>Owner Email:</strong> {(selectedRequest as HotelApprovalRequest).ownerEmail}</div>
-                  <div><strong style={{ color: "#475569" }}>Owner Phone:</strong> {(selectedRequest as HotelApprovalRequest).ownerPhoneNumber}</div>
-                </div>
-              ) : (
-                <div style={{ display: "grid", gap: "12px" }}>
-                  <div><strong style={{ color: "#475569" }}>Customer:</strong> {(selectedRequest as UpgradeRequest).fullName} (@{(selectedRequest as UpgradeRequest).userName})</div>
-                  <div><strong style={{ color: "#475569" }}>User ID:</strong> {(selectedRequest as UpgradeRequest).userId}</div>
-                  <div><strong style={{ color: "#475569" }}>Email:</strong> {(selectedRequest as UpgradeRequest).email}</div>
-                  <div><strong style={{ color: "#475569" }}>Phone:</strong> {(selectedRequest as UpgradeRequest).phoneNumber}</div>
-                  <div><strong style={{ color: "#475569" }}>Address:</strong> {(selectedRequest as UpgradeRequest).address}</div>
-                  <div><strong style={{ color: "#475569" }}>Tax Code:</strong> {(selectedRequest as UpgradeRequest).taxCode}</div>
-                </div>
+          <Divider />
+
+          {/* Details Section */}
+          <Box sx={{ p: 3 }}>
+            {isHotel ? (
+              <Grid container spacing={4}>
+                <Grid item xs={12} md={6}>
+                  <Box display="flex" alignItems="center" mb={2}>
+                    <BusinessIcon sx={{ color: '#3B82F6', mr: 1 }} />
+                    <Typography variant="h6" fontWeight="700">Property Details</Typography>
+                  </Box>
+                  <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: '#fff' }}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12}>
+                        <Typography variant="caption" color="text.secondary" display="block">Hotel Name</Typography>
+                        <Typography variant="body1" fontWeight="600">{hotelReq.name}</Typography>
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Typography variant="caption" color="text.secondary" display="block">Address</Typography>
+                        <Typography variant="body2">{hotelReq.address}, {hotelReq.wardName}, {hotelReq.provinceName}, {hotelReq.countryName}</Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary" display="block">Type</Typography>
+                        <Typography variant="body2">{hotelReq.propertyTypeName}</Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary" display="block">Tax Code</Typography>
+                        <Typography variant="body2" fontWeight="500">{hotelReq.taxCode}</Typography>
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Typography variant="caption" color="text.secondary" display="block">Business License</Typography>
+                        <Button 
+                          variant="outlined" 
+                          size="small" 
+                          href={hotelReq.businessLicenseUrl} 
+                          target="_blank" 
+                          sx={{ mt: 0.5, borderColor: '#EC4899', color: '#EC4899', '&:hover': { borderColor: '#DB2777', bgcolor: 'rgba(236,72,153,0.04)' } }}
+                        >
+                          View Document
+                        </Button>
+                      </Grid>
+                    </Grid>
+                  </Paper>
+                </Grid>
+                
+                <Grid item xs={12} md={6}>
+                  <Box display="flex" alignItems="center" mb={2}>
+                    <PersonIcon sx={{ color: '#F59E0B', mr: 1 }} />
+                    <Typography variant="h6" fontWeight="700">Owner Contact</Typography>
+                  </Box>
+                  <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: '#fff' }}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12}>
+                        <Typography variant="caption" color="text.secondary" display="block">Full Name</Typography>
+                        <Typography variant="body1" fontWeight="600">{hotelReq.ownerFullName}</Typography>
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Typography variant="caption" color="text.secondary" display="block">System User ID</Typography>
+                        <Typography variant="body2">#{hotelReq.ownerId}</Typography>
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Typography variant="caption" color="text.secondary" display="block">Email Address</Typography>
+                        <Typography variant="body2" color="primary.main">{hotelReq.ownerEmail}</Typography>
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Typography variant="caption" color="text.secondary" display="block">Phone Number</Typography>
+                        <Typography variant="body2">{hotelReq.ownerPhoneNumber}</Typography>
+                      </Grid>
+                    </Grid>
+                  </Paper>
+                </Grid>
+              </Grid>
+            ) : (
+              <Grid container spacing={4} justifyContent="center">
+                <Grid item xs={12} md={8}>
+                  <Box display="flex" alignItems="center" mb={2}>
+                    <AssignmentIndIcon sx={{ color: '#8B5CF6', mr: 1 }} />
+                    <Typography variant="h6" fontWeight="700">Customer Details</Typography>
+                  </Box>
+                  <Paper variant="outlined" sx={{ p: 3, borderRadius: 2, bgcolor: '#fff' }}>
+                    <Grid container spacing={3}>
+                      <Grid item xs={12} sm={6}>
+                        <Typography variant="caption" color="text.secondary" display="block">Full Name</Typography>
+                        <Typography variant="body1" fontWeight="600">{upgradeReq.fullName}</Typography>
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <Typography variant="caption" color="text.secondary" display="block">Username</Typography>
+                        <Typography variant="body2">@{upgradeReq.userName}</Typography>
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <Typography variant="caption" color="text.secondary" display="block">Email</Typography>
+                        <Typography variant="body2" color="primary.main">{upgradeReq.email}</Typography>
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <Typography variant="caption" color="text.secondary" display="block">Phone</Typography>
+                        <Typography variant="body2">{upgradeReq.phoneNumber}</Typography>
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Typography variant="caption" color="text.secondary" display="block">Address</Typography>
+                        <Typography variant="body2">{upgradeReq.address}</Typography>
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Typography variant="caption" color="text.secondary" display="block">Tax Code</Typography>
+                        <Typography variant="body2" fontWeight="500">{upgradeReq.taxCode}</Typography>
+                      </Grid>
+                    </Grid>
+                  </Paper>
+                </Grid>
+              </Grid>
+            )}
+          </Box>
+        </DialogContent>
+
+        <DialogActions sx={{ p: 3, pt: 2, borderTop: '1px solid #F1F5F9', bgcolor: '#F8FAFC' }}>
+          <Box display="flex" justifyContent="space-between" width="100%">
+            <Button 
+              variant="text" 
+              color="inherit" 
+              onClick={() => setSelectedRequest(null)}
+              sx={{ fontWeight: 600, color: 'text.secondary' }}
+            >
+              Cancel
+            </Button>
+            <Box display="flex" gap={2}>
+              {selectedRequest.canReject && (
+                <Button 
+                  variant="outlined" 
+                  color="error"
+                  startIcon={<CancelIcon />}
+                  onClick={() => handleReject(selectedRequest.requestId)}
+                  sx={{ borderRadius: 2, fontWeight: 600 }}
+                >
+                  Reject Request
+                </Button>
               )}
-            </div>
-
-            <div style={{ marginTop: "32px", display: "flex", justifyContent: "flex-end", gap: "12px" }}>
-              {renderActionButtons(selectedRequest)}
-              <button onClick={() => setSelectedRequest(null)} style={{ padding: "8px 20px", backgroundColor: "#F1F5F9", color: "#475569", border: "1px solid #E2E8F0", borderRadius: "9999px", cursor: "pointer", fontSize: "14px", fontWeight: 600 }}>
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+              {selectedRequest.canApprove && (
+                <Button 
+                  variant="contained" 
+                  color="success"
+                  startIcon={<CheckCircleIcon />}
+                  onClick={() => handleApprove(selectedRequest.requestId)}
+                  sx={{ borderRadius: 2, fontWeight: 600, boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)' }}
+                >
+                  Approve Request
+                </Button>
+              )}
+            </Box>
+          </Box>
+        </DialogActions>
+      </Dialog>
     );
   }
 
@@ -436,7 +603,8 @@ function AdminRequestsPage() {
         </div>
       )}
 
-      {renderModal()}
+      {/* Render the new MUI Modal */}
+      {renderMuiModal()}
     </div>
   );
 }
