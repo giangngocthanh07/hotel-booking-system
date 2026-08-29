@@ -1,6 +1,6 @@
 // LoginPage.tsx
-// CONTAINER component: quan ly state va goi authService
-// Sau do truyen du lieu xuong cho LoginForm de hien thi
+// CONTAINER component: manages state and calls authService.
+// Passes state and handlers down to LoginForm for rendering.
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -9,31 +9,31 @@ import { loginUser } from "../services/authService";
 import type { LoginRequest } from "../types/auth.types";
 
 function LoginPage() {
-  // State cho cac o input
+  // State for each input field
   const [usernameOrEmail, setUsernameOrEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  // State cho trang thai loading va thong bao loi
+  // State for loading status and error messages
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Hook de chuyen trang sau khi dang nhap thanh cong
+  // Hook to navigate to another page after a successful login
   const navigate = useNavigate();
 
-  // Kiem tra o nhap truoc khi gui len server
+  // Client-side validation before sending data to the server
   function validateForm(): boolean {
     if (usernameOrEmail.trim() === "") {
-      setErrorMessage("Vui long nhap ten dang nhap hoac email.");
+      setErrorMessage("Please enter your username or email.");
       return false;
     }
     if (password.trim() === "") {
-      setErrorMessage("Vui long nhap mat khau.");
+      setErrorMessage("Please enter your password.");
       return false;
     }
     return true;
   }
 
-  // Ham xu ly khi nguoi dung nhan nut Dang nhap
+  // Called when the user clicks the Sign In button
   async function handleSubmit() {
     setErrorMessage("");
 
@@ -53,11 +53,11 @@ function LoginPage() {
       const response = await loginUser(request);
 
       if (response.isSuccess) {
-        // Luu token vao localStorage
+        // Save token and user info to localStorage
         localStorage.setItem("accessToken", response.data.accessToken);
         localStorage.setItem("fullName", response.data.fullName);
 
-        // Luu danh sach roles vao localStorage (dung for loop thay vi map/join)
+        // Save roles list using a for loop (no map/join)
         let rolesString = "";
         for (let i = 0; i < response.data.roles.length; i++) {
           if (i > 0) {
@@ -67,19 +67,19 @@ function LoginPage() {
         }
         localStorage.setItem("roles", rolesString);
 
-        // Chuyen ve trang chu
+        // Redirect to home page
         navigate("/");
       } else {
-        setErrorMessage(response.message || "Dang nhap that bai. Vui long thu lai.");
+        setErrorMessage(response.message || "Login failed. Please try again.");
       }
     } catch {
-      setErrorMessage("Loi ket noi. Vui long kiem tra lai.");
+      setErrorMessage("Connection error. Please check your network and try again.");
     } finally {
       setIsLoading(false);
     }
   }
 
-  // Truyen state va ham xuong LoginForm de hien thi
+  // Pass state and handlers down to the LoginForm component
   return (
     <div className="auth-page">
       <LoginForm

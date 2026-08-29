@@ -1,10 +1,10 @@
 // LoginForm.tsx
-// Component THUAN UI (Presentational) - khong goi API, khong co state
-// Nhan du lieu va ham tu LoginPage thong qua props, chi hien thi form
+// PRESENTATIONAL component — no API calls, no state management.
+// Receives data and callbacks from LoginPage via props and renders the UI only.
 
 import React from "react";
 
-// Dinh nghia cac props ma LoginForm can nhan tu LoginPage
+// Props that LoginForm expects to receive from LoginPage
 interface LoginFormProps {
   usernameOrEmail: string;
   password: string;
@@ -16,7 +16,7 @@ interface LoginFormProps {
 }
 
 function LoginForm(props: LoginFormProps) {
-  // Ngan chan form reload trang (hanh vi mac dinh cua browser)
+  // Prevent the browser from reloading the page on form submit
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     props.onSubmit();
@@ -24,15 +24,15 @@ function LoginForm(props: LoginFormProps) {
 
   return (
     <div className="auth-card">
-      {/* Logo va tieu de app */}
+      {/* App logo and tagline */}
       <div className="auth-logo">
         <h1>HotelBooking</h1>
-        <p>Tim cho nghi hoan hao cho ban</p>
+        <p>Find your perfect stay</p>
       </div>
 
-      <h2 className="auth-title">Dang nhap</h2>
+      <h2 className="auth-title">Sign In</h2>
 
-      {/* Chi hien thi thong bao loi neu co loi */}
+      {/* Show error alert only when there is an error */}
       {props.errorMessage !== "" && (
         <div className="alert alert-error">
           {props.errorMessage}
@@ -40,44 +40,44 @@ function LoginForm(props: LoginFormProps) {
       )}
 
       <form onSubmit={handleSubmit}>
-        {/* O nhap ten dang nhap hoac email */}
+        {/* Username or Email input */}
         <div className="form-group">
-          <label htmlFor="usernameOrEmail">Ten dang nhap hoac Email</label>
+          <label htmlFor="usernameOrEmail">Username or Email</label>
           <input
             id="usernameOrEmail"
             type="text"
             value={props.usernameOrEmail}
-            placeholder="Nhap ten dang nhap hoac email..."
+            placeholder="Enter your username or email..."
             onChange={(e) => props.onUsernameOrEmailChange(e.target.value)}
           />
         </div>
 
-        {/* O nhap mat khau */}
+        {/* Password input */}
         <div className="form-group">
-          <label htmlFor="password">Mat khau</label>
+          <label htmlFor="password">Password</label>
           <input
             id="password"
             type="password"
             value={props.password}
-            placeholder="Nhap mat khau..."
+            placeholder="Enter your password..."
             onChange={(e) => props.onPasswordChange(e.target.value)}
           />
         </div>
 
-        {/* Nut dang nhap - bi disable khi dang loading */}
+        {/* Submit button — disabled while loading */}
         <button
           type="submit"
           className="btn-primary"
           disabled={props.isLoading}
         >
-          {props.isLoading ? "Dang dang nhap..." : "Dang nhap"}
+          {props.isLoading ? "Signing in..." : "Sign In"}
         </button>
       </form>
 
-      {/* Link chuyen sang trang dang ky */}
+      {/* Link to the register page */}
       <div className="auth-footer">
-        Chua co tai khoan?{" "}
-        <a href="/register">Dang ky ngay</a>
+        Don&apos;t have an account?{" "}
+        <a href="/register">Sign up</a>
       </div>
     </div>
   );

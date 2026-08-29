@@ -1,6 +1,6 @@
 // RegisterPage.tsx
-// CONTAINER component: quan ly state va goi authService
-// Sau do truyen du lieu xuong cho RegisterForm de hien thi
+// CONTAINER component: manages state and calls authService.
+// Passes state and handlers down to RegisterForm for rendering.
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -9,7 +9,7 @@ import { registerUser } from "../services/authService";
 import type { RegisterRequest } from "../types/auth.types";
 
 function RegisterPage() {
-  // State cho cac o nhap trong form
+  // State for each input field
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -17,43 +17,43 @@ function RegisterPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // State cho loading, loi va thanh cong
+  // State for loading status, error messages, and success message
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
   const navigate = useNavigate();
 
-  // Kiem tra cac o nhap truoc khi gui len server
+  // Client-side validation before sending data to the server
   function validateForm(): boolean {
     if (username.trim() === "") {
-      setErrorMessage("Vui long nhap ten dang nhap.");
+      setErrorMessage("Please enter a username.");
       return false;
     }
     if (fullName.trim() === "") {
-      setErrorMessage("Vui long nhap ho va ten.");
+      setErrorMessage("Please enter your full name.");
       return false;
     }
     if (email.trim() === "") {
-      setErrorMessage("Vui long nhap email.");
+      setErrorMessage("Please enter your email address.");
       return false;
     }
     if (phoneNumber.trim() === "") {
-      setErrorMessage("Vui long nhap so dien thoai.");
+      setErrorMessage("Please enter your phone number.");
       return false;
     }
     if (password.trim() === "") {
-      setErrorMessage("Vui long nhap mat khau.");
+      setErrorMessage("Please enter a password.");
       return false;
     }
     if (confirmPassword !== password) {
-      setErrorMessage("Mat khau xac nhan khong khop.");
+      setErrorMessage("Passwords do not match.");
       return false;
     }
     return true;
   }
 
-  // Ham xu ly khi nguoi dung nhan nut Tao tai khoan
+  // Called when the user clicks the Create Account button
   async function handleSubmit() {
     setErrorMessage("");
     setSuccessMessage("");
@@ -78,22 +78,22 @@ function RegisterPage() {
       const response = await registerUser(request);
 
       if (response.isSuccess) {
-        setSuccessMessage("Tao tai khoan thanh cong! Chuyen sang trang dang nhap...");
-        // Doi 2 giay roi chuyen sang trang dang nhap
+        setSuccessMessage("Account created successfully! Redirecting to sign in...");
+        // Wait 2 seconds then redirect to login page
         setTimeout(() => {
           navigate("/login");
         }, 2000);
       } else {
-        setErrorMessage(response.message || "Dang ky that bai. Vui long thu lai.");
+        setErrorMessage(response.message || "Registration failed. Please try again.");
       }
     } catch {
-      setErrorMessage("Loi ket noi. Vui long kiem tra lai.");
+      setErrorMessage("Connection error. Please check your network and try again.");
     } finally {
       setIsLoading(false);
     }
   }
 
-  // Truyen state va ham xuong RegisterForm de hien thi
+  // Pass state and handlers down to the RegisterForm component
   return (
     <div className="auth-page">
       <RegisterForm

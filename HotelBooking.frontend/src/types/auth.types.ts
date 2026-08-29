@@ -1,16 +1,16 @@
 // auth.types.ts
-// Dinh nghia tat ca cac kieu du lieu (TypeScript interfaces) cho tinh nang Auth
-// File nay KHONG chua logic, chi chua "hinh dang" cua du lieu
+// Defines all TypeScript interfaces (data shapes) for the Auth feature.
+// This file contains NO logic — only type definitions.
 
-// --- REQUEST TYPES (du lieu gui LEN backend) ---
+// --- REQUEST TYPES (data sent TO the backend) ---
 
-// Kieu du lieu de dang nhap
+// Data required to log in
 export interface LoginRequest {
   usernameOrEmail: string;
   password: string;
 }
 
-// Kieu du lieu de dang ky tai khoan khach hang
+// Data required to register a new customer account
 export interface RegisterRequest {
   username: string;
   fullName: string;
@@ -20,9 +20,9 @@ export interface RegisterRequest {
   confirmPassword: string;
 }
 
-// --- RESPONSE TYPES (du lieu nhan VE tu backend) ---
+// --- RESPONSE TYPES (data received FROM the backend) ---
 
-// Du lieu tra ve sau khi dang nhap thanh cong
+// Data returned after a successful login
 export interface LoginResponseData {
   accessToken: string;
   fullName: string;
@@ -30,15 +30,15 @@ export interface LoginResponseData {
   roles: string[];
 }
 
-// Du lieu tra ve sau khi dang ky thanh cong
+// Data returned after a successful registration
 export interface RegisterResponseData {
   userId: number;
   username: string;
   email: string;
 }
 
-// Wrapper chung cho MOI response tu backend
-// T la kieu du lieu ben trong (vi du: LoginResponseData, RegisterResponseData)
+// Generic wrapper for ALL responses from the backend.
+// T is the inner data type (e.g. LoginResponseData, RegisterResponseData)
 export interface ApiResponse<T> {
   data: T;
   isSuccess: boolean;

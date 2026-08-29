@@ -1,5 +1,5 @@
 // App.tsx
-// Diem vao cua ung dung: cau hinh Router va cac Routes (duong dan trang)
+// Application entry point — configures the Router and all routes.
 
 import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
@@ -8,7 +8,7 @@ import RegisterPage from "./pages/RegisterPage";
 function App() {
   return (
     <Routes>
-      {/* Trang chu tam thoi - se thay the sau */}
+      {/* Home page (placeholder — will be replaced later) */}
       <Route
         path="/"
         element={
@@ -17,27 +17,27 @@ function App() {
               HotelBooking
             </h1>
             <p style={{ color: "#64748B", marginTop: "12px", fontSize: "16px" }}>
-              Trang chu - Dang xay dung...
+              Home page — under construction
             </p>
             <div style={{ marginTop: "28px", display: "flex", gap: "16px", justifyContent: "center" }}>
               <a href="/login" style={{ padding: "10px 24px", background: "#3B82F6", color: "white", borderRadius: "8px", textDecoration: "none", fontWeight: 600 }}>
-                Dang nhap
+                Sign In
               </a>
               <a href="/register" style={{ padding: "10px 24px", background: "#EC4899", color: "white", borderRadius: "8px", textDecoration: "none", fontWeight: 600 }}>
-                Dang ky
+                Sign Up
               </a>
             </div>
           </div>
         }
       />
 
-      {/* Trang dang nhap - URL: /login */}
+      {/* Login page — URL: /login */}
       <Route path="/login" element={<LoginPage />} />
 
-      {/* Trang dang ky - URL: /register */}
+      {/* Register page — URL: /register */}
       <Route path="/register" element={<RegisterPage />} />
 
-      {/* Moi URL khong khop -> chuyen ve trang chu */}
+      {/* Any unmatched URL redirects to home */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

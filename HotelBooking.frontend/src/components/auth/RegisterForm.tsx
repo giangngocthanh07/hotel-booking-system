@@ -1,10 +1,10 @@
 // RegisterForm.tsx
-// Component THUAN UI (Presentational) - khong goi API, khong co state
-// Nhan du lieu va ham tu RegisterPage thong qua props, chi hien thi form
+// PRESENTATIONAL component — no API calls, no state management.
+// Receives data and callbacks from RegisterPage via props and renders the UI only.
 
 import React from "react";
 
-// Dinh nghia cac props ma RegisterForm can nhan tu RegisterPage
+// Props that RegisterForm expects to receive from RegisterPage
 interface RegisterFormProps {
   username: string;
   fullName: string;
@@ -25,7 +25,7 @@ interface RegisterFormProps {
 }
 
 function RegisterForm(props: RegisterFormProps) {
-  // Ngan chan form reload trang (hanh vi mac dinh cua browser)
+  // Prevent the browser from reloading the page on form submit
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     props.onSubmit();
@@ -33,22 +33,22 @@ function RegisterForm(props: RegisterFormProps) {
 
   return (
     <div className="auth-card">
-      {/* Logo va tieu de app */}
+      {/* App logo and tagline */}
       <div className="auth-logo">
         <h1>HotelBooking</h1>
-        <p>Tao tai khoan mien phi</p>
+        <p>Create a free account</p>
       </div>
 
-      <h2 className="auth-title">Dang ky</h2>
+      <h2 className="auth-title">Sign Up</h2>
 
-      {/* Hien thi thong bao loi */}
+      {/* Show error alert */}
       {props.errorMessage !== "" && (
         <div className="alert alert-error">
           {props.errorMessage}
         </div>
       )}
 
-      {/* Hien thi thong bao thanh cong */}
+      {/* Show success alert */}
       {props.successMessage !== "" && (
         <div className="alert alert-success">
           {props.successMessage}
@@ -57,23 +57,23 @@ function RegisterForm(props: RegisterFormProps) {
 
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label htmlFor="username">Ten dang nhap</label>
+          <label htmlFor="username">Username</label>
           <input
             id="username"
             type="text"
             value={props.username}
-            placeholder="Nhap ten dang nhap..."
+            placeholder="Enter your username..."
             onChange={(e) => props.onUsernameChange(e.target.value)}
           />
         </div>
 
         <div className="form-group">
-          <label htmlFor="fullName">Ho va ten</label>
+          <label htmlFor="fullName">Full Name</label>
           <input
             id="fullName"
             type="text"
             value={props.fullName}
-            placeholder="Nhap ho va ten..."
+            placeholder="Enter your full name..."
             onChange={(e) => props.onFullNameChange(e.target.value)}
           />
         </div>
@@ -84,58 +84,58 @@ function RegisterForm(props: RegisterFormProps) {
             id="email"
             type="email"
             value={props.email}
-            placeholder="Nhap dia chi email..."
+            placeholder="Enter your email address..."
             onChange={(e) => props.onEmailChange(e.target.value)}
           />
         </div>
 
         <div className="form-group">
-          <label htmlFor="phoneNumber">So dien thoai</label>
+          <label htmlFor="phoneNumber">Phone Number</label>
           <input
             id="phoneNumber"
             type="tel"
             value={props.phoneNumber}
-            placeholder="Nhap so dien thoai..."
+            placeholder="Enter your phone number..."
             onChange={(e) => props.onPhoneNumberChange(e.target.value)}
           />
         </div>
 
         <div className="form-group">
-          <label htmlFor="password">Mat khau</label>
+          <label htmlFor="password">Password</label>
           <input
             id="password"
             type="password"
             value={props.password}
-            placeholder="Nhap mat khau..."
+            placeholder="Enter your password..."
             onChange={(e) => props.onPasswordChange(e.target.value)}
           />
         </div>
 
         <div className="form-group">
-          <label htmlFor="confirmPassword">Xac nhan mat khau</label>
+          <label htmlFor="confirmPassword">Confirm Password</label>
           <input
             id="confirmPassword"
             type="password"
             value={props.confirmPassword}
-            placeholder="Nhap lai mat khau..."
+            placeholder="Re-enter your password..."
             onChange={(e) => props.onConfirmPasswordChange(e.target.value)}
           />
         </div>
 
-        {/* Nut tao tai khoan - bi disable khi dang loading */}
+        {/* Submit button — disabled while loading */}
         <button
           type="submit"
           className="btn-primary"
           disabled={props.isLoading}
         >
-          {props.isLoading ? "Dang tao tai khoan..." : "Tao tai khoan"}
+          {props.isLoading ? "Creating account..." : "Create Account"}
         </button>
       </form>
 
-      {/* Link chuyen sang trang dang nhap */}
+      {/* Link to the login page */}
       <div className="auth-footer">
-        Da co tai khoan?{" "}
-        <a href="/login">Dang nhap</a>
+        Already have an account?{" "}
+        <a href="/login">Sign in</a>
       </div>
     </div>
   );
