@@ -11,18 +11,6 @@ import {
 import type { HotelApprovalRequest, UpgradeRequest, BaseRequest, RequestStats } from "../../types/admin.types";
 import "./AdminRequestsPage.css"; 
 
-// --- MUI Imports ---
-import { 
-  Dialog, DialogTitle, DialogContent, DialogActions, 
-  Button, Typography, Box, Grid, Divider, Chip, IconButton, Paper
-} from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import CancelIcon from "@mui/icons-material/Cancel";
-import BusinessIcon from "@mui/icons-material/Business";
-import PersonIcon from "@mui/icons-material/Person";
-import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
-
 type RequestType = "Hotel" | "Upgrade";
 
 function AdminRequestsPage() {
@@ -165,13 +153,6 @@ function AdminRequestsPage() {
       </span>
     );
   }
-  
-  function getMuiStatusColor(status: string): "default" | "success" | "error" | "warning" {
-    if (status === "Approved") return "success";
-    if (status === "Rejected") return "error";
-    if (status === "Pending") return "warning";
-    return "default";
-  }
 
   function renderActionButtons(req: BaseRequest) {
     return (
@@ -228,8 +209,8 @@ function AdminRequestsPage() {
     );
   }
 
-  // --- MUI Dialog Modal ---
-  function renderMuiModal() {
+  // --- HTML/CSS Custom Modal ---
+  function renderModal() {
     if (!selectedRequest) return null;
 
     const isHotel = requestType === "Hotel";
@@ -237,216 +218,149 @@ function AdminRequestsPage() {
     const upgradeReq = selectedRequest as UpgradeRequest;
 
     return (
-      <Dialog 
-        open={!!selectedRequest} 
-        onClose={() => setSelectedRequest(null)}
-        maxWidth="md"
-        fullWidth
-        PaperProps={{
-          sx: { borderRadius: 3, boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }
-        }}
-      >
-        <DialogTitle sx={{ 
-          m: 0, p: 3, pb: 2, 
-          background: 'linear-gradient(135deg, rgba(59,130,246,0.05), rgba(236,72,153,0.05))',
-          borderBottom: '1px solid #F1F5F9'
-        }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Typography variant="h5" fontWeight="800" sx={{ 
-              background: 'linear-gradient(135deg, #3B82F6, #EC4899)', 
-              WebkitBackgroundClip: 'text', 
-              WebkitTextFillColor: 'transparent' 
-            }}>
-              {isHotel ? "🏨 Hotel Registration Approval" : "👤 Owner Upgrade Request"}
-            </Typography>
-            <IconButton onClick={() => setSelectedRequest(null)} sx={{ color: 'text.secondary', '&:hover': { color: 'error.main', bgcolor: 'error.lighter' } }}>
-              <CloseIcon />
-            </IconButton>
-          </Box>
-        </DialogTitle>
-
-        <DialogContent sx={{ p: 0 }}>
-          {/* Overview Section */}
-          <Box sx={{ p: 3, bgcolor: '#F8FAFC' }}>
-            <Grid container spacing={3}>
-              <Grid item xs={6} sm={3}>
-                <Typography variant="overline" color="text.secondary" fontWeight="700">Request ID</Typography>
-                <Typography variant="h6" fontWeight="700" color="text.primary">#{selectedRequest.requestId}</Typography>
-              </Grid>
-              <Grid item xs={6} sm={3}>
-                <Typography variant="overline" color="text.secondary" fontWeight="700">Status</Typography>
-                <Box mt={0.5}>
-                  <Chip 
-                    label={selectedRequest.status} 
-                    color={getMuiStatusColor(selectedRequest.status)} 
-                    size="small" 
-                    sx={{ fontWeight: 'bold', px: 1 }} 
-                  />
-                </Box>
-              </Grid>
-              <Grid item xs={6} sm={3}>
-                <Typography variant="overline" color="text.secondary" fontWeight="700">Requested At</Typography>
-                <Typography variant="body1" fontWeight="500">{new Date(selectedRequest.requestedAt).toLocaleString()}</Typography>
-              </Grid>
+      <div className="req-modal-overlay">
+        <div className="req-modal-content">
+          <div className="req-modal-header">
+            <h2 className="req-modal-title sunset-gradient-text">
+              {isHotel ? "Hotel Approval Details" : "Upgrade Request Details"}
+            </h2>
+            <button onClick={() => setSelectedRequest(null)} className="req-modal-close">✕</button>
+          </div>
+          
+          <div className="req-modal-body">
+            {/* Overview Section */}
+            <div className="req-modal-overview">
+              <div className="overview-item">
+                <span className="overview-label">Request ID</span>
+                <span className="overview-value">#{selectedRequest.requestId}</span>
+              </div>
+              <div className="overview-item">
+                <span className="overview-label">Status</span>
+                <span>{renderStatusBadge(selectedRequest.status)}</span>
+              </div>
+              <div className="overview-item">
+                <span className="overview-label">Requested At</span>
+                <span className="overview-value">{new Date(selectedRequest.requestedAt).toLocaleString()}</span>
+              </div>
               {selectedRequest.processedAt && (
-                <Grid item xs={6} sm={3}>
-                  <Typography variant="overline" color="text.secondary" fontWeight="700">Processed At</Typography>
-                  <Typography variant="body1" fontWeight="500">{new Date(selectedRequest.processedAt).toLocaleString()}</Typography>
-                </Grid>
+                <div className="overview-item">
+                  <span className="overview-label">Processed At</span>
+                  <span className="overview-value">{new Date(selectedRequest.processedAt).toLocaleString()}</span>
+                </div>
               )}
-            </Grid>
-          </Box>
+            </div>
 
-          <Divider />
+            <h3 className="req-section-title">Specific Information</h3>
+            <div className="req-info-container">
+              {isHotel ? (
+                <div className="req-info-grid-2col">
+                  {/* Property Details */}
+                  <div className="req-info-card">
+                    <h4 className="req-info-card-title">Property Details</h4>
+                    <div className="req-info-list">
+                      <div className="info-row">
+                        <span className="info-label">Hotel Name</span>
+                        <span className="info-val strong">{hotelReq.name}</span>
+                      </div>
+                      <div className="info-row">
+                        <span className="info-label">Address</span>
+                        <span className="info-val">{hotelReq.address}, {hotelReq.wardName}, {hotelReq.provinceName}, {hotelReq.countryName}</span>
+                      </div>
+                      <div className="info-row">
+                        <span className="info-label">Property Type</span>
+                        <span className="info-val">{hotelReq.propertyTypeName}</span>
+                      </div>
+                      <div className="info-row">
+                        <span className="info-label">Tax Code</span>
+                        <span className="info-val">{hotelReq.taxCode}</span>
+                      </div>
+                      <div className="info-row">
+                        <span className="info-label">License Document</span>
+                        <span className="info-val">
+                          <a href={hotelReq.businessLicenseUrl} target="_blank" rel="noreferrer" className="req-link-btn">
+                            View Document
+                          </a>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
 
-          {/* Details Section */}
-          <Box sx={{ p: 3 }}>
-            {isHotel ? (
-              <Grid container spacing={4}>
-                <Grid item xs={12} md={6}>
-                  <Box display="flex" alignItems="center" mb={2}>
-                    <BusinessIcon sx={{ color: '#3B82F6', mr: 1 }} />
-                    <Typography variant="h6" fontWeight="700">Property Details</Typography>
-                  </Box>
-                  <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: '#fff' }}>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12}>
-                        <Typography variant="caption" color="text.secondary" display="block">Hotel Name</Typography>
-                        <Typography variant="body1" fontWeight="600">{hotelReq.name}</Typography>
-                      </Grid>
-                      <Grid item xs={12}>
-                        <Typography variant="caption" color="text.secondary" display="block">Address</Typography>
-                        <Typography variant="body2">{hotelReq.address}, {hotelReq.wardName}, {hotelReq.provinceName}, {hotelReq.countryName}</Typography>
-                      </Grid>
-                      <Grid item xs={6}>
-                        <Typography variant="caption" color="text.secondary" display="block">Type</Typography>
-                        <Typography variant="body2">{hotelReq.propertyTypeName}</Typography>
-                      </Grid>
-                      <Grid item xs={6}>
-                        <Typography variant="caption" color="text.secondary" display="block">Tax Code</Typography>
-                        <Typography variant="body2" fontWeight="500">{hotelReq.taxCode}</Typography>
-                      </Grid>
-                      <Grid item xs={12}>
-                        <Typography variant="caption" color="text.secondary" display="block">Business License</Typography>
-                        <Button 
-                          variant="outlined" 
-                          size="small" 
-                          href={hotelReq.businessLicenseUrl} 
-                          target="_blank" 
-                          sx={{ mt: 0.5, borderColor: '#EC4899', color: '#EC4899', '&:hover': { borderColor: '#DB2777', bgcolor: 'rgba(236,72,153,0.04)' } }}
-                        >
-                          View Document
-                        </Button>
-                      </Grid>
-                    </Grid>
-                  </Paper>
-                </Grid>
-                
-                <Grid item xs={12} md={6}>
-                  <Box display="flex" alignItems="center" mb={2}>
-                    <PersonIcon sx={{ color: '#F59E0B', mr: 1 }} />
-                    <Typography variant="h6" fontWeight="700">Owner Contact</Typography>
-                  </Box>
-                  <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: '#fff' }}>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12}>
-                        <Typography variant="caption" color="text.secondary" display="block">Full Name</Typography>
-                        <Typography variant="body1" fontWeight="600">{hotelReq.ownerFullName}</Typography>
-                      </Grid>
-                      <Grid item xs={12}>
-                        <Typography variant="caption" color="text.secondary" display="block">System User ID</Typography>
-                        <Typography variant="body2">#{hotelReq.ownerId}</Typography>
-                      </Grid>
-                      <Grid item xs={12}>
-                        <Typography variant="caption" color="text.secondary" display="block">Email Address</Typography>
-                        <Typography variant="body2" color="primary.main">{hotelReq.ownerEmail}</Typography>
-                      </Grid>
-                      <Grid item xs={12}>
-                        <Typography variant="caption" color="text.secondary" display="block">Phone Number</Typography>
-                        <Typography variant="body2">{hotelReq.ownerPhoneNumber}</Typography>
-                      </Grid>
-                    </Grid>
-                  </Paper>
-                </Grid>
-              </Grid>
-            ) : (
-              <Grid container spacing={4} justifyContent="center">
-                <Grid item xs={12} md={8}>
-                  <Box display="flex" alignItems="center" mb={2}>
-                    <AssignmentIndIcon sx={{ color: '#8B5CF6', mr: 1 }} />
-                    <Typography variant="h6" fontWeight="700">Customer Details</Typography>
-                  </Box>
-                  <Paper variant="outlined" sx={{ p: 3, borderRadius: 2, bgcolor: '#fff' }}>
-                    <Grid container spacing={3}>
-                      <Grid item xs={12} sm={6}>
-                        <Typography variant="caption" color="text.secondary" display="block">Full Name</Typography>
-                        <Typography variant="body1" fontWeight="600">{upgradeReq.fullName}</Typography>
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <Typography variant="caption" color="text.secondary" display="block">Username</Typography>
-                        <Typography variant="body2">@{upgradeReq.userName}</Typography>
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <Typography variant="caption" color="text.secondary" display="block">Email</Typography>
-                        <Typography variant="body2" color="primary.main">{upgradeReq.email}</Typography>
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <Typography variant="caption" color="text.secondary" display="block">Phone</Typography>
-                        <Typography variant="body2">{upgradeReq.phoneNumber}</Typography>
-                      </Grid>
-                      <Grid item xs={12}>
-                        <Typography variant="caption" color="text.secondary" display="block">Address</Typography>
-                        <Typography variant="body2">{upgradeReq.address}</Typography>
-                      </Grid>
-                      <Grid item xs={12}>
-                        <Typography variant="caption" color="text.secondary" display="block">Tax Code</Typography>
-                        <Typography variant="body2" fontWeight="500">{upgradeReq.taxCode}</Typography>
-                      </Grid>
-                    </Grid>
-                  </Paper>
-                </Grid>
-              </Grid>
-            )}
-          </Box>
-        </DialogContent>
-
-        <DialogActions sx={{ p: 3, pt: 2, borderTop: '1px solid #F1F5F9', bgcolor: '#F8FAFC' }}>
-          <Box display="flex" justifyContent="space-between" width="100%">
-            <Button 
-              variant="text" 
-              color="inherit" 
-              onClick={() => setSelectedRequest(null)}
-              sx={{ fontWeight: 600, color: 'text.secondary' }}
-            >
-              Cancel
-            </Button>
-            <Box display="flex" gap={2}>
+                  {/* Owner Contact */}
+                  <div className="req-info-card">
+                    <h4 className="req-info-card-title">Owner Contact</h4>
+                    <div className="req-info-list">
+                      <div className="info-row">
+                        <span className="info-label">Full Name</span>
+                        <span className="info-val strong">{hotelReq.ownerFullName}</span>
+                      </div>
+                      <div className="info-row">
+                        <span className="info-label">User ID</span>
+                        <span className="info-val">#{hotelReq.ownerId}</span>
+                      </div>
+                      <div className="info-row">
+                        <span className="info-label">Email Address</span>
+                        <span className="info-val highlight">{hotelReq.ownerEmail}</span>
+                      </div>
+                      <div className="info-row">
+                        <span className="info-label">Phone Number</span>
+                        <span className="info-val">{hotelReq.ownerPhoneNumber}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="req-info-card full-width">
+                  <h4 className="req-info-card-title">Customer Details</h4>
+                  <div className="req-info-grid-3col">
+                    <div className="info-row">
+                      <span className="info-label">Full Name</span>
+                      <span className="info-val strong">{upgradeReq.fullName}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Username</span>
+                      <span className="info-val">@{upgradeReq.userName}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Email</span>
+                      <span className="info-val highlight">{upgradeReq.email}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Phone</span>
+                      <span className="info-val">{upgradeReq.phoneNumber}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Address</span>
+                      <span className="info-val">{upgradeReq.address}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Tax Code</span>
+                      <span className="info-val">{upgradeReq.taxCode}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <div className="req-modal-footer">
+            <button onClick={() => setSelectedRequest(null)} className="req-btn-cancel">
+              Close
+            </button>
+            <div className="req-modal-actions">
               {selectedRequest.canReject && (
-                <Button 
-                  variant="outlined" 
-                  color="error"
-                  startIcon={<CancelIcon />}
-                  onClick={() => handleReject(selectedRequest.requestId)}
-                  sx={{ borderRadius: 2, fontWeight: 600 }}
-                >
+                <button onClick={() => handleReject(selectedRequest.requestId)} className="req-btn-reject">
                   Reject Request
-                </Button>
+                </button>
               )}
               {selectedRequest.canApprove && (
-                <Button 
-                  variant="contained" 
-                  color="success"
-                  startIcon={<CheckCircleIcon />}
-                  onClick={() => handleApprove(selectedRequest.requestId)}
-                  sx={{ borderRadius: 2, fontWeight: 600, boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)' }}
-                >
+                <button onClick={() => handleApprove(selectedRequest.requestId)} className="req-btn-approve">
                   Approve Request
-                </Button>
+                </button>
               )}
-            </Box>
-          </Box>
-        </DialogActions>
-      </Dialog>
+            </div>
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -603,8 +517,7 @@ function AdminRequestsPage() {
         </div>
       )}
 
-      {/* Render the new MUI Modal */}
-      {renderMuiModal()}
+      {renderModal()}
     </div>
   );
 }
