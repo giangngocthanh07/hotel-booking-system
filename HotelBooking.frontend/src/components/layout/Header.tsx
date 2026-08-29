@@ -98,7 +98,7 @@ function Header() {
                 
                 {roles.includes("Owner") && (
                   <a href="/owner/dashboard" className="site-header__menu-item">
-                    List your properties
+                    Owner dashboard
                   </a>
                 )}
 
