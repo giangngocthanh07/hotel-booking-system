@@ -54,7 +54,7 @@ function HomePage() {
       })
       .catch((error: unknown) => {
         if (ignore) return;
-        const fallback = "Không thể tải danh sách tỉnh thành.";
+        const fallback = "Failed to load destinations.";
         setProvinceLoadError(error instanceof Error ? error.message : fallback);
       })
       .finally(() => {
@@ -103,7 +103,7 @@ function HomePage() {
   // Called when the user clicks Search
   function handleSearch() {
     if (!selectedProvince || selectedProvince.name !== searchForm.cityName) {
-      setCityValidationError("Vui lòng chọn một tỉnh/thành trong danh sách.");
+      setCityValidationError("Please select a destination from the list.");
       return;
     }
 

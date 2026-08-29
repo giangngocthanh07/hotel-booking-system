@@ -67,14 +67,14 @@ function ProvinceAutocomplete(props: ProvinceAutocompleteProps) {
         className="searchbar-input"
         type="text"
         role="combobox"
-        aria-label="Tỉnh hoặc thành phố"
+        aria-label="Province or city"
         aria-expanded={isOpen}
         aria-controls={LISTBOX_ID}
         aria-autocomplete="list"
         aria-activedescendant={
           activeIndex >= 0 ? `province-option-${options[activeIndex].id}` : undefined
         }
-        placeholder={props.isLoading ? "Đang tải tỉnh thành..." : "Where to?"}
+        placeholder={props.isLoading ? "Loading destinations..." : "Where to?"}
         value={props.value}
         onChange={(event) => {
           props.onInputChange(event.target.value);
@@ -90,7 +90,7 @@ function ProvinceAutocomplete(props: ProvinceAutocompleteProps) {
         <div className="province-options" id={LISTBOX_ID} role="listbox">
           {props.isLoading && (
             <div className="province-empty" role="status">
-              Đang tải danh sách tỉnh thành...
+              Loading destinations...
             </div>
           )}
           {!props.isLoading && props.error && (
@@ -102,13 +102,13 @@ function ProvinceAutocomplete(props: ProvinceAutocompleteProps) {
                   type="button"
                   onClick={props.onRetry}
                 >
-                  Thử lại
+                  Retry
                 </button>
               )}
             </div>
           )}
           {!props.isLoading && !props.error && options.length === 0 && (
-            <div className="province-empty">Không tìm thấy tỉnh/thành.</div>
+            <div className="province-empty">No destinations found.</div>
           )}
           {!props.isLoading &&
             !props.error &&
