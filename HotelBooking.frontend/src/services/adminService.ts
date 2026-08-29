@@ -14,8 +14,8 @@ function getHeaders() {
 
 // === HOTEL APPROVALS ===
 
-export async function getHotelApprovals(pageNumber = 1, pageSize = 10, status?: string): Promise<ApiResponse<PagedResponse<HotelApprovalRequest>>> {
-  let url = `${BASE_URL}/admin/hotel-approvals?pageNumber=${pageNumber}&pageSize=${pageSize}`;
+export async function getHotelApprovals(pageIndex = 1, pageSize = 10, status?: string): Promise<ApiResponse<PagedResponse<HotelApprovalRequest>>> {
+  let url = `${BASE_URL}/admin/hotel-approvals?pageIndex=${pageIndex}&pageSize=${pageSize}`;
   if (status) {
     url += `&status=${status}`;
   }
@@ -41,8 +41,8 @@ export async function rejectHotel(id: number): Promise<ApiResponse<boolean>> {
 
 // === UPGRADE REQUESTS ===
 
-export async function getUpgradeRequests(pageNumber = 1, pageSize = 10, status?: string): Promise<ApiResponse<PagedResponse<UpgradeRequest>>> {
-  let url = `${BASE_URL}/admin/upgrade-requests?pageNumber=${pageNumber}&pageSize=${pageSize}`;
+export async function getUpgradeRequests(pageIndex = 1, pageSize = 10, status?: string): Promise<ApiResponse<PagedResponse<UpgradeRequest>>> {
+  let url = `${BASE_URL}/admin/upgrade-requests?pageIndex=${pageIndex}&pageSize=${pageSize}`;
   if (status) {
     url += `&status=${status}`;
   }

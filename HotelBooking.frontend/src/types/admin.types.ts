@@ -3,11 +3,9 @@
 export interface PagedResponse<T> {
   items: T[];
   totalCount: number;
-  pageNumber: number;
+  pageIndex: number;
   pageSize: number;
   totalPages: number;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
 }
 
 export interface BaseRequest {

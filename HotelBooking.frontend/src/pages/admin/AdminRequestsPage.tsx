@@ -16,7 +16,7 @@ function AdminRequestsPage() {
   const [statusFilter, setStatusFilter] = useState("Pending");
   
   // Pagination State
-  const [pageNumber, setPageNumber] = useState(1);
+  const [pageIndex, setPageIndex] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -26,6 +26,9 @@ function AdminRequestsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Modal State
+  const [selectedRequest, setSelectedRequest] = useState<HotelApprovalRequest | UpgradeRequest | null>(null);
+
   // Fetch Data
   async function fetchRequests() {
     setLoading(true);
@@ -34,20 +37,20 @@ function AdminRequestsPage() {
       const status = statusFilter === "All" ? undefined : statusFilter;
       
       if (requestType === "Hotel") {
-        const res = await getHotelApprovals(pageNumber, pageSize, status);
+        const res = await getHotelApprovals(pageIndex, pageSize, status);
         if (res.statusCode === "Success" && res.data) {
-          setRequests(res.data.items);
-          setTotalPages(res.data.totalPages);
-          setTotalCount(res.data.totalCount);
+          setRequests(res.data.items || []);
+          setTotalPages(res.data.totalPages || 1);
+          setTotalCount(res.data.totalCount || 0);
         } else {
           setError(res.message || "Failed to load requests.");
         }
       } else {
-        const res = await getUpgradeRequests(pageNumber, pageSize, status);
+        const res = await getUpgradeRequests(pageIndex, pageSize, status);
         if (res.statusCode === "Success" && res.data) {
-          setRequests(res.data.items);
-          setTotalPages(res.data.totalPages);
-          setTotalCount(res.data.totalCount);
+          setRequests(res.data.items || []);
+          setTotalPages(res.data.totalPages || 1);
+          setTotalCount(res.data.totalCount || 0);
         } else {
           setError(res.message || "Failed to load requests.");
         }
@@ -63,17 +66,17 @@ function AdminRequestsPage() {
   useEffect(() => {
     fetchRequests();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [requestType, statusFilter, pageNumber, pageSize]);
+  }, [requestType, statusFilter, pageIndex, pageSize]);
 
   // Reset page number when changing type or status filter
   function handleTypeChange(newType: RequestType) {
     setRequestType(newType);
-    setPageNumber(1);
+    setPageIndex(1);
   }
 
   function handleStatusChange(newStatus: string) {
     setStatusFilter(newStatus);
-    setPageNumber(1);
+    setPageIndex(1);
   }
 
   // Actions
@@ -83,6 +86,7 @@ function AdminRequestsPage() {
       const res = requestType === "Hotel" ? await approveHotel(id) : await approveUpgrade(id);
       if (res.statusCode === "Success") {
         alert("Request approved successfully!");
+        if (selectedRequest?.requestId === id) setSelectedRequest(null);
         fetchRequests();
       } else {
         alert("Failed: " + res.message);
@@ -98,6 +102,7 @@ function AdminRequestsPage() {
       const res = requestType === "Hotel" ? await rejectHotel(id) : await rejectUpgrade(id);
       if (res.statusCode === "Success") {
         alert("Request rejected successfully!");
+        if (selectedRequest?.requestId === id) setSelectedRequest(null);
         fetchRequests();
       } else {
         alert("Failed: " + res.message);
@@ -110,7 +115,7 @@ function AdminRequestsPage() {
   // Render Helpers
   function renderHotelRow(req: HotelApprovalRequest) {
     return (
-      <tr key={req.requestId} style={{ borderBottom: "1px solid #F1F5F9" }}>
+      <tr key={req.requestId} style={{ borderBottom: "1px solid #F1F5F9", cursor: "pointer" }} onClick={() => setSelectedRequest(req)}>
         <td style={{ padding: "16px", fontSize: "14px", color: "#0F172A" }}>#{req.requestId}</td>
         <td style={{ padding: "16px", fontSize: "14px", color: "#0F172A", fontWeight: 500 }}>
           {req.name}
@@ -122,14 +127,14 @@ function AdminRequestsPage() {
         </td>
         <td style={{ padding: "16px", fontSize: "14px", color: "#0F172A" }}>{new Date(req.requestedAt).toLocaleDateString()}</td>
         <td style={{ padding: "16px", fontSize: "14px" }}>{renderStatusBadge(req.status)}</td>
-        <td style={{ padding: "16px", textAlign: "right" }}>{renderActionButtons(req)}</td>
+        <td style={{ padding: "16px", textAlign: "right" }} onClick={(e) => e.stopPropagation()}>{renderActionButtons(req)}</td>
       </tr>
     );
   }
 
   function renderUpgradeRow(req: UpgradeRequest) {
     return (
-      <tr key={req.requestId} style={{ borderBottom: "1px solid #F1F5F9" }}>
+      <tr key={req.requestId} style={{ borderBottom: "1px solid #F1F5F9", cursor: "pointer" }} onClick={() => setSelectedRequest(req)}>
         <td style={{ padding: "16px", fontSize: "14px", color: "#0F172A" }}>#{req.requestId}</td>
         <td style={{ padding: "16px", fontSize: "14px", color: "#0F172A", fontWeight: 500 }}>
           {req.fullName}
@@ -141,7 +146,7 @@ function AdminRequestsPage() {
         </td>
         <td style={{ padding: "16px", fontSize: "14px", color: "#0F172A" }}>{req.taxCode}</td>
         <td style={{ padding: "16px", fontSize: "14px" }}>{renderStatusBadge(req.status)}</td>
-        <td style={{ padding: "16px", textAlign: "right" }}>{renderActionButtons(req)}</td>
+        <td style={{ padding: "16px", textAlign: "right" }} onClick={(e) => e.stopPropagation()}>{renderActionButtons(req)}</td>
       </tr>
     );
   }
@@ -175,6 +180,77 @@ function AdminRequestsPage() {
           </button>
         )}
       </>
+    );
+  }
+
+  function renderModal() {
+    if (!selectedRequest) return null;
+
+    return (
+      <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000 }}>
+        <div style={{ backgroundColor: "#fff", borderRadius: "12px", width: "100%", maxWidth: "600px", maxHeight: "90vh", overflowY: "auto", padding: "24px", position: "relative" }}>
+          <button onClick={() => setSelectedRequest(null)} style={{ position: "absolute", top: "16px", right: "16px", background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "#64748B" }}>✕</button>
+          
+          <h2 style={{ fontSize: "20px", color: "#0F172A", marginBottom: "16px", paddingBottom: "12px", borderBottom: "1px solid #E2E8F0" }}>
+            {requestType === "Hotel" ? "Hotel Approval Details" : "Upgrade Request Details"}
+          </h2>
+          
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>
+            <div>
+              <div style={{ fontSize: "12px", color: "#64748B", textTransform: "uppercase", fontWeight: 600, marginBottom: "4px" }}>Request ID</div>
+              <div style={{ fontSize: "15px", color: "#0F172A" }}>#{selectedRequest.requestId}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: "12px", color: "#64748B", textTransform: "uppercase", fontWeight: 600, marginBottom: "4px" }}>Status</div>
+              <div>{renderStatusBadge(selectedRequest.status)}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: "12px", color: "#64748B", textTransform: "uppercase", fontWeight: 600, marginBottom: "4px" }}>Requested At</div>
+              <div style={{ fontSize: "15px", color: "#0F172A" }}>{new Date(selectedRequest.requestedAt).toLocaleString()}</div>
+            </div>
+            {selectedRequest.processedAt && (
+              <div>
+                <div style={{ fontSize: "12px", color: "#64748B", textTransform: "uppercase", fontWeight: 600, marginBottom: "4px" }}>Processed At</div>
+                <div style={{ fontSize: "15px", color: "#0F172A" }}>{new Date(selectedRequest.processedAt).toLocaleString()}</div>
+              </div>
+            )}
+          </div>
+
+          <h3 style={{ fontSize: "16px", color: "#0F172A", marginBottom: "12px" }}>Specific Information</h3>
+          <div style={{ backgroundColor: "#F8FAFC", padding: "16px", borderRadius: "8px", border: "1px solid #E2E8F0" }}>
+            {requestType === "Hotel" ? (
+              <div style={{ display: "grid", gap: "12px" }}>
+                <div><strong>Hotel Name:</strong> {(selectedRequest as HotelApprovalRequest).name}</div>
+                <div><strong>Address:</strong> {(selectedRequest as HotelApprovalRequest).address}</div>
+                <div><strong>Location:</strong> {(selectedRequest as HotelApprovalRequest).wardName}, {(selectedRequest as HotelApprovalRequest).provinceName}, {(selectedRequest as HotelApprovalRequest).countryName}</div>
+                <div><strong>Type:</strong> {(selectedRequest as HotelApprovalRequest).propertyTypeName}</div>
+                <div><strong>Tax Code:</strong> {(selectedRequest as HotelApprovalRequest).taxCode}</div>
+                <div><strong>Business License:</strong> <a href={(selectedRequest as HotelApprovalRequest).businessLicenseUrl} target="_blank" rel="noreferrer" style={{color:"#3B82F6"}}>View Document</a></div>
+                <hr style={{ borderColor: "#E2E8F0", margin: "12px 0" }} />
+                <div><strong>Owner:</strong> {(selectedRequest as HotelApprovalRequest).ownerFullName} (ID: {(selectedRequest as HotelApprovalRequest).ownerId})</div>
+                <div><strong>Owner Email:</strong> {(selectedRequest as HotelApprovalRequest).ownerEmail}</div>
+                <div><strong>Owner Phone:</strong> {(selectedRequest as HotelApprovalRequest).ownerPhoneNumber}</div>
+              </div>
+            ) : (
+              <div style={{ display: "grid", gap: "12px" }}>
+                <div><strong>Customer:</strong> {(selectedRequest as UpgradeRequest).fullName} (@{(selectedRequest as UpgradeRequest).userName})</div>
+                <div><strong>User ID:</strong> {(selectedRequest as UpgradeRequest).userId}</div>
+                <div><strong>Email:</strong> {(selectedRequest as UpgradeRequest).email}</div>
+                <div><strong>Phone:</strong> {(selectedRequest as UpgradeRequest).phoneNumber}</div>
+                <div><strong>Address:</strong> {(selectedRequest as UpgradeRequest).address}</div>
+                <div><strong>Tax Code:</strong> {(selectedRequest as UpgradeRequest).taxCode}</div>
+              </div>
+            )}
+          </div>
+
+          <div style={{ marginTop: "24px", display: "flex", justifyContent: "flex-end", gap: "12px" }}>
+            {renderActionButtons(selectedRequest)}
+            <button onClick={() => setSelectedRequest(null)} style={{ padding: "6px 16px", backgroundColor: "#E2E8F0", color: "#475569", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "14px", fontWeight: 600 }}>
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -220,7 +296,7 @@ function AdminRequestsPage() {
           </select>
           <select 
             value={pageSize} 
-            onChange={(e) => { setPageSize(Number(e.target.value)); setPageNumber(1); }}
+            onChange={(e) => { setPageSize(Number(e.target.value)); setPageIndex(1); }}
             style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "14px" }}
           >
             <option value={10}>10 per page</option>
@@ -278,17 +354,17 @@ function AdminRequestsPage() {
             </div>
             <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
               <button 
-                disabled={pageNumber === 1}
-                onClick={() => setPageNumber(p => p - 1)}
-                style={{ padding: "6px 12px", border: "1px solid #CBD5E1", borderRadius: "6px", backgroundColor: pageNumber === 1 ? "#F1F5F9" : "#fff", cursor: pageNumber === 1 ? "not-allowed" : "pointer", color: "#0F172A" }}
+                disabled={pageIndex === 1}
+                onClick={() => setPageIndex(p => p - 1)}
+                style={{ padding: "6px 12px", border: "1px solid #CBD5E1", borderRadius: "6px", backgroundColor: pageIndex === 1 ? "#F1F5F9" : "#fff", cursor: pageIndex === 1 ? "not-allowed" : "pointer", color: "#0F172A" }}
               >
                 Previous
               </button>
-              <span style={{ fontSize: "14px", color: "#0F172A", margin: "0 8px" }}>Page {pageNumber} of {totalPages}</span>
+              <span style={{ fontSize: "14px", color: "#0F172A", margin: "0 8px" }}>Page {pageIndex} of {totalPages}</span>
               <button 
-                disabled={pageNumber >= totalPages}
-                onClick={() => setPageNumber(p => p + 1)}
-                style={{ padding: "6px 12px", border: "1px solid #CBD5E1", borderRadius: "6px", backgroundColor: pageNumber >= totalPages ? "#F1F5F9" : "#fff", cursor: pageNumber >= totalPages ? "not-allowed" : "pointer", color: "#0F172A" }}
+                disabled={pageIndex >= totalPages}
+                onClick={() => setPageIndex(p => p + 1)}
+                style={{ padding: "6px 12px", border: "1px solid #CBD5E1", borderRadius: "6px", backgroundColor: pageIndex >= totalPages ? "#F1F5F9" : "#fff", cursor: pageIndex >= totalPages ? "not-allowed" : "pointer", color: "#0F172A" }}
               >
                 Next
               </button>
@@ -296,6 +372,8 @@ function AdminRequestsPage() {
           </div>
         </div>
       )}
+
+      {renderModal()}
     </div>
   );
 }
