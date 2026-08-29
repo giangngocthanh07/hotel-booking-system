@@ -24,3 +24,20 @@ export async function createUpgradeRequest(request: CreateUpgradeRequest): Promi
   });
   return response.json();
 }
+
+export interface UserUpgradeInfo {
+  userId: number;
+  userName: string;
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  requestStatus: string;
+  requestId: number | null;
+}
+
+export async function getMyUpgradeInfo(): Promise<ApiResponse<UserUpgradeInfo>> {
+  const response = await fetch(`${BASE_URL}/upgrade-requests/me/info`, {
+    headers: getHeaders()
+  });
+  return response.json();
+}
