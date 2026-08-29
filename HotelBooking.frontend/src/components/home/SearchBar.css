@@ -35,8 +35,17 @@
   flex: 1 1 220px;
 }
 
-.searchbar-field--date {
-  flex: 0 0 140px;
+/* Single date trigger that opens the calendar panel */
+.searchbar-field--date-trigger {
+  flex: 0 0 200px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.searchbar-date-label-text {
+  font-size: 15px;
+  color: #1E293B;
+  white-space: nowrap;
 }
 
 .searchbar-field--guests {
@@ -246,4 +255,47 @@
 
 .guest-panel__done:hover {
   opacity: 0.9;
+}
+
+/* ============================================================
+   MUI Date Range Calendar Panel
+   ============================================================ */
+.calendar-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  z-index: 200;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+  /* Remove default MUI border */
+  border: 1px solid #E2E8F0;
+}
+
+/* Remove default MUI toolbar / action bar padding */
+.calendar-panel .MuiPickersLayout-root {
+  border-radius: 16px;
+}
+
+/* Hint text inside the calendar panel */
+.calendar-panel__hint {
+  padding: 12px 24px 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #3B82F6;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+/* Two calendars side by side */
+.calendar-panel__months {
+  display: flex;
+  gap: 0;
+}
+
+/* Divider between the two calendars */
+.calendar-panel__months > div:first-child {
+  border-right: 1px solid #F1F5F9;
 }
