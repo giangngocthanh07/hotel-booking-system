@@ -24,7 +24,7 @@
 }
 
 body {
-  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: "Roboto", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--bg-gradient);
   min-height: 100vh;
   color: var(--color-text);
