@@ -272,3 +272,43 @@ export async function deleteRoomView(id: number): Promise<ApiResponse<any>> {
   });
   return response.json();
 }
+
+// BED TYPES
+export interface BedTypeItem extends BaseAdminItem {
+  defaultCapacity: number;
+  minWidth: number;
+  maxWidth: number;
+  isVaryingSize: boolean;
+  sizeDisplay: string;
+}
+
+export async function getBedTypes(): Promise<ApiResponse<BedTypeItem[]>> {
+  const response = await fetch(`${BASE_URL}/admin/management/bed-types`, { headers: getHeaders() });
+  return response.json();
+}
+
+export async function createBedType(data: any): Promise<ApiResponse<any>> {
+  const response = await fetch(`${BASE_URL}/admin/management/bed-types`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify(data)
+  });
+  return response.json();
+}
+
+export async function updateBedType(id: number, data: any): Promise<ApiResponse<any>> {
+  const response = await fetch(`${BASE_URL}/admin/management/bed-types/${id}`, {
+    method: "PUT",
+    headers: getHeaders(),
+    body: JSON.stringify(data)
+  });
+  return response.json();
+}
+
+export async function deleteBedType(id: number): Promise<ApiResponse<any>> {
+  const response = await fetch(`${BASE_URL}/admin/management/bed-types/${id}`, {
+    method: "DELETE",
+    headers: getHeaders()
+  });
+  return response.json();
+}

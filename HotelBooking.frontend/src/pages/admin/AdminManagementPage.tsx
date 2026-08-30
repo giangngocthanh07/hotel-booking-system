@@ -3,6 +3,7 @@ import AmenitiesTab from "../../components/admin/management/AmenitiesTab";
 import PoliciesTab from "../../components/admin/management/PoliciesTab";
 import ServicesTab from "../../components/admin/management/ServicesTab";
 import RoomViewsTab from "../../components/admin/management/RoomViewsTab";
+import BedTypesTab from "../../components/admin/management/BedTypesTab";
 import "./AdminManagementPage.css";
 
 type TabType = "Amenities" | "BedTypes" | "RoomViews" | "Services" | "Policies";
@@ -29,7 +30,7 @@ export default function AdminManagementPage() {
 
       <div className="manage-content">
         {activeTab === "Amenities" && <AmenitiesTab />}
-        {activeTab === "BedTypes" && <div className="empty-state">Bed Types management (Coming soon)</div>}
+        {activeTab === "BedTypes" && <BedTypesTab />}
         {activeTab === "RoomViews" && <RoomViewsTab />}
         {activeTab === "Services" && <ServicesTab />}
         {activeTab === "Policies" && <PoliciesTab />}
