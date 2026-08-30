@@ -102,10 +102,10 @@ export interface UpdateUserProfileRequest {
 
 export async function getCurrentUser(): Promise<ApiResponse<UserDetail>> {
   const token = getAuthToken();
-  const res = await fetch(${BASE_URL}/auth/me, {
+  const res = await fetch(`${BASE_URL}/auth/me`, {
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: Bearer  } : {})
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
     }
   });
   return res.json();
@@ -113,11 +113,11 @@ export async function getCurrentUser(): Promise<ApiResponse<UserDetail>> {
 
 export async function updateUserProfile(data: UpdateUserProfileRequest): Promise<ApiResponse<any>> {
   const token = getAuthToken();
-  const res = await fetch(${BASE_URL}/auth/profile, {
+  const res = await fetch(`${BASE_URL}/auth/profile`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: Bearer  } : {})
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
     },
     body: JSON.stringify(data)
   });
