@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import Header from "../components/layout/Header";
 import "./NotFoundPage.css";
 
 export default function NotFoundPage() {
@@ -7,7 +6,6 @@ export default function NotFoundPage() {
 
   return (
     <div className="not-found-wrapper">
-      <Header />
       <div className="not-found-container">
         <div className="not-found-content">
           <h1 className="not-found-title">404</h1>
