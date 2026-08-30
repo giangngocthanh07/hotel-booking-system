@@ -60,7 +60,7 @@ public class FileService : IFileService
                 {
                     result.Uploaded = true;
                     result.FileName = file.FileName;
-                    result.StoredFileName = uploadResult.SecureUrl.ToString();
+                    result.StoredFileName = _cloudinary.Api.UrlImgUp.ResourceType("raw").Action("upload").Signed(true).BuildUrl(uploadResult.PublicId);
 
                     return ResponseFactory.Success(result, MessageResponse.Common.UPDATE_SUCCESSFULLY);
                 }
