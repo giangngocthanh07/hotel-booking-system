@@ -1,5 +1,6 @@
 import { useState } from "react";
 import AmenitiesTab from "../../components/admin/management/AmenitiesTab";
+import PoliciesTab from "../../components/admin/management/PoliciesTab";
 import "./AdminManagementPage.css";
 
 type TabType = "Amenities" | "BedTypes" | "RoomViews" | "Services" | "Policies";
@@ -29,7 +30,7 @@ export default function AdminManagementPage() {
         {activeTab === "BedTypes" && <div className="empty-state">Bed Types management (Coming soon)</div>}
         {activeTab === "RoomViews" && <div className="empty-state">Room Views management (Coming soon)</div>}
         {activeTab === "Services" && <div className="empty-state">Services management (Coming soon)</div>}
-        {activeTab === "Policies" && <div className="empty-state">Policies management (Coming soon)</div>}
+        {activeTab === "Policies" && <PoliciesTab />}
       </div>
     </div>
   );

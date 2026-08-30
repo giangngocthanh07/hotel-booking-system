@@ -107,3 +107,70 @@ export async function deleteBedType(id: number): Promise<ApiResponse<any>> {
   });
   return response.json();
 }
+// POLICIES
+export interface PolicyType extends BaseAdminItem {}
+
+export interface PolicyItem extends BaseAdminItem {
+  typeId: number;
+  discriminator: "checkInOut" | "cancellation" | "children" | "pets";
+  
+  // checkInOut
+  checkInTime?: string;
+  checkOutTime?: string;
+  earlyCheckInFee?: number;
+  lateCheckOutFee?: number;
+  
+  // cancellation
+  daysBeforeCheckIn?: number;
+  refundPercent?: number;
+  isRefundable?: boolean;
+  
+  // children
+  minAge?: number;
+  maxAge?: number;
+  extraBedFee?: number;
+  
+  // pets
+  petFee?: number;
+  isPetAllowed?: boolean;
+}
+
+export async function getPolicyTypes(): Promise<ApiResponse<PolicyType[]>> {
+  const response = await fetch(`${BASE_URL}/admin/management/policy-types`, { headers: getHeaders() });
+  return response.json();
+}
+
+export async function getPolicies(pageIndex = 1, pageSize = 50, typeId?: number): Promise<ApiResponse<PagedResponse<PolicyItem>>> {
+  let url = `${BASE_URL}/admin/management/policies?pageIndex=${pageIndex}&pageSize=${pageSize}`;
+  if (typeId) {
+    url += `&typeId=${typeId}`;
+  }
+  const response = await fetch(url, { headers: getHeaders() });
+  return response.json();
+}
+
+export async function createPolicy(type: "check-in-out" | "cancellation" | "pet" | "children", data: any): Promise<ApiResponse<any>> {
+  const response = await fetch(`${BASE_URL}/admin/management/policies/${type}`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify(data)
+  });
+  return response.json();
+}
+
+export async function updatePolicy(id: number, type: "check-in-out" | "cancellation" | "pet" | "children", data: any): Promise<ApiResponse<any>> {
+  const response = await fetch(`${BASE_URL}/admin/management/policies/${type}/${id}`, {
+    method: "PUT",
+    headers: getHeaders(),
+    body: JSON.stringify(data)
+  });
+  return response.json();
+}
+
+export async function deletePolicy(id: number): Promise<ApiResponse<any>> {
+  const response = await fetch(`${BASE_URL}/admin/management/policies/${id}`, {
+    method: "DELETE",
+    headers: getHeaders()
+  });
+  return response.json();
+}
