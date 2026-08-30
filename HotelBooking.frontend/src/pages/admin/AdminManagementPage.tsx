@@ -4,9 +4,11 @@ import PoliciesTab from "../../components/admin/management/PoliciesTab";
 import ServicesTab from "../../components/admin/management/ServicesTab";
 import RoomViewsTab from "../../components/admin/management/RoomViewsTab";
 import BedTypesTab from "../../components/admin/management/BedTypesTab";
+import UnitTypesTab from "../../components/admin/management/UnitTypesTab";
+import RoomQualitiesTab from "../../components/admin/management/RoomQualitiesTab";
 import "./AdminManagementPage.css";
 
-type TabType = "Amenities" | "BedTypes" | "RoomViews" | "Services" | "Policies";
+type TabType = "Amenities" | "UnitTypes" | "BedTypes" | "RoomViews" | "RoomQualities" | "Services" | "Policies";
 
 export default function AdminManagementPage() {
   const [activeTab, setActiveTab] = useState<TabType>("Amenities");
@@ -30,8 +32,10 @@ export default function AdminManagementPage() {
 
       <div className="manage-content">
         {activeTab === "Amenities" && <AmenitiesTab />}
+        {activeTab === "UnitTypes" && <UnitTypesTab />}
         {activeTab === "BedTypes" && <BedTypesTab />}
         {activeTab === "RoomViews" && <RoomViewsTab />}
+        {activeTab === "RoomQualities" && <RoomQualitiesTab />}
         {activeTab === "Services" && <ServicesTab />}
         {activeTab === "Policies" && <PoliciesTab />}
       </div>

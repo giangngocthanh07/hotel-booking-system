@@ -281,3 +281,89 @@ export async function deleteBedType(id: number): Promise<ApiResponse<any>> {
   });
   return response.json();
 }
+
+// UNIT TYPES
+export interface UnitTypeItem extends BaseAdminItem {
+  isEntirePlace: boolean;
+}
+
+export async function getUnitTypes(): Promise<ApiResponse<UnitTypeItem[]>> {
+  const response = await fetch(`${BASE_URL}/admin/management/unit-types`, { headers: getHeaders() });
+  return response.json();
+}
+
+export async function createUnitType(data: any): Promise<ApiResponse<any>> {
+  const response = await fetch(`${BASE_URL}/admin/management/unit-types`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify(data)
+  });
+  return response.json();
+}
+
+export async function updateUnitType(id: number, data: any): Promise<ApiResponse<any>> {
+  const response = await fetch(`${BASE_URL}/admin/management/unit-types/${id}`, {
+    method: "PUT",
+    headers: getHeaders(),
+    body: JSON.stringify(data)
+  });
+  return response.json();
+}
+
+export async function deleteUnitType(id: number): Promise<ApiResponse<any>> {
+  const response = await fetch(`${BASE_URL}/admin/management/unit-types/${id}`, {
+    method: "DELETE",
+    headers: getHeaders()
+  });
+  return response.json();
+}
+
+// ROOM QUALITIES
+export interface RoomQualityGroup extends BaseAdminItem {
+  sortOrder?: number;
+}
+
+export interface RoomQualityItem extends BaseAdminItem {
+  typeId: number;
+  sortOrder?: number;
+}
+
+export async function getRoomQualityGroups(): Promise<ApiResponse<RoomQualityGroup[]>> {
+  const response = await fetch(`${BASE_URL}/admin/management/room-quality-groups`, { headers: getHeaders() });
+  return response.json();
+}
+
+export async function getRoomQualities(pageIndex = 1, pageSize = 50, typeId?: number): Promise<ApiResponse<PagedResponse<RoomQualityItem>>> {
+  let url = `${BASE_URL}/admin/management/room-qualities?pageIndex=${pageIndex}&pageSize=${pageSize}`;
+  if (typeId) {
+    url += `&typeId=${typeId}`;
+  }
+  const response = await fetch(url, { headers: getHeaders() });
+  return response.json();
+}
+
+export async function createRoomQuality(data: any): Promise<ApiResponse<any>> {
+  const response = await fetch(`${BASE_URL}/admin/management/room-qualities`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify(data)
+  });
+  return response.json();
+}
+
+export async function updateRoomQuality(id: number, data: any): Promise<ApiResponse<any>> {
+  const response = await fetch(`${BASE_URL}/admin/management/room-qualities/${id}`, {
+    method: "PUT",
+    headers: getHeaders(),
+    body: JSON.stringify(data)
+  });
+  return response.json();
+}
+
+export async function deleteRoomQuality(id: number): Promise<ApiResponse<any>> {
+  const response = await fetch(`${BASE_URL}/admin/management/room-qualities/${id}`, {
+    method: "DELETE",
+    headers: getHeaders()
+  });
+  return response.json();
+}
