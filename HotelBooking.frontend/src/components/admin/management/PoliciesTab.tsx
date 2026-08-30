@@ -4,6 +4,11 @@ import {
 } from "../../../services/adminManagementService";
 import type { PolicyType, PolicyItem } from "../../../services/adminManagementService";
 
+function formatFee(fee?: number) {
+  if (!fee || fee === 0) return "Free";
+  return `${fee.toLocaleString("vi-VN")} VNĐ`;
+}
+
 export default function PoliciesTab() {
   const [policyTypes, setPolicyTypes] = useState<PolicyType[]>([]);
   const [items, setItems] = useState<PolicyItem[]>([]);
@@ -202,7 +207,7 @@ export default function PoliciesTab() {
         return (
           <div style={{ fontSize: "12px", color: "#64748B" }}>
             <div>In: <strong>{item.checkInTime}</strong> | Out: <strong>{item.checkOutTime}</strong></div>
-            <div>Early Fee: <strong>{item.earlyCheckInFee?.toLocaleString("vi-VN")} VNĐ</strong> | Late Fee: <strong>{item.lateCheckOutFee?.toLocaleString("vi-VN")} VNĐ</strong></div>
+            <div>Early Fee: <strong>{formatFee(item.earlyCheckInFee)}</strong> | Late Fee: <strong>{formatFee(item.lateCheckOutFee)}</strong></div>
           </div>
         );
       case "cancellation":
@@ -216,14 +221,14 @@ export default function PoliciesTab() {
         return (
           <div style={{ fontSize: "12px", color: "#64748B" }}>
             <div>Age: <strong>{item.minAge} - {item.maxAge}</strong></div>
-            <div>Extra Bed Fee: <strong>{item.extraBedFee?.toLocaleString("vi-VN")} VNĐ</strong></div>
+            <div>Extra Bed Fee: <strong>{formatFee(item.extraBedFee)}</strong></div>
           </div>
         );
       case "pets":
         return (
           <div style={{ fontSize: "12px", color: "#64748B" }}>
             <div>Allowed: <strong>{item.isPetAllowed ? "Yes" : "No"}</strong></div>
-            {item.isPetAllowed && <div>Fee: <strong>{item.petFee?.toLocaleString("vi-VN")} VNĐ</strong></div>}
+            {item.isPetAllowed && <div>Fee: <strong>{formatFee(item.petFee)}</strong></div>}
           </div>
         );
       default:
@@ -424,7 +429,7 @@ export default function PoliciesTab() {
           <div className="manage-modal" style={{ maxWidth: "600px" }}>
             <div className="modal-header">
               <h3>{modalMode} Policy</h3>
-              <button type="button" className="close-btn" onClick={() => setIsModalOpen(false)}>×</button>
+              <button type="button" className="close-btn" onClick={() => setIsModalOpen(false)}>Ã—</button>
             </div>
             <form onSubmit={handleFormSubmit}>
               <div className="modal-body" style={{ maxHeight: "65vh", overflowY: "auto" }}>
@@ -498,5 +503,8 @@ export default function PoliciesTab() {
     </div>
   );
 }
+
+
+
 
 
