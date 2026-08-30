@@ -67,7 +67,7 @@ public class FileService : IFileService
             }
             else
             {
-                var uploadParams = new ImageUploadParams /* bypassed raw */
+                var uploadParams = new RawUploadParams
                 {
                     File = new FileDescription(file.FileName, file.Content),
                     PublicId = $"user_{userId}_business_license_{Guid.NewGuid()}",
