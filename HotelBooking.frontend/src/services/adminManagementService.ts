@@ -76,37 +76,6 @@ export async function deleteAmenity(id: number): Promise<ApiResponse<any>> {
   return response.json();
 }
 
-// ROOM ATTRIBUTES (Bed Types for instance)
-export async function getBedTypes(pageIndex = 1, pageSize = 50): Promise<ApiResponse<PagedResponse<BaseAdminItem>>> {
-  const response = await fetch(`${BASE_URL}/admin/management/bed-types?pageIndex=${pageIndex}&pageSize=${pageSize}`, { headers: getHeaders() });
-  return response.json();
-}
-
-export async function createBedType(data: { name: string, description: string }): Promise<ApiResponse<any>> {
-  const response = await fetch(`${BASE_URL}/admin/management/bed-types`, {
-    method: "POST",
-    headers: getHeaders(),
-    body: JSON.stringify(data)
-  });
-  return response.json();
-}
-
-export async function updateBedType(id: number, data: { name: string, description: string }): Promise<ApiResponse<any>> {
-  const response = await fetch(`${BASE_URL}/admin/management/bed-types/${id}`, {
-    method: "PUT",
-    headers: getHeaders(),
-    body: JSON.stringify(data)
-  });
-  return response.json();
-}
-
-export async function deleteBedType(id: number): Promise<ApiResponse<any>> {
-  const response = await fetch(`${BASE_URL}/admin/management/bed-types/${id}`, {
-    method: "DELETE",
-    headers: getHeaders()
-  });
-  return response.json();
-}
 // POLICIES
 export interface PolicyType extends BaseAdminItem {}
 
