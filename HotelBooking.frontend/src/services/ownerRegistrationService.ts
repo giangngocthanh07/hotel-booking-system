@@ -1,5 +1,5 @@
-import { get, post, postFormData } from './api';
-import type { ApiResponse } from './api';
+import { getAuthToken } from "./authService";
+import { API_BASE_URL } from "../config/api";
 
 export interface LocationItem {
   id: number;
@@ -32,17 +32,73 @@ export interface HotelRegistrationDTO {
   businessLicenseUrl: string;
 }
 
-export const getCountries = () => get<LocationItem[]>('/api/v1/locations/countries');
-export const getProvinces = (countryId: number) => get<LocationItem[]>(`/api/v1/locations/countries/${countryId}/provinces`);
-export const getWards = (provinceId: number) => get<LocationItem[]>(`/api/v1/locations/provinces/${provinceId}/wards`);
+export interface ApiResponse<T> {
+  statusCode: string;
+  message: string;
+  content?: T;
+  errors?: string[];
+}
 
-export const getPropertyTypes = () => get<PropertyTypeItem[]>('/api/v1/hotels/property-types');
+// Internal generic fetch helper
+async function request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
+  const token = getAuthToken();
+  const headers = new Headers(options.headers || {});
+  
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  // Set default content type if not provided and not FormData
+  if (!headers.has("Content-Type") && !(options.body instanceof FormData)) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...options,
+    headers
+  });
+
+  // Handle No Content (204)
+  if (response.status === 204) {
+    return { statusCode: "Success", message: "Success" };
+  }
+
+  const text = await response.text();
+  let data: any;
+  
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch (err) {
+    data = { statusCode: "Error", message: "Invalid JSON response" };
+  }
+
+  if (!response.ok) {
+    throw {
+      response: { data }
+    };
+  }
+
+  return data as ApiResponse<T>;
+}
+
+export const getCountries = () => request<LocationItem[]>('/locations/countries');
+export const getProvinces = (countryId: number) => request<LocationItem[]>(`/locations/countries/${countryId}/provinces`);
+export const getWards = (provinceId: number) => request<LocationItem[]>(`/locations/provinces/${provinceId}/wards`);
+
+export const getPropertyTypes = () => request<PropertyTypeItem[]>('/hotels/property-types');
 
 export const uploadBusinessLicense = async (file: File): Promise<ApiResponse<any>> => {
   const formData = new FormData();
   formData.append('file', file);
-  return postFormData<any>('/api/v1/files/business-licenses', formData);
+  return request<any>('/files/business-licenses', {
+    method: 'POST',
+    body: formData
+  });
 };
 
-export const submitRegistration = (data: HotelRegistrationDTO) => post<any>('/api/v1/owner/hotel-registrations', data);
-export const getMyRegistrations = () => get<any[]>('/api/v1/owner/hotel-registrations/me');
+export const submitRegistration = (data: HotelRegistrationDTO) => request<any>('/owner/hotel-registrations', {
+  method: 'POST',
+  body: JSON.stringify(data)
+});
+
+export const getMyRegistrations = () => request<any[]>('/owner/hotel-registrations/me');
