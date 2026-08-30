@@ -118,7 +118,7 @@ export default function HotelRegistrationPage() {
     try {
       // 1. Upload File
       const uploadRes = await uploadBusinessLicense(file);
-      if (uploadRes.statusCode !== "Success" || !uploadRes.content?.url) {
+      if (uploadRes.statusCode !== "Success" || !uploadRes.content?.storedFileName) {
         setError("Failed to upload business license: " + (uploadRes.message || "Unknown error"));
         setSubmitting(false);
         return;
@@ -146,7 +146,7 @@ export default function HotelRegistrationPage() {
         wardId: formData.wardId!,
         wardName: wName,
         taxCode: formData.taxCode!,
-        businessLicenseUrl: uploadRes.content.url
+        businessLicenseUrl: uploadRes.content.storedFileName
       };
 
       if (formData.latitude && formData.longitude) {
