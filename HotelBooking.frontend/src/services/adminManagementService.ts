@@ -238,3 +238,37 @@ export async function deleteService(id: number): Promise<ApiResponse<any>> {
   });
   return response.json();
 }
+
+// ROOM VIEWS
+export interface RoomViewItem extends BaseAdminItem {}
+
+export async function getRoomViews(): Promise<ApiResponse<RoomViewItem[]>> {
+  const response = await fetch(`${BASE_URL}/admin/management/room-views`, { headers: getHeaders() });
+  return response.json();
+}
+
+export async function createRoomView(data: { name: string, description?: string }): Promise<ApiResponse<any>> {
+  const response = await fetch(`${BASE_URL}/admin/management/room-views`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify(data)
+  });
+  return response.json();
+}
+
+export async function updateRoomView(id: number, data: { name: string, description?: string }): Promise<ApiResponse<any>> {
+  const response = await fetch(`${BASE_URL}/admin/management/room-views/${id}`, {
+    method: "PUT",
+    headers: getHeaders(),
+    body: JSON.stringify(data)
+  });
+  return response.json();
+}
+
+export async function deleteRoomView(id: number): Promise<ApiResponse<any>> {
+  const response = await fetch(`${BASE_URL}/admin/management/room-views/${id}`, {
+    method: "DELETE",
+    headers: getHeaders()
+  });
+  return response.json();
+}
