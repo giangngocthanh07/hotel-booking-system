@@ -14,6 +14,7 @@ import AdminManagementPage from "./pages/admin/AdminManagementPage";
 import BecomePartnerPage from "./pages/customer/BecomePartnerPage";
 import UserProfilePage from "./pages/user/UserProfilePage";
 import HotelRegistrationPage from "./pages/owner/HotelRegistrationPage";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 import NotFoundPage from "./pages/NotFoundPage";
 
 function App() {
@@ -40,7 +41,9 @@ function App() {
         <Route path="/profile" element={<UserProfilePage />} />
 
         {/* Owner section */}
-        <Route path="/owner/registration" element={<HotelRegistrationPage />} />
+        <Route element={<ProtectedRoute allowedRoles={["Owner"]} />}>
+          <Route path="/owner/registration" element={<HotelRegistrationPage />} />
+        </Route>
 
         {/* Admin section */}
         <Route path="/admin" element={<AdminLayout />}>
