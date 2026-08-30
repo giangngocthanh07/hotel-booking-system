@@ -60,14 +60,14 @@ public class FileService : IFileService
                 {
                     result.Uploaded = true;
                     result.FileName = file.FileName;
-                    result.StoredFileName = uploadResult.SecureUrl.ToString();
+                    result.StoredFileName = _cloudinary.Api.UrlImgUp.ResourceType("raw").Action("upload").Signed(true).BuildUrl(uploadResult.PublicId);
 
                     return ResponseFactory.Success(result, MessageResponse.Common.UPDATE_SUCCESSFULLY);
                 }
             }
             else
             {
-                var uploadParams = new RawUploadParams
+                var uploadParams = new ImageUploadParams /* bypassed raw */
                 {
                     File = new FileDescription(file.FileName, file.Content),
                     PublicId = $"user_{userId}_business_license_{Guid.NewGuid()}",

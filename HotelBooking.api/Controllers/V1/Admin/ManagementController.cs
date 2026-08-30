@@ -1,4 +1,4 @@
-using HotelBooking.application.Helpers;
+﻿using HotelBooking.application.Helpers;
 using HotelBooking.application.Services.Domains.AdminManagement;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -311,6 +311,13 @@ namespace HotelBooking.api.Controllers.V1.Admin
         #endregion
 
         #region MANAGE ROOM QUALITY
+                [HttpGet("room-quality-groups")]
+        public async Task<IActionResult> GetRoomQualityGroups()
+        {
+            var result = await _roomQualityService.GetTypeDataAsync();
+            return ApiResponseHandlerHelper.HandleResponse(result);
+        }
+
         [HttpGet("room-qualities")]
         public async Task<IActionResult> GetRoomQualityData([FromQuery] int? typeId, [FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
         {
@@ -471,3 +478,4 @@ namespace HotelBooking.api.Controllers.V1.Admin
 
 
 }
+

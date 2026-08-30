@@ -46,12 +46,16 @@ public class HotelRegistrationValidator : AbstractValidator<HotelRegistrationDTO
             .GreaterThan(0).WithMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_INVALID_WARD_ID);
 
         RuleFor(x => x.Latitude)
+            .NotNull().When(x => x.Longitude.HasValue).WithMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_INVALID_LATITUDE)
             .InclusiveBetween(-90.0, 90.0)
-            .WithMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_INVALID_LATITUDE);
+            .WithMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_INVALID_LATITUDE)
+            .When(x => x.Latitude.HasValue);
 
         RuleFor(x => x.Longitude)
+            .NotNull().When(x => x.Latitude.HasValue).WithMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_INVALID_LONGITUDE)
             .InclusiveBetween(-180.0, 180.0)
-            .WithMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_INVALID_LONGITUDE);
+            .WithMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_INVALID_LONGITUDE)
+            .When(x => x.Longitude.HasValue);
 
         RuleFor(x => x.TaxCode)
             .NotEmpty().WithMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_EMPTY_TAX_CODE)

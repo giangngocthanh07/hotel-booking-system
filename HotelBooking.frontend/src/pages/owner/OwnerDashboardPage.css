@@ -1,0 +1,69 @@
+.owner-dashboard {
+  padding: 32px;
+}
+
+.owner-dashboard h1 {
+  font-size: 28px;
+  color: #0F172A;
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.owner-dashboard p {
+  color: #64748B;
+  margin-bottom: 32px;
+}
+
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-card h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748B;
+  text-transform: uppercase;
+  margin: 0 0 12px 0;
+}
+
+.stat-card .value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #0F172A;
+}
+
+.dashboard-content {
+  background: white;
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.dashboard-content h2 {
+  margin-top: 0;
+  color: #1E293B;
+  font-size: 20px;
+  margin-bottom: 16px;
+}
+
+.loading-state, .error-state {
+  text-align: center;
+  padding: 40px;
+  color: #64748B;
+}
+
+.error-state {
+  color: #EF4444;
+}

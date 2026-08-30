@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createUpgradeRequest, getMyUpgradeInfo } from "../../services/customerService";
+import { isLoggedIn, getStoredRoles } from "../../services/authService";
 import "./BecomePartnerPage.css";
 
 export default function BecomePartnerPage() {
@@ -15,6 +16,17 @@ export default function BecomePartnerPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (!isLoggedIn()) {
+      navigate("/login", { replace: true });
+      return;
+    }
+    
+    const roles = getStoredRoles();
+    if (roles.includes("Owner") || roles.includes("Admin")) {
+      navigate("/404", { replace: true });
+      return;
+    }
+
     async function loadInfo() {
       try {
         const res = await getMyUpgradeInfo();
