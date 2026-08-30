@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCurrentUser, updateUserProfile, isLoggedIn, AUTH_CHANGED_EVENT } from "../../services/authService";
 import type { UserDetail } from "../../services/authService";
-import Header from "../../components/layout/Header";
 import "./UserProfilePage.css";
 
 export default function UserProfilePage() {
@@ -87,7 +86,7 @@ export default function UserProfilePage() {
   if (loading) {
     return (
       <div className="profile-wrapper">
-        <Header />
+
         <div className="profile-container" style={{ textAlign: "center", paddingTop: "100px", color: "#64748B" }}>
           Loading profile...
         </div>
@@ -98,7 +97,7 @@ export default function UserProfilePage() {
   if (!user) {
     return (
       <div className="profile-wrapper">
-        <Header />
+
         <div className="profile-container" style={{ textAlign: "center", paddingTop: "100px", color: "#EF4444" }}>
           {error || "Could not load user data."}
         </div>
@@ -111,7 +110,7 @@ export default function UserProfilePage() {
 
   return (
     <div className="profile-wrapper">
-      <Header />
+
       <div className="profile-container">
         
         <div className="profile-card">
