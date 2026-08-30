@@ -30,6 +30,14 @@ function AdminLayout() {
             <span className="admin-sidebar__icon">👥</span>
             Users Management
           </NavLink>
+
+          <NavLink 
+            to="/admin/management" 
+            className={({ isActive }) => isActive ? "admin-sidebar__link active" : "admin-sidebar__link"}
+          >
+            <span className="admin-sidebar__icon">⚙️</span>
+            System Data
+          </NavLink>
           
           <NavLink 
             to="/admin/requests" 

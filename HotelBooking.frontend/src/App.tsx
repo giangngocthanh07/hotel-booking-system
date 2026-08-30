@@ -10,6 +10,7 @@ import SearchResultsPage from "./pages/SearchResultsPage";
 import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminRequestsPage from "./pages/admin/AdminRequestsPage";
+import AdminManagementPage from "./pages/admin/AdminManagementPage";
 import BecomePartnerPage from "./pages/customer/BecomePartnerPage";
 import UserProfilePage from "./pages/user/UserProfilePage";
 import NotFoundPage from "./pages/NotFoundPage";
@@ -41,6 +42,7 @@ function App() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route path="dashboard" element={<AdminDashboardPage />} />
           <Route path="requests" element={<AdminRequestsPage />} />
+          <Route path="management" element={<AdminManagementPage />} />
           {/* Add more admin pages here later, e.g. users, hotels, etc. */}
         </Route>
 
