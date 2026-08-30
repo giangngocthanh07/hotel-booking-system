@@ -71,23 +71,23 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
                         "Một yêu cầu đăng ký cho khách sạn này đang chờ xử lý.");
                 }
 
-                
+
                 // 3. Verify Property Type exists and is active
                 var propertyType = await _propertyTypeRepo.GetByIdAsync(request.PropertyTypeId);
                 if (propertyType == null || propertyType.IsActive != true)
                 {
                     return ResponseFactory.Failure<HotelRegistrationDetailDTO>(
                         StatusCodeResponse.BadRequest,
-                        "Lo?i hnh luu tr (Property Type) khng t?n t?i ho?c d ng?ng ho?t d?ng.");
+                        "Loại hình lưu trữ (Property Type) không tồn tại hoặc đã ngừng hoạt động.");
                 }
-                
+
                 // 4. Verify Province and Ward
                 var province = await _provinceRepo.GetByIdAsync(request.ProvinceId);
                 if (province == null)
                 {
                     return ResponseFactory.Failure<HotelRegistrationDetailDTO>(
                         StatusCodeResponse.BadRequest,
-                        "T?nh/Thnh ph? khng t?n t?i.");
+                        "Tỉnh/Thành phố không tồn tại.");
                 }
 
                 var ward = await _wardRepo.GetByIdAsync(request.WardId);
@@ -95,7 +95,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
                 {
                     return ResponseFactory.Failure<HotelRegistrationDetailDTO>(
                         StatusCodeResponse.BadRequest,
-                        "Phu?ng/X khng t?n t?i ho?c khng thu?c T?nh/Thnh ph? d ch?n.");
+                        "Phường/Xã không tồn tại hoặc không thuộc Tỉnh/Thành phố đã chọn.");
                 }
 
                 await _unitOfWork.BeginTransactionAsync();
