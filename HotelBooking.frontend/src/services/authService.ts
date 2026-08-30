@@ -81,3 +81,45 @@ export function logout(): void {
   localStorage.removeItem("roles");
   window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
 }
+
+export interface UserDetail {
+  id: number;
+  userName: string;
+  email: string;
+  phoneNumber: string;
+  fullName: string;
+  address: string | null;
+  dateOfBirth: string | null;
+  avatarUrl: string | null;
+  roles: string[];
+}
+
+export interface UpdateUserProfileRequest {
+  fullName: string;
+  phoneNumber?: string;
+  dateOfBirth?: string;
+}
+
+export async function getCurrentUser(): Promise<ApiResponse<UserDetail>> {
+  const token = getAuthToken();
+  const res = await fetch(${BASE_URL}/auth/me, {
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: Bearer  } : {})
+    }
+  });
+  return res.json();
+}
+
+export async function updateUserProfile(data: UpdateUserProfileRequest): Promise<ApiResponse<any>> {
+  const token = getAuthToken();
+  const res = await fetch(${BASE_URL}/auth/profile, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: Bearer  } : {})
+    },
+    body: JSON.stringify(data)
+  });
+  return res.json();
+}

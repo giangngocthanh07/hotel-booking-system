@@ -11,6 +11,7 @@ import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminRequestsPage from "./pages/admin/AdminRequestsPage";
 import BecomePartnerPage from "./pages/customer/BecomePartnerPage";
+import UserProfilePage from "./pages/user/UserProfilePage";
 import NotFoundPage from "./pages/NotFoundPage";
 
 function App() {
@@ -32,6 +33,9 @@ function App() {
 
         {/* Customer section */}
         <Route path="/become-partner" element={<BecomePartnerPage />} />
+        
+        {/* User Profile */}
+        <Route path="/profile" element={<UserProfilePage />} />
 
         {/* Admin section */}
         <Route path="/admin" element={<AdminLayout />}>
