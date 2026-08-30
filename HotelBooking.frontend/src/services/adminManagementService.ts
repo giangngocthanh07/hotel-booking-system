@@ -174,3 +174,67 @@ export async function deletePolicy(id: number): Promise<ApiResponse<any>> {
   });
   return response.json();
 }
+
+// SERVICES
+export interface ServiceType extends BaseAdminItem {}
+
+export interface ServiceItem extends BaseAdminItem {
+  typeId: number;
+  discriminator: "standard" | "airportTransfer" | "airport"; // Usually server uses standard/airportTransfer for output
+  price: number;
+  
+  // standard
+  unit?: string;
+  
+  // airportTransfer
+  isOneWayPaid?: boolean;
+  hasRoundTrip?: boolean;
+  isRoundTripPaid?: boolean;
+  roundTripPrice?: number;
+  hasNightFee?: boolean;
+  additionalFee?: number;
+  additionalFeeStartTime?: string;
+  additionalFeeEndTime?: string;
+  maxPassengers?: number;
+  maxLuggage?: number;
+}
+
+export async function getServiceTypes(): Promise<ApiResponse<ServiceType[]>> {
+  const response = await fetch(`${BASE_URL}/admin/management/service-types`, { headers: getHeaders() });
+  return response.json();
+}
+
+export async function getServices(pageIndex = 1, pageSize = 50, typeId?: number): Promise<ApiResponse<PagedResponse<ServiceItem>>> {
+  let url = `${BASE_URL}/admin/management/services?pageIndex=${pageIndex}&pageSize=${pageSize}`;
+  if (typeId) {
+    url += `&typeId=${typeId}`;
+  }
+  const response = await fetch(url, { headers: getHeaders() });
+  return response.json();
+}
+
+export async function createService(type: "standard" | "airport-transfer", data: any): Promise<ApiResponse<any>> {
+  const response = await fetch(`${BASE_URL}/admin/management/services/${type}`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify(data)
+  });
+  return response.json();
+}
+
+export async function updateService(id: number, type: "standard" | "airport-transfer", data: any): Promise<ApiResponse<any>> {
+  const response = await fetch(`${BASE_URL}/admin/management/services/${type}/${id}`, {
+    method: "PUT",
+    headers: getHeaders(),
+    body: JSON.stringify(data)
+  });
+  return response.json();
+}
+
+export async function deleteService(id: number): Promise<ApiResponse<any>> {
+  const response = await fetch(`${BASE_URL}/admin/management/services/${id}`, {
+    method: "DELETE",
+    headers: getHeaders()
+  });
+  return response.json();
+}
