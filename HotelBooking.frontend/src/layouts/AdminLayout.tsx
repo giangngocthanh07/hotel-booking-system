@@ -1,12 +1,8 @@
 import { Outlet, NavLink, Navigate } from "react-router-dom";
-import { getStoredRoles, isLoggedIn } from "../services/authService";
+import { getStoredRoles } from "../services/authService";
 import "./AdminLayout.css";
 
 function AdminLayout() {
-  if (!isLoggedIn()) {
-    return <Navigate to="/login" replace />;
-  }
-
   const roles = getStoredRoles();
   if (!roles.includes("Admin")) {
     return <Navigate to="/404" replace />;
