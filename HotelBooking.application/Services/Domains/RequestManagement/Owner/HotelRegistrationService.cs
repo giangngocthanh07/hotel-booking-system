@@ -6,7 +6,6 @@ using HotelBooking.application.DTOs.Request.Base;
 using HotelBooking.application.DTOs.Request.HotelApproval;
 using HotelBooking.application.Services.Domains.RequestManagement.Base;
 using HotelBooking.infrastructure.Models;
-
 namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
 {
     public interface IHotelRegistrationService : IBaseUserRequestService<HotelRegistrationDetailDTO, HotelRegistrationDTO>
@@ -17,15 +16,21 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
     {
         private readonly IHotelApprovalRequestRepository _approvalRepo;
         private readonly IHotelRepository _hotelRepo;
+        private readonly IPropertyTypeRepository _propertyTypeRepo;
+        private readonly IProvinceRepository _provinceRepo;
+        private readonly IWardRepository _wardRepo;
         private readonly IValidator<HotelRegistrationDTO> _validator;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<HotelRegistrationService> _logger;
 
 
-        public HotelRegistrationService(IHotelApprovalRequestRepository approvalRepo, IHotelRepository hotelRepo, IValidator<HotelRegistrationDTO> validator, IUnitOfWork unitOfWork, ILogger<HotelRegistrationService> logger)
+        public HotelRegistrationService(IHotelApprovalRequestRepository approvalRepo, IHotelRepository hotelRepo, IPropertyTypeRepository propertyTypeRepo, IProvinceRepository provinceRepo, IWardRepository wardRepo, IValidator<HotelRegistrationDTO> validator, IUnitOfWork unitOfWork, ILogger<HotelRegistrationService> logger)
         {
             _approvalRepo = approvalRepo;
             _hotelRepo = hotelRepo;
+            _propertyTypeRepo = propertyTypeRepo;
+            _provinceRepo = provinceRepo;
+            _wardRepo = wardRepo;
             _validator = validator;
             _unitOfWork = unitOfWork;
             _logger = logger;
@@ -64,6 +69,33 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
                     return ResponseFactory.Failure<HotelRegistrationDetailDTO>(
                         StatusCodeResponse.Conflict,
                         "Một yêu cầu đăng ký cho khách sạn này đang chờ xử lý.");
+                }
+
+                
+                // 3. Verify Property Type exists and is active
+                var propertyType = await _propertyTypeRepo.GetByIdAsync(request.PropertyTypeId);
+                if (propertyType == null || propertyType.IsActive != true)
+                {
+                    return ResponseFactory.Failure<HotelRegistrationDetailDTO>(
+                        StatusCodeResponse.BadRequest,
+                        "Lo?i hnh luu tr (Property Type) khng t?n t?i ho?c d ng?ng ho?t d?ng.");
+                }
+                
+                // 4. Verify Province and Ward
+                var province = await _provinceRepo.GetByIdAsync(request.ProvinceId);
+                if (province == null)
+                {
+                    return ResponseFactory.Failure<HotelRegistrationDetailDTO>(
+                        StatusCodeResponse.BadRequest,
+                        "T?nh/Thnh ph? khng t?n t?i.");
+                }
+
+                var ward = await _wardRepo.GetByIdAsync(request.WardId);
+                if (ward == null || ward.ProvinceId != request.ProvinceId)
+                {
+                    return ResponseFactory.Failure<HotelRegistrationDetailDTO>(
+                        StatusCodeResponse.BadRequest,
+                        "Phu?ng/X khng t?n t?i ho?c khng thu?c T?nh/Thnh ph? d ch?n.");
                 }
 
                 await _unitOfWork.BeginTransactionAsync();

@@ -13,6 +13,9 @@ public class HotelRegistrationServiceTests : BaseServiceTest<HotelRegistrationSe
 {
     private readonly Mock<IHotelApprovalRequestRepository> _mockApprovalRepo;
     private readonly Mock<IHotelRepository> _mockHotelRepo;
+    private readonly Mock<IPropertyTypeRepository> _mockPropertyTypeRepo;
+    private readonly Mock<IProvinceRepository> _mockProvinceRepo;
+    private readonly Mock<IWardRepository> _mockWardRepo;
     private readonly Mock<IValidator<HotelRegistrationDTO>> _mockValidator;
     private readonly IHotelRegistrationService _service;
 
@@ -22,7 +25,15 @@ public class HotelRegistrationServiceTests : BaseServiceTest<HotelRegistrationSe
         _mockApprovalRepo = new Mock<IHotelApprovalRequestRepository>();
         _mockHotelRepo = new Mock<IHotelRepository>();
         _mockValidator = new Mock<IValidator<HotelRegistrationDTO>>();
-        _service = new HotelRegistrationService(_mockApprovalRepo.Object, _mockHotelRepo.Object, _mockValidator.Object, _mockUnitOfWork.Object, _mockLogger.Object);
+        _mockPropertyTypeRepo = new Mock<IPropertyTypeRepository>();
+        _mockProvinceRepo = new Mock<IProvinceRepository>();
+        _mockWardRepo = new Mock<IWardRepository>();
+        
+        _mockPropertyTypeRepo.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(new PropertyType { Id = 1, IsActive = true });
+        _mockProvinceRepo.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(new Province { Id = 1 });
+        _mockWardRepo.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(new Ward { Id = 1, ProvinceId = 1 });
+
+        _service = new HotelRegistrationService(_mockApprovalRepo.Object, _mockHotelRepo.Object, _mockPropertyTypeRepo.Object, _mockProvinceRepo.Object, _mockWardRepo.Object, _mockValidator.Object, _mockUnitOfWork.Object, _mockLogger.Object);
     }
 
     [Fact]
