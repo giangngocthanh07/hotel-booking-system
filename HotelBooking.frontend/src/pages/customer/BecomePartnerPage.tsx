@@ -23,7 +23,7 @@ export default function BecomePartnerPage() {
     
     const roles = getStoredRoles();
     if (roles.includes("Owner") || roles.includes("Admin")) {
-      navigate("/", { replace: true });
+      navigate("/404", { replace: true });
       return;
     }
 
