@@ -202,7 +202,7 @@ export default function PoliciesTab() {
         return (
           <div style={{ fontSize: "12px", color: "#64748B" }}>
             <div>In: <strong>{item.checkInTime}</strong> | Out: <strong>{item.checkOutTime}</strong></div>
-            <div>Early Fee: <strong>${item.earlyCheckInFee}</strong> | Late Fee: <strong>${item.lateCheckOutFee}</strong></div>
+            <div>Early Fee: <strong>{item.earlyCheckInFee?.toLocaleString("vi-VN")} VNĐ</strong> | Late Fee: <strong>{item.lateCheckOutFee?.toLocaleString("vi-VN")} VNĐ</strong></div>
           </div>
         );
       case "cancellation":
@@ -216,14 +216,14 @@ export default function PoliciesTab() {
         return (
           <div style={{ fontSize: "12px", color: "#64748B" }}>
             <div>Age: <strong>{item.minAge} - {item.maxAge}</strong></div>
-            <div>Extra Bed Fee: <strong>${item.extraBedFee}</strong></div>
+            <div>Extra Bed Fee: <strong>{item.extraBedFee?.toLocaleString("vi-VN")} VNĐ</strong></div>
           </div>
         );
       case "pets":
         return (
           <div style={{ fontSize: "12px", color: "#64748B" }}>
             <div>Allowed: <strong>{item.isPetAllowed ? "Yes" : "No"}</strong></div>
-            {item.isPetAllowed && <div>Fee: <strong>${item.petFee}</strong></div>}
+            {item.isPetAllowed && <div>Fee: <strong>{item.petFee?.toLocaleString("vi-VN")} VNĐ</strong></div>}
           </div>
         );
       default:
@@ -247,11 +247,11 @@ export default function PoliciesTab() {
             <input type="time" step="1" value={formData.checkOutTime} onChange={e => setFormData({...formData, checkOutTime: e.target.value})} disabled={formLoading} />
           </div>
           <div className="form-group">
-            <label>Early Check-In Fee ($)</label>
+            <label>Early Check-In Fee (VNĐ)</label>
             <input type="number" value={formData.earlyCheckInFee} onChange={e => setFormData({...formData, earlyCheckInFee: parseFloat(e.target.value)})} disabled={formLoading} />
           </div>
           <div className="form-group">
-            <label>Late Check-Out Fee ($)</label>
+            <label>Late Check-Out Fee (VNĐ)</label>
             <input type="number" value={formData.lateCheckOutFee} onChange={e => setFormData({...formData, lateCheckOutFee: parseFloat(e.target.value)})} disabled={formLoading} />
           </div>
         </div>
@@ -296,7 +296,7 @@ export default function PoliciesTab() {
             <input type="number" value={formData.maxAge} onChange={e => setFormData({...formData, maxAge: parseInt(e.target.value)})} disabled={formLoading} />
           </div>
           <div className="form-group">
-            <label>Extra Bed Fee ($)</label>
+            <label>Extra Bed Fee (VNĐ)</label>
             <input type="number" value={formData.extraBedFee} onChange={e => setFormData({...formData, extraBedFee: parseFloat(e.target.value)})} disabled={formLoading} />
           </div>
         </div>
@@ -315,7 +315,7 @@ export default function PoliciesTab() {
           </div>
           {formData.isPetAllowed && (
             <div className="form-group">
-              <label>Pet Fee ($)</label>
+              <label>Pet Fee (VNĐ)</label>
               <input type="number" value={formData.petFee} onChange={e => setFormData({...formData, petFee: parseFloat(e.target.value)})} disabled={formLoading} />
             </div>
           )}
@@ -498,3 +498,5 @@ export default function PoliciesTab() {
     </div>
   );
 }
+
+
