@@ -85,6 +85,7 @@ export default function ServicesTab() {
       isRoundTripPaid: false,
       roundTripPrice: 0,
       hasNightFee: false,
+      isNightFeePaid: false,
       additionalFee: 0,
       additionalFeeStartTime: "22:00:00",
       additionalFeeEndTime: "06:00:00",
@@ -111,6 +112,7 @@ export default function ServicesTab() {
       isRoundTripPaid: item.isRoundTripPaid || false,
       roundTripPrice: item.roundTripPrice || 0,
       hasNightFee: item.hasNightFee || false,
+      isNightFeePaid: (item.additionalFee && item.additionalFee > 0) ? true : false,
       additionalFee: item.additionalFee || 0,
       additionalFeeStartTime: item.additionalFeeStartTime || "22:00:00",
       additionalFeeEndTime: item.additionalFeeEndTime || "06:00:00",
@@ -176,7 +178,7 @@ export default function ServicesTab() {
         isRoundTripPaid: formData.hasRoundTrip ? formData.isRoundTripPaid : false,
         roundTripPrice: formData.hasRoundTrip && formData.isRoundTripPaid ? formData.roundTripPrice : 0,
         hasNightFee: formData.hasNightFee,
-        additionalFee: formData.hasNightFee ? formData.additionalFee : 0,
+        additionalFee: formData.hasNightFee && formData.isNightFeePaid ? formData.additionalFee : 0,
         additionalFeeStartTime: formData.hasNightFee ? formData.additionalFeeStartTime : null,
         additionalFeeEndTime: formData.hasNightFee ? formData.additionalFeeEndTime : null,
         maxPassengers: formData.maxPassengers,
@@ -325,20 +327,37 @@ export default function ServicesTab() {
               </select>
             </div>
             {formData.hasNightFee && (
-              <div className="profile-grid" style={{ gap: "12px" }}>
-                <div className="form-group">
-                  <label>Additional Fee (VNĐ)</label>
-                  <input type="number" value={formData.additionalFee} onChange={e => setFormData({...formData, additionalFee: parseFloat(e.target.value)})} disabled={formLoading} />
+              <>
+                <div className="profile-grid" style={{ gap: "12px", marginBottom: "12px" }}>
+                  <div className="form-group" style={{ gridColumn: formData.isNightFeePaid ? "auto" : "1 / -1" }}>
+                    <label>Is Night Fee Paid?</label>
+                    <select 
+                      value={formData.isNightFeePaid ? "true" : "false"} 
+                      onChange={e => setFormData({...formData, isNightFeePaid: e.target.value === "true", additionalFee: e.target.value === "true" ? formData.additionalFee : 0})} 
+                      disabled={formLoading}
+                    >
+                      <option value="false">Free</option>
+                      <option value="true">Paid</option>
+                    </select>
+                  </div>
+                  {formData.isNightFeePaid && (
+                    <div className="form-group">
+                      <label>Additional Fee (VNĐ)</label>
+                      <input type="number" value={formData.additionalFee} onChange={e => setFormData({...formData, additionalFee: parseFloat(e.target.value)})} disabled={formLoading} />
+                    </div>
+                  )}
                 </div>
-                <div className="form-group">
-                  <label>Start Time</label>
-                  <input type="time" step="1" value={formData.additionalFeeStartTime} onChange={e => setFormData({...formData, additionalFeeStartTime: e.target.value})} disabled={formLoading} />
+                <div className="profile-grid" style={{ gap: "12px" }}>
+                  <div className="form-group">
+                    <label>Start Time</label>
+                    <input type="time" step="1" value={formData.additionalFeeStartTime} onChange={e => setFormData({...formData, additionalFeeStartTime: e.target.value})} disabled={formLoading} />
+                  </div>
+                  <div className="form-group">
+                    <label>End Time</label>
+                    <input type="time" step="1" value={formData.additionalFeeEndTime} onChange={e => setFormData({...formData, additionalFeeEndTime: e.target.value})} disabled={formLoading} />
+                  </div>
                 </div>
-                <div className="form-group">
-                  <label>End Time</label>
-                  <input type="time" step="1" value={formData.additionalFeeEndTime} onChange={e => setFormData({...formData, additionalFeeEndTime: e.target.value})} disabled={formLoading} />
-                </div>
-              </div>
+              </>
             )}
           </div>
         </div>
@@ -520,3 +539,4 @@ export default function ServicesTab() {
     </div>
   );
 }
+
