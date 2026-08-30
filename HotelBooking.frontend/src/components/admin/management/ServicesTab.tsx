@@ -259,17 +259,23 @@ export default function ServicesTab() {
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           <div className="profile-grid" style={{ gap: "12px" }}>
-            <div className="form-group">
-              <label>One-Way Base Price (VNĐ)</label>
-              <input type="number" value={formData.price} onChange={e => setFormData({...formData, price: parseFloat(e.target.value)})} disabled={formLoading} />
-            </div>
-            <div className="form-group">
+            <div className="form-group" style={{ gridColumn: formData.isOneWayPaid ? "auto" : "1 / -1" }}>
               <label>Is One-Way Paid?</label>
-              <select value={formData.isOneWayPaid ? "true" : "false"} onChange={e => setFormData({...formData, isOneWayPaid: e.target.value === "true"})} disabled={formLoading}>
+              <select 
+                value={formData.isOneWayPaid ? "true" : "false"} 
+                onChange={e => setFormData({...formData, isOneWayPaid: e.target.value === "true", price: e.target.value === "true" ? formData.price : 0})} 
+                disabled={formLoading}
+              >
                 <option value="false">Free</option>
                 <option value="true">Paid</option>
               </select>
             </div>
+            {formData.isOneWayPaid && (
+              <div className="form-group">
+                <label>One-Way Base Price (VNĐ)</label>
+                <input type="number" value={formData.price} onChange={e => setFormData({...formData, price: parseFloat(e.target.value)})} disabled={formLoading} />
+              </div>
+            )}
           </div>
           
           <div className="profile-grid" style={{ gap: "12px" }}>
