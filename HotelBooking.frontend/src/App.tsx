@@ -13,6 +13,7 @@ import AdminRequestsPage from "./pages/admin/AdminRequestsPage";
 import AdminManagementPage from "./pages/admin/AdminManagementPage";
 import BecomePartnerPage from "./pages/customer/BecomePartnerPage";
 import UserProfilePage from "./pages/user/UserProfilePage";
+import HotelRegistrationPage from "./pages/owner/HotelRegistrationPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
 function App() {
@@ -37,6 +38,9 @@ function App() {
         
         {/* User Profile */}
         <Route path="/profile" element={<UserProfilePage />} />
+
+        {/* Owner section */}
+        <Route path="/owner/registration" element={<HotelRegistrationPage />} />
 
         {/* Admin section */}
         <Route path="/admin" element={<AdminLayout />}>
