@@ -171,6 +171,24 @@
 }
 
 /* History List */
+/* Pagination controls wrap on narrow screens instead of expanding the history card. */
+.history-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-top: 16px;
+}
+
+.history-pagination button {
+  padding: 8px 12px;
+}
+
+.history-pagination button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 .history-list {
   display: flex;
   flex-direction: column;

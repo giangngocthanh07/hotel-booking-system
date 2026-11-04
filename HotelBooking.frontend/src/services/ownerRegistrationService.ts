@@ -118,4 +118,14 @@ export const submitRegistration = (data: HotelRegistrationDTO) => request<any>('
   body: JSON.stringify(data)
 });
 
-export const getMyRegistrations = () => request<HotelRegistrationHistoryItem[]>('/owner/hotel-registrations/me');
+export interface RegistrationHistoryPage {
+  items: HotelRegistrationHistoryItem[];
+  totalCount: number;
+  totalPages: number;
+  pageIndex: number;
+  pageSize: number;
+}
+
+// FR-ONB-013 / NFR-PERF-008: ask the server for a slice rather than downloading all history.
+export const getMyRegistrations = (pageIndex = 1, pageSize = 3, signal?: AbortSignal) =>
+  request<RegistrationHistoryPage>(`/owner/hotel-registrations/me/paged?pageIndex=${pageIndex}&pageSize=${pageSize}`, { signal });

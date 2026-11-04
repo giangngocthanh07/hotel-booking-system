@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 public interface IHotelApprovalRequestRepository : IRepository<HotelApprovalRequest>
 {
+    Task<(List<HotelApprovalRequest> Items, int TotalCount)> GetPageByOwnerAsync(
+        int ownerId, int pageIndex, int pageSize, CancellationToken cancellationToken = default);
     // Add custom methods for HotelApprovalRequest here if needed
     Task<(List<HotelApprovalRequest> Items, int TotalCount)> GetPagedWithUserAsync(
             Expression<Func<HotelApprovalRequest, bool>>? filter,
@@ -27,6 +29,16 @@ public interface IHotelApprovalRequestRepository : IRepository<HotelApprovalRequ
 
 public class HotelApprovalRequestRepository : Repository<HotelApprovalRequest>, IHotelApprovalRequestRepository
 {
+    public async Task<(List<HotelApprovalRequest> Items, int TotalCount)> GetPageByOwnerAsync(
+        int ownerId, int pageIndex, int pageSize, CancellationToken cancellationToken = default)
+    {
+        // FR-ONB-013 / NFR-PERF-008: scope both count and rows to the Owner before SQL pagination.
+        var query = _dbSet.AsNoTracking().Where(request => request.OwnerId == ownerId);
+        var count = await query.CountAsync(cancellationToken);
+        var items = await query.OrderByDescending(request => request.CreatedAt).ThenByDescending(request => request.Id)
+            .Skip(checked((pageIndex - 1) * pageSize)).Take(pageSize).ToListAsync(cancellationToken);
+        return (items, count);
+    }
     public HotelApprovalRequestRepository(HotelBookingDBContext context, ICancellationTokenProvider tokenProvider) : base(context, tokenProvider)
     {
     }
