@@ -140,7 +140,7 @@ export default function AdminDashboardPage() {
               return (
                 <div className="chart-bar-container" key={idx}>
                   <div className="chart-bar" style={{ height: heightPercent }}></div>
-                  <div className="chart-label">{trend.month}</div>
+                  <div className="chart-label">{trend.monthName}</div>
                 </div>
               );
             })}

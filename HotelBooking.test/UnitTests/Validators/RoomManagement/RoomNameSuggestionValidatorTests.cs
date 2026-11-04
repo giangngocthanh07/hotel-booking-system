@@ -229,7 +229,7 @@ public class RoomNameSuggestionValidatorTests
 
         // Assert
         result.IsValid.Should().BeFalse();
-        result.ShouldHaveValidationErrorFor(r => r.BedTypes[0].BedTypeId)
+        result.ShouldHaveValidationErrorFor("BedTypes[0].BedTypeId")
             .WithErrorMessage(MessageResponse.RoomManagement.ROOM_NAME_SUGGESTION_BED_TYPES_INVALID);
     }
 
@@ -257,7 +257,7 @@ public class RoomNameSuggestionValidatorTests
 
         // Assert
         result.IsValid.Should().BeFalse();
-        result.ShouldHaveValidationErrorFor(r => r.BedTypes[0].Quantity)
+        result.ShouldHaveValidationErrorFor("BedTypes[0].Quantity")
             .WithErrorMessage(MessageResponse.RoomManagement.ROOM_NAME_SUGGESTION_BED_TYPES_QUANTITY_INVALID);
     }
 
