@@ -450,6 +450,33 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
     // ════════════════════════════════════════════════════════════════════════
     #region APPROVE REQUEST
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    [Trait("Requirement", "FR-ONB-015")]
+    [Trait("Requirement", "FR-ONB-017")]
+    public async Task DecideOwnRequest_ReturnsForbiddenWithoutChangingData(bool approve)
+    {
+        // Use the requester's identity as the acting Admin to reproduce self-decision.
+        var request = BuildPendingRequest();
+        _mockApprovalRepo.Setup(repo => repo.GetByIdAsync(ValidRequestId)).ReturnsAsync(request);
+
+        var result = approve
+            ? await _service.ApproveRequestAsync(ValidRequestId, ValidOwnerId)
+            : await _service.RejectRequestAsync(ValidRequestId, ValidOwnerId);
+
+        result.StatusCode.Should().Be(StatusCodeResponse.Forbidden);
+        result.Message.Should().Be(MessageResponse.RequestManagement.HotelApproval.SELF_DECISION_FORBIDDEN);
+        request.Status.Should().Be(RequestStatusConst.Pending);
+        request.AdminId.Should().BeNull();
+        request.UpdatedAt.Should().BeNull();
+        _mockApprovalRepo.Verify(repo => repo.UpdateAsync(It.IsAny<HotelApprovalRequest>()), Times.Never);
+        _mockHotelRepo.Verify(repo => repo.AddAsync(It.IsAny<Hotel>()), Times.Never);
+        Verify_Never_Saved();
+        _mockUnitOfWork.Verify(unit => unit.CommitTransactionAsync(), Times.Never);
+        _mockUnitOfWork.Verify(unit => unit.RollBackTransactionAsync(), approve ? Times.Once() : Times.Never());
+    }
+
     [Fact]
     public async Task ApproveRequest_ValidRequest_ShouldReturnSuccess()
     {

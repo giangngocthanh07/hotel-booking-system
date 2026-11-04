@@ -346,6 +346,7 @@ public static class MessageResponse
         /// </summary>
         public static class HotelApproval
         {
+            public const string SELF_DECISION_FORBIDDEN = "You cannot approve or reject your own hotel registration request.";
             public const string HOTEL_INVALID_REQUEST_ID = "Request ID must be greater than 0!";
             public const string OWNER_ID_INVALID = "Owner ID must be greater than 0!";
             public const string HOTEL_OWNER_NOT_FOUND = "Hotel owner not found!";
