@@ -277,6 +277,14 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
                     MessageResponse.RequestManagement.HotelApproval.STATUS_INVALID);
             }
 
+            // A multi-role Admin/Owner must not decide their own registration request.
+            if (request.OwnerId == adminId)
+            {
+                await _unitOfWork.RollBackTransactionAsync();
+                return ResponseFactory.Failure<bool>(StatusCodeResponse.Forbidden,
+                    MessageResponse.RequestManagement.HotelApproval.SELF_DECISION_FORBIDDEN);
+            }
+
             request.Status = RequestStatusConst.Approved;
             request.AdminId = adminId;
             request.UpdatedAt = DateTime.Now;
@@ -365,6 +373,11 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
                 return ResponseFactory.Failure<bool>(
                     StatusCodeResponse.BadRequest,
                     MessageResponse.RequestManagement.HotelApproval.STATUS_INVALID);
+
+            // Rejecting one's own request is prohibited just like self-approval.
+            if (request.OwnerId == adminId)
+                return ResponseFactory.Failure<bool>(StatusCodeResponse.Forbidden,
+                    MessageResponse.RequestManagement.HotelApproval.SELF_DECISION_FORBIDDEN);
 
             request.Status = RequestStatusConst.Rejected;
             request.AdminId = adminId;
