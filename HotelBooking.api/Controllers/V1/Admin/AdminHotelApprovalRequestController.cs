@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using HotelBooking.application.DTOs.Request.HotelApproval;
 using HotelBooking.application.Services.Domains.RequestManagement.Admin;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -52,10 +53,12 @@ namespace V1.Controllers
         }
 
         [HttpPost("{requestId:int}/reject")]
-        public async Task<IActionResult> Reject(int requestId)
+        // Bind the explanation from JSON; the acting Admin still comes from authentication claims.
+        // Older clients posting no body must be updated to send { "reason": "..." }.
+        public async Task<IActionResult> Reject(int requestId, [FromBody] RejectHotelRegistrationDTO request, CancellationToken cancellationToken = default)
         {
             var adminId = GetAdminId();
-            var result = await _adminHotelApprovalRequestService.RejectRequestAsync(requestId, adminId);
+            var result = await _adminHotelApprovalRequestService.RejectRequestAsync(requestId, adminId, request, cancellationToken);
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 

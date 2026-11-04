@@ -346,6 +346,8 @@ public static class MessageResponse
         /// </summary>
         public static class HotelApproval
         {
+            // Share one explanation for missing, blank, too-short, and too-long rejection reasons.
+            public const string REJECTION_REASON_INVALID = "Rejection reason must contain between 10 and 500 characters.";
             public const string SELF_DECISION_FORBIDDEN = "You cannot approve or reject your own hotel registration request.";
             public const string HOTEL_INVALID_REQUEST_ID = "Request ID must be greater than 0!";
             public const string OWNER_ID_INVALID = "Owner ID must be greater than 0!";

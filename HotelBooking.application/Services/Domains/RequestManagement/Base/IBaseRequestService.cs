@@ -13,6 +13,8 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Base;
 /// <typeparam name="T">DTOs that inherit from BaseRequestDTO</typeparam>
 public interface IBaseAdminRequestService<T> where T : BaseRequestDTO
 {
+    // Rejection belongs to each specialized interface because its input differs by workflow.
+    // Keeping an ID-only method here would allow Hotel callers to omit the required reason.
     /// <summary>
     /// Get paged list of requests (Filter, Sort, Paging)
     /// </summary>
@@ -27,11 +29,6 @@ public interface IBaseAdminRequestService<T> where T : BaseRequestDTO
     /// Approve request
     /// </summary>
     Task<ApiResponse<bool>> ApproveRequestAsync(int requestId, int adminId);
-
-    /// <summary>
-    /// Reject request
-    /// </summary>
-    Task<ApiResponse<bool>> RejectRequestAsync(int requestId, int adminId);
 
     /// <summary>
     /// Get a list of all available statuses for filtering

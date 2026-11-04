@@ -15,11 +15,15 @@ using HotelBooking.application.Validators.RequestManagement.Customer;
 using HotelBooking.application.Validators.RequestManagement.Owner;
 using HotelBooking.application.DTOs.User;
 using HotelBooking.application.Validators.UserManagement;
+using HotelBooking.application.DTOs.Request.HotelApproval;
+using HotelBooking.application.Validators.RequestManagement.Admin;
 
 public static class ValidatorServiceExtension
 {
     public static IServiceCollection AddAppValidators(this IServiceCollection services)
     {
+        // Resolve the rejection validator through DI so the application service enforces the same rule for every caller.
+        services.AddScoped<IValidator<RejectHotelRegistrationDTO>, RejectHotelRegistrationValidator>();
         services.AddUserValidators();
         services.AddAdminManagementValidators();
         services.AddRoomManagementValidators();
