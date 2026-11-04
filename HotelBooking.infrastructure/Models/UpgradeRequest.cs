@@ -23,6 +23,8 @@ public partial class UpgradeRequest
 
     public string? TaxCode { get; set; }
 
+    public string? RejectionReason { get; set; }
+
     public virtual User? ApprovedByNavigation { get; set; }
 
     public virtual User User { get; set; } = null!;

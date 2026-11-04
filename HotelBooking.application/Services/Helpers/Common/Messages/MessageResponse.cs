@@ -289,6 +289,7 @@ public static class MessageResponse
         // Upgrade Request Messages
         public static class UpgradeRequest
         {
+            public const string REJECTION_REASON_INVALID = "Rejection reason must contain between 10 and 500 characters.";
             // Get User for Upgrade
             public const string USERID_OR_REQUESTID_INVALID = "User ID or Request ID must be greater than 0!";
             public const string USERID_INVALID = "User ID must be greater than 0!";
