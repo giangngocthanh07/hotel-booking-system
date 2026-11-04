@@ -46,6 +46,24 @@ A hotel booking platform (Booking.com clone) connecting Hotel Owners and Custome
 - **System Exceptions**: Unhandled system-level exceptions (e.g., database connection issues, server errors) are caught at the API boundary using a global exception handling middleware.
 - **Validation First**: Every application service method must run validation on input DTOs using `FluentValidation` before executing any business logic.
 
+### 4.5 Comments and Requirement Traceability
+
+- **Scope**: Apply these rules to new or modified backend, frontend, and test code.
+- **Language**: Write code comments in English.
+- **Explain Why**: Comment non-obvious business rules, authorization checks, state transitions, and design decisions. Explain why the code exists and which problem it solves.
+- **Comment Placement**: Place concise comments at the relevant use-case method or business-rule block. Do not comment every line or repeat behavior that is already clear from the code.
+- **Requirement References**: Reference the applicable, existing User Story and Acceptance Criterion IDs near the behavior they govern. Use the project's authoritative requirement catalog.
+- **SRS Fallback**: If User Stories or ACs have not been defined for the behavior, reference the relevant existing SRS requirement IDs, such as `FR-ONB-017`. Never invent User Story or AC identifiers. Add their approved mappings when available.
+- **Test Traceability**: Tag automated tests with the requirement and AC IDs they verify, using xUnit traits in .NET and descriptive test suites or cases in frontend tests. Keep references aligned when requirements change.
+- **Evidence**: A comment or requirement tag describes intent; it does not prove that an AC is satisfied. Verification must exercise the corresponding behavior.
+
+Example:
+
+```csharp
+// FR-ONB-017: A rejection requires a meaningful explanation.
+// Validate before database access to prevent saving an unexplained decision.
+```
+
 ## 5. Repository & Unit of Work (UoW) Pattern
 
 ### 5.1 Encapsulation of EF Core
@@ -94,6 +112,8 @@ A hotel booking platform (Booking.com clone) connecting Hotel Owners and Custome
 - [ ] Code follows size limits (methods < 20 lines, classes < 300 lines).
 - [ ] All tests (Unit & Integration) pass.
 - [ ] Logic is implemented as per Acceptance Criteria (AC).
+- [ ] Relevant business rules and design decisions have concise English comments explaining why they exist and the problem they solve.
+- [ ] Changed behavior and its tests reference existing SRS requirements or approved User Story/AC identifiers.
 - [ ] No direct `DbContext` usage in Application or API layers (must go through Repositories and `IUnitOfWork`).
 - [ ] All asynchronous database/network operations accept and pass `CancellationToken`.
 - [ ] Validation is executed first via `FluentValidation` before business logic.
