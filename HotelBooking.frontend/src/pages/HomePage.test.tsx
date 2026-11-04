@@ -59,8 +59,8 @@ describe("HomePage province search", () => {
     await user.click(screen.getByRole("button", { name: "Search" }));
 
     expect(screen.getByTestId("location")).toHaveTextContent("/");
-    expect(
-      screen.getByText("Vui lòng chọn một tỉnh/thành trong danh sách."),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Please select a destination from the list.",
+    );
   });
 });

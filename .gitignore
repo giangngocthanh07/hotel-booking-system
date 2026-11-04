@@ -23,6 +23,9 @@ artifacts/
 .agents/
 .superpowers/
 
+# Project documentation
+/docs/
+
 # ASP.NET Core local configuration
 appsettings.Development.json
 appsettings.*.json

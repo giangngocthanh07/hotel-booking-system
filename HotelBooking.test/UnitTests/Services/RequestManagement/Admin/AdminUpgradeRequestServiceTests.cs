@@ -1128,7 +1128,7 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest<AdminUpgradeReque
     }
 
     [Fact]
-    public async Task RejectRequest_RequestNotFound_ShouldReturnBadRequest()
+    public async Task RejectRequest_RequestNotFound_ShouldReturnNotFound()
     {
         // 1. Arrange
         int requestId = 99;
@@ -1143,8 +1143,8 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest<AdminUpgradeReque
 
         // 3. Assert
         result.Should().NotBeNull();
-        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
-        result.Message.Should().Be(MessageResponse.RequestManagement.UpgradeRequest.REQUEST_STATUS_INVALID);
+        result.StatusCode.Should().Be(StatusCodeResponse.NotFound);
+        result.Message.Should().Be(MessageResponse.RequestManagement.UpgradeRequest.REQUEST_NOT_FOUND);
 
         // Verify
         _mockUpgradeRequestRepo.Verify(r => r.GetByIdAsync(requestId), Times.Once);
