@@ -32,10 +32,22 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest<AdminUpgradeReque
             _mockUserRoleRepo.Object,
             _mockUnitOfWork.Object,
             _mockPagingValidator.Object,
-            _mockLogger.Object);
+            _mockLogger.Object, new HotelBooking.application.Validators.RequestManagement.Admin.RejectUpgradeRequestValidator());
     }
 
     #region GET PAGED REQUESTS TESTS
+    [Fact]
+    [Trait("Requirement", "FR-ONB-008")]
+    public async Task RejectRequest_MissingReason_DoesNotSave()
+    {
+        _mockUpgradeRequestRepo.Setup(repo => repo.GetByIdAsync(99))
+            .ReturnsAsync(new UpgradeRequest { Id = 99, UserId = 7, Status = RequestStatusConst.Pending });
+        var result = await _service.RejectRequestAsync(99, 1, new RejectUpgradeRequestDTO());
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+        _mockUpgradeRequestRepo.Verify(repo => repo.GetByIdAsync(It.IsAny<int>()), Times.Never);
+        Verify_Never_Saved();
+    }
+
     [Fact]
     public async Task GetPagedRequests_ValidRequest_ShouldReturnTrue()
     {
@@ -53,7 +65,7 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest<AdminUpgradeReque
         var mockUser = new User { Id = 5, UserName = "testuser", Email = "test@abc.com" };
         var mockItems = new List<UpgradeRequest>
     {
-        new UpgradeRequest { Id = 1, UserId = 5, Status = RequestStatusConst.Pending, User = mockUser, RequestedAt = DateTime.Now },
+        new UpgradeRequest { Id = 1, UserId = 5, Status = RequestStatusConst.Rejected, RejectionReason = "Tax record is incomplete.", User = mockUser, RequestedAt = DateTime.Now },
         new UpgradeRequest { Id = 2, UserId = 5, Status = RequestStatusConst.Pending, User = mockUser, RequestedAt = DateTime.Now }
     };
 
@@ -86,6 +98,7 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest<AdminUpgradeReque
         result.Content.Items.First().RequestId.Should().Be(1);
         result.Content.Items.First().UserName.Should().Be("testuser");
         result.Content.Items.First().Email.Should().Be("test@abc.com");
+        result.Content.Items.First().RejectionReason.Should().Be("Tax record is incomplete.");
     }
 
     [Fact]
@@ -258,14 +271,15 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest<AdminUpgradeReque
         {
             Id = requestId,
             UserId = 5,
-            Status = RequestStatusConst.Pending,
+            Status = RequestStatusConst.Rejected,
+            RejectionReason = "Tax record is incomplete.",
             Address = "123 Default Street",
             TaxCode = "1234567890",
             User = validUser
 
         };
 
-        var validRequestDTO = new UpgradeRequestDTO
+        var validRequestDTO = new AdminUpgradeRequestDTO
         {
             RequestId = validRequest.Id,
             UserId = validRequest.UserId,
@@ -276,7 +290,8 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest<AdminUpgradeReque
             Address = validRequest.Address ?? "",
             TaxCode = validRequest.TaxCode ?? "",
             Status = validRequest.Status ?? RequestStatusConst.Pending,
-            RequestedAt = validRequest.RequestedAt
+            RequestedAt = validRequest.RequestedAt,
+            RejectionReason = validRequest.RejectionReason
         };
 
         _mockUpgradeRequestRepo.Setup(r => r.GetByIdWithUserAsync(requestId))
@@ -1087,7 +1102,7 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest<AdminUpgradeReque
         _mockUnitOfWork.Setup(dbu => dbu.SaveChangesAsync()).ReturnsAsync(1);
 
         // 2. Act
-        var result = await _service.RejectRequestAsync(requestId, adminId);
+        var result = await _service.RejectRequestAsync(requestId, adminId, ValidRejection());
 
         // 3. Assert
         result.Should().NotBeNull();
@@ -1100,7 +1115,8 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest<AdminUpgradeReque
             req.Id == requestId &&
             req.Status == RequestStatusConst.Rejected &&
             req.ApprovedBy == adminId &&
-            req.ApprovedAt != null
+            req.ApprovedAt != null &&
+            req.RejectionReason == "Business documents are incomplete."
         )), Times.Once);
 
         Verify_Saved(1);
@@ -1114,7 +1130,7 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest<AdminUpgradeReque
         int adminId = 1;
 
         // 2. Act
-        var result = await _service.RejectRequestAsync(requestId, adminId);
+        var result = await _service.RejectRequestAsync(requestId, adminId, ValidRejection());
 
         // 3. Assert
         result.Should().NotBeNull();
@@ -1139,7 +1155,7 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest<AdminUpgradeReque
             .ReturnsAsync((UpgradeRequest)null!);
 
         // 2. Act
-        var result = await _service.RejectRequestAsync(requestId, adminId);
+        var result = await _service.RejectRequestAsync(requestId, adminId, ValidRejection());
 
         // 3. Assert
         result.Should().NotBeNull();
@@ -1177,7 +1193,7 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest<AdminUpgradeReque
             .ReturnsAsync(invalidRequest);
 
         // 2. Act
-        var result = await _service.RejectRequestAsync(requestId, adminId);
+        var result = await _service.RejectRequestAsync(requestId, adminId, ValidRejection());
 
         // 3. Assert
         result.Should().NotBeNull();
@@ -1225,7 +1241,7 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest<AdminUpgradeReque
             .ReturnsAsync(0);
 
         // 2. Act
-        var result = await _service.RejectRequestAsync(requestId, adminId);
+        var result = await _service.RejectRequestAsync(requestId, adminId, ValidRejection());
 
         // 3. Assert
         result.Should().NotBeNull();
@@ -1251,7 +1267,7 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest<AdminUpgradeReque
             .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
 
         // 2. Act
-        var result = await _service.RejectRequestAsync(requestId, adminId);
+        var result = await _service.RejectRequestAsync(requestId, adminId, ValidRejection());
 
         // 3. Assert
         result.Should().NotBeNull();
@@ -1299,7 +1315,7 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest<AdminUpgradeReque
             .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
 
         // 2. Act
-        var result = await _service.RejectRequestAsync(requestId, adminId);
+        var result = await _service.RejectRequestAsync(requestId, adminId, ValidRejection());
 
         // 3. Assert
         result.Should().NotBeNull();
@@ -1350,7 +1366,7 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest<AdminUpgradeReque
             .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
 
         // 2. Act
-        var result = await _service.RejectRequestAsync(requestId, adminId);
+        var result = await _service.RejectRequestAsync(requestId, adminId, ValidRejection());
 
         // 3. Assert
         result.Should().NotBeNull();
@@ -1422,6 +1438,11 @@ public class AdminUpgradeRequestServiceTests : BaseServiceTest<AdminUpgradeReque
 
 
     #region HELPERS
+    private static RejectUpgradeRequestDTO ValidRejection() => new()
+    {
+        Reason = "Business documents are incomplete."
+    };
+
     private void MockPagingValidationSuccess()
     {
         _mockPagingValidator.Setup(v => v.ValidateAsync(It.IsAny<PagingRequest>(), It.IsAny<CancellationToken>()))

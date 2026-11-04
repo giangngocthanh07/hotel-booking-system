@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using HotelBooking.application.DTOs.Request.UpgradeRequest;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using HotelBooking.application.Helpers;
@@ -69,12 +70,12 @@ namespace HotelBooking.api.Controllers.V1.Admin
         /// Reject request
         /// </summary>
         [HttpPost("{requestId:int}/reject")]
-        public async Task<IActionResult> Reject(int requestId)
+        public async Task<IActionResult> Reject(int requestId, [FromBody] RejectUpgradeRequestDTO input, CancellationToken cancellationToken = default)
         {
             var adminId = GetAdminId();
             if (adminId == 0) return Unauthorized();
 
-            var response = await _upgradeRequestService.RejectRequestAsync(requestId, adminId);
+            var response = await _upgradeRequestService.RejectRequestAsync(requestId, adminId, input, cancellationToken);
             return ApiResponseHandlerHelper.HandleResponse(response);
         }
 

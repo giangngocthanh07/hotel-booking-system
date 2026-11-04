@@ -673,6 +673,7 @@ public partial class HotelBookingDBContext : DbContext
 
             entity.Property(e => e.Address).HasMaxLength(255);
             entity.Property(e => e.ApprovedAt).HasColumnType("datetime");
+            entity.Property(e => e.RejectionReason).HasMaxLength(500);
             entity.Property(e => e.RequestedAt).HasColumnType("datetime");
             entity.Property(e => e.Status).HasMaxLength(20);
             entity.Property(e => e.TaxCode).HasMaxLength(50);
