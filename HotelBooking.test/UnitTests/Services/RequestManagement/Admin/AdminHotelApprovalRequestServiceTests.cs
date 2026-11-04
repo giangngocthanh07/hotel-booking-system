@@ -77,7 +77,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
             _mockHotelRepo.Object,
             _mockUnitOfWork.Object,
             _mockPagingValidator.Object,
-            _mockLogger.Object);
+            _mockLogger.Object, new HotelBooking.application.Validators.RequestManagement.Admin.RejectHotelRegistrationValidator());
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -463,7 +463,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
 
         var result = approve
             ? await _service.ApproveRequestAsync(ValidRequestId, ValidOwnerId)
-            : await _service.RejectRequestAsync(ValidRequestId, ValidOwnerId);
+            : await _service.RejectRequestAsync(ValidRequestId, ValidOwnerId, ValidRejection());
 
         result.StatusCode.Should().Be(StatusCodeResponse.Forbidden);
         result.Message.Should().Be(MessageResponse.RequestManagement.HotelApproval.SELF_DECISION_FORBIDDEN);
@@ -668,6 +668,98 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
     // ════════════════════════════════════════════════════════════════════════
     #region REJECT REQUEST
 
+    // Existing rejection tests need a valid reason so they still reach the behavior they intend to test.
+    private static RejectHotelRegistrationDTO ValidRejection() => new() { Reason = "Business license is incomplete." };
+
+    [Theory]
+    [InlineData(9, false)]
+    [InlineData(10, true)]
+    [InlineData(500, true)]
+    [InlineData(501, false)]
+    [Trait("Requirement", "FR-ONB-017")]
+    public async Task RejectRequest_ReasonLength_EnforcesBoundaries(int length, bool valid)
+    {
+        // Test both accepted limits and the nearest rejected lengths to catch off-by-one mistakes.
+        var request = BuildPendingRequest();
+        _mockApprovalRepo.Setup(repo => repo.GetByIdAsync(ValidRequestId)).ReturnsAsync(request);
+        var input = new RejectHotelRegistrationDTO { Reason = new string('x', length) };
+        var result = await _service.RejectRequestAsync(ValidRequestId, ValidAdminId, input);
+        result.StatusCode.Should().Be(valid ? StatusCodeResponse.Success : StatusCodeResponse.BadRequest);
+        if (valid) request.AdminRemark.Should().Be(input.Reason);
+        else AssertRejectionWasNotPersisted(request);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("           ")]
+    [InlineData("  short   ")]
+    [Trait("Requirement", "FR-ONB-017")]
+    public async Task RejectRequest_InvalidReason_DoesNotReadOrWrite(string? reason)
+    {
+        // Null, blank, and padded short text must fail before any repository call.
+        var request = BuildPendingRequest();
+        var result = await _service.RejectRequestAsync(ValidRequestId, ValidAdminId,
+            new RejectHotelRegistrationDTO { Reason = reason! });
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+        result.Message.Should().Be(MessageResponse.RequestManagement.HotelApproval.REJECTION_REASON_INVALID);
+        _mockApprovalRepo.VerifyNoOtherCalls();
+        AssertRejectionWasNotPersisted(request);
+    }
+
+    [Fact]
+    public async Task RejectRequest_NullBody_DoesNotReadOrWrite()
+    {
+        // Protect direct service calls too; they do not benefit from ApiController body validation.
+        var result = await _service.RejectRequestAsync(ValidRequestId, ValidAdminId, null!);
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+        _mockApprovalRepo.VerifyNoOtherCalls();
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    public async Task RejectRequest_ValidReason_TrimsAndSavesDecisionMetadata()
+    {
+        // Confirm the explanation is saved with the decision, not just accepted and discarded.
+        var request = BuildPendingRequest();
+        _mockApprovalRepo.Setup(repo => repo.GetByIdAsync(ValidRequestId)).ReturnsAsync(request);
+        var input = new RejectHotelRegistrationDTO { Reason = "  Business license is incomplete.  " };
+        var result = await _service.RejectRequestAsync(ValidRequestId, ValidAdminId, input);
+        result.StatusCode.Should().Be(StatusCodeResponse.Success);
+        request.AdminRemark.Should().Be(input.Reason.Trim());
+        request.AdminId.Should().Be(ValidAdminId);
+        request.UpdatedAt.Should().NotBeNull();
+        request.UpdatedAt!.Value.Kind.Should().Be(DateTimeKind.Utc);
+        request.Status.Should().Be(RequestStatusConst.Rejected);
+        Verify_Saved(1);
+        _mockHotelRepo.Verify(repo => repo.AddAsync(It.IsAny<Hotel>()), Times.Never);
+    }
+
+    private void AssertRejectionWasNotPersisted(HotelApprovalRequest request)
+    {
+        // Check unchanged tracked fields as well as repository calls to detect premature mutations.
+        request.Status.Should().Be(RequestStatusConst.Pending);
+        request.AdminRemark.Should().BeNull();
+        request.AdminId.Should().BeNull();
+        request.UpdatedAt.Should().BeNull();
+        _mockApprovalRepo.Verify(repo => repo.UpdateAsync(It.IsAny<HotelApprovalRequest>()), Times.Never);
+        _mockHotelRepo.Verify(repo => repo.AddAsync(It.IsAny<Hotel>()), Times.Never);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    [Trait("Requirement", "FR-ONB-017")]
+    public async Task RejectRequest_WithoutReason_ReturnsBadRequestWithoutSaving()
+    {
+        // A rejection must not be persisted unless the Admin supplies a valid reason.
+        var request = BuildPendingRequest();
+        _mockApprovalRepo.Setup(repo => repo.GetByIdAsync(ValidRequestId)).ReturnsAsync(request);
+        var result = await _service.RejectRequestAsync(ValidRequestId, ValidAdminId, new RejectHotelRegistrationDTO());
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+        request.Status.Should().Be(RequestStatusConst.Pending);
+        Verify_Never_Saved();
+    }
+
     [Fact]
     public async Task RejectRequest_ValidRequest_ShouldReturnSuccess()
     {
@@ -677,7 +769,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
         _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
         // Act
-        var result = await _service.RejectRequestAsync(ValidRequestId, ValidAdminId);
+        var result = await _service.RejectRequestAsync(ValidRequestId, ValidAdminId, ValidRejection());
 
         // Assert
         result.Should().NotBeNull();
@@ -699,7 +791,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
     public async Task RejectRequest_InvalidRequestId_ShouldReturnBadRequest()
     {
         // Act
-        var result = await _service.RejectRequestAsync(0, ValidAdminId);
+        var result = await _service.RejectRequestAsync(0, ValidAdminId, ValidRejection());
 
         // Assert
         result.Should().NotBeNull();
@@ -714,7 +806,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
     public async Task RejectRequest_NegativeRequestId_ShouldReturnBadRequest()
     {
         // Act
-        var result = await _service.RejectRequestAsync(-99, ValidAdminId);
+        var result = await _service.RejectRequestAsync(-99, ValidAdminId, ValidRejection());
 
         // Assert
         result.Should().NotBeNull();
@@ -733,7 +825,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
             .ReturnsAsync((HotelApprovalRequest)null!);
 
         // Act
-        var result = await _service.RejectRequestAsync(ValidRequestId, ValidAdminId);
+        var result = await _service.RejectRequestAsync(ValidRequestId, ValidAdminId, ValidRejection());
 
         // Assert
         result.Should().NotBeNull();
@@ -753,7 +845,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
         _mockApprovalRepo.Setup(r => r.GetByIdAsync(ValidRequestId)).ReturnsAsync(request);
 
         // Act
-        var result = await _service.RejectRequestAsync(ValidRequestId, ValidAdminId);
+        var result = await _service.RejectRequestAsync(ValidRequestId, ValidAdminId, ValidRejection());
 
         // Assert
         result.Should().NotBeNull();
@@ -773,7 +865,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
         _mockApprovalRepo.Setup(r => r.GetByIdAsync(ValidRequestId)).ReturnsAsync(request);
 
         // Act
-        var result = await _service.RejectRequestAsync(ValidRequestId, ValidAdminId);
+        var result = await _service.RejectRequestAsync(ValidRequestId, ValidAdminId, ValidRejection());
 
         // Assert
         result.Should().NotBeNull();
@@ -793,7 +885,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
         _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(0);
 
         // Act
-        var result = await _service.RejectRequestAsync(ValidRequestId, ValidAdminId);
+        var result = await _service.RejectRequestAsync(ValidRequestId, ValidAdminId, ValidRejection());
 
         // Assert
         result.Should().NotBeNull();
@@ -813,7 +905,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
             .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
 
         // Act
-        var result = await _service.RejectRequestAsync(ValidRequestId, ValidAdminId);
+        var result = await _service.RejectRequestAsync(ValidRequestId, ValidAdminId, ValidRejection());
 
         // Assert
         result.Should().NotBeNull();
@@ -836,7 +928,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
             .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
 
         // Act
-        var result = await _service.RejectRequestAsync(ValidRequestId, ValidAdminId);
+        var result = await _service.RejectRequestAsync(ValidRequestId, ValidAdminId, ValidRejection());
 
         // Assert
         result.Should().NotBeNull();

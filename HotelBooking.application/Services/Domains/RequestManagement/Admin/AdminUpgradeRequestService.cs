@@ -10,6 +10,8 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Admin
 {
     public interface IAdminUpgradeRequestService : IBaseAdminRequestService<UpgradeRequestDTO>
     {
+        // Preserve the upgrade workflow's existing contract while Hotel rejection gains its own DTO.
+        Task<ApiResponse<bool>> RejectRequestAsync(int requestId, int adminId);
     }
 
     public class AdminUpgradeRequestService : IAdminUpgradeRequestService

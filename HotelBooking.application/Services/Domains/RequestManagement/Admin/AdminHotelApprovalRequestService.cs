@@ -12,6 +12,8 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Admin;
 
 public interface IAdminHotelApprovalRequestService : IBaseAdminRequestService<HotelRegistrationDetailDTO>
 {
+    // Require a reason at the service boundary, including calls that do not originate in HTTP.
+    Task<ApiResponse<bool>> RejectRequestAsync(int requestId, int adminId, RejectHotelRegistrationDTO request, CancellationToken cancellationToken = default);
 }
 
 public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestService
@@ -21,19 +23,22 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
     private readonly IUnitOfWork _unitOfWork;
     private readonly IValidator<PagingRequest> _pagingValidator;
     private readonly ILogger<AdminHotelApprovalRequestService> _logger;
+    private readonly IValidator<RejectHotelRegistrationDTO> _rejectionValidator;
 
     public AdminHotelApprovalRequestService(
         IHotelApprovalRequestRepository approvalRepo,
         IHotelRepository hotelRepo,
         IUnitOfWork unitOfWork,
         IValidator<PagingRequest> pagingValidator,
-        ILogger<AdminHotelApprovalRequestService> logger)
+        ILogger<AdminHotelApprovalRequestService> logger,
+        IValidator<RejectHotelRegistrationDTO> rejectionValidator)
     {
         _approvalRepo = approvalRepo;
         _hotelRepo = hotelRepo;
         _unitOfWork = unitOfWork;
         _pagingValidator = pagingValidator;
         _logger = logger;
+        _rejectionValidator = rejectionValidator;
     }
 
     public async Task<ApiResponse<List<string>>> GetAllStatusesAsync()
@@ -353,47 +358,72 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
         }
     }
 
-    public async Task<ApiResponse<bool>> RejectRequestAsync(int requestId, int adminId)
+    public async Task<ApiResponse<bool>> RejectRequestAsync(int requestId, int adminId,
+        RejectHotelRegistrationDTO input, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+        // Validate before repository access so missing or unusable explanations cannot change a request.
+        if (input == null) return InvalidRejectionReason();
+        var validation = await _rejectionValidator.ValidateAsync(input, cancellationToken);
+        if (!validation.IsValid) return InvalidRejectionReason();
         try
         {
             if (requestId <= 0)
                 return ResponseFactory.Failure<bool>(
                     StatusCodeResponse.BadRequest,
                     MessageResponse.RequestManagement.HotelApproval.HOTEL_INVALID_REQUEST_ID);
-
             var request = await _approvalRepo.GetByIdAsync(requestId);
-
-            if (request == null)
-                return ResponseFactory.Failure<bool>(
-                    StatusCodeResponse.NotFound,
-                    MessageResponse.RequestManagement.HotelApproval.HOTEL_REQUEST_NOT_FOUND);
-
-            if (request.Status != RequestStatusConst.Pending)
-                return ResponseFactory.Failure<bool>(
-                    StatusCodeResponse.BadRequest,
-                    MessageResponse.RequestManagement.HotelApproval.STATUS_INVALID);
-
-            // Rejecting one's own request is prohibited just like self-approval.
-            if (request.OwnerId == adminId)
-                return ResponseFactory.Failure<bool>(StatusCodeResponse.Forbidden,
-                    MessageResponse.RequestManagement.HotelApproval.SELF_DECISION_FORBIDDEN);
-
-            request.Status = RequestStatusConst.Rejected;
-            request.AdminId = adminId;
-            request.UpdatedAt = DateTime.Now;
-
-            await _approvalRepo.UpdateAsync(request);
-            var saved = await _unitOfWork.SaveChangesAsync() > 0;
-
-            return saved
-                ? ResponseFactory.Success(true, MessageResponse.RequestManagement.HotelApproval.REJECTED_SUCCESS)
-                : ResponseFactory.Failure<bool>(StatusCodeResponse.Error, MessageResponse.RequestManagement.HotelApproval.REJECT_FAILED);
+            // A valid reason does not override state restrictions or the self-decision prohibition.
+            var error = ValidateRejectionTarget(request, adminId);
+            if (error != null) return error;
+            return await RejectPendingRequestAsync(request!, adminId, input.Reason.Trim(), cancellationToken);
         }
+        // Preserve cancellation instead of reporting an interrupted request as a system failure.
+        catch (OperationCanceledException) { throw; }
         catch (Exception ex)
         {
             _logger.LogError(ex, "[AdminHotelApprovalRequestService - RejectRequestAsync] Error rejecting hotel registration request with ID {RequestId} by Admin with ID: {AdminId}: {ErrorMessage}", requestId, adminId, ex.Message);
             return ResponseFactory.ServerError<bool>();
         }
+    }
+
+    // Missing bodies and invalid text use the same predictable validation response.
+    private static ApiResponse<bool> InvalidRejectionReason() =>
+        ResponseFactory.Failure<bool>(StatusCodeResponse.BadRequest,
+            MessageResponse.RequestManagement.HotelApproval.REJECTION_REASON_INVALID);
+
+    private static ApiResponse<bool>? ValidateRejectionTarget(HotelApprovalRequest? request, int adminId)
+    {
+        // Reject only an existing Pending request; completed decisions must not be overwritten.
+        if (request == null)
+            return ResponseFactory.Failure<bool>(StatusCodeResponse.NotFound,
+                MessageResponse.RequestManagement.HotelApproval.HOTEL_REQUEST_NOT_FOUND);
+        if (request.Status != RequestStatusConst.Pending)
+            return ResponseFactory.Failure<bool>(StatusCodeResponse.BadRequest,
+                MessageResponse.RequestManagement.HotelApproval.STATUS_INVALID);
+        // An Admin must not reject their own registration, even when they also have the Owner role.
+        if (request.OwnerId == adminId)
+            return ResponseFactory.Failure<bool>(StatusCodeResponse.Forbidden,
+                MessageResponse.RequestManagement.HotelApproval.SELF_DECISION_FORBIDDEN);
+        return null;
+    }
+
+    private async Task<ApiResponse<bool>> RejectPendingRequestAsync(HotelApprovalRequest request,
+        int adminId, string reason, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        // Persist the explanation with the status and decision metadata in one SaveChanges call.
+        // Reuse AdminRemark rather than introducing a schema change for this focused feature.
+        request.Status = RequestStatusConst.Rejected;
+        request.AdminId = adminId;
+        request.AdminRemark = reason;
+        // Technical decision timestamps use UTC to avoid dependence on the server's local timezone.
+        request.UpdatedAt = DateTime.UtcNow;
+        await _approvalRepo.UpdateAsync(request);
+        cancellationToken.ThrowIfCancellationRequested();
+        var saved = await _unitOfWork.SaveChangesAsync() > 0;
+        return saved
+            ? ResponseFactory.Success(true, MessageResponse.RequestManagement.HotelApproval.REJECTED_SUCCESS)
+            : ResponseFactory.Failure<bool>(StatusCodeResponse.Error, MessageResponse.RequestManagement.HotelApproval.REJECT_FAILED);
     }
 }
