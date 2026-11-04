@@ -276,6 +276,33 @@
 }
 
 /* Modal */
+/* FR-ONB-014: long explanations must wrap without widening the table or overflowing the detail panel. */
+.req-rejection-preview {
+  max-width: 260px;
+  margin: 8px 0 0;
+  color: #475569;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.req-decision-details {
+  margin-bottom: 20px;
+}
+
+.req-decision-details dt {
+  margin-top: 12px;
+  font-weight: 600;
+}
+
+.req-decision-details dd {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.req-decision-reason {
+  white-space: pre-wrap;
+}
+
 .req-modal-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;

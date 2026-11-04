@@ -223,3 +223,21 @@
   display: flex;
   justify-content: flex-end;
 }
+
+/* FR-ONB-013: preserve the full explanation, including line breaks and long words, within each history card. */
+.hi-decision {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #E2E8F0;
+  color: #475569;
+  font-size: 13px;
+}
+
+.hi-decision p {
+  margin: 0 0 6px;
+}
+
+.hi-rejection-reason {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

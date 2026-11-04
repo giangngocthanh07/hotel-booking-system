@@ -39,6 +39,23 @@ export interface ApiResponse<T> {
   errors?: string[];
 }
 
+// FR-ONB-013: type the history fields so decision metadata cannot be silently lost behind any[].
+export interface HotelRegistrationHistoryItem {
+  requestId: number;
+  name: string;
+  status: string;
+  requestedAt: string;
+  propertyTypeName: string;
+  starRating?: number | null;
+  address: string;
+  wardName: string;
+  provinceName: string;
+  taxCode: string;
+  businessLicenseUrl: string;
+  adminRemark?: string | null;
+  processedAt?: string | null;
+}
+
 // Internal generic fetch helper
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
   const token = getAuthToken();
@@ -101,4 +118,4 @@ export const submitRegistration = (data: HotelRegistrationDTO) => request<any>('
   body: JSON.stringify(data)
 });
 
-export const getMyRegistrations = () => request<any[]>('/owner/hotel-registrations/me');
+export const getMyRegistrations = () => request<HotelRegistrationHistoryItem[]>('/owner/hotel-registrations/me');
