@@ -3,12 +3,15 @@ import { Alert, Button, Dialog, DialogActions, DialogContent, DialogContentText,
 
 interface Props {
   requestId?: number;
+  title?: string;
+  description?: string;
   onSubmit: (reason: string) => Promise<void>;
   onClose: () => void;
 }
 
 // Keep the explanation and recoverable errors local; the page owns API calls and list refreshes.
-export default function HotelRejectionDialog({ requestId, onSubmit, onClose }: Props) {
+export default function HotelRejectionDialog({ requestId, title = "Reject hotel registration",
+  description = "Explain why this registration cannot be approved. This decision will reject the request.", onSubmit, onClose }: Props) {
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -37,11 +40,11 @@ export default function HotelRejectionDialog({ requestId, onSubmit, onClose }: P
     <Dialog open fullWidth maxWidth="sm" aria-labelledby="hotel-rejection-title"
       onClose={() => { if (!saving) onClose(); }}>
       <form onSubmit={submit} noValidate aria-busy={saving}>
-        <DialogTitle id="hotel-rejection-title">Reject hotel registration</DialogTitle>
+        <DialogTitle id="hotel-rejection-title">{title}</DialogTitle>
         <DialogContent>
           <DialogContentText>
             {requestId !== undefined && `Request #${requestId}. `}
-            Explain why this registration cannot be approved. This decision will reject the request.
+            {description}
           </DialogContentText>
           <TextField autoFocus fullWidth multiline minRows={4} margin="normal" required
             label="Rejection reason" value={reason} disabled={saving}
