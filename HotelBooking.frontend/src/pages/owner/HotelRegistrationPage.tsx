@@ -3,8 +3,9 @@ import {
   getCountries, getProvinces, getWards, getPropertyTypes, 
   uploadBusinessLicense, submitRegistration, getMyRegistrations
 } from "../../services/ownerRegistrationService";
-import type { LocationItem, PropertyTypeItem, HotelRegistrationDTO } from "../../services/ownerRegistrationService";
+import type { LocationItem, PropertyTypeItem, HotelRegistrationDTO, HotelRegistrationHistoryItem } from "../../services/ownerRegistrationService";
 import "./HotelRegistrationPage.css";
+import OwnerRegistrationDecision from "./OwnerRegistrationDecision";
 
 export default function HotelRegistrationPage() {
   
@@ -15,7 +16,7 @@ export default function HotelRegistrationPage() {
   const [propertyTypes, setPropertyTypes] = useState<PropertyTypeItem[]>([]);
   
   // History
-  const [history, setHistory] = useState<any[]>([]);
+  const [history, setHistory] = useState<HotelRegistrationHistoryItem[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
 
   // Form State
@@ -307,6 +308,7 @@ export default function HotelRegistrationPage() {
                     <p><strong>Tax Code:</strong> {req.taxCode}</p>
                     <p><strong>Submitted:</strong> {new Date(req.requestedAt).toLocaleString()}</p>
                   </div>
+                  <OwnerRegistrationDecision request={req} />
                   <div className="hi-footer">
                     <a href={req.businessLicenseUrl} target="_blank" rel="noreferrer" className="btn-link">View License</a>
                   </div>

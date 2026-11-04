@@ -11,6 +11,7 @@ import {
 import type { HotelApprovalRequest, UpgradeRequest, BaseRequest, RequestStats } from "../../types/admin.types";
 import "./AdminRequestsPage.css"; 
 import HotelRejectionDialog from "./HotelRejectionDialog";
+import HotelDecisionDetails from "./HotelDecisionDetails";
 
 type RequestType = "Hotel" | "Upgrade";
 
@@ -191,6 +192,9 @@ function AdminRequestsPage() {
   }
 
   function renderHotelRow(req: HotelApprovalRequest) {
+    // FR-ONB-014: keep the table compact; the detail view preserves the complete explanation.
+    const reason = req.adminRemark?.trim() || "No rejection reason recorded.";
+    const reasonPreview = reason.length > 100 ? `${reason.slice(0, 100).trimEnd()}…` : reason;
     return (
       <tr key={req.requestId} style={{ cursor: "pointer" }} onClick={() => setSelectedRequest(req)}>
         <td>#{req.requestId}</td>
@@ -203,7 +207,10 @@ function AdminRequestsPage() {
           <div style={{ fontSize: "12px", color: "#64748B" }}>{req.ownerEmail}</div>
         </td>
         <td>{new Date(req.requestedAt).toLocaleDateString()}</td>
-        <td>{renderStatusBadge(req.status)}</td>
+        <td>
+          {renderStatusBadge(req.status)}
+          {req.status === "Rejected" && <p className="req-rejection-preview">{reasonPreview}</p>}
+        </td>
         <td onClick={(e) => e.stopPropagation()}>{renderActionButtons(req)}</td>
       </tr>
     );
@@ -261,7 +268,7 @@ function AdminRequestsPage() {
                 <span className="overview-label">Requested At</span>
                 <span className="overview-value">{new Date(selectedRequest.requestedAt).toLocaleString()}</span>
               </div>
-              {selectedRequest.processedAt && (
+              {!isHotel && selectedRequest.processedAt && (
                 <div className="overview-item">
                   <span className="overview-label">Processed At</span>
                   <span className="overview-value">{new Date(selectedRequest.processedAt).toLocaleString()}</span>
@@ -269,6 +276,7 @@ function AdminRequestsPage() {
               )}
             </div>
 
+            {isHotel && <HotelDecisionDetails request={hotelReq} />}
             <h3 className="req-section-title">Specific Information</h3>
             <div className="req-info-container">
               {isHotel ? (
