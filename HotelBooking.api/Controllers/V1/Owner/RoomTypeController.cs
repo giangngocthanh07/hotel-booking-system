@@ -3,8 +3,7 @@ using HotelBooking.application.Helpers;
 using HotelBooking.application.Services.Domains.RoomManagement;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
-// Remember to import the namespaces containing Service, DTO, and ResponseFactory
+using System.Security.Claims;
 
 namespace HotelBooking.API.Controllers.V1.Owner
 {
@@ -42,12 +41,15 @@ namespace HotelBooking.API.Controllers.V1.Owner
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateRoomType([FromBody] RoomTypeCreateDTO request)
+        public async Task<IActionResult> CreateRoomType([FromBody] RoomTypeCreateDTO request, CancellationToken cancellationToken = default)
         {
-            // Call the service layer to create a new room type
-            var result = await _roomTypeService.CreateRoomTypeAsync(request);
+            if (!TryGetOwnerId(out var ownerId)) return Unauthorized();
+            var result = await _roomTypeService.CreateRoomTypeAsync(request, ownerId, cancellationToken);
 
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
+
+        private bool TryGetOwnerId(out int ownerId) =>
+            int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out ownerId) && ownerId > 0;
     }
 }

@@ -1,104 +1,110 @@
+using FluentValidation;
 using HotelBooking.application.DTOs.Hotel;
 using HotelBooking.application.Interfaces;
 using HotelBooking.infrastructure.Models;
-using Microsoft.Extensions.Logging;
 
 namespace HotelBooking.application.Services.Domains.RoomManagement;
 
-public class RoomService : IRoomService
+public class RoomService(
+    IRoomRepository roomRepository,
+    IInventoryAccessService inventoryAccess,
+    IValidator<BatchAddRoomsRequestDTO> batchValidator,
+    IValidator<int> listValidator,
+    IUnitOfWork unitOfWork,
+    ILogger<RoomService> logger) : IRoomService
 {
-    private readonly IRoomRepository _roomRepo;
-    private readonly IRoomTypeRepository _roomTypeRepo;
-    private readonly IUnitOfWork _dbu;
-    private readonly ILogger<RoomService> _logger;
-
-    public RoomService(IRoomRepository roomRepo, IRoomTypeRepository roomTypeRepo, IUnitOfWork dbu, ILogger<RoomService> logger)
+    public async Task<ApiResponse<IEnumerable<RoomResponseDTO>>> BatchAddRoomsAsync(
+        BatchAddRoomsRequestDTO request, int ownerId, CancellationToken cancellationToken = default)
     {
-        _roomRepo = roomRepo;
-        _roomTypeRepo = roomTypeRepo;
-        _dbu = dbu;
-        _logger = logger;
+        cancellationToken.ThrowIfCancellationRequested();
+        if (request == null) return Failure(StatusCodeResponse.BadRequest, MessageResponse.Common.REQUEST_CANNOT_BE_NULL);
+        var validation = await batchValidator.ValidateAsync(request, cancellationToken);
+        if (!validation.IsValid) return Failure(StatusCodeResponse.BadRequest, validation.Errors[0].ErrorMessage);
+        if (!await inventoryAccess.CanAccessRoomTypeAsync(request.RoomTypeId, ownerId, request.HotelId, cancellationToken))
+            return Failure(StatusCodeResponse.Forbidden, InventoryAccessService.AccessDeniedMessage);
+        var duplicate = await FindDuplicateAsync(request, cancellationToken);
+        if (duplicate != null) return Failure(StatusCodeResponse.Conflict, $"Room number '{duplicate}' already exists in this hotel.");
+        return await CreateRoomsAsync(request, cancellationToken);
     }
 
-    public async Task<ApiResponse<IEnumerable<RoomResponseDTO>>> BatchAddRoomsAsync(BatchAddRoomsRequestDTO request)
+    public async Task<ApiResponse<IEnumerable<RoomResponseDTO>>> GetRoomsByRoomTypeAsync(
+        int roomTypeId, int ownerId, CancellationToken cancellationToken = default)
     {
-        await _dbu.BeginTransactionAsync();
+        cancellationToken.ThrowIfCancellationRequested();
+        var validation = await listValidator.ValidateAsync(roomTypeId, cancellationToken);
+        if (!validation.IsValid) return Failure(StatusCodeResponse.BadRequest, validation.Errors[0].ErrorMessage);
+        if (!await inventoryAccess.CanAccessRoomTypeAsync(roomTypeId, ownerId, cancellationToken: cancellationToken))
+            return Failure(StatusCodeResponse.Forbidden, InventoryAccessService.AccessDeniedMessage);
+        cancellationToken.ThrowIfCancellationRequested();
+        var rooms = await roomRepository.WhereAsync(room => room.RoomTypeId == roomTypeId && room.IsDeleted != true);
+        return ResponseFactory.Success(rooms.Select(ToResponse), "Rooms retrieved successfully.");
+    }
+
+    private async Task<string?> FindDuplicateAsync(BatchAddRoomsRequestDTO request, CancellationToken cancellationToken)
+    {
+        foreach (var roomNumber in request.RoomNumbers)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (await roomRepository.AnyAsync(room => room.RoomType.HotelId == request.HotelId
+                && room.RoomNumber == roomNumber && room.IsDeleted != true)) return roomNumber;
+        }
+        return null;
+    }
+
+    private async Task<ApiResponse<IEnumerable<RoomResponseDTO>>> CreateRoomsAsync(
+        BatchAddRoomsRequestDTO request, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        await unitOfWork.BeginTransactionAsync();
         try
         {
-            // 1. Validate RoomType exists and belongs to Hotel
-            var roomType = await _roomTypeRepo.GetByIdAsync(request.RoomTypeId);
-            if (roomType == null || roomType.HotelId != request.HotelId)
-            {
-                await _dbu.RollBackTransactionAsync();
-                return ResponseFactory.Failure<IEnumerable<RoomResponseDTO>>(StatusCodeResponse.NotFound, "Room type not found or does not belong to this hotel.");
-            }
-
-            // 2. Check for duplicate room numbers within the hotel
-            foreach (var roomNumber in request.RoomNumbers)
-            {
-                var exists = await _roomRepo.AnyAsync(r => r.RoomType.HotelId == request.HotelId && r.RoomNumber == roomNumber && r.IsDeleted != true);
-                if (exists)
-                {
-                    await _dbu.RollBackTransactionAsync();
-                    return ResponseFactory.Failure<IEnumerable<RoomResponseDTO>>(StatusCodeResponse.Conflict, $"Room number '{roomNumber}' already exists in this hotel.");
-                }
-            }
-
-            // 3. Create Rooms
-            var rooms = new List<Room>();
-            foreach (var roomNumber in request.RoomNumbers)
-            {
-                var room = new Room
-                {
-                    RoomTypeId = request.RoomTypeId,
-                    RoomNumber = roomNumber,
-                    Status = request.Status,
-                    IsDeleted = false
-                };
-                await _roomRepo.AddAsync(room);
-                rooms.Add(room);
-            }
-
-            await _dbu.SaveChangesAsync();
-            await _dbu.CommitTransactionAsync();
-
-            var content = rooms.Select(r => new RoomResponseDTO
-            {
-                Id = r.Id,
-                RoomTypeId = r.RoomTypeId,
-                RoomNumber = r.RoomNumber,
-                Status = r.Status ?? "Active"
-            });
-
-            return ResponseFactory.Success(content, "Rooms added successfully.");
+            var rooms = await AddRoomsAsync(request, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            await unitOfWork.SaveChangesAsync();
+            cancellationToken.ThrowIfCancellationRequested();
+            await unitOfWork.CommitTransactionAsync();
+            return ResponseFactory.Success(rooms.Select(ToResponse), "Rooms added successfully.");
         }
-        catch (Exception ex)
+        catch (OperationCanceledException)
         {
-            await _dbu.RollBackTransactionAsync();
-            _logger.LogError(ex, "Error batch adding rooms");
-            return ResponseFactory.Failure<IEnumerable<RoomResponseDTO>>(StatusCodeResponse.Error, "An error occurred while adding rooms.");
+            await unitOfWork.RollBackTransactionAsync();
+            throw;
+        }
+        catch (Exception exception)
+        {
+            await unitOfWork.RollBackTransactionAsync();
+            logger.LogError(exception, "Error batch adding rooms");
+            return Failure(StatusCodeResponse.Error, "An error occurred while adding rooms.");
         }
     }
 
-    public async Task<ApiResponse<IEnumerable<RoomResponseDTO>>> GetRoomsByRoomTypeAsync(int roomTypeId)
+    private async Task<List<Room>> AddRoomsAsync(BatchAddRoomsRequestDTO request, CancellationToken cancellationToken)
     {
-        try
+        var rooms = new List<Room>();
+        foreach (var number in request.RoomNumbers)
         {
-            var rooms = await _roomRepo.WhereAsync(r => r.RoomTypeId == roomTypeId && r.IsDeleted != true);
-            var content = rooms.Select(r => new RoomResponseDTO
+            cancellationToken.ThrowIfCancellationRequested();
+            var room = new Room
             {
-                Id = r.Id,
-                RoomTypeId = r.RoomTypeId,
-                RoomNumber = r.RoomNumber,
-                Status = r.Status ?? "Active"
-            });
-
-            return ResponseFactory.Success(content, "Rooms retrieved successfully.");
+                RoomTypeId = request.RoomTypeId,
+                RoomNumber = number,
+                Status = request.Status,
+                IsDeleted = false
+            };
+            await roomRepository.AddAsync(room);
+            rooms.Add(room);
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting rooms for room type {RoomTypeId}", roomTypeId);
-            return ResponseFactory.Failure<IEnumerable<RoomResponseDTO>>(StatusCodeResponse.Error, "An error occurred while retrieving rooms.");
-        }
+        return rooms;
     }
+
+    private static RoomResponseDTO ToResponse(Room room) => new()
+    {
+        Id = room.Id,
+        RoomTypeId = room.RoomTypeId,
+        RoomNumber = room.RoomNumber,
+        Status = room.Status ?? "Active"
+    };
+
+    private static ApiResponse<IEnumerable<RoomResponseDTO>> Failure(string status, string message) =>
+        ResponseFactory.Failure<IEnumerable<RoomResponseDTO>>(status, message);
 }

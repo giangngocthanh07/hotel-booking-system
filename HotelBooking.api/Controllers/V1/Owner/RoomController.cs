@@ -3,6 +3,7 @@ using HotelBooking.application.Helpers;
 using HotelBooking.application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace HotelBooking.api.Controllers.V1.Owner;
 
@@ -20,16 +21,21 @@ public class RoomController : ControllerBase
     }
 
     [HttpPost("batch")]
-    public async Task<IActionResult> BatchAddRooms([FromBody] BatchAddRoomsRequestDTO request)
+    public async Task<IActionResult> BatchAddRooms([FromBody] BatchAddRoomsRequestDTO request, CancellationToken cancellationToken = default)
     {
-        var result = await _roomService.BatchAddRoomsAsync(request);
+        if (!TryGetOwnerId(out var ownerId)) return Unauthorized();
+        var result = await _roomService.BatchAddRoomsAsync(request, ownerId, cancellationToken);
         return ApiResponseHandlerHelper.HandleResponse(result);
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetRoomsByRoomType([FromQuery] int roomTypeId)
+    public async Task<IActionResult> GetRoomsByRoomType([FromQuery] int roomTypeId, CancellationToken cancellationToken = default)
     {
-        var result = await _roomService.GetRoomsByRoomTypeAsync(roomTypeId);
+        if (!TryGetOwnerId(out var ownerId)) return Unauthorized();
+        var result = await _roomService.GetRoomsByRoomTypeAsync(roomTypeId, ownerId, cancellationToken);
         return ApiResponseHandlerHelper.HandleResponse(result);
     }
+
+    private bool TryGetOwnerId(out int ownerId) =>
+        int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out ownerId) && ownerId > 0;
 }
