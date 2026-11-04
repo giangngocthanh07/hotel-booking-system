@@ -18,6 +18,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest<HotelRegistrationSe
     private readonly Mock<IWardRepository> _mockWardRepo;
     private readonly Mock<IValidator<HotelRegistrationDTO>> _mockValidator;
     private readonly IHotelRegistrationService _service;
+    private readonly Mock<IUserRepository> _mockUserRepo = new();
 
 
     public HotelRegistrationServiceTests()
@@ -33,7 +34,28 @@ public class HotelRegistrationServiceTests : BaseServiceTest<HotelRegistrationSe
         _mockProvinceRepo.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(new Province { Id = 1 });
         _mockWardRepo.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(new Ward { Id = 1, ProvinceId = 1 });
 
-        _service = new HotelRegistrationService(_mockApprovalRepo.Object, _mockHotelRepo.Object, _mockPropertyTypeRepo.Object, _mockProvinceRepo.Object, _mockWardRepo.Object, _mockValidator.Object, _mockUnitOfWork.Object, _mockLogger.Object);
+        _service = new HotelRegistrationService(_mockApprovalRepo.Object, _mockHotelRepo.Object, _mockPropertyTypeRepo.Object, _mockProvinceRepo.Object, _mockWardRepo.Object, _mockValidator.Object, _mockUnitOfWork.Object, _mockLogger.Object, _mockUserRepo.Object);
+    }
+
+    [Fact]
+    [Trait("Requirement", "FR-ONB-013")]
+    public async Task GetMyRequests_RejectedRequest_ExposesDecisionWithoutWriting()
+    {
+        // Enrich only the history fetched for this Owner; reading history must never save data.
+        var request = new HotelApprovalRequest { Id = 99, OwnerId = 7, Status = "Rejected",
+            AdminRemark = "Business license is incomplete.", AdminId = 42, UpdatedAt = DateTime.UtcNow };
+        _mockApprovalRepo.Setup(repo => repo.GetByUserIdAsync(7)).ReturnsAsync([request]);
+        _mockUserRepo.Setup(repo => repo.WhereAsync(It.IsAny<Expression<Func<User, bool>>>()))
+            .ReturnsAsync([new User { Id = 42, FullName = "Review Admin" }]);
+        var result = await _service.GetMyRequestsAsync(7);
+        result.StatusCode.Should().Be(StatusCodeResponse.Success);
+        var detail = Assert.Single(result.Content!);
+        detail.AdminRemark.Should().Be(request.AdminRemark);
+        detail.ProcessedAt.Should().Be(request.UpdatedAt);
+        detail.ProcessedBy.Should().Be(42);
+        detail.ProcessedByName.Should().Be("Review Admin");
+        _mockApprovalRepo.Verify(repo => repo.GetByUserIdAsync(7), Times.Once);
+        Verify_Never_Saved();
     }
 
     [Fact]
