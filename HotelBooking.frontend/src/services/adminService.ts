@@ -38,12 +38,16 @@ export async function approveHotel(id: number): Promise<ApiResponse<boolean>> {
   return response.json();
 }
 
-export async function rejectHotel(id: number): Promise<ApiResponse<boolean>> {
+export async function rejectHotel(id: number, reason: string): Promise<ApiResponse<boolean>> {
   const response = await fetch(`${BASE_URL}/admin/hotel-approvals/${id}/reject`, {
     method: "POST",
     headers: getHeaders(),
+    // Hotel rejection now requires a validated explanation; upgrade rejection keeps its own contract.
+    body: JSON.stringify({ reason: reason.trim() }),
   });
-  return response.json();
+  const result: ApiResponse<boolean> = await response.json();
+  if (!response.ok) throw new Error(result.message || "Unable to reject this request. Please try again.");
+  return result;
 }
 
 // === UPGRADE REQUESTS ===

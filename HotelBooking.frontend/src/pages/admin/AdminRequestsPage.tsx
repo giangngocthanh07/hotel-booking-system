@@ -10,6 +10,7 @@ import {
 } from "../../services/adminService";
 import type { HotelApprovalRequest, UpgradeRequest, BaseRequest, RequestStats } from "../../types/admin.types";
 import "./AdminRequestsPage.css"; 
+import HotelRejectionDialog from "./HotelRejectionDialog";
 
 type RequestType = "Hotel" | "Upgrade";
 
@@ -32,6 +33,9 @@ function AdminRequestsPage() {
 
   // Modal State
   const [selectedRequest, setSelectedRequest] = useState<HotelApprovalRequest | UpgradeRequest | null>(null);
+  // Store the Hotel request ID independently so changing tabs cannot redirect a pending decision.
+  const [rejectionId, setRejectionId] = useState<number | null>(null);
+  const [decisionMessage, setDecisionMessage] = useState("");
 
   // Fetch Data
   async function fetchData() {
@@ -130,9 +134,14 @@ function AdminRequestsPage() {
   }
 
   async function handleReject(id: number) {
+    if (requestType === "Hotel") {
+      setDecisionMessage("");
+      setRejectionId(id);
+      return;
+    }
     if (!window.confirm("Are you sure you want to reject this request?")) return;
     try {
-      const res = requestType === "Hotel" ? await rejectHotel(id) : await rejectUpgrade(id);
+      const res = await rejectUpgrade(id);
       if (res.statusCode === "Success") {
         alert("Request rejected successfully!");
         if (selectedRequest?.requestId === id) setSelectedRequest(null);
@@ -143,6 +152,16 @@ function AdminRequestsPage() {
     } catch (e) {
       alert("Error rejecting request.");
     }
+  }
+
+  async function submitHotelRejection(reason: string) {
+    if (rejectionId === null) return;
+    const response = await rejectHotel(rejectionId, reason);
+    if (response.statusCode !== "Success") throw new Error(response.message || "Failed to reject request.");
+    if (selectedRequest?.requestId === rejectionId) setSelectedRequest(null);
+    setRejectionId(null);
+    setDecisionMessage("Hotel registration rejected successfully.");
+    await fetchData();
   }
 
   function renderStatusBadge(status: string) {
@@ -388,6 +407,7 @@ function AdminRequestsPage() {
         </div>
       </div>
 
+      {decisionMessage && <p role="status">{decisionMessage}</p>}
       {/* Stats Cards */}
       {currentStats && (
         <div className="req-stats-grid">
@@ -518,6 +538,10 @@ function AdminRequestsPage() {
       )}
 
       {renderModal()}
+      {rejectionId !== null && (
+        <HotelRejectionDialog requestId={rejectionId} onSubmit={submitHotelRejection}
+          onClose={() => setRejectionId(null)} />
+      )}
     </div>
   );
 }
