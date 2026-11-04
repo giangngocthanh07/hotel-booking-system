@@ -22,9 +22,10 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
         private readonly IValidator<HotelRegistrationDTO> _validator;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<HotelRegistrationService> _logger;
+        private readonly IUserRepository _userRepo;
 
 
-        public HotelRegistrationService(IHotelApprovalRequestRepository approvalRepo, IHotelRepository hotelRepo, IPropertyTypeRepository propertyTypeRepo, IProvinceRepository provinceRepo, IWardRepository wardRepo, IValidator<HotelRegistrationDTO> validator, IUnitOfWork unitOfWork, ILogger<HotelRegistrationService> logger)
+        public HotelRegistrationService(IHotelApprovalRequestRepository approvalRepo, IHotelRepository hotelRepo, IPropertyTypeRepository propertyTypeRepo, IProvinceRepository provinceRepo, IWardRepository wardRepo, IValidator<HotelRegistrationDTO> validator, IUnitOfWork unitOfWork, ILogger<HotelRegistrationService> logger, IUserRepository userRepo)
         {
             _approvalRepo = approvalRepo;
             _hotelRepo = hotelRepo;
@@ -34,6 +35,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
             _validator = validator;
             _unitOfWork = unitOfWork;
             _logger = logger;
+            _userRepo = userRepo;
         }
 
         public async Task<ApiResponse<HotelRegistrationDetailDTO>> CreateRequestAsync(int ownerId, HotelRegistrationDTO request)
@@ -237,6 +239,8 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
                 var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
                 var rawHotels = requests.ToList();
+                // FR-ONB-013: enrich only requests already scoped to this Owner by the repository.
+                var processorNames = await HotelRequestDecisionMapper.LoadNamesAsync(rawHotels, _userRepo);
 
                 var dtoItems = new List<HotelRegistrationDetailDTO>();
 
@@ -273,6 +277,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
                     dto.BusinessLicenseUrl = i.BusinessLicenseUrl;
                     dto.Status = i.Status ?? RequestStatusConst.None;
 
+                    HotelRequestDecisionMapper.Apply(dto, i, processorNames);
                     dtoItems.Add(dto);
                 }
                 return ResponseFactory.Success(dtoItems, MessageResponse.RequestManagement.HotelApproval.HOTELS_RETRIEVED);

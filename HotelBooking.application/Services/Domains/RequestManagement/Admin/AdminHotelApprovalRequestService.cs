@@ -24,6 +24,7 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
     private readonly IValidator<PagingRequest> _pagingValidator;
     private readonly ILogger<AdminHotelApprovalRequestService> _logger;
     private readonly IValidator<RejectHotelRegistrationDTO> _rejectionValidator;
+    private readonly IUserRepository _userRepo;
 
     public AdminHotelApprovalRequestService(
         IHotelApprovalRequestRepository approvalRepo,
@@ -31,7 +32,8 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
         IUnitOfWork unitOfWork,
         IValidator<PagingRequest> pagingValidator,
         ILogger<AdminHotelApprovalRequestService> logger,
-        IValidator<RejectHotelRegistrationDTO> rejectionValidator)
+        IValidator<RejectHotelRegistrationDTO> rejectionValidator,
+        IUserRepository userRepo)
     {
         _approvalRepo = approvalRepo;
         _hotelRepo = hotelRepo;
@@ -39,6 +41,7 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
         _pagingValidator = pagingValidator;
         _logger = logger;
         _rejectionValidator = rejectionValidator;
+        _userRepo = userRepo;
     }
 
     public async Task<ApiResponse<List<string>>> GetAllStatusesAsync()
@@ -132,6 +135,9 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
                 Latitude = additionalInfo?.Latitude,
             };
 
+            // FR-ONB-014: expose the recorded decision without leaking the processor's account details.
+            var processorNames = await HotelRequestDecisionMapper.LoadNamesAsync([approvalRequest], _userRepo);
+            HotelRequestDecisionMapper.Apply(dto, approvalRequest, processorNames);
             return ResponseFactory.Success(dto, MessageResponse.RequestManagement.HotelApproval.HOTELS_RETRIEVED);
         }
         catch (Exception ex)
@@ -193,6 +199,7 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
             var dtoItems = new List<HotelRegistrationDetailDTO>();
+            var processorNames = await HotelRequestDecisionMapper.LoadNamesAsync(items, _userRepo);
 
             foreach (var i in items)
             {
@@ -232,6 +239,7 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
                     PublicPhone = additionalInfo.PublicPhone,
                     PublicEmail = additionalInfo.PublicEmail
                 };
+                HotelRequestDecisionMapper.Apply(dto, i, processorNames);
                 dtoItems.Add(dto);
             }
 

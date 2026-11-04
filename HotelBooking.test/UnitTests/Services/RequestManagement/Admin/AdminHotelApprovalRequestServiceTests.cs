@@ -19,6 +19,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
     private readonly Mock<IHotelRepository> _mockHotelRepo;
     private readonly Mock<IValidator<PagingRequest>> _mockPagingValidator;
     private readonly IAdminHotelApprovalRequestService _service;
+    private readonly Mock<IUserRepository> _mockUserRepo = new();
 
 
     private const int ValidRequestId = 99;
@@ -77,7 +78,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
             _mockHotelRepo.Object,
             _mockUnitOfWork.Object,
             _mockPagingValidator.Object,
-            _mockLogger.Object, new HotelBooking.application.Validators.RequestManagement.Admin.RejectHotelRegistrationValidator());
+            _mockLogger.Object, new HotelBooking.application.Validators.RequestManagement.Admin.RejectHotelRegistrationValidator(), _mockUserRepo.Object);
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -310,6 +311,48 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
     // 3. GET PAGED REQUESTS
     // ════════════════════════════════════════════════════════════════════════
     #region GET PAGED REQUESTS
+
+    [Fact]
+    [Trait("Requirement", "FR-ONB-014")]
+    public async Task GetPagedRequests_DecidedRequests_ExposeMetadataWithOneProcessorLookup()
+    {
+        // Repeated processor IDs should not cause a separate lookup for every request.
+        var request = BuildPendingRequest(status: RequestStatusConst.Rejected);
+        request.AdminRemark = "Business license is incomplete.";
+        request.AdminId = 42;
+        request.UpdatedAt = DateTime.UtcNow;
+        MockPagingValidationSuccess();
+        _mockApprovalRepo.Setup(repo => repo.GetPagedWithUserAsync(It.IsAny<Expression<Func<HotelApprovalRequest, bool>>>(), 1, 10))
+            .ReturnsAsync((new List<HotelApprovalRequest> { request, request }, 2));
+        _mockUserRepo.Setup(repo => repo.WhereAsync(It.IsAny<Expression<Func<User, bool>>>()))
+            .ReturnsAsync([new User { Id = 42, FullName = "Review Admin" }]);
+        var result = await _service.GetPagedRequestsAsync(new PagingRequest { PageIndex = 1, PageSize = 10 });
+        result.Content!.Items.Should().OnlyContain(dto => dto.AdminRemark == request.AdminRemark
+            && dto.ProcessedBy == 42 && dto.ProcessedAt == request.UpdatedAt && dto.ProcessedByName == "Review Admin");
+        _mockUserRepo.Verify(repo => repo.WhereAsync(It.IsAny<Expression<Func<User, bool>>>()), Times.Once);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    [Trait("Requirement", "FR-ONB-014")]
+    public async Task GetByRequestId_RejectedRequest_ExposesDecisionWithoutWriting()
+    {
+        // Admin review must show the decision already saved, not just an unexplained Rejected badge.
+        var request = BuildPendingRequest(status: RequestStatusConst.Rejected);
+        request.AdminRemark = "Business license is incomplete.";
+        request.AdminId = 42;
+        request.UpdatedAt = DateTime.UtcNow;
+        _mockApprovalRepo.Setup(repo => repo.GetByIdWithOwnerAsync(ValidRequestId)).ReturnsAsync(request);
+        _mockUserRepo.Setup(repo => repo.WhereAsync(It.IsAny<Expression<Func<User, bool>>>()))
+            .ReturnsAsync([new User { Id = 42, FullName = "Review Admin" }]);
+        var result = await _service.GetByRequestIdAsync(ValidRequestId);
+        result.StatusCode.Should().Be(StatusCodeResponse.Success);
+        result.Content!.AdminRemark.Should().Be(request.AdminRemark);
+        result.Content.ProcessedAt.Should().Be(request.UpdatedAt);
+        result.Content.ProcessedBy.Should().Be(42);
+        result.Content.ProcessedByName.Should().Be("Review Admin");
+        Verify_Never_Saved();
+    }
 
     [Fact]
     public async Task GetPagedRequests_ValidRequest_ShouldReturnPagedResult()
