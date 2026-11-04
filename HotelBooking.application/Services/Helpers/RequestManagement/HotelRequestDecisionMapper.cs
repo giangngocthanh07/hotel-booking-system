@@ -2,8 +2,6 @@ using HotelBooking.application.DTOs.Request.Base;
 using HotelBooking.application.DTOs.Request.HotelApproval;
 using HotelBooking.infrastructure.Models;
 
-namespace HotelBooking.application.Services.Domains.RequestManagement;
-
 // FR-ONB-013/014: keep decision data consistent across Admin detail/list and Owner history.
 public static class HotelRequestDecisionMapper
 {

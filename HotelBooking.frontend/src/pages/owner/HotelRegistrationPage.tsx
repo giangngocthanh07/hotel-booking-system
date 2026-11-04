@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { 
   getCountries, getProvinces, getWards, getPropertyTypes, 
   uploadBusinessLicense, submitRegistration, getMyRegistrations
@@ -18,6 +18,39 @@ export default function HotelRegistrationPage() {
   // History
   const [history, setHistory] = useState<HotelRegistrationHistoryItem[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyTotal, setHistoryTotal] = useState(0);
+  const [historyPages, setHistoryPages] = useState(0);
+  const [historyError, setHistoryError] = useState("");
+  const historyAbort = useRef<AbortController | null>(null);
+
+  const loadHistory = useCallback(async () => {
+    // Cancel stale page requests so a slow earlier response cannot replace the selected page.
+    historyAbort.current?.abort();
+    const controller = new AbortController();
+    historyAbort.current = controller;
+    setLoadingHistory(true);
+    setHistoryError("");
+    try {
+      // Keep history cards compact with three requests per page and no page-size selector.
+      const res = await getMyRegistrations(historyPage, 3, controller.signal);
+      if (controller.signal.aborted) return;
+      if (res.statusCode !== "Success" || !res.content) throw new Error(res.message || "Unable to load registration history.");
+      setHistory(res.content.items);
+      setHistoryTotal(res.content.totalCount);
+      setHistoryPages(res.content.totalPages);
+      if (res.content.totalPages > 0 && historyPage > res.content.totalPages) setHistoryPage(res.content.totalPages);
+    } catch (failure) {
+      if (!controller.signal.aborted) setHistoryError(failure instanceof Error ? failure.message : "Unable to load registration history.");
+    } finally {
+      if (!controller.signal.aborted) setLoadingHistory(false);
+    }
+  }, [historyPage]);
+
+  useEffect(() => {
+    void loadHistory();
+    return () => historyAbort.current?.abort();
+  }, [loadHistory]);
 
   // Form State
   const [formData, setFormData] = useState<Partial<HotelRegistrationDTO>>({
@@ -37,7 +70,6 @@ export default function HotelRegistrationPage() {
 
   useEffect(() => {
     loadLookups();
-    loadHistory();
   }, []);
 
   async function loadLookups() {
@@ -60,19 +92,6 @@ export default function HotelRegistrationPage() {
       }
     } catch (err) {
       console.error("Failed to load lookups", err);
-    }
-  }
-
-  async function loadHistory() {
-    try {
-      const res = await getMyRegistrations();
-      if (res.statusCode === "Success" && res.content) {
-        setHistory(res.content);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingHistory(false);
     }
   }
 
@@ -167,7 +186,9 @@ export default function HotelRegistrationPage() {
         // Reset file input element if needed
         const fileInput = document.getElementById("file-upload") as HTMLInputElement;
         if (fileInput) fileInput.value = "";
-        loadHistory();
+        // A newly submitted request belongs at the top of the newest-first history.
+        if (historyPage === 1) void loadHistory();
+        else setHistoryPage(1);
       } else {
         setError(res.message || "Failed to submit request.");
       }
@@ -290,7 +311,9 @@ export default function HotelRegistrationPage() {
         {/* HISTORY SECTION */}
         <div className="history-card">
           <h2>My Registration Requests</h2>
-          {loadingHistory ? (
+          {historyError ? (
+            <div role="alert">{historyError} <button type="button" onClick={() => void loadHistory()}>Retry history</button></div>
+          ) : loadingHistory ? (
             <p>Loading history...</p>
           ) : history.length === 0 ? (
             <div className="empty-state">No registration requests found.</div>
@@ -315,6 +338,13 @@ export default function HotelRegistrationPage() {
                 </div>
               ))}
             </div>
+          )}
+          {!loadingHistory && !historyError && historyTotal > 0 && (
+            <nav className="history-pagination" aria-label="Registration history pagination">
+              <span role="status">Page {historyPage} of {Math.max(1, historyPages)} · {historyTotal} requests</span>
+              <button type="button" disabled={historyPage <= 1} onClick={() => setHistoryPage(page => page - 1)}>Previous</button>
+              <button type="button" disabled={historyPage >= historyPages} onClick={() => setHistoryPage(page => page + 1)}>Next</button>
+            </nav>
           )}
         </div>
       </div>
