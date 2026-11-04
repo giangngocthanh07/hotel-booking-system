@@ -1,198 +1,167 @@
 using System.Text.Json;
 using FluentValidation;
 using HotelBooking.application.DTOs.Hotel;
-using HotelBooking.application.Helpers;
 using HotelBooking.infrastructure.Models;
 
-namespace HotelBooking.application.Services.Domains.RoomManagement
+namespace HotelBooking.application.Services.Domains.RoomManagement;
+
+public interface IRoomTypeService
 {
-    public interface IRoomTypeService
+    Task<ApiResponse<RoomTypeResponseDTO>> CreateRoomTypeAsync(RoomTypeCreateDTO request, int ownerId, CancellationToken cancellationToken = default);
+}
+
+public class RoomTypeService(
+    IRoomTypeRepository roomTypeRepository,
+    IValidator<RoomTypeCreateDTO> validator,
+    IInventoryAccessService inventoryAccess,
+    IRoomAttributeFacade attributes,
+    IUnitOfWork unitOfWork,
+    ILogger<RoomTypeService> logger) : IRoomTypeService
+{
+    public async Task<ApiResponse<RoomTypeResponseDTO>> CreateRoomTypeAsync(
+        RoomTypeCreateDTO request, int ownerId, CancellationToken cancellationToken = default)
     {
-        Task<ApiResponse<RoomTypeResponseDTO>> CreateRoomTypeAsync(RoomTypeCreateDTO request);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (request == null) return Failure(StatusCodeResponse.BadRequest, MessageResponse.Common.REQUEST_CANNOT_BE_NULL);
+        var validation = await validator.ValidateAsync(request, cancellationToken);
+        if (!validation.IsValid) return Failure(StatusCodeResponse.BadRequest, validation.Errors[0].ErrorMessage);
+        if (!await inventoryAccess.CanAccessHotelAsync(request.HotelId, ownerId, cancellationToken))
+            return Failure(StatusCodeResponse.Forbidden, InventoryAccessService.AccessDeniedMessage);
+        cancellationToken.ThrowIfCancellationRequested();
+        var attributeError = await ValidateAttributesAsync(request, cancellationToken);
+        if (attributeError != null) return Failure(StatusCodeResponse.NotFound, attributeError);
+        var normalizedName = request.Name.Trim().ToLower();
+        if (await roomTypeRepository.AnyAsync(type => type.HotelId == request.HotelId
+            && type.Name.ToLower() == normalizedName && type.IsDeleted == false))
+            return Failure(StatusCodeResponse.Conflict, MessageResponse.RoomManagement.ROOM_TYPE_ALREADY_EXISTS);
+        return await CreateAsync(request, cancellationToken);
     }
 
-    public class RoomTypeService : IRoomTypeService
+    private async Task<ApiResponse<RoomTypeResponseDTO>> CreateAsync(RoomTypeCreateDTO request, CancellationToken cancellationToken)
     {
-        private readonly IHotelRepository _hotelRepo;
-        private readonly IRoomTypeRepository _roomTypeRepo;
-        private readonly IRoomTypeBedConfigRepository _bedConfigRepo;
-        private readonly IRoomAttributeFacade _attributeFacade;
-        private readonly IUnitOfWork _dbu;
-        private readonly ILogger<RoomTypeService> _logger;
-        private readonly IValidator<RoomTypeCreateDTO> _validator;
-
-        public RoomTypeService(IHotelRepository hotelRepo, IRoomTypeRepository roomTypeRepo, IRoomTypeBedConfigRepository bedConfigRepo, IValidator<RoomTypeCreateDTO> validator, IRoomAttributeFacade attributeFacade, IUnitOfWork dbu, ILogger<RoomTypeService> logger)
+        cancellationToken.ThrowIfCancellationRequested();
+        await unitOfWork.BeginTransactionAsync();
+        try
         {
-            _hotelRepo = hotelRepo;
-            _roomTypeRepo = roomTypeRepo;
-            _bedConfigRepo = bedConfigRepo;
-            _validator = validator;
-            _attributeFacade = attributeFacade;
-            _dbu = dbu;
-            _logger = logger;
+            var roomType = ToEntity(request);
+            await PersistAsync(roomType, cancellationToken);
+            return ResponseFactory.Success(ToResponse(roomType, request), MessageResponse.Common.CREATE_SUCCESSFULLY);
         }
-        public async Task<ApiResponse<RoomTypeResponseDTO>> CreateRoomTypeAsync(RoomTypeCreateDTO request)
+        catch (OperationCanceledException)
         {
-            // 1. GUARD CLAUSE & VALIDATION
-            if (request == null)
-            {
-                return ResponseFactory.Failure<RoomTypeResponseDTO>(
-                    StatusCodeResponse.BadRequest,
-                    MessageResponse.Common.REQUEST_CANNOT_BE_NULL);
-            }
-
-            var validationResult = await _validator.ValidateAsync(request);
-            if (validationResult.IsValid == false)
-            {
-                return ResponseFactory.Failure<RoomTypeResponseDTO>(StatusCodeResponse.BadRequest, validationResult.Errors[0].ErrorMessage);
-            }
-
-            var ghostIdValidation = await ValidateGhostIdsAsync(request);
-            if (!ghostIdValidation.IsValid)
-            {
-                return ResponseFactory.Failure<RoomTypeResponseDTO>(StatusCodeResponse.NotFound, ghostIdValidation.Message);
-            }
-
-            try
-            {
-                // 2. BUSINESS LOGIC
-                // a) Lower RoomTypeName
-                var normalizedRoomTypeName = request.Name.Trim().ToLower();
-
-                var existingRoomType = await _roomTypeRepo.AnyAsync(x => x.HotelId == request.HotelId && x.Name.ToLower() == normalizedRoomTypeName && x.IsDeleted == false);
-                if (existingRoomType)
-                {
-                    return ResponseFactory.Failure<RoomTypeResponseDTO>(StatusCodeResponse.Conflict, MessageResponse.RoomManagement.ROOM_TYPE_ALREADY_EXISTS);
-                }
-
-                await _dbu.BeginTransactionAsync();
-
-                var roomType = new RoomType
-                {
-                    HotelId = request.HotelId,
-                    Name = request.Name.Trim(),
-                    Description = request.Description,
-                    IsDeleted = false,
-                    PricePerNight = request.PricePerNight,
-                    AdultCapacity = request.AdultCapacity,
-                    ChildCapacity = request.ChildCapacity,
-                    Capacity = request.AdultCapacity + request.ChildCapacity,
-                    UnitTypeId = request.UnitTypeId,
-                    QualityId = request.QualityId,
-                    RoomViewId = request.RoomViewId,
-                    IsPrivateBathroom = request.IsPrivateBathroom,
-                    HasBalcony = request.HasBalcony,
-                    HasTerrace = request.HasTerrace,
-                    CanAddExtraBed = request.CanAddExtraBed,
-                    MaxExtraBeds = request.MaxExtraBeds,
-                    AreaSqm = request.AreaSqm,
-                    Additional = JsonSerializer.Serialize(new
-                    {
-                        BedTypes = request.BedTypes,
-                        IsSmokingAllowed = request.IsSmokingAllowed,
-                        TotalRooms = request.TotalRooms
-                    })
-                };
-
-                await _roomTypeRepo.AddAsync(roomType);
-                await _dbu.SaveChangesAsync();
-
-                foreach (var bedType in request.BedTypes)
-                {
-                    var bedConfig = new RoomTypeBedConfig
-                    {
-                        RoomTypeId = roomType.Id,
-                        BedTypeId = bedType.BedTypeId,
-                        Quantity = bedType.Quantity
-                    };
-                    await _bedConfigRepo.AddAsync(bedConfig);
-                }
-                await _dbu.SaveChangesAsync();
-
-                await _dbu.CommitTransactionAsync();
-
-                var additionalInfo = string.IsNullOrEmpty(roomType.Additional) ? new RoomTypeAdditionalData() : JsonSerializer.Deserialize<RoomTypeAdditionalData>(roomType.Additional);
-
-                RoomTypeResponseDTO dto = new RoomTypeResponseDTO
-                {
-                    Id = roomType.Id,
-                    HotelId = roomType.HotelId,
-                    Name = roomType.Name,
-                    Description = roomType.Description,
-                    IsDeleted = false,
-                    PricePerNight = roomType.PricePerNight,
-                    AdultCapacity = roomType.AdultCapacity,
-                    ChildCapacity = roomType.ChildCapacity,
-                    UnitTypeId = roomType.UnitTypeId,
-                    QualityId = roomType.QualityId,
-                    RoomViewId = roomType.RoomViewId,
-                    IsPrivateBathroom = roomType.IsPrivateBathroom,
-                    HasBalcony = roomType.HasBalcony,
-                    HasTerrace = roomType.HasTerrace,
-                    CanAddExtraBed = roomType.CanAddExtraBed,
-                    MaxExtraBeds = roomType.MaxExtraBeds,
-                    AreaSqm = roomType.AreaSqm,
-
-                    IsSmokingAllowed = additionalInfo?.IsSmokingAllowed ?? false,
-                    TotalRooms = additionalInfo?.TotalRooms ?? 0,
-                    BedTypes = additionalInfo?.BedTypes ?? new List<BedTypeConfigDTO>()
-
-                };
-
-                return ResponseFactory.Success(dto, MessageResponse.Common.CREATE_SUCCESSFULLY);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("RoomTypeService.CreateRoomTypeAsync: {ErrorMessage}", ex.Message);
-                await _dbu.RollBackTransactionAsync();
-                return ResponseFactory.Failure<RoomTypeResponseDTO>(StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
-            }
+            await unitOfWork.RollBackTransactionAsync();
+            throw;
         }
-
-        // --- HELPER FUNCTION: Convert child paged result to parent paged result ---
-        private async Task<(bool IsValid, string Message)> ValidateGhostIdsAsync(RoomTypeCreateDTO request)
+        catch (Exception exception)
         {
-            // Check Hotel
-            var isHotelExisted = await _hotelRepo.AnyAsync(x => x.Id == request.HotelId);
-            if (!isHotelExisted)
-            {
-                return (false, MessageResponse.RoomManagement.ROOM_TYPE_HOTEL_NOT_FOUND);
-            }
-            // Check UnitType
-            var isUnitTypeExisted = await _attributeFacade.IsUnitTypeExistedAsync(request.UnitTypeId);
-            if (!isUnitTypeExisted)
-            {
-                return (false, MessageResponse.RoomManagement.ROOM_TYPE_UNIT_TYPE_NOT_FOUND);
-            }
-            // Check Quality (if provided)
-            if (request.QualityId.HasValue)
-            {
-                var isQualityExisted = await _attributeFacade.IsRoomQualityExistedAsync(request.QualityId.Value);
-                if (!isQualityExisted)
-                {
-                    return (false, MessageResponse.RoomManagement.ROOM_TYPE_QUALITY_NOT_FOUND);
-                }
-            }
-            // Check RoomView (if provided)
-            if (request.RoomViewId.HasValue)
-            {
-                var isRoomViewExisted = await _attributeFacade.IsRoomViewExistedAsync(request.RoomViewId.Value);
-                if (!isRoomViewExisted)
-                {
-                    return (false, MessageResponse.RoomManagement.ROOM_TYPE_ROOM_VIEW_NOT_FOUND);
-                }
-            }
-
-            // Check BedTypes
-            foreach (var bedType in request.BedTypes)
-            {
-                var isBedTypeExisted = await _attributeFacade.IsBedTypeExistedAsync(bedType.BedTypeId);
-                if (!isBedTypeExisted)
-                {
-                    return (false, MessageResponse.RoomManagement.ROOM_TYPE_BED_TYPE_NOT_FOUND);
-                }
-            }
-            return (true, string.Empty);
+            logger.LogError(exception, "Error creating room type");
+            await unitOfWork.RollBackTransactionAsync();
+            return Failure(StatusCodeResponse.Error, MessageResponse.Common.ERROR_IN_SERVER);
         }
     }
+
+    private async Task PersistAsync(RoomType roomType, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        await roomTypeRepository.AddAsync(roomType);
+        cancellationToken.ThrowIfCancellationRequested();
+        await unitOfWork.SaveChangesAsync();
+        cancellationToken.ThrowIfCancellationRequested();
+        await unitOfWork.CommitTransactionAsync();
+    }
+
+    private async Task<string?> ValidateAttributesAsync(RoomTypeCreateDTO request, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!await attributes.IsUnitTypeExistedAsync(request.UnitTypeId)) return MessageResponse.RoomManagement.ROOM_TYPE_UNIT_TYPE_NOT_FOUND;
+        if (request.QualityId.HasValue && !await attributes.IsRoomQualityExistedAsync(request.QualityId.Value))
+            return MessageResponse.RoomManagement.ROOM_TYPE_QUALITY_NOT_FOUND;
+        if (request.RoomViewId.HasValue && !await attributes.IsRoomViewExistedAsync(request.RoomViewId.Value))
+            return MessageResponse.RoomManagement.ROOM_TYPE_ROOM_VIEW_NOT_FOUND;
+        foreach (var bed in request.BedTypes)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!await attributes.IsBedTypeExistedAsync(bed.BedTypeId)) return MessageResponse.RoomManagement.ROOM_TYPE_BED_TYPE_NOT_FOUND;
+        }
+        return null;
+    }
+
+    private static RoomType ToEntity(RoomTypeCreateDTO request)
+    {
+        var roomType = new RoomType
+        {
+            HotelId = request.HotelId,
+            Name = request.Name.Trim(),
+            Description = request.Description,
+            IsDeleted = false,
+            PricePerNight = request.PricePerNight,
+            AdultCapacity = request.AdultCapacity,
+            ChildCapacity = request.ChildCapacity,
+            Capacity = request.AdultCapacity + request.ChildCapacity,
+            Additional = JsonSerializer.Serialize(new { request.BedTypes, request.IsSmokingAllowed, request.TotalRooms })
+        };
+        SetEntityAttributes(roomType, request);
+        AddBedConfigurations(roomType, request);
+        return roomType;
+    }
+
+    private static void SetEntityAttributes(RoomType roomType, RoomTypeCreateDTO request)
+    {
+        roomType.UnitTypeId = request.UnitTypeId;
+        roomType.QualityId = request.QualityId;
+        roomType.RoomViewId = request.RoomViewId;
+        roomType.IsPrivateBathroom = request.IsPrivateBathroom;
+        roomType.HasBalcony = request.HasBalcony;
+        roomType.HasTerrace = request.HasTerrace;
+        roomType.CanAddExtraBed = request.CanAddExtraBed;
+        roomType.MaxExtraBeds = request.MaxExtraBeds;
+        roomType.AreaSqm = request.AreaSqm;
+    }
+
+    private static void AddBedConfigurations(RoomType roomType, RoomTypeCreateDTO request)
+    {
+        foreach (var bed in request.BedTypes)
+            roomType.RoomTypeBedConfigs.Add(new RoomTypeBedConfig
+            {
+                RoomType = roomType,
+                BedTypeId = bed.BedTypeId,
+                Quantity = bed.Quantity
+            });
+    }
+
+    private static RoomTypeResponseDTO ToResponse(RoomType roomType, RoomTypeCreateDTO request)
+    {
+        var response = new RoomTypeResponseDTO
+        {
+            Id = roomType.Id,
+            HotelId = roomType.HotelId,
+            Name = roomType.Name,
+            Description = roomType.Description,
+            IsDeleted = roomType.IsDeleted,
+            PricePerNight = roomType.PricePerNight,
+            AdultCapacity = roomType.AdultCapacity,
+            ChildCapacity = roomType.ChildCapacity,
+            IsSmokingAllowed = request.IsSmokingAllowed ?? false,
+            TotalRooms = request.TotalRooms,
+            BedTypes = request.BedTypes
+        };
+        SetResponseAttributes(response, roomType);
+        return response;
+    }
+
+    private static void SetResponseAttributes(RoomTypeResponseDTO response, RoomType roomType)
+    {
+        response.UnitTypeId = roomType.UnitTypeId;
+        response.QualityId = roomType.QualityId;
+        response.RoomViewId = roomType.RoomViewId;
+        response.IsPrivateBathroom = roomType.IsPrivateBathroom;
+        response.HasBalcony = roomType.HasBalcony;
+        response.HasTerrace = roomType.HasTerrace;
+        response.CanAddExtraBed = roomType.CanAddExtraBed;
+        response.MaxExtraBeds = roomType.MaxExtraBeds;
+        response.AreaSqm = roomType.AreaSqm;
+    }
+
+    private static ApiResponse<RoomTypeResponseDTO> Failure(string status, string message) =>
+        ResponseFactory.Failure<RoomTypeResponseDTO>(status, message);
 }

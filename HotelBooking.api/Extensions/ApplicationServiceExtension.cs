@@ -26,6 +26,7 @@ public static class ApplicationServiceExtension
         services.AddScoped<IBookingService, BookingService>();
         services.AddScoped<ILocationService, LocationService>();
         services.AddScoped<IRoomService, RoomService>();
+        services.AddScoped<IInventoryAccessService, InventoryAccessService>();
         services.AddScoped<IReviewService, ReviewService>();
         services.AddScoped<IPaymentService, PaymentService>();
         services.AddScoped<IPhotoService, PhotoService>();
