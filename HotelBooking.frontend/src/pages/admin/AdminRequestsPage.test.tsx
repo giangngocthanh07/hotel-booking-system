@@ -2,7 +2,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as api from "../../services/adminService";
-import type { HotelApprovalRequest } from "../../types/admin.types";
+import type { HotelApprovalRequest, UpgradeRequest } from "../../types/admin.types";
 import AdminRequestsPage from "./AdminRequestsPage";
 
 vi.mock("../../services/adminService", () => ({
@@ -20,6 +20,11 @@ const hotel: HotelApprovalRequest = {
 };
 
 const counts = { total: 1, pending: 1, approved: 0, rejected: 0, cancelled: 0, today: 1, thisWeek: 1, thisMonth: 1 };
+const upgrade: UpgradeRequest = {
+  requestId: 77, userId: 8, userName: "partner", fullName: "Partner User", email: "partner@example.com",
+  phoneNumber: "0901234567", address: "1 Main Street", taxCode: "1234567890", status: "Pending",
+  requestedAt: "2026-11-04T00:00:00Z", typeDisplay: "UpgradeOwner", canApprove: true, canReject: true, requesterName: "Partner User",
+};
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -30,6 +35,45 @@ beforeEach(() => {
   vi.mocked(api.getHotelApprovals).mockResolvedValue({
     statusCode: "Success", message: "OK",
     content: { items: [hotel], pageIndex: 1, pageSize: 10, totalPages: 1, totalCount: 1 },
+  });
+  vi.mocked(api.getUpgradeRequests).mockResolvedValue({
+    statusCode: "Success", message: "OK",
+    content: { items: [upgrade], pageIndex: 1, pageSize: 10, totalPages: 1, totalCount: 1 },
+  });
+});
+
+describe("Admin upgrade rejection (FR-ONB-008)", () => {
+  it("shows the saved reason in the rejected row and details", async () => {
+    const user = userEvent.setup();
+    const reason = "Tax documents do not match the registered business address. ".repeat(3);
+    vi.mocked(api.getUpgradeRequests).mockResolvedValue({
+      statusCode: "Success", message: "OK",
+      content: { items: [{ ...upgrade, status: "Rejected", canApprove: false, canReject: false, rejectionReason: reason }],
+        pageIndex: 1, pageSize: 10, totalPages: 1, totalCount: 1 },
+    });
+    render(<AdminRequestsPage />);
+
+    await user.click(screen.getByRole("button", { name: "👤 Owner Upgrades" }));
+    const row = (await screen.findByText("Partner User")).closest("tr")!;
+    expect(within(row).getByText(`${reason.trim().slice(0, 100).trimEnd()}…`)).toBeInTheDocument();
+    await user.click(screen.getByText("Partner User"));
+    expect(screen.getByText(reason.trim())).toBeInTheDocument();
+    // Reuse the decision spacing used by Hotel requests so the next section heading stays aligned.
+    expect(screen.getByRole("region", { name: "Upgrade rejection details" })).toHaveClass("req-decision-details");
+  });
+
+  it("collects a reason and sends it when rejecting an owner upgrade", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.rejectUpgrade).mockResolvedValue({ statusCode: "Success", message: "Rejected", content: true });
+    render(<AdminRequestsPage />);
+
+    await user.click(screen.getByRole("button", { name: "👤 Owner Upgrades" }));
+    await screen.findByText("Partner User");
+    await user.click(screen.getByRole("button", { name: "Reject" }));
+    await user.type(screen.getByRole("textbox", { name: "Rejection reason" }), "Tax document is incomplete.");
+    await user.click(screen.getByRole("button", { name: "Confirm rejection" }));
+
+    await waitFor(() => expect(api.rejectUpgrade).toHaveBeenCalledWith(77, "Tax document is incomplete."));
   });
 });
 

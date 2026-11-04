@@ -49,6 +49,8 @@ export interface UpgradeRequest extends BaseRequest {
   phoneNumber: string;
   address: string;
   taxCode: string;
+  // FR-ONB-008: Admin-only API response; Customer request types intentionally omit this field.
+  rejectionReason?: string;
 }
 
 export interface RequestTypeStats {

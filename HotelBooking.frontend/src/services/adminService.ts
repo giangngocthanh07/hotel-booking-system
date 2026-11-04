@@ -69,12 +69,16 @@ export async function approveUpgrade(id: number): Promise<ApiResponse<boolean>> 
   return response.json();
 }
 
-export async function rejectUpgrade(id: number): Promise<ApiResponse<boolean>> {
+export async function rejectUpgrade(id: number, reason: string): Promise<ApiResponse<boolean>> {
   const response = await fetch(`${BASE_URL}/admin/upgrade-requests/${id}/reject`, {
     method: "POST",
     headers: getHeaders(),
+    // FR-ONB-008: the Admin must explain an Owner-upgrade rejection.
+    body: JSON.stringify({ reason: reason.trim() }),
   });
-  return response.json();
+  const result: ApiResponse<boolean> = await response.json();
+  if (!response.ok) throw new Error(result.message || "Unable to reject this request. Please try again.");
+  return result;
 }
 
 // === DASHBOARD STATS ===

@@ -34,8 +34,9 @@ function AdminRequestsPage() {
 
   // Modal State
   const [selectedRequest, setSelectedRequest] = useState<HotelApprovalRequest | UpgradeRequest | null>(null);
-  // Store the Hotel request ID independently so changing tabs cannot redirect a pending decision.
+  // Store the selected workflow with the ID so a tab change cannot redirect a pending decision.
   const [rejectionId, setRejectionId] = useState<number | null>(null);
+  const [rejectionType, setRejectionType] = useState<RequestType | null>(null);
   const [decisionMessage, setDecisionMessage] = useState("");
 
   // Fetch Data
@@ -135,33 +136,22 @@ function AdminRequestsPage() {
   }
 
   async function handleReject(id: number) {
-    if (requestType === "Hotel") {
-      setDecisionMessage("");
-      setRejectionId(id);
-      return;
-    }
-    if (!window.confirm("Are you sure you want to reject this request?")) return;
-    try {
-      const res = await rejectUpgrade(id);
-      if (res.statusCode === "Success") {
-        alert("Request rejected successfully!");
-        if (selectedRequest?.requestId === id) setSelectedRequest(null);
-        fetchData();
-      } else {
-        alert("Failed: " + res.message);
-      }
-    } catch (e) {
-      alert("Error rejecting request.");
-    }
+    // FR-ONB-008: retain the workflow selected at click time so a tab change cannot send to another endpoint.
+    setDecisionMessage("");
+    setRejectionId(id);
+    setRejectionType(requestType);
   }
 
-  async function submitHotelRejection(reason: string) {
-    if (rejectionId === null) return;
-    const response = await rejectHotel(rejectionId, reason);
+  async function submitRejection(reason: string) {
+    if (rejectionId === null || rejectionType === null) return;
+    const response = rejectionType === "Hotel"
+      ? await rejectHotel(rejectionId, reason)
+      : await rejectUpgrade(rejectionId, reason);
     if (response.statusCode !== "Success") throw new Error(response.message || "Failed to reject request.");
     if (selectedRequest?.requestId === rejectionId) setSelectedRequest(null);
     setRejectionId(null);
-    setDecisionMessage("Hotel registration rejected successfully.");
+    setRejectionType(null);
+    setDecisionMessage(`${rejectionType === "Hotel" ? "Hotel registration" : "Owner upgrade"} rejected successfully.`);
     await fetchData();
   }
 
@@ -217,6 +207,9 @@ function AdminRequestsPage() {
   }
 
   function renderUpgradeRow(req: UpgradeRequest) {
+    // FR-ONB-008: keep the Admin list scannable while the detail modal preserves the full explanation.
+    const reason = req.rejectionReason?.trim() || "No rejection reason recorded.";
+    const reasonPreview = reason.length > 100 ? `${reason.slice(0, 100).trimEnd()}…` : reason;
     return (
       <tr key={req.requestId} style={{ cursor: "pointer" }} onClick={() => setSelectedRequest(req)}>
         <td>#{req.requestId}</td>
@@ -229,7 +222,10 @@ function AdminRequestsPage() {
           <div style={{ fontSize: "12px", color: "#64748B" }}>{req.phoneNumber}</div>
         </td>
         <td>{req.taxCode}</td>
-        <td>{renderStatusBadge(req.status)}</td>
+        <td>
+          {renderStatusBadge(req.status)}
+          {req.status === "Rejected" && <p className="req-rejection-preview">{reasonPreview}</p>}
+        </td>
         <td onClick={(e) => e.stopPropagation()}>{renderActionButtons(req)}</td>
       </tr>
     );
@@ -277,6 +273,13 @@ function AdminRequestsPage() {
             </div>
 
             {isHotel && <HotelDecisionDetails request={hotelReq} />}
+            {!isHotel && upgradeReq.status === "Rejected" && (
+              <section className="req-info-card full-width" aria-label="Upgrade rejection details">
+                <h3 className="req-info-card-title">Rejection reason</h3>
+                {/* Legacy records predate mandatory reasons; do not invent an explanation. */}
+                <p className="req-decision-reason">{upgradeReq.rejectionReason?.trim() || "No rejection reason recorded."}</p>
+              </section>
+            )}
             <h3 className="req-section-title">Specific Information</h3>
             <div className="req-info-container">
               {isHotel ? (
@@ -547,8 +550,10 @@ function AdminRequestsPage() {
 
       {renderModal()}
       {rejectionId !== null && (
-        <HotelRejectionDialog requestId={rejectionId} onSubmit={submitHotelRejection}
-          onClose={() => setRejectionId(null)} />
+        <HotelRejectionDialog requestId={rejectionId} onSubmit={submitRejection}
+          title={rejectionType === "Upgrade" ? "Reject owner upgrade" : undefined}
+          description={rejectionType === "Upgrade" ? "Explain why this Owner-upgrade request cannot be approved. This decision will reject the request." : undefined}
+          onClose={() => { setRejectionId(null); setRejectionType(null); }} />
       )}
     </div>
   );
