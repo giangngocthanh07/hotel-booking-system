@@ -45,14 +45,22 @@ public class HotelRegistrationValidator : AbstractValidator<HotelRegistrationDTO
         RuleFor(x => x.WardId)
             .GreaterThan(0).WithMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_INVALID_WARD_ID);
 
+        // FR-ONB-010: keep pairing rules independent so range conditions cannot skip missing values.
+        // HasValue treats zero as a provided coordinate, including points on the equator/prime meridian.
         RuleFor(x => x.Latitude)
-            .NotNull().When(x => x.Longitude.HasValue).WithMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_INVALID_LATITUDE)
+            .NotNull().WithMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_INVALID_LATITUDE)
+            .When(x => x.Longitude.HasValue);
+
+        RuleFor(x => x.Longitude)
+            .NotNull().WithMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_INVALID_LONGITUDE)
+            .When(x => x.Latitude.HasValue);
+
+        RuleFor(x => x.Latitude)
             .InclusiveBetween(-90.0, 90.0)
             .WithMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_INVALID_LATITUDE)
             .When(x => x.Latitude.HasValue);
 
         RuleFor(x => x.Longitude)
-            .NotNull().When(x => x.Latitude.HasValue).WithMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_INVALID_LONGITUDE)
             .InclusiveBetween(-180.0, 180.0)
             .WithMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_INVALID_LONGITUDE)
             .When(x => x.Longitude.HasValue);

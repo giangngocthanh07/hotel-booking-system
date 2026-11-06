@@ -374,6 +374,59 @@ public class HotelRegistrationValidatorTests
               .WithErrorMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_INVALID_BUSINESS_LICENSE_URL);
     }
 
+    [Theory]
+    [InlineData(null, null)]
+    [InlineData(0.0, 0.0)]
+    [InlineData(0.0, 106.0)]
+    [InlineData(10.0, 0.0)]
+    [InlineData(-90.0, -180.0)]
+    [InlineData(90.0, 180.0)]
+    [Trait("Requirement", "FR-ONB-010")]
+    public async Task Coordinates_AbsentOrValidPair_Accepted(double? latitude, double? longitude)
+    {
+        var request = CreateValidRequest();
+        request.Latitude = latitude;
+        request.Longitude = longitude;
+        var result = await _validator.TestValidateAsync(request);
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData(null, 0.0)]
+    [InlineData(null, 106.0)]
+    [InlineData(0.0, null)]
+    [InlineData(10.0, null)]
+    [Trait("Requirement", "FR-ONB-010")]
+    public async Task Coordinates_OnlyOneProvided_RejectsMissingCoordinate(double? latitude, double? longitude)
+    {
+        var request = CreateValidRequest();
+        request.Latitude = latitude;
+        request.Longitude = longitude;
+        var result = await _validator.TestValidateAsync(request);
+        if (!latitude.HasValue)
+            result.ShouldHaveValidationErrorFor(x => x.Latitude)
+                .WithErrorMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_INVALID_LATITUDE);
+        else
+            result.ShouldHaveValidationErrorFor(x => x.Longitude)
+                .WithErrorMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_INVALID_LONGITUDE);
+    }
+
+    [Theory]
+    [InlineData(-90.0001, 0.0, true)]
+    [InlineData(90.0001, 0.0, true)]
+    [InlineData(0.0, -180.0001, false)]
+    [InlineData(0.0, 180.0001, false)]
+    [Trait("Requirement", "FR-ONB-010")]
+    public async Task Coordinates_OutsideBoundary_RejectsInvalidCoordinate(double latitude, double longitude, bool invalidLatitude)
+    {
+        var request = CreateValidRequest();
+        request.Latitude = latitude;
+        request.Longitude = longitude;
+        var result = await _validator.TestValidateAsync(request);
+        if (invalidLatitude) result.ShouldHaveValidationErrorFor(x => x.Latitude);
+        else result.ShouldHaveValidationErrorFor(x => x.Longitude);
+    }
+
     private HotelRegistrationDTO CreateValidRequest()
     {
         return new HotelRegistrationDTO
