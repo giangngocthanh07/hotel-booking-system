@@ -24,7 +24,8 @@ namespace HotelBooking.api.Controllers.V1.Owner
         [HttpPost]
         public async Task<IActionResult> HotelRegistration([FromBody] HotelRegistrationDTO request)
         {
-            var ownerId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            // FR-ONB-009: reject invalid identities before creating an Owner-scoped request.
+            if (!TryGetOwnerId(out var ownerId)) return Unauthorized();
 
             var result = await _hotelRegistrationService.CreateRequestAsync(ownerId, request);
             return ApiResponseHandlerHelper.HandleResponse(result);
@@ -34,11 +35,8 @@ namespace HotelBooking.api.Controllers.V1.Owner
         [Authorize(Roles = "Owner")]
         public async Task<IActionResult> GetMyHotelRequests()
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out int ownerId))
-            {
-                return Unauthorized();
-            }
+            // FR-ONB-013: history must be scoped to a valid authenticated Owner.
+            if (!TryGetOwnerId(out var ownerId)) return Unauthorized();
 
             var result = await _hotelRegistrationService.GetMyRequestsAsync(ownerId);
             return ApiResponseHandlerHelper.HandleResponse(result);
@@ -48,10 +46,12 @@ namespace HotelBooking.api.Controllers.V1.Owner
         public async Task<IActionResult> GetMyHistoryPage([FromQuery] PagingRequest paging, CancellationToken cancellationToken)
         {
             // FR-ONB-013: the caller cannot choose another Owner's history via query parameters.
-            if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var ownerId) || ownerId <= 0)
-                return Unauthorized();
+            if (!TryGetOwnerId(out var ownerId)) return Unauthorized();
             var result = await _history.GetPageAsync(ownerId, paging, cancellationToken);
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
+
+        private bool TryGetOwnerId(out int ownerId) =>
+            int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out ownerId) && ownerId > 0;
     }
 }
