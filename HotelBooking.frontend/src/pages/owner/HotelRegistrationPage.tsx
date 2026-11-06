@@ -6,6 +6,7 @@ import {
 import type { LocationItem, PropertyTypeItem, HotelRegistrationDTO, HotelRegistrationHistoryItem } from "../../services/ownerRegistrationService";
 import "./HotelRegistrationPage.css";
 import OwnerRegistrationDecision from "./OwnerRegistrationDecision";
+import useRegistrationCancellation from "./useRegistrationCancellation";
 
 export default function HotelRegistrationPage() {
   
@@ -46,6 +47,8 @@ export default function HotelRegistrationPage() {
       if (!controller.signal.aborted) setLoadingHistory(false);
     }
   }, [historyPage]);
+
+  const { cancel, cancellingId, cancelError, cancelSuccess } = useRegistrationCancellation(loadHistory);
 
   useEffect(() => {
     void loadHistory();
@@ -311,6 +314,8 @@ export default function HotelRegistrationPage() {
         {/* HISTORY SECTION */}
         <div className="history-card">
           <h2>My Registration Requests</h2>
+          {cancelError && <div className="error-alert" role="alert">{cancelError}</div>}
+          {cancelSuccess && <p className="success-alert" role="status">{cancelSuccess}</p>}
           {historyError ? (
             <div role="alert">{historyError} <button type="button" onClick={() => void loadHistory()}>Retry history</button></div>
           ) : loadingHistory ? (
@@ -334,6 +339,13 @@ export default function HotelRegistrationPage() {
                   <OwnerRegistrationDecision request={req} />
                   <div className="hi-footer">
                     <a href={req.businessLicenseUrl} target="_blank" rel="noreferrer" className="btn-link">View License</a>
+                    {/* FR-ONB-018: terminal requests cannot be cancelled again. */}
+                    {req.status === "Pending" && (
+                      <button type="button" className="btn-cancel-registration" disabled={cancellingId !== null}
+                        onClick={() => void cancel(req)}>
+                        {cancellingId === req.requestId ? "Cancelling..." : "Cancel request"}
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -342,8 +354,8 @@ export default function HotelRegistrationPage() {
           {!loadingHistory && !historyError && historyTotal > 0 && (
             <nav className="history-pagination" aria-label="Registration history pagination">
               <span role="status">Page {historyPage} of {Math.max(1, historyPages)} · {historyTotal} requests</span>
-              <button type="button" disabled={historyPage <= 1} onClick={() => setHistoryPage(page => page - 1)}>Previous</button>
-              <button type="button" disabled={historyPage >= historyPages} onClick={() => setHistoryPage(page => page + 1)}>Next</button>
+              <button type="button" disabled={cancellingId !== null || historyPage <= 1} onClick={() => setHistoryPage(page => page - 1)}>Previous</button>
+              <button type="button" disabled={cancellingId !== null || historyPage >= historyPages} onClick={() => setHistoryPage(page => page + 1)}>Next</button>
             </nav>
           )}
         </div>
