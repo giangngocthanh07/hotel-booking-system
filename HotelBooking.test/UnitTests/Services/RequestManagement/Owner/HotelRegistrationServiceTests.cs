@@ -38,6 +38,80 @@ public class HotelRegistrationServiceTests : BaseServiceTest<HotelRegistrationSe
     }
 
     [Fact]
+    [Trait("Requirement", "FR-ONB-018")]
+    public async Task CancelPendingRequest_RecordsUtcTimeAndSavesOnce()
+    {
+        var request = new HotelApprovalRequest { Id = 99, OwnerId = 7, Status = "Pending" };
+        _mockApprovalRepo.Setup(repo => repo.GetPendingByIdAsync(7)).ReturnsAsync([request]);
+        _mockUnitOfWork.Setup(unit => unit.SaveChangesAsync()).ReturnsAsync(1);
+        var before = DateTime.UtcNow;
+        var result = await _service.CancelRequestAsync(7, 99);
+        var after = DateTime.UtcNow;
+        result.StatusCode.Should().Be(StatusCodeResponse.Success);
+        request.Status.Should().Be("Cancelled");
+        Assert.NotNull(request.UpdatedAt);
+        Assert.Equal(DateTimeKind.Utc, request.UpdatedAt.Value.Kind);
+        Assert.InRange(request.UpdatedAt.Value, before, after);
+        _mockApprovalRepo.Verify(repo => repo.UpdateAsync(request), Times.Once);
+        Verify_Saved(1);
+    }
+
+    [Theory]
+    [InlineData(8, "Pending")]
+    [InlineData(7, "Approved")]
+    [InlineData(7, "Rejected")]
+    [InlineData(7, "Cancelled")]
+    [Trait("Requirement", "FR-ONB-018")]
+    public async Task CancelIneligibleRequest_DoesNotChangeOrSave(int ownerId, string status)
+    {
+        // Defense in depth: even unexpected repository results cannot bypass the use-case rule.
+        var request = new HotelApprovalRequest { Id = 99, OwnerId = ownerId, Status = status };
+        _mockApprovalRepo.Setup(repo => repo.GetPendingByIdAsync(7)).ReturnsAsync([request]);
+        var result = await _service.CancelRequestAsync(7, 99);
+        result.StatusCode.Should().Be(StatusCodeResponse.NotFound);
+        request.Status.Should().Be(status);
+        request.UpdatedAt.Should().BeNull();
+        _mockApprovalRepo.Verify(repo => repo.UpdateAsync(It.IsAny<HotelApprovalRequest>()), Times.Never);
+        Verify_Never_Saved();
+    }
+
+    [Theory]
+    [InlineData(0, 99)]
+    [InlineData(-1, 99)]
+    [InlineData(7, 0)]
+    [InlineData(7, -1)]
+    [Trait("Requirement", "FR-ONB-018")]
+    public async Task CancelInvalidIds_DoesNotQueryOrSave(int ownerId, int requestId)
+    {
+        var result = await _service.CancelRequestAsync(ownerId, requestId);
+        result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
+        _mockApprovalRepo.Verify(repo => repo.GetPendingByIdAsync(It.IsAny<int>()), Times.Never);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    [Trait("Requirement", "FR-ONB-018")]
+    public async Task CancelMissingRequest_DoesNotSave()
+    {
+        _mockApprovalRepo.Setup(repo => repo.GetPendingByIdAsync(7)).ReturnsAsync([]);
+        var result = await _service.CancelRequestAsync(7, 99);
+        result.StatusCode.Should().Be(StatusCodeResponse.NotFound);
+        Verify_Never_Saved();
+    }
+
+    [Fact]
+    [Trait("Requirement", "FR-ONB-018")]
+    public async Task CancelSaveFailure_DoesNotReportSuccess()
+    {
+        var request = new HotelApprovalRequest { Id = 99, OwnerId = 7, Status = "Pending" };
+        _mockApprovalRepo.Setup(repo => repo.GetPendingByIdAsync(7)).ReturnsAsync([request]);
+        _mockUnitOfWork.Setup(unit => unit.SaveChangesAsync()).ReturnsAsync(0);
+        var result = await _service.CancelRequestAsync(7, 99);
+        result.StatusCode.Should().Be(StatusCodeResponse.Error);
+        Verify_Saved(1);
+    }
+
+    [Fact]
     [Trait("Requirement", "FR-ONB-013")]
     public async Task GetMyRequests_RejectedRequest_ExposesDecisionWithoutWriting()
     {

@@ -196,7 +196,9 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
                 }
 
                 var pendingRequests = await _approvalRepo.GetPendingByIdAsync(userId);
-                var request = pendingRequests.FirstOrDefault(r => r.Id == requestId);
+                // FR-ONB-018: enforce ownership and Pending status before changing a request.
+                var request = pendingRequests.FirstOrDefault(r =>
+                    r.Id == requestId && r.OwnerId == userId && r.Status == RequestStatusConst.Pending);
 
                 if (request == null)
                 {
@@ -206,6 +208,8 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
                 }
 
                 request.Status = RequestStatusConst.Cancelled;
+                // FR-ONB-018: UpdatedAt records cancellation time without an Admin decision.
+                request.UpdatedAt = DateTime.UtcNow;
                 await _approvalRepo.UpdateAsync(request);
 
                 var saved = await _unitOfWork.SaveChangesAsync() > 0;
