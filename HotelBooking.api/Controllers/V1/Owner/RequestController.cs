@@ -51,6 +51,15 @@ namespace HotelBooking.api.Controllers.V1.Owner
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
+        [HttpPost("{requestId:int}/cancel")]
+        public async Task<IActionResult> Cancel(int requestId)
+        {
+            // FR-ONB-018: use only the authenticated Owner, never a caller-supplied user ID.
+            if (!TryGetOwnerId(out var ownerId)) return Unauthorized();
+            var result = await _hotelRegistrationService.CancelRequestAsync(ownerId, requestId);
+            return ApiResponseHandlerHelper.HandleResponse(result);
+        }
+
         private bool TryGetOwnerId(out int ownerId) =>
             int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out ownerId) && ownerId > 0;
     }

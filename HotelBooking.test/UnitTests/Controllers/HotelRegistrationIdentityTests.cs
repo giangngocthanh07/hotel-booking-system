@@ -75,6 +75,36 @@ public class HotelRegistrationIdentityTests
         service.VerifyNoOtherCalls();
     }
 
+    [Theory]
+    [MemberData(nameof(InvalidClaims))]
+    [Trait("Requirement", "FR-ONB-018")]
+    public async Task CancelInvalidIdentity_DoesNotCallService(string? claim)
+    {
+        var service = new Mock<IHotelRegistrationService>(MockBehavior.Strict);
+        var controller = WithIdentity(new RequestController(service.Object, Mock.Of<IHotelRegistrationHistoryService>()), claim);
+        Assert.IsType<UnauthorizedResult>(await controller.Cancel(99));
+        service.VerifyNoOtherCalls();
+    }
+
+    [Theory]
+    [InlineData(StatusCodeResponse.Success, 200)]
+    [InlineData(StatusCodeResponse.NotFound, 404)]
+    [InlineData(StatusCodeResponse.BadRequest, 400)]
+    [InlineData(StatusCodeResponse.Error, 500)]
+    [Trait("Requirement", "FR-ONB-018")]
+    public async Task Cancel_ForwardsTrustedOwnerAndMapsResponse(string status, int httpStatus)
+    {
+        var response = new ApiResponse<bool> { StatusCode = status };
+        var service = new Mock<IHotelRegistrationService>(MockBehavior.Strict);
+        service.Setup(value => value.CancelRequestAsync(42, 99)).ReturnsAsync(response);
+        var controller = WithIdentity(new RequestController(service.Object, Mock.Of<IHotelRegistrationHistoryService>()), "42");
+        var result = Assert.IsType<ObjectResult>(await controller.Cancel(99));
+        Assert.Equal(httpStatus, result.StatusCode);
+        Assert.Same(response, result.Value);
+        service.Verify(value => value.CancelRequestAsync(42, 99), Times.Once);
+        service.VerifyNoOtherCalls();
+    }
+
     private static T WithIdentity<T>(T controller, string? claim) where T : ControllerBase
     {
         var claims = claim == null ? Array.Empty<Claim>() : [new Claim(ClaimTypes.NameIdentifier, claim)];
