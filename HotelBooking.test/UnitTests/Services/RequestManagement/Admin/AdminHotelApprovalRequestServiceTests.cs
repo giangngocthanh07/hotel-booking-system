@@ -550,6 +550,30 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
     }
 
     [Fact]
+    [Trait("Requirement", "FR-ONB-016")]
+    public async Task ApproveRequest_RecordsDecisionAndHotelCreationInUtc()
+    {
+        var request = BuildPendingRequest();
+        _mockApprovalRepo.Setup(repo => repo.GetByIdAsync(ValidRequestId)).ReturnsAsync(request);
+        _mockUnitOfWork.Setup(unit => unit.SaveChangesAsync()).ReturnsAsync(1);
+        Hotel? saved = null;
+        _mockHotelRepo.Setup(repo => repo.AddAsync(It.IsAny<Hotel>()))
+            .Callback<Hotel>(hotel => saved = hotel).Returns(Task.CompletedTask);
+        var before = DateTime.UtcNow;
+        var result = await _service.ApproveRequestAsync(ValidRequestId, ValidAdminId);
+        var after = DateTime.UtcNow;
+        result.StatusCode.Should().Be(StatusCodeResponse.Success);
+        Assert.NotNull(saved);
+        Assert.NotNull(request.UpdatedAt);
+        Assert.Equal(DateTimeKind.Utc, request.UpdatedAt.Value.Kind);
+        Assert.NotNull(saved.CreatedAt);
+        Assert.Equal(DateTimeKind.Utc, saved.CreatedAt.Value.Kind);
+        Assert.InRange(request.UpdatedAt.Value, before, after);
+        Assert.InRange(saved.CreatedAt.Value, before, after);
+        Verify_Saved(1);
+    }
+
+    [Fact]
     public async Task ApproveRequest_InvalidRequestId_ShouldReturnBadRequest()
     {
         // Act

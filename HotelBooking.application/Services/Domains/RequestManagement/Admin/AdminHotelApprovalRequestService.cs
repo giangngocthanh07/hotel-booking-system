@@ -300,7 +300,8 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
 
             request.Status = RequestStatusConst.Approved;
             request.AdminId = adminId;
-            request.UpdatedAt = DateTime.Now;
+            // FR-ONB-016: approval timestamps share the UTC convention used by rejection.
+            request.UpdatedAt = DateTime.UtcNow;
 
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             var additionalInfo = !string.IsNullOrWhiteSpace(request.Additional)
@@ -334,7 +335,7 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
 
                 Additional = hotelAdditionalJson,
 
-                CreatedAt = DateTime.Now,
+                CreatedAt = DateTime.UtcNow,
                 IsVerified = true,
                 IsDeleted = false,
                 Status = HotelStatus.Active,
