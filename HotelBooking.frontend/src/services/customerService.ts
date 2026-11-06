@@ -41,3 +41,11 @@ export async function getMyUpgradeInfo(): Promise<ApiResponse<UserUpgradeInfo>> 
   });
   return response.json();
 }
+
+// FR-ONB-018: ownership is determined by the authenticated Customer at the API.
+export async function cancelUpgradeRequest(requestId: number): Promise<ApiResponse<boolean>> {
+  const response = await fetch(`${BASE_URL}/upgrade-requests/${requestId}/cancel`, {
+    method: "PUT", headers: getHeaders(),
+  });
+  return response.json();
+}
