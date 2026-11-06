@@ -124,7 +124,8 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
                     Address = request.Address,
                     TaxCode = request.TaxCode,
                     BusinessLicenseUrl = request.BusinessLicenseUrl,
-                    CreatedAt = DateTime.Now,
+                    // FR-ONB-012/013: record submission in UTC independently of server timezone.
+                    CreatedAt = DateTime.UtcNow,
                     Status = RequestStatusConst.Pending,
                     Additional = JsonSerializer.Serialize(additionalData)
                 };

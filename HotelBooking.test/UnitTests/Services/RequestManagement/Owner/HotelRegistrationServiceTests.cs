@@ -85,6 +85,24 @@ public class HotelRegistrationServiceTests : BaseServiceTest<HotelRegistrationSe
     }
 
     [Fact]
+    [Trait("Requirement", "FR-ONB-012")]
+    public async Task CreateRequest_RecordsSubmissionTimeInUtc()
+    {
+        MockValidationSuccess();
+        HotelApprovalRequest? saved = null;
+        _mockApprovalRepo.Setup(repo => repo.AddAsync(It.IsAny<HotelApprovalRequest>()))
+            .Callback<HotelApprovalRequest>(request => saved = request).Returns(Task.CompletedTask);
+        var before = DateTime.UtcNow;
+        var result = await _service.CreateRequestAsync(1, CreateValidRequest());
+        var after = DateTime.UtcNow;
+        result.StatusCode.Should().Be(StatusCodeResponse.Success);
+        Assert.NotNull(saved);
+        Assert.Equal(DateTimeKind.Utc, saved.CreatedAt.Kind);
+        Assert.InRange(saved.CreatedAt, before, after);
+        Verify_Saved(1);
+    }
+
+    [Fact]
     public async Task HotelRegistration_InvalidOwnerId_ShouldReturnUnauthorized()
     {
         // 1. Arrange
