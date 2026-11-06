@@ -47,7 +47,8 @@ namespace V1.Controllers
         [HttpPost("{requestId:int}/approve")]
         public async Task<IActionResult> Approve(int requestId)
         {
-            var adminId = GetAdminId();
+            // FR-ONB-015: a decision requires a valid authenticated Admin identity.
+            if (!TryGetAdminId(out var adminId)) return Unauthorized();
             var result = await _adminHotelApprovalRequestService.ApproveRequestAsync(requestId, adminId);
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
@@ -57,16 +58,14 @@ namespace V1.Controllers
         // Older clients posting no body must be updated to send { "reason": "..." }.
         public async Task<IActionResult> Reject(int requestId, [FromBody] RejectHotelRegistrationDTO request, CancellationToken cancellationToken = default)
         {
-            var adminId = GetAdminId();
+            // FR-ONB-017: never delegate rejection with a missing or malformed Admin ID.
+            if (!TryGetAdminId(out var adminId)) return Unauthorized();
             var result = await _adminHotelApprovalRequestService.RejectRequestAsync(requestId, adminId, request, cancellationToken);
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 
-        private int GetAdminId()
-        {
-            var claim = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-            return claim;
-        }
+        private bool TryGetAdminId(out int adminId) =>
+            int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out adminId) && adminId > 0;
 
     }
 }
