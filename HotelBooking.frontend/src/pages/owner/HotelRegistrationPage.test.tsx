@@ -1,12 +1,12 @@
 import { render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as api from "../../services/ownerRegistrationService";
 import HotelRegistrationPage from "./HotelRegistrationPage";
 
 vi.mock("../../services/ownerRegistrationService", () => ({
   getCountries: vi.fn(), getPropertyTypes: vi.fn(), getMyRegistrations: vi.fn(),
-  getProvinces: vi.fn(), getWards: vi.fn(), uploadBusinessLicense: vi.fn(), submitRegistration: vi.fn(),
+  getProvinces: vi.fn(), getWards: vi.fn(), uploadBusinessLicense: vi.fn(), submitRegistration: vi.fn(), cancelRegistration: vi.fn(),
 }));
 
 const registration = {
@@ -99,6 +99,87 @@ describe("Owner hotel-registration history (FR-ONB-013)", () => {
     vi.mocked(api.getMyRegistrations).mockResolvedValue({ statusCode: "Success", message: "OK", content: pageOf([]) });
     render(<HotelRegistrationPage />);
     expect(await screen.findByText("No registration requests found.")).toBeInTheDocument();
+  });
+});
+
+afterEach(() => vi.restoreAllMocks());
+
+describe("Owner registration cancellation (FR-ONB-018)", () => {
+  it.each(["Approved", "Rejected", "Cancelled"])("does not offer cancellation for %s", async status => {
+    mockHistory({ status });
+    render(<HotelRegistrationPage />);
+    await screen.findByText("Lake Hotel");
+    expect(screen.queryByRole("button", { name: "Cancel request" })).not.toBeInTheDocument();
+  });
+
+  it("does not call the API when confirmation is declined", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(window, "confirm").mockReturnValue(false);
+    mockHistory({ status: "Pending" });
+    render(<HotelRegistrationPage />);
+    await user.click(await screen.findByRole("button", { name: "Cancel request" }));
+    expect(window.confirm).toHaveBeenCalledWith(expect.stringContaining("Lake Hotel"));
+    expect(api.cancelRegistration).not.toHaveBeenCalled();
+    expect(api.getMyRegistrations).toHaveBeenCalledOnce();
+  });
+
+  it("locks cancellation while sending and refreshes the current page on success", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    mockHistory({ status: "Pending" });
+    let finish!: (value: api.ApiResponse<boolean>) => void;
+    vi.mocked(api.cancelRegistration).mockReturnValue(new Promise(resolve => { finish = resolve; }));
+    render(<HotelRegistrationPage />);
+    await user.click(await screen.findByRole("button", { name: "Cancel request" }));
+    expect(screen.getByRole("button", { name: "Cancelling..." })).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: "Cancelling..." }));
+    expect(api.cancelRegistration).toHaveBeenCalledExactlyOnceWith(99);
+    mockHistory({ status: "Cancelled" });
+    finish({ statusCode: "Success", message: "OK", content: true });
+    expect(await screen.findByText("Cancelled", { selector: ".status-badge" })).toBeInTheDocument();
+    expect(api.getMyRegistrations).toHaveBeenLastCalledWith(1, 3, expect.any(AbortSignal));
+    expect(api.getMyRegistrations).toHaveBeenCalledTimes(2);
+    expect(screen.queryByRole("button", { name: "Cancel request" })).not.toBeInTheDocument();
+  });
+
+  it.each([
+    [{ response: { data: { message: "Request is no longer Pending." } } }, "Request is no longer Pending."],
+    [new Error("Network unavailable"), "Network unavailable"],
+  ])("shows cancellation errors and allows retry without hiding history", async (failure, message) => {
+    const user = userEvent.setup();
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    mockHistory({ status: "Pending" });
+    vi.mocked(api.cancelRegistration).mockRejectedValue(failure);
+    render(<HotelRegistrationPage />);
+    await user.click(await screen.findByRole("button", { name: "Cancel request" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(message as string);
+    expect(screen.getByText("Lake Hotel")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Cancel request" })).toBeEnabled();
+    expect(api.getMyRegistrations).toHaveBeenCalledOnce();
+  });
+
+  it("refreshes page two and returns to a valid page when the page count shrinks", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    vi.mocked(api.getMyRegistrations).mockImplementation(async (page = 1) => ({
+      statusCode: "Success", message: "OK", content: {
+        ...pageOf([{ ...registration, status: "Pending" }]), pageIndex: page, totalCount: 4, totalPages: 2,
+      },
+    }));
+    vi.mocked(api.cancelRegistration).mockResolvedValue({ statusCode: "Success", message: "OK", content: true });
+    render(<HotelRegistrationPage />);
+    await screen.findByText("Lake Hotel");
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    await screen.findByText("Page 2 of 2 · 4 requests");
+    vi.mocked(api.getMyRegistrations).mockResolvedValue({ statusCode: "Success", message: "OK", content: pageOf([]) });
+    // A smaller positive page count exercises the existing out-of-range-page recovery.
+    vi.mocked(api.getMyRegistrations).mockResolvedValueOnce({
+      statusCode: "Success", message: "OK", content: { ...pageOf([]), totalCount: 3, totalPages: 1 },
+    });
+    await user.click(screen.getByRole("button", { name: "Cancel request" }));
+    await screen.findByText("No registration requests found.");
+    expect(api.getMyRegistrations).toHaveBeenNthCalledWith(3, 2, 3, expect.any(AbortSignal));
+    await waitFor(() => expect(api.getMyRegistrations).toHaveBeenLastCalledWith(1, 3, expect.any(AbortSignal)));
   });
 });
 

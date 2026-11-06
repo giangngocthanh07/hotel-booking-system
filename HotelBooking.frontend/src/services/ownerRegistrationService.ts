@@ -129,3 +129,7 @@ export interface RegistrationHistoryPage {
 // FR-ONB-013 / NFR-PERF-008: ask the server for a slice rather than downloading all history.
 export const getMyRegistrations = (pageIndex = 1, pageSize = 3, signal?: AbortSignal) =>
   request<RegistrationHistoryPage>(`/owner/hotel-registrations/me/paged?pageIndex=${pageIndex}&pageSize=${pageSize}`, { signal });
+
+// FR-ONB-018: the API derives ownership from authentication; send only the request ID.
+export const cancelRegistration = (requestId: number) =>
+  request<boolean>(`/owner/hotel-registrations/${requestId}/cancel`, { method: "POST" });

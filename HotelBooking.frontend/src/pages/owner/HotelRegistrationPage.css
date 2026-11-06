@@ -235,11 +235,33 @@
 }
 
 .hi-footer {
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
   margin-top: 12px;
   padding-top: 12px;
   border-top: 1px solid #E2E8F0;
   display: flex;
   justify-content: flex-end;
+}
+
+/* FR-ONB-018: make cancellation distinct and preserve keyboard focus visibility. */
+.btn-cancel-registration {
+  padding: 8px 12px;
+  border: 1px solid #DC2626;
+  border-radius: 6px;
+  background: white;
+  color: #B91C1C;
+  cursor: pointer;
+}
+
+.btn-cancel-registration:hover:not(:disabled) {
+  background: #FEF2F2;
+}
+
+.btn-cancel-registration:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* FR-ONB-013: preserve the full explanation, including line breaks and long words, within each history card. */
