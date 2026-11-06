@@ -1,4 +1,4 @@
-import { render, screen, within, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as api from "../../services/ownerRegistrationService";
@@ -181,6 +181,55 @@ describe("Owner registration cancellation (FR-ONB-018)", () => {
     expect(api.getMyRegistrations).toHaveBeenNthCalledWith(3, 2, 3, expect.any(AbortSignal));
     await waitFor(() => expect(api.getMyRegistrations).toHaveBeenLastCalledWith(1, 3, expect.any(AbortSignal)));
   });
+});
+
+describe("Registration coordinates (FR-ONB-010)", () => {
+  beforeEach(() => {
+    vi.mocked(api.uploadBusinessLicense).mockResolvedValue({ statusCode: "Success", message: "OK", content: { storedFileName: "https://example.com/license.pdf" } });
+    vi.mocked(api.submitRegistration).mockResolvedValue({ statusCode: "Success", message: "OK" });
+  });
+
+  it.each([[0, 0], [0, 106], [10, 0], [undefined, undefined]])(
+    "preserves optional coordinates in the payload: %s, %s", async (latitude, longitude) => {
+      const { container } = render(<HotelRegistrationPage />);
+      await screen.findByText("Lake Hotel");
+      const [lat, lng] = screen.getAllByRole("spinbutton");
+      if (latitude !== undefined) {
+        fireEvent.change(lat, { target: { value: String(latitude) } });
+        expect(lat).toHaveValue(latitude);
+      }
+      if (longitude !== undefined) {
+        fireEvent.change(lng, { target: { value: String(longitude) } });
+        expect(lng).toHaveValue(longitude);
+      }
+      await userEvent.upload(container.querySelector<HTMLInputElement>("#file-upload")!, new File(["license"], "license.pdf", { type: "application/pdf" }));
+      // Exercise the submit handler independently of unrelated required HTML fields.
+      fireEvent.submit(container.querySelector("form")!);
+      await waitFor(() => expect(api.submitRegistration).toHaveBeenCalledOnce());
+      const payload = vi.mocked(api.submitRegistration).mock.calls[0][0];
+      if (latitude === undefined) {
+        expect(payload).not.toHaveProperty("latitude");
+        expect(payload).not.toHaveProperty("longitude");
+      } else {
+        expect(payload).toMatchObject({ latitude, longitude });
+      }
+    },
+  );
+
+  it.each([[0, undefined], [undefined, 0], [10, undefined], [undefined, 106]])(
+    "rejects an incomplete pair before uploading: %s, %s", async (latitude, longitude) => {
+      const { container } = render(<HotelRegistrationPage />);
+      await screen.findByText("Lake Hotel");
+      const [lat, lng] = screen.getAllByRole("spinbutton");
+      fireEvent.change(lat, { target: { value: latitude === undefined ? "" : String(latitude) } });
+      fireEvent.change(lng, { target: { value: longitude === undefined ? "" : String(longitude) } });
+      await userEvent.upload(container.querySelector<HTMLInputElement>("#file-upload")!, new File(["license"], "license.pdf", { type: "application/pdf" }));
+      fireEvent.submit(container.querySelector("form")!);
+      expect(await screen.findByText("If you provide Latitude, you must also provide Longitude, and vice versa.")).toBeInTheDocument();
+      expect(api.uploadBusinessLicense).not.toHaveBeenCalled();
+      expect(api.submitRegistration).not.toHaveBeenCalled();
+    },
+  );
 });
 
 function mockHistory(overrides: { status?: string; adminRemark?: string; processedAt?: string }) {

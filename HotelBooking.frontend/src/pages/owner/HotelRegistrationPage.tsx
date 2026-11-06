@@ -131,8 +131,8 @@ export default function HotelRegistrationPage() {
       return;
     }
 
-    // Latitude and Longitude co-dependence check
-    if ((formData.latitude && !formData.longitude) || (!formData.latitude && formData.longitude)) {
+    // FR-ONB-010: zero is a valid coordinate; only undefined means an input was left blank.
+    if ((formData.latitude !== undefined) !== (formData.longitude !== undefined)) {
       setError("If you provide Latitude, you must also provide Longitude, and vice versa.");
       return;
     }
@@ -172,7 +172,7 @@ export default function HotelRegistrationPage() {
         businessLicenseUrl: uploadRes.content.storedFileName
       };
 
-      if (formData.latitude && formData.longitude) {
+      if (formData.latitude !== undefined && formData.longitude !== undefined) {
         payload.latitude = formData.latitude;
         payload.longitude = formData.longitude;
       }
@@ -284,11 +284,11 @@ export default function HotelRegistrationPage() {
             <div className="form-row">
               <div className="form-group">
                 <label>Latitude (Optional)</label>
-                <input type="number" step="any" min="-90" max="90" value={formData.latitude || ""} onChange={e => setFormData({...formData, latitude: e.target.value ? parseFloat(e.target.value) : undefined})} disabled={submitting} />
+                <input type="number" step="any" min="-90" max="90" value={formData.latitude ?? ""} onChange={e => setFormData({...formData, latitude: e.target.value ? parseFloat(e.target.value) : undefined})} disabled={submitting} />
               </div>
               <div className="form-group">
                 <label>Longitude (Optional)</label>
-                <input type="number" step="any" min="-180" max="180" value={formData.longitude || ""} onChange={e => setFormData({...formData, longitude: e.target.value ? parseFloat(e.target.value) : undefined})} disabled={submitting} />
+                <input type="number" step="any" min="-180" max="180" value={formData.longitude ?? ""} onChange={e => setFormData({...formData, longitude: e.target.value ? parseFloat(e.target.value) : undefined})} disabled={submitting} />
               </div>
             </div>
             
