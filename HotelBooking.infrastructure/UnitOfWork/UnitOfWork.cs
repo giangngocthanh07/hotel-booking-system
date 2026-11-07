@@ -1,4 +1,5 @@
 using HotelBooking.infrastructure.Models;
+using Microsoft.EntityFrameworkCore;
 public interface IUnitOfWork : IAsyncDisposable
 {
 
@@ -6,6 +7,7 @@ public interface IUnitOfWork : IAsyncDisposable
     Task CommitTransactionAsync();
 
     Task<int> SaveChangesAsync();
+    Task<SaveChangesResult> TrySaveChangesAsync(CancellationToken cancellationToken = default);
     Task RollBackTransactionAsync();
 }
 
@@ -23,6 +25,21 @@ public class UnitOfWork : IUnitOfWork
     public async Task<int> SaveChangesAsync()
     {
         return await _context.SaveChangesAsync();
+    }
+
+    public async Task<SaveChangesResult> TrySaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return new SaveChangesResult(await _context.SaveChangesAsync(cancellationToken), false);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // FR-ONB-019: discard stale tracked changes, including an unsaved Hotel.
+            // The caller must roll back any explicit transaction before returning a conflict.
+            _context.ChangeTracker.Clear();
+            return new SaveChangesResult(0, true);
+        }
     }
 
     public async ValueTask DisposeAsync()
