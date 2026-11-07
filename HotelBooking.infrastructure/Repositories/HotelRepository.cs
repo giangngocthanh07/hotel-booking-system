@@ -16,13 +16,16 @@ public class HotelRepository : Repository<Hotel>, IHotelRepository
 
     public async Task<Hotel?> GetHotelDetailsByIdAsync(int id)
     {
+        // FR-ONB-016 / FR-CAT-006/007: public links must respect approval and operational state.
+        // Keep this local to public details so management reads can still access hidden Hotels.
         return await _dbSet
+            .Where(h => h.Id == id && h.IsVerified == true && h.Status == "Active" && h.IsDeleted != true)
             .Include(h => h.HotelImages)
             .Include(h => h.HotelAmenities).ThenInclude(ha => ha.Amenity)
             .Include(h => h.RoomTypes).ThenInclude(rt => rt.RoomImages)
             .Include(h => h.RoomTypes).ThenInclude(rt => rt.RoomAmenities).ThenInclude(ra => ra.Amenity)
             .Include(h => h.Reviews).ThenInclude(r => r.Customer)
-            .FirstOrDefaultAsync(h => h.Id == id && h.IsDeleted != true, _cancellationToken);
+            .FirstOrDefaultAsync(_cancellationToken);
     }
 
     public async Task<List<SearchHotelResult>> GetSearchHotelsAsync(string cityName, DateTime? checkIn, DateTime? checkOut, int? adults, int? children, int? rooms)
