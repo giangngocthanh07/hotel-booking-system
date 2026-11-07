@@ -63,14 +63,19 @@ public class HotelRegistrationIdentityTests
         service.VerifyNoOtherCalls();
     }
 
-    [Fact]
-    public async Task ValidAdminIdentity_ForwardsApproval()
+    [Theory]
+    [InlineData(StatusCodeResponse.Success, 200)]
+    [InlineData(StatusCodeResponse.Conflict, 409)]
+    [Trait("Requirement", "FR-ONB-019")]
+    public async Task ValidAdminIdentity_ForwardsApproval(string status, int httpStatus)
     {
-        var response = new ApiResponse<bool> { StatusCode = StatusCodeResponse.Success };
+        var response = new ApiResponse<bool> { StatusCode = status };
         var service = new Mock<IAdminHotelApprovalRequestService>(MockBehavior.Strict);
         service.Setup(value => value.ApproveRequestAsync(99, 42)).ReturnsAsync(response);
         var controller = WithIdentity(new AdminHotelApprovalRequestController(service.Object), "42");
-        Assert.Same(response, Assert.IsType<ObjectResult>(await controller.Approve(99)).Value);
+        var result = Assert.IsType<ObjectResult>(await controller.Approve(99));
+        Assert.Same(response, result.Value);
+        Assert.Equal(httpStatus, result.StatusCode);
         service.Verify(value => value.ApproveRequestAsync(99, 42), Times.Once);
         service.VerifyNoOtherCalls();
     }
@@ -89,6 +94,7 @@ public class HotelRegistrationIdentityTests
     [Theory]
     [InlineData(StatusCodeResponse.Success, 200)]
     [InlineData(StatusCodeResponse.NotFound, 404)]
+    [InlineData(StatusCodeResponse.Conflict, 409)]
     [InlineData(StatusCodeResponse.BadRequest, 400)]
     [InlineData(StatusCodeResponse.Error, 500)]
     [Trait("Requirement", "FR-ONB-018")]

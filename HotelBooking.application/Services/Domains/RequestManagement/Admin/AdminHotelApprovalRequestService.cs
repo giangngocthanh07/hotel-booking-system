@@ -346,7 +346,14 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
             await _hotelRepo.AddAsync(newHotel);
             await _approvalRepo.UpdateAsync(request);
 
-            var saved = await _unitOfWork.SaveChangesAsync() > 0;
+            // FR-ONB-019: a competing decision must roll back this transaction, including its Hotel.
+            var saveResult = await _unitOfWork.TrySaveChangesAsync();
+            if (saveResult.HasConcurrencyConflict)
+            {
+                await _unitOfWork.RollBackTransactionAsync();
+                return HotelRequestSaveResponse.Conflict();
+            }
+            var saved = saveResult.AffectedRows > 0;
 
             if (saved)
             {
@@ -430,8 +437,10 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
         request.UpdatedAt = DateTime.UtcNow;
         await _approvalRepo.UpdateAsync(request);
         cancellationToken.ThrowIfCancellationRequested();
-        var saved = await _unitOfWork.SaveChangesAsync() > 0;
-        return saved
+        // FR-ONB-019: preserve the winning decision; do not retry a stale rejection.
+        var saveResult = await _unitOfWork.TrySaveChangesAsync(cancellationToken);
+        if (saveResult.HasConcurrencyConflict) return HotelRequestSaveResponse.Conflict();
+        return saveResult.AffectedRows > 0
             ? ResponseFactory.Success(true, MessageResponse.RequestManagement.HotelApproval.REJECTED_SUCCESS)
             : ResponseFactory.Failure<bool>(StatusCodeResponse.Error, MessageResponse.RequestManagement.HotelApproval.REJECT_FAILED);
     }

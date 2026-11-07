@@ -212,8 +212,10 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
                 request.UpdatedAt = DateTime.UtcNow;
                 await _approvalRepo.UpdateAsync(request);
 
-                var saved = await _unitOfWork.SaveChangesAsync() > 0;
-                return saved ? ResponseFactory.Success(true, MessageResponse.RequestManagement.HotelApproval.HOTEL_REQUEST_CANCELLED_SUCCESS) : ResponseFactory.Failure<bool>(StatusCodeResponse.Error, MessageResponse.RequestManagement.HotelApproval.HOTEL_REQUEST_CANCEL_FAILED);
+                // FR-ONB-019: another saved decision wins over this stale cancellation.
+                var saveResult = await _unitOfWork.TrySaveChangesAsync();
+                if (saveResult.HasConcurrencyConflict) return HotelRequestSaveResponse.Conflict();
+                return saveResult.AffectedRows > 0 ? ResponseFactory.Success(true, MessageResponse.RequestManagement.HotelApproval.HOTEL_REQUEST_CANCELLED_SUCCESS) : ResponseFactory.Failure<bool>(StatusCodeResponse.Error, MessageResponse.RequestManagement.HotelApproval.HOTEL_REQUEST_CANCEL_FAILED);
             }
             catch (Exception ex)
             {
