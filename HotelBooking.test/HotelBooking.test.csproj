@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+    <None Include="..\Scripts\StoredProcedures\sp_SearchHotels.sql" Link="Sql\sp_SearchHotels.sql" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
