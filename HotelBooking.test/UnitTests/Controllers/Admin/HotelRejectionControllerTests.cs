@@ -16,6 +16,7 @@ public class HotelRejectionControllerTests
     [Theory]
     [InlineData(StatusCodeResponse.Success, 200)]
     [InlineData(StatusCodeResponse.BadRequest, 400)]
+    [InlineData(StatusCodeResponse.Conflict, 409)]
     public async Task Reject_ForwardsBodyAndTrustedAdminIdentity(string status, int httpStatus)
     {
         // A strict setup detects dropped reasons, incorrect Admin identity, or lost cancellation tokens.

@@ -38,12 +38,27 @@ public class HotelRegistrationServiceTests : BaseServiceTest<HotelRegistrationSe
     }
 
     [Fact]
+    [Trait("Requirement", "FR-ONB-019")]
+    public async Task Cancel_ConcurrentSave_ReturnsConflictWithoutRetry()
+    {
+        var request = new HotelApprovalRequest { Id = 99, OwnerId = 7, Status = "Pending" };
+        _mockApprovalRepo.Setup(repo => repo.GetPendingByIdAsync(7)).ReturnsAsync([request]);
+        _mockUnitOfWork.Setup(unit => unit.TrySaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SaveChangesResult(0, true));
+        var result = await _service.CancelRequestAsync(7, 99);
+        result.StatusCode.Should().Be(StatusCodeResponse.Conflict);
+        _mockUnitOfWork.Verify(unit => unit.TrySaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _mockUnitOfWork.Verify(unit => unit.SaveChangesAsync(), Times.Never);
+        _mockUnitOfWork.Verify(unit => unit.BeginTransactionAsync(), Times.Never);
+    }
+
+    [Fact]
     [Trait("Requirement", "FR-ONB-018")]
     public async Task CancelPendingRequest_RecordsUtcTimeAndSavesOnce()
     {
         var request = new HotelApprovalRequest { Id = 99, OwnerId = 7, Status = "Pending" };
         _mockApprovalRepo.Setup(repo => repo.GetPendingByIdAsync(7)).ReturnsAsync([request]);
-        _mockUnitOfWork.Setup(unit => unit.SaveChangesAsync()).ReturnsAsync(1);
+        _mockUnitOfWork.Setup(unit => unit.TrySaveChangesAsync(default)).ReturnsAsync(new SaveChangesResult(1, false));
         var before = DateTime.UtcNow;
         var result = await _service.CancelRequestAsync(7, 99);
         var after = DateTime.UtcNow;
@@ -53,7 +68,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest<HotelRegistrationSe
         Assert.Equal(DateTimeKind.Utc, request.UpdatedAt.Value.Kind);
         Assert.InRange(request.UpdatedAt.Value, before, after);
         _mockApprovalRepo.Verify(repo => repo.UpdateAsync(request), Times.Once);
-        Verify_Saved(1);
+        VerifyCancellationSaved(1);
     }
 
     [Theory]
@@ -72,7 +87,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest<HotelRegistrationSe
         request.Status.Should().Be(status);
         request.UpdatedAt.Should().BeNull();
         _mockApprovalRepo.Verify(repo => repo.UpdateAsync(It.IsAny<HotelApprovalRequest>()), Times.Never);
-        Verify_Never_Saved();
+        VerifyCancellationSaved(0);
     }
 
     [Theory]
@@ -86,7 +101,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest<HotelRegistrationSe
         var result = await _service.CancelRequestAsync(ownerId, requestId);
         result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
         _mockApprovalRepo.Verify(repo => repo.GetPendingByIdAsync(It.IsAny<int>()), Times.Never);
-        Verify_Never_Saved();
+        VerifyCancellationSaved(0);
     }
 
     [Fact]
@@ -96,7 +111,7 @@ public class HotelRegistrationServiceTests : BaseServiceTest<HotelRegistrationSe
         _mockApprovalRepo.Setup(repo => repo.GetPendingByIdAsync(7)).ReturnsAsync([]);
         var result = await _service.CancelRequestAsync(7, 99);
         result.StatusCode.Should().Be(StatusCodeResponse.NotFound);
-        Verify_Never_Saved();
+        VerifyCancellationSaved(0);
     }
 
     [Fact]
@@ -105,10 +120,10 @@ public class HotelRegistrationServiceTests : BaseServiceTest<HotelRegistrationSe
     {
         var request = new HotelApprovalRequest { Id = 99, OwnerId = 7, Status = "Pending" };
         _mockApprovalRepo.Setup(repo => repo.GetPendingByIdAsync(7)).ReturnsAsync([request]);
-        _mockUnitOfWork.Setup(unit => unit.SaveChangesAsync()).ReturnsAsync(0);
+        _mockUnitOfWork.Setup(unit => unit.TrySaveChangesAsync(default)).ReturnsAsync(new SaveChangesResult(0, false));
         var result = await _service.CancelRequestAsync(7, 99);
         result.StatusCode.Should().Be(StatusCodeResponse.Error);
-        Verify_Saved(1);
+        VerifyCancellationSaved(1);
     }
 
     [Fact]
@@ -374,4 +389,10 @@ public class HotelRegistrationServiceTests : BaseServiceTest<HotelRegistrationSe
 
     }
 
+
+    private void VerifyCancellationSaved(int count)
+    {
+        _mockUnitOfWork.Verify(unit => unit.TrySaveChangesAsync(It.IsAny<CancellationToken>()), Times.Exactly(count));
+        _mockUnitOfWork.Verify(unit => unit.SaveChangesAsync(), Times.Never);
+    }
 }

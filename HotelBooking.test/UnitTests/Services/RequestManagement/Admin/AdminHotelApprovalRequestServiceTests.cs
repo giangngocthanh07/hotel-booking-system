@@ -36,6 +36,38 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
         Address = "123 Owner Street"
     };
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    [Trait("Requirement", "FR-ONB-019")]
+    public async Task Decision_ConcurrentSave_ReturnsConflictWithoutCommitOrRetry(bool approve)
+    {
+        var request = BuildPendingRequest();
+        _mockApprovalRepo.Setup(repo => repo.GetByIdAsync(ValidRequestId)).ReturnsAsync(request);
+        _mockUnitOfWork.Setup(unit => unit.TrySaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SaveChangesResult(0, true));
+        var result = approve
+            ? await _service.ApproveRequestAsync(ValidRequestId, ValidAdminId)
+            : await _service.RejectRequestAsync(ValidRequestId, ValidAdminId, ValidRejection());
+        result.StatusCode.Should().Be(StatusCodeResponse.Conflict);
+        _mockUnitOfWork.Verify(unit => unit.TrySaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _mockUnitOfWork.Verify(unit => unit.SaveChangesAsync(), Times.Never);
+        _mockUnitOfWork.Verify(unit => unit.CommitTransactionAsync(), Times.Never);
+        _mockUnitOfWork.Verify(unit => unit.RollBackTransactionAsync(), approve ? Times.Once() : Times.Never());
+    }
+
+    [Fact]
+    [Trait("Requirement", "FR-ONB-019")]
+    public async Task Reject_ConcurrentSave_ForwardsCancellation()
+    {
+        using var cancellation = new CancellationTokenSource();
+        _mockApprovalRepo.Setup(repo => repo.GetByIdAsync(ValidRequestId)).ReturnsAsync(BuildPendingRequest());
+        _mockUnitOfWork.Setup(unit => unit.TrySaveChangesAsync(cancellation.Token)).ReturnsAsync(new SaveChangesResult(0, true));
+        var result = await _service.RejectRequestAsync(ValidRequestId, ValidAdminId, ValidRejection(), cancellation.Token);
+        result.StatusCode.Should().Be(StatusCodeResponse.Conflict);
+        _mockUnitOfWork.Verify(unit => unit.TrySaveChangesAsync(cancellation.Token), Times.Once);
+    }
+
     private static string BuildAdditionalJson() =>
         JsonSerializer.Serialize(new HotelAdditionalInfo
         {
@@ -69,6 +101,8 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
 
     public AdminHotelApprovalRequestServiceTests()
     {
+        _mockUnitOfWork.Setup(unit => unit.TrySaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SaveChangesResult(1, false));
         _mockApprovalRepo = new Mock<IHotelApprovalRequestRepository>();
         _mockHotelRepo = new Mock<IHotelRepository>();
         _mockPagingValidator = new Mock<IValidator<PagingRequest>>();
@@ -330,7 +364,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
         result.Content!.Items.Should().OnlyContain(dto => dto.AdminRemark == request.AdminRemark
             && dto.ProcessedBy == 42 && dto.ProcessedAt == request.UpdatedAt && dto.ProcessedByName == "Review Admin");
         _mockUserRepo.Verify(repo => repo.WhereAsync(It.IsAny<Expression<Func<User, bool>>>()), Times.Once);
-        Verify_Never_Saved();
+        VerifyNoDecisionSaved();
     }
 
     [Fact]
@@ -351,7 +385,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
         result.Content.ProcessedAt.Should().Be(request.UpdatedAt);
         result.Content.ProcessedBy.Should().Be(42);
         result.Content.ProcessedByName.Should().Be("Review Admin");
-        Verify_Never_Saved();
+        VerifyNoDecisionSaved();
     }
 
     [Fact]
@@ -515,7 +549,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
         request.UpdatedAt.Should().BeNull();
         _mockApprovalRepo.Verify(repo => repo.UpdateAsync(It.IsAny<HotelApprovalRequest>()), Times.Never);
         _mockHotelRepo.Verify(repo => repo.AddAsync(It.IsAny<Hotel>()), Times.Never);
-        Verify_Never_Saved();
+        VerifyNoDecisionSaved();
         _mockUnitOfWork.Verify(unit => unit.CommitTransactionAsync(), Times.Never);
         _mockUnitOfWork.Verify(unit => unit.RollBackTransactionAsync(), approve ? Times.Once() : Times.Never());
     }
@@ -526,7 +560,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
         // Arrange
         var request = BuildPendingRequest();
         _mockApprovalRepo.Setup(r => r.GetByIdAsync(ValidRequestId)).ReturnsAsync(request);
-        _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+        _mockUnitOfWork.Setup(u => u.TrySaveChangesAsync(default)).ReturnsAsync(new SaveChangesResult(1, false));
 
         // Act
         var result = await _service.ApproveRequestAsync(ValidRequestId, ValidAdminId);
@@ -546,7 +580,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
             h.OwnerId == request.OwnerId &&
             h.IsVerified == true)), Times.Once);
 
-        Verify_Saved(1);
+        VerifyDecisionSaved(1);
     }
 
     [Fact]
@@ -555,7 +589,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
     {
         var request = BuildPendingRequest();
         _mockApprovalRepo.Setup(repo => repo.GetByIdAsync(ValidRequestId)).ReturnsAsync(request);
-        _mockUnitOfWork.Setup(unit => unit.SaveChangesAsync()).ReturnsAsync(1);
+        _mockUnitOfWork.Setup(unit => unit.TrySaveChangesAsync(default)).ReturnsAsync(new SaveChangesResult(1, false));
         Hotel? saved = null;
         _mockHotelRepo.Setup(repo => repo.AddAsync(It.IsAny<Hotel>()))
             .Callback<Hotel>(hotel => saved = hotel).Returns(Task.CompletedTask);
@@ -570,7 +604,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
         Assert.Equal(DateTimeKind.Utc, saved.CreatedAt.Value.Kind);
         Assert.InRange(request.UpdatedAt.Value, before, after);
         Assert.InRange(saved.CreatedAt.Value, before, after);
-        Verify_Saved(1);
+        VerifyDecisionSaved(1);
     }
 
     [Fact]
@@ -585,7 +619,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
         result.Message.Should().Be(MessageResponse.RequestManagement.HotelApproval.HOTEL_INVALID_REQUEST_ID);
 
         _mockApprovalRepo.Verify(r => r.GetByIdAsync(It.IsAny<int>()), Times.Never);
-        Verify_Never_Saved();
+        VerifyNoDecisionSaved();
     }
 
     [Fact]
@@ -600,7 +634,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
         result.Message.Should().Be(MessageResponse.RequestManagement.HotelApproval.HOTEL_INVALID_REQUEST_ID);
 
         _mockApprovalRepo.Verify(r => r.GetByIdAsync(It.IsAny<int>()), Times.Never);
-        Verify_Never_Saved();
+        VerifyNoDecisionSaved();
     }
 
     [Fact]
@@ -620,7 +654,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
 
         _mockApprovalRepo.Verify(r => r.GetByIdAsync(ValidRequestId), Times.Once);
         Verify_Repo_Never_UpdateAsync<IHotelApprovalRequestRepository, HotelApprovalRequest>(_mockApprovalRepo);
-        Verify_Never_Saved();
+        VerifyNoDecisionSaved();
     }
 
     [Fact]
@@ -640,7 +674,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
 
         _mockApprovalRepo.Verify(r => r.GetByIdAsync(ValidRequestId), Times.Once);
         Verify_Repo_Never_UpdateAsync<IHotelApprovalRequestRepository, HotelApprovalRequest>(_mockApprovalRepo);
-        Verify_Never_Saved();
+        VerifyNoDecisionSaved();
     }
 
     [Fact]
@@ -659,7 +693,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
         result.Message.Should().Be(MessageResponse.RequestManagement.HotelApproval.STATUS_INVALID);
 
         Verify_Repo_Never_UpdateAsync<IHotelApprovalRequestRepository, HotelApprovalRequest>(_mockApprovalRepo);
-        Verify_Never_Saved();
+        VerifyNoDecisionSaved();
     }
 
     [Fact]
@@ -668,7 +702,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
         // Arrange
         var request = BuildPendingRequest();
         _mockApprovalRepo.Setup(r => r.GetByIdAsync(ValidRequestId)).ReturnsAsync(request);
-        _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(0);
+        _mockUnitOfWork.Setup(u => u.TrySaveChangesAsync(default)).ReturnsAsync(new SaveChangesResult(0, false));
 
         // Act
         var result = await _service.ApproveRequestAsync(ValidRequestId, ValidAdminId);
@@ -681,7 +715,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
         _mockApprovalRepo.Verify(r => r.GetByIdAsync(ValidRequestId), Times.Once);
         Verify_Repo_UpdateAsync<IHotelApprovalRequestRepository, HotelApprovalRequest>(_mockApprovalRepo, 1);
         Verify_Repo_AddAsync<IHotelRepository, Hotel>(_mockHotelRepo, 1);
-        Verify_Saved(1);
+        VerifyDecisionSaved(1);
     }
 
     [Fact]
@@ -701,7 +735,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
 
         _mockApprovalRepo.Verify(r => r.GetByIdAsync(ValidRequestId), Times.Once);
         Verify_Repo_Never_UpdateAsync<IHotelApprovalRequestRepository, HotelApprovalRequest>(_mockApprovalRepo);
-        Verify_Never_Saved();
+        VerifyNoDecisionSaved();
         VerifyLogErrorOnce();
     }
 
@@ -711,7 +745,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
         // Arrange
         var request = BuildPendingRequest();
         _mockApprovalRepo.Setup(r => r.GetByIdAsync(ValidRequestId)).ReturnsAsync(request);
-        _mockUnitOfWork.Setup(u => u.SaveChangesAsync())
+        _mockUnitOfWork.Setup(u => u.TrySaveChangesAsync(default))
             .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
 
         // Act
@@ -724,7 +758,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
 
         Verify_Repo_UpdateAsync<IHotelApprovalRequestRepository, HotelApprovalRequest>(_mockApprovalRepo, 1);
         Verify_Repo_AddAsync<IHotelRepository, Hotel>(_mockHotelRepo, 1);
-        Verify_Saved(1);
+        VerifyDecisionSaved(1);
         VerifyLogErrorOnce();
     }
 
@@ -781,7 +815,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
         var result = await _service.RejectRequestAsync(ValidRequestId, ValidAdminId, null!);
         result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
         _mockApprovalRepo.VerifyNoOtherCalls();
-        Verify_Never_Saved();
+        VerifyNoDecisionSaved();
     }
 
     [Fact]
@@ -798,7 +832,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
         request.UpdatedAt.Should().NotBeNull();
         request.UpdatedAt!.Value.Kind.Should().Be(DateTimeKind.Utc);
         request.Status.Should().Be(RequestStatusConst.Rejected);
-        Verify_Saved(1);
+        VerifyDecisionSaved(1);
         _mockHotelRepo.Verify(repo => repo.AddAsync(It.IsAny<Hotel>()), Times.Never);
     }
 
@@ -811,7 +845,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
         request.UpdatedAt.Should().BeNull();
         _mockApprovalRepo.Verify(repo => repo.UpdateAsync(It.IsAny<HotelApprovalRequest>()), Times.Never);
         _mockHotelRepo.Verify(repo => repo.AddAsync(It.IsAny<Hotel>()), Times.Never);
-        Verify_Never_Saved();
+        VerifyNoDecisionSaved();
     }
 
     [Fact]
@@ -824,7 +858,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
         var result = await _service.RejectRequestAsync(ValidRequestId, ValidAdminId, new RejectHotelRegistrationDTO());
         result.StatusCode.Should().Be(StatusCodeResponse.BadRequest);
         request.Status.Should().Be(RequestStatusConst.Pending);
-        Verify_Never_Saved();
+        VerifyNoDecisionSaved();
     }
 
     [Fact]
@@ -833,7 +867,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
         // Arrange
         var request = BuildPendingRequest();
         _mockApprovalRepo.Setup(r => r.GetByIdAsync(ValidRequestId)).ReturnsAsync(request);
-        _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+        _mockUnitOfWork.Setup(u => u.TrySaveChangesAsync(default)).ReturnsAsync(new SaveChangesResult(1, false));
 
         // Act
         var result = await _service.RejectRequestAsync(ValidRequestId, ValidAdminId, ValidRejection());
@@ -851,7 +885,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
         // Hotel repo should NOT be touched on reject
         _mockHotelRepo.Verify(r => r.AddAsync(It.IsAny<Hotel>()), Times.Never);
 
-        Verify_Saved(1);
+        VerifyDecisionSaved(1);
     }
 
     [Fact]
@@ -866,7 +900,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
         result.Message.Should().Be(MessageResponse.RequestManagement.HotelApproval.HOTEL_INVALID_REQUEST_ID);
 
         _mockApprovalRepo.Verify(r => r.GetByIdAsync(It.IsAny<int>()), Times.Never);
-        Verify_Never_Saved();
+        VerifyNoDecisionSaved();
     }
 
     [Fact]
@@ -881,7 +915,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
         result.Message.Should().Be(MessageResponse.RequestManagement.HotelApproval.HOTEL_INVALID_REQUEST_ID);
 
         _mockApprovalRepo.Verify(r => r.GetByIdAsync(It.IsAny<int>()), Times.Never);
-        Verify_Never_Saved();
+        VerifyNoDecisionSaved();
     }
 
     [Fact]
@@ -901,7 +935,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
 
         _mockApprovalRepo.Verify(r => r.GetByIdAsync(ValidRequestId), Times.Once);
         Verify_Repo_Never_UpdateAsync<IHotelApprovalRequestRepository, HotelApprovalRequest>(_mockApprovalRepo);
-        Verify_Never_Saved();
+        VerifyNoDecisionSaved();
     }
 
     [Fact]
@@ -921,7 +955,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
 
         _mockApprovalRepo.Verify(r => r.GetByIdAsync(ValidRequestId), Times.Once);
         Verify_Repo_Never_UpdateAsync<IHotelApprovalRequestRepository, HotelApprovalRequest>(_mockApprovalRepo);
-        Verify_Never_Saved();
+        VerifyNoDecisionSaved();
     }
 
     [Fact]
@@ -940,7 +974,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
         result.Message.Should().Be(MessageResponse.RequestManagement.HotelApproval.STATUS_INVALID);
 
         Verify_Repo_Never_UpdateAsync<IHotelApprovalRequestRepository, HotelApprovalRequest>(_mockApprovalRepo);
-        Verify_Never_Saved();
+        VerifyNoDecisionSaved();
     }
 
     [Fact]
@@ -949,7 +983,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
         // Arrange
         var request = BuildPendingRequest();
         _mockApprovalRepo.Setup(r => r.GetByIdAsync(ValidRequestId)).ReturnsAsync(request);
-        _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(0);
+        _mockUnitOfWork.Setup(u => u.TrySaveChangesAsync(default)).ReturnsAsync(new SaveChangesResult(0, false));
 
         // Act
         var result = await _service.RejectRequestAsync(ValidRequestId, ValidAdminId, ValidRejection());
@@ -961,7 +995,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
 
         _mockApprovalRepo.Verify(r => r.GetByIdAsync(ValidRequestId), Times.Once);
         Verify_Repo_UpdateAsync<IHotelApprovalRequestRepository, HotelApprovalRequest>(_mockApprovalRepo, 1);
-        Verify_Saved(1);
+        VerifyDecisionSaved(1);
     }
 
     [Fact]
@@ -981,7 +1015,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
 
         _mockApprovalRepo.Verify(r => r.GetByIdAsync(ValidRequestId), Times.Once);
         Verify_Repo_Never_UpdateAsync<IHotelApprovalRequestRepository, HotelApprovalRequest>(_mockApprovalRepo);
-        Verify_Never_Saved();
+        VerifyNoDecisionSaved();
         VerifyLogErrorOnce();
     }
 
@@ -991,7 +1025,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
         // Arrange
         var request = BuildPendingRequest();
         _mockApprovalRepo.Setup(r => r.GetByIdAsync(ValidRequestId)).ReturnsAsync(request);
-        _mockUnitOfWork.Setup(u => u.SaveChangesAsync())
+        _mockUnitOfWork.Setup(u => u.TrySaveChangesAsync(default))
             .ThrowsAsync(new Exception(MessageResponse.Common.ERROR_IN_SERVER));
 
         // Act
@@ -1003,7 +1037,7 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
         result.Message.Should().Be(MessageResponse.Common.ERROR_IN_SERVER);
 
         Verify_Repo_UpdateAsync<IHotelApprovalRequestRepository, HotelApprovalRequest>(_mockApprovalRepo, 1);
-        Verify_Saved(1);
+        VerifyDecisionSaved(1);
         VerifyLogErrorOnce();
     }
 
@@ -1034,4 +1068,12 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
 
     
     #endregion
+
+    private void VerifyDecisionSaved(int count)
+    {
+        _mockUnitOfWork.Verify(unit => unit.TrySaveChangesAsync(It.IsAny<CancellationToken>()), Times.Exactly(count));
+        _mockUnitOfWork.Verify(unit => unit.SaveChangesAsync(), Times.Never);
+    }
+
+    private void VerifyNoDecisionSaved() => VerifyDecisionSaved(0);
 }
