@@ -22,6 +22,7 @@
   <ItemGroup>
     <Using Include="Xunit" />
     <None Include="..\Scripts\StoredProcedures\sp_SearchHotels.sql" Link="Sql\sp_SearchHotels.sql" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\Scripts\Schema\2026-11-09-business-license-uploads.sql" Link="Sql\2026-11-09-business-license-uploads.sql" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
