@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using HotelBooking.application.Services.Domains.Media;
+using HotelBooking.application.Services.Helpers.Media;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 //using V1.Models;
@@ -23,19 +24,27 @@ namespace HotelBooking.api.Controllers.V1.Owner
         }
 
         [HttpPost("business-licenses")]
-        public async Task<IActionResult> UploadBusinessLicense(IFormFile file)
+        [RequestSizeLimit(BusinessLicenseFileRules.MaximumSize + 1024 * 1024)]
+        [RequestFormLimits(MultipartBodyLengthLimit = BusinessLicenseFileRules.MaximumSize + 1024 * 1024)]
+        public async Task<IActionResult> UploadBusinessLicense(IFormFile? file, CancellationToken cancellationToken = default)
         {
-            var claim = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-            if (claim == 0) return Unauthorized();
+            // FR-ONB-011: reject missing input before opening a caller-owned multipart stream.
+            if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var ownerId) || ownerId <= 0)
+                return Unauthorized();
+            if (file == null)
+                return ApiResponseHandlerHelper.HandleResponse(ResponseFactory.Failure<UploadResultDTO>(
+                    StatusCodeResponse.BadRequest, "A business license file is required."));
 
+            await using var stream = file.OpenReadStream();
             var result = new UploadFileDTO
             {
                 FileName = file.FileName,
+                ContentType = file.ContentType,
                 Size = file.Length,
-                Content = file.OpenReadStream()
+                Content = stream
             };
 
-            var response = await _fileService.UploadBusinessLicenseAsync(result, claim);
+            var response = await _fileService.UploadBusinessLicenseAsync(result, ownerId, cancellationToken);
             return ApiResponseHandlerHelper.HandleResponse(response);
 
         }

@@ -24,6 +24,7 @@ public static class ValidatorServiceExtension
     {
         // Resolve the rejection validator through DI so the application service enforces the same rule for every caller.
         services.AddScoped<IValidator<RejectHotelRegistrationDTO>, RejectHotelRegistrationValidator>();
+        services.AddScoped<IValidator<UploadFileDTO>, HotelBooking.application.Validators.Media.BusinessLicenseUploadValidator>();
         services.AddScoped<IValidator<RejectUpgradeRequestDTO>, RejectUpgradeRequestValidator>();
         services.AddUserValidators();
         services.AddAdminManagementValidators();
