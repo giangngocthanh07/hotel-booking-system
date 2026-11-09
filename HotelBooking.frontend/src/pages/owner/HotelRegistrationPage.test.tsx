@@ -185,7 +185,9 @@ describe("Owner registration cancellation (FR-ONB-018)", () => {
 
 describe("Registration coordinates (FR-ONB-010)", () => {
   beforeEach(() => {
-    vi.mocked(api.uploadBusinessLicense).mockResolvedValue({ statusCode: "Success", message: "OK", content: { storedFileName: "https://example.com/license.pdf" } });
+    vi.mocked(api.uploadBusinessLicense).mockResolvedValue({ statusCode: "Success", message: "OK", content: {
+      uploaded: true, uploadId: "12345678-1234-4234-8234-123456789abc", storedFileName: "https://example.com/license.pdf",
+    } });
     vi.mocked(api.submitRegistration).mockResolvedValue({ statusCode: "Success", message: "OK" });
   });
 
@@ -228,6 +230,38 @@ describe("Registration coordinates (FR-ONB-010)", () => {
       expect(await screen.findByText("If you provide Latitude, you must also provide Longitude, and vice versa.")).toBeInTheDocument();
       expect(api.uploadBusinessLicense).not.toHaveBeenCalled();
       expect(api.submitRegistration).not.toHaveBeenCalled();
+    },
+  );
+});
+
+describe("Registration upload ownership (FR-ONB-009/013)", () => {
+  const uploadId = "12345678-1234-4234-8234-123456789abc";
+  beforeEach(() => {
+    vi.mocked(api.submitRegistration).mockResolvedValue({ statusCode: "Success", message: "OK" });
+  });
+
+  it("submits the receipt ID without trusting or requiring a client URL", async () => {
+    vi.mocked(api.uploadBusinessLicense).mockResolvedValue({ statusCode: "Success", message: "OK", content: { uploaded: true, uploadId } });
+    const { container } = render(<HotelRegistrationPage />);
+    await screen.findByText("Lake Hotel");
+    await userEvent.upload(container.querySelector<HTMLInputElement>("#file-upload")!, new File(["license"], "license.pdf", { type: "application/pdf" }));
+    fireEvent.submit(container.querySelector("form")!);
+    await waitFor(() => expect(api.submitRegistration).toHaveBeenCalledOnce());
+    expect(vi.mocked(api.submitRegistration).mock.calls[0][0]).toHaveProperty("businessLicenseUploadId", uploadId);
+    expect(vi.mocked(api.submitRegistration).mock.calls[0][0]).not.toHaveProperty("businessLicenseUrl");
+  });
+
+  it.each([undefined, null, "", "not-a-guid", "00000000-0000-0000-0000-000000000000"])(
+    "does not fall back to a URL when the receipt is invalid: %s", async receipt => {
+      vi.mocked(api.uploadBusinessLicense).mockResolvedValue({ statusCode: "Success", message: "OK",
+        content: { uploaded: true, uploadId: receipt, storedFileName: "https://example.com/license.pdf" } });
+      const { container } = render(<HotelRegistrationPage />);
+      await screen.findByText("Lake Hotel");
+      await userEvent.upload(container.querySelector<HTMLInputElement>("#file-upload")!, new File(["license"], "license.pdf", { type: "application/pdf" }));
+      fireEvent.submit(container.querySelector("form")!);
+      expect(await screen.findByText("Could not verify your business license upload. Please upload again.")).toBeInTheDocument();
+      expect(api.submitRegistration).not.toHaveBeenCalled();
+      expect(screen.getByRole("button", { name: "Submit Registration" })).toBeEnabled();
     },
   );
 });

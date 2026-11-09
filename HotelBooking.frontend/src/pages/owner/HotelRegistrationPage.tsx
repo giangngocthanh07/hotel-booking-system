@@ -141,9 +141,16 @@ export default function HotelRegistrationPage() {
     try {
       // 1. Upload File
       const uploadRes = await uploadBusinessLicense(file);
-      if (uploadRes.statusCode !== "Success" || !uploadRes.content?.storedFileName) {
+      if (uploadRes.statusCode !== "Success" || uploadRes.content?.uploaded !== true) {
         setError("Failed to upload business license: " + (uploadRes.message || "Unknown error"));
         setSubmitting(false);
+        return;
+      }
+      // FR-ONB-009/013: submit only a server-issued receipt; a URL is not ownership evidence.
+      const uploadId = uploadRes.content.uploadId;
+      if (!uploadId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uploadId)
+        || uploadId === "00000000-0000-0000-0000-000000000000") {
+        setError("Could not verify your business license upload. Please upload again.");
         return;
       }
 
@@ -169,7 +176,7 @@ export default function HotelRegistrationPage() {
         wardId: formData.wardId!,
         wardName: wName,
         taxCode: formData.taxCode!,
-        businessLicenseUrl: uploadRes.content.storedFileName
+        businessLicenseUploadId: uploadId
       };
 
       if (formData.latitude !== undefined && formData.longitude !== undefined) {

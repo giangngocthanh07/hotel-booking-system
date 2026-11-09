@@ -22,12 +22,12 @@ namespace HotelBooking.api.Controllers.V1.Owner
         }
 
         [HttpPost]
-        public async Task<IActionResult> HotelRegistration([FromBody] HotelRegistrationDTO request)
+        public async Task<IActionResult> HotelRegistration([FromBody] HotelRegistrationDTO request, CancellationToken cancellationToken = default)
         {
             // FR-ONB-009: reject invalid identities before creating an Owner-scoped request.
             if (!TryGetOwnerId(out var ownerId)) return Unauthorized();
 
-            var result = await _hotelRegistrationService.CreateRequestAsync(ownerId, request);
+            var result = await _hotelRegistrationService.CreateRequestAsync(ownerId, request, cancellationToken);
             return ApiResponseHandlerHelper.HandleResponse(result);
         }
 

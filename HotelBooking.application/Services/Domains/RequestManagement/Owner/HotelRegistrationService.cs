@@ -10,9 +10,10 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
 {
     public interface IHotelRegistrationService : IBaseUserRequestService<HotelRegistrationDetailDTO, HotelRegistrationDTO>
     {
+        Task<ApiResponse<HotelRegistrationDetailDTO>> CreateRequestAsync(int ownerId, HotelRegistrationDTO request, CancellationToken cancellationToken);
     }
 
-    public class HotelRegistrationService : IHotelRegistrationService
+    public partial class HotelRegistrationService : IHotelRegistrationService
     {
         private readonly IHotelApprovalRequestRepository _approvalRepo;
         private readonly IHotelRepository _hotelRepo;
@@ -23,9 +24,10 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<HotelRegistrationService> _logger;
         private readonly IUserRepository _userRepo;
+        private readonly IBusinessLicenseUploadRepository _uploads;
 
 
-        public HotelRegistrationService(IHotelApprovalRequestRepository approvalRepo, IHotelRepository hotelRepo, IPropertyTypeRepository propertyTypeRepo, IProvinceRepository provinceRepo, IWardRepository wardRepo, IValidator<HotelRegistrationDTO> validator, IUnitOfWork unitOfWork, ILogger<HotelRegistrationService> logger, IUserRepository userRepo)
+        public HotelRegistrationService(IHotelApprovalRequestRepository approvalRepo, IHotelRepository hotelRepo, IPropertyTypeRepository propertyTypeRepo, IProvinceRepository provinceRepo, IWardRepository wardRepo, IValidator<HotelRegistrationDTO> validator, IUnitOfWork unitOfWork, ILogger<HotelRegistrationService> logger, IUserRepository userRepo, IBusinessLicenseUploadRepository uploads)
         {
             _approvalRepo = approvalRepo;
             _hotelRepo = hotelRepo;
@@ -36,146 +38,7 @@ namespace HotelBooking.application.Services.Domains.RequestManagement.Owner
             _unitOfWork = unitOfWork;
             _logger = logger;
             _userRepo = userRepo;
-        }
-
-        public async Task<ApiResponse<HotelRegistrationDetailDTO>> CreateRequestAsync(int ownerId, HotelRegistrationDTO request)
-        {
-            if (ownerId <= 0)
-            {
-                return ResponseFactory.Failure<HotelRegistrationDetailDTO>(StatusCodeResponse.Unauthorized, MessageResponse.RequestManagement.HotelApproval.OWNER_ID_INVALID);
-            }
-
-            var validation = await _validator.ValidateAsync(request);
-            if (!validation.IsValid)
-            {
-                return ResponseFactory.Failure<HotelRegistrationDetailDTO>(
-                    StatusCodeResponse.BadRequest,
-                    validation.Errors.First().ErrorMessage);
-            }
-
-            try
-            {
-                // 1. Check duplicate name in existing Hotels
-                var hasDuplicateInHotels = await _hotelRepo.AnyAsync(h => h.Name == request.Name && h.IsDeleted != true);
-                if (hasDuplicateInHotels)
-                {
-                    return ResponseFactory.Failure<HotelRegistrationDetailDTO>(
-                        StatusCodeResponse.Conflict,
-                        MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_NAME_ALREADY_EXISTS);
-                }
-
-                // 2. Check duplicate name in Pending Requests
-                var hasDuplicateInRequests = await _approvalRepo.AnyAsync(r => r.Name == request.Name && r.Status == RequestStatusConst.Pending);
-                if (hasDuplicateInRequests)
-                {
-                    return ResponseFactory.Failure<HotelRegistrationDetailDTO>(
-                        StatusCodeResponse.Conflict,
-                        "Một yêu cầu đăng ký cho khách sạn này đang chờ xử lý.");
-                }
-
-
-                // 3. Verify Property Type exists and is active
-                var propertyType = await _propertyTypeRepo.GetByIdAsync(request.PropertyTypeId);
-                if (propertyType == null || propertyType.IsActive != true)
-                {
-                    return ResponseFactory.Failure<HotelRegistrationDetailDTO>(
-                        StatusCodeResponse.BadRequest,
-                        "Loại hình lưu trữ (Property Type) không tồn tại hoặc đã ngừng hoạt động.");
-                }
-
-                // 4. Verify Province and Ward
-                var province = await _provinceRepo.GetByIdAsync(request.ProvinceId);
-                if (province == null)
-                {
-                    return ResponseFactory.Failure<HotelRegistrationDetailDTO>(
-                        StatusCodeResponse.BadRequest,
-                        "Tỉnh/Thành phố không tồn tại.");
-                }
-
-                var ward = await _wardRepo.GetByIdAsync(request.WardId);
-                if (ward == null || ward.ProvinceId != request.ProvinceId)
-                {
-                    return ResponseFactory.Failure<HotelRegistrationDetailDTO>(
-                        StatusCodeResponse.BadRequest,
-                        "Phường/Xã không tồn tại hoặc không thuộc Tỉnh/Thành phố đã chọn.");
-                }
-
-                await _unitOfWork.BeginTransactionAsync();
-
-                // Add Hotel Request to Hotel with Pending Status
-                var additionalData = new HotelAdditionalInfoForm
-                {
-                    Description = request.Description,
-                    StarRating = request.StarRating,
-                    PublicPhone = request.PublicPhone,
-                    PublicEmail = request.PublicEmail,
-                    Latitude = request.Latitude,
-                    Longitude = request.Longitude,
-                    PropType = new PropertyTypeDTO { Id = request.PropertyTypeId, Name = request.PropertyTypeName },
-                    Country = new CountryDTO { Id = request.CountryId, Name = request.CountryName },
-                    Province = new ProvinceDTO { Id = request.ProvinceId, Name = request.ProvinceName },
-                    Ward = new WardDTO { Id = request.WardId, Name = request.WardName }
-                };
-
-                var hotelRequest = new HotelApprovalRequest
-                {
-                    OwnerId = ownerId,
-                    Name = request.Name,
-                    Address = request.Address,
-                    TaxCode = request.TaxCode,
-                    BusinessLicenseUrl = request.BusinessLicenseUrl,
-                    // FR-ONB-012/013: record submission in UTC independently of server timezone.
-                    CreatedAt = DateTime.UtcNow,
-                    Status = RequestStatusConst.Pending,
-                    Additional = JsonSerializer.Serialize(additionalData)
-                };
-
-                await _approvalRepo.AddAsync(hotelRequest);
-                var saved = await _unitOfWork.SaveChangesAsync() > 0;
-
-                if (saved)
-                {
-                    await _unitOfWork.CommitTransactionAsync();
-
-                    var dto = new HotelRegistrationDetailDTO
-                    {
-                        RequestId = hotelRequest.Id,
-                        OwnerId = hotelRequest.OwnerId,
-                        Name = hotelRequest.Name,
-                        Address = hotelRequest.Address,
-                        Description = additionalData.Description,
-                        PropertyTypeId = additionalData.PropType.Id,
-                        PropertyTypeName = additionalData.PropType.Name,
-                        CountryId = additionalData.Country.Id,
-                        CountryName = additionalData.Country.Name,
-                        ProvinceId = additionalData.Province.Id,
-                        ProvinceName = additionalData.Province.Name,
-                        WardId = additionalData.Ward.Id,
-                        WardName = additionalData.Ward.Name,
-                        StarRating = additionalData.StarRating,
-                        Status = hotelRequest.Status,
-                        PublicPhone = additionalData.PublicPhone,
-                        PublicEmail = additionalData.PublicEmail,
-                        Latitude = additionalData.Latitude,
-                        Longitude = additionalData.Longitude,
-                        TaxCode = hotelRequest.TaxCode,
-                        BusinessLicenseUrl = hotelRequest.BusinessLicenseUrl
-                    };
-
-                    return ResponseFactory.Success(dto, MessageResponse.RequestManagement.HotelApproval.HOTEL_REQUEST_CREATED_SUCCESS);
-                }
-                else
-                {
-                    await _unitOfWork.RollBackTransactionAsync();
-                    return ResponseFactory.Failure<HotelRegistrationDetailDTO>(StatusCodeResponse.Error, "Không thể tạo yêu cầu đăng ký.");
-                }
-            }
-            catch (Exception ex)
-            {
-                await _unitOfWork.RollBackTransactionAsync();
-                _logger.LogError("HotelRegistrationService.CreateRequestAsync: {ErrorMessage}", ex.Message);
-                return ResponseFactory.ServerError<HotelRegistrationDetailDTO>();
-            }
+            _uploads = uploads;
         }
 
         public async Task<ApiResponse<bool>> CancelRequestAsync(int userId, int requestId)
