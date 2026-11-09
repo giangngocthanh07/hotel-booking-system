@@ -338,7 +338,8 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
                 CreatedAt = DateTime.UtcNow,
                 IsVerified = true,
                 IsDeleted = false,
-                Status = HotelStatus.Active,
+                // FR-CAT-006: the Owner prepares inventory and a cover before explicitly activating the Hotel.
+                Status = HotelStatus.Inactive,
                 CoverImageUrl = string.Empty
 
             };

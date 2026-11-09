@@ -555,6 +555,8 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
     }
 
     [Fact]
+    [Trait("Requirement", "FR-ONB-016")]
+    [Trait("Requirement", "FR-CAT-006")]
     public async Task ApproveRequest_ValidRequest_ShouldReturnSuccess()
     {
         // Arrange
@@ -578,7 +580,9 @@ public class AdminHotelApprovalRequestServiceTests : BaseServiceTest<AdminHotelA
         _mockHotelRepo.Verify(r => r.AddAsync(It.Is<Hotel>(h =>
             h.Name == request.Name &&
             h.OwnerId == request.OwnerId &&
-            h.IsVerified == true)), Times.Once);
+            h.IsVerified == true &&
+            h.IsDeleted == false &&
+            h.Status == HotelStatus.Inactive)), Times.Once);
 
         VerifyDecisionSaved(1);
     }

@@ -1,8 +1,10 @@
+using HotelBooking.application.DTOs.Hotel;
 using Microsoft.EntityFrameworkCore;
 
 namespace HotelBooking.Tests.Integration.RequestManagement;
 
 [Trait("Requirement", "FR-ONB-019")]
+[Trait("Requirement", "FR-CAT-006")]
 [Trait("Category", "SqlIntegration")]
 public class HotelRequestConcurrencySqlTests(HotelRequestSqlFixture fixture) : IClassFixture<HotelRequestSqlFixture>
 {
@@ -53,5 +55,17 @@ public class HotelRequestConcurrencySqlTests(HotelRequestSqlFixture fixture) : I
         Assert.Equal(winner == "Approved" ? 1 : 0, await verify.Hotels.CountAsync(hotel => hotel.Name == seed.Name));
         Assert.Equal(winner == "Cancelled" ? (int?)null : seed.AdminId, request.AdminId);
         Assert.Equal(winner == "Rejected" ? "The submitted business license is incomplete." : null, request.AdminRemark);
+        if (winner == "Approved") await AssertApprovedHotelIsInactiveAsync(seed);
+    }
+
+    private async Task AssertApprovedHotelIsInactiveAsync(HotelRequestSeed seed)
+    {
+        // FR-ONB-016 / FR-CAT-006: approval commits ownership, but publication awaits the Owner's activation.
+        await using var verify = fixture.CreateContext();
+        var hotel = await verify.Hotels.SingleAsync(value => value.Name == seed.Name);
+        Assert.Equal(HotelStatus.Inactive, hotel.Status);
+        Assert.True(hotel.IsVerified);
+        Assert.False(hotel.IsDeleted);
+        Assert.Equal(seed.OwnerId, hotel.OwnerId);
     }
 }
