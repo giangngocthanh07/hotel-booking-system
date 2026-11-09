@@ -5,7 +5,7 @@ namespace HotelBooking.application.Services.Domains.Media;
 
 public interface IBusinessLicenseUploader
 {
-    Task<ApiResponse<UploadResultDTO>> UploadAsync(UploadFileDTO file, int userId, CancellationToken cancellationToken);
+    Task<ApiResponse<BusinessLicenseProviderUpload>> UploadAsync(UploadFileDTO file, int userId, CancellationToken cancellationToken);
 }
 
 // Keep provider behavior separate so validation can guarantee rejected files never reach Cloudinary.
@@ -20,21 +20,18 @@ public class BusinessLicenseUploader : IBusinessLicenseUploader
         _cloudinary.Api.Secure = true;
     }
 
-    public async Task<ApiResponse<UploadResultDTO>> UploadAsync(UploadFileDTO file, int userId, CancellationToken cancellationToken)
+    public async Task<ApiResponse<BusinessLicenseProviderUpload>> UploadAsync(UploadFileDTO file, int userId, CancellationToken cancellationToken)
     {
         var isImage = Path.GetExtension(file.FileName).ToLowerInvariant() is ".jpg" or ".jpeg" or ".png";
         var parameters = CreateParameters(file, userId, isImage);
         var uploaded = await _cloudinary.UploadAsync(parameters, cancellationToken);
         if (uploaded.Error != null)
-            return ResponseFactory.Failure<UploadResultDTO>(StatusCodeResponse.BadRequest, MessageResponse.Common.UPDATE_FAILED);
-        // Preserve the existing delivery contract; ownership/private retrieval are separate work.
-        var url = isImage
-            ? _cloudinary.Api.UrlImgUp.ResourceType("raw").Action("upload").Signed(true).BuildUrl(uploaded.PublicId)
-            : uploaded.SecureUrl.ToString();
-        return ResponseFactory.Success(new UploadResultDTO
-        {
-            Uploaded = true, FileName = file.FileName, StoredFileName = url,
-        }, MessageResponse.Common.UPDATE_SUCCESSFULLY);
+            return ResponseFactory.Failure<BusinessLicenseProviderUpload>(StatusCodeResponse.BadRequest, MessageResponse.Common.UPDATE_FAILED);
+        // FR-ONB-013: record actual provider metadata and its canonical URL, not a client URL
+        // or a synthesized raw URL for an image asset. Private delivery remains separate work.
+        return ResponseFactory.Success(new BusinessLicenseProviderUpload(uploaded.PublicId ?? string.Empty,
+            uploaded.ResourceType ?? string.Empty, uploaded.Type ?? string.Empty, uploaded.SecureUrl?.ToString() ?? string.Empty),
+            MessageResponse.Common.UPDATE_SUCCESSFULLY);
     }
 
     private static ImageUploadParams CreateParameters(UploadFileDTO file, int userId, bool isImage) => new()

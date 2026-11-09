@@ -22,9 +22,12 @@ public sealed class HotelRequestSqlFixture : IAsyncLifetime
         var connection = new SqlConnectionStringBuilder(_container.GetConnectionString())
             { InitialCatalog = "HotelRequestConcurrencyTests" };
         Options = new DbContextOptionsBuilder<HotelBookingDBContext>().UseSqlServer(connection.ConnectionString).Options;
-        await using var context = CreateContext();
-        // Test-only mapped schema in a disposable container; no migrations or application DB changes.
+        await using var context = new PreUploadSchemaContext(Options);
+        // Scaffolded EF mappings omit some SQL defaults/check constraints. Build the legacy
+        // test-only baseline, then apply the exact DB-first upgrade instead of altering generated models.
         await context.Database.EnsureCreatedAsync();
+        var script = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Sql", "2026-11-09-business-license-uploads.sql"));
+        await context.Database.ExecuteSqlRawAsync(script);
     }
 
     public TestHotelBookingDBContext CreateContext() => new(Options);
@@ -77,4 +80,16 @@ public sealed class HotelRequestSqlFixture : IAsyncLifetime
     };
 
     public async Task DisposeAsync() => await _container.DisposeAsync();
+
+    private sealed class PreUploadSchemaContext(DbContextOptions<HotelBookingDBContext> options) : TestHotelBookingDBContext(options)
+    {
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.Ignore<BusinessLicenseUpload>();
+            modelBuilder.Entity<User>().Ignore(user => user.BusinessLicenseUploads);
+            modelBuilder.Entity<HotelApprovalRequest>().Ignore(request => request.BusinessLicenseUpload);
+            modelBuilder.Entity<HotelApprovalRequest>().Ignore(request => request.BusinessLicenseUploadId);
+        }
+    }
 }

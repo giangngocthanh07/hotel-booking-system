@@ -9,6 +9,7 @@ public class BusinessLicenseUploadValidator : AbstractValidator<UploadFileDTO>
     {
         RuleLevelCascadeMode = CascadeMode.Stop;
         RuleFor(file => file.FileName).NotEmpty()
+            .MaximumLength(255).WithMessage("Business license filename must contain no more than 255 characters.")
             .Must(name => BusinessLicenseFileRules.ExpectedMime(name) != null)
             .WithMessage("Business license must be a PDF, JPEG or PNG file.");
         RuleFor(file => file.ContentType).NotEmpty()

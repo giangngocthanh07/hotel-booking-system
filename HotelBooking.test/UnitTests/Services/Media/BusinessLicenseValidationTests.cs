@@ -10,7 +10,16 @@ namespace HotelBooking.test.UnitTests.Services.Media;
 public class BusinessLicenseValidationTests
 {
     private readonly Mock<IBusinessLicenseUploader> _uploader = new(MockBehavior.Strict);
-    private FileService Service => new(_uploader.Object, new BusinessLicenseUploadValidator(), NullLogger<FileService>.Instance);
+    private readonly Mock<IBusinessLicenseUploadRepository> _uploads = new(MockBehavior.Strict);
+    private readonly Mock<IUnitOfWork> _unit = new(MockBehavior.Strict);
+    private FileService Service => new(_uploader.Object, new BusinessLicenseUploadValidator(), NullLogger<FileService>.Instance, _uploads.Object, _unit.Object);
+
+    public BusinessLicenseValidationTests()
+    {
+        _uploads.Setup(repo => repo.AddAsync(It.IsAny<HotelBooking.infrastructure.Models.BusinessLicenseUpload>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _unit.Setup(unit => unit.TrySaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new SaveChangesResult(1, false));
+    }
     private static readonly byte[] Pdf = "%PDF-1.7\nexample"u8.ToArray();
     private static readonly byte[] Jpeg = [255, 216, 255, 224, 0, 16];
     private static readonly byte[] Png = [137, 80, 78, 71, 13, 10, 26, 10, 0];
@@ -58,6 +67,8 @@ public class BusinessLicenseValidationTests
         await using var content = new MemoryStream(Pdf);
         Assert.Equal(StatusCodeResponse.BadRequest, (await Service.UploadBusinessLicenseAsync(File(name, mime, content, Pdf.Length), 7)).StatusCode);
         _uploader.VerifyNoOtherCalls();
+        _uploads.VerifyNoOtherCalls();
+        _unit.VerifyNoOtherCalls();
     }
 
     [Theory]
@@ -69,6 +80,8 @@ public class BusinessLicenseValidationTests
         await using var content = new MemoryStream([0, 1, 2]);
         Assert.Equal(StatusCodeResponse.BadRequest, (await Service.UploadBusinessLicenseAsync(File(name, mime, content, 3), 7)).StatusCode);
         _uploader.VerifyNoOtherCalls();
+        _uploads.VerifyNoOtherCalls();
+        _unit.VerifyNoOtherCalls();
     }
 
     [Theory]
@@ -80,6 +93,8 @@ public class BusinessLicenseValidationTests
         var file = File("license.pdf", "application/pdf", Stream.Null, size);
         Assert.Equal(StatusCodeResponse.BadRequest, (await Service.UploadBusinessLicenseAsync(file, 7)).StatusCode);
         _uploader.VerifyNoOtherCalls();
+        _uploads.VerifyNoOtherCalls();
+        _unit.VerifyNoOtherCalls();
     }
 
     [Theory]
@@ -105,7 +120,13 @@ public class BusinessLicenseValidationTests
     {
         await using var stream = new NonSeekableStream(Pdf);
         _uploader.Setup(provider => provider.UploadAsync(It.Is<UploadFileDTO>(file => file.Content.CanSeek && file.Content.Position == 0), 7, default))
-            .ReturnsAsync(Success());
+            .Returns(async (UploadFileDTO file, int _, CancellationToken token) =>
+            {
+                using var copy = new MemoryStream();
+                await file.Content.CopyToAsync(copy, token);
+                Assert.Equal(Pdf, copy.ToArray());
+                return Success();
+            });
         Assert.Equal(StatusCodeResponse.Success, (await Service.UploadBusinessLicenseAsync(File("license.pdf", "application/pdf", stream, Pdf.Length), 7)).StatusCode);
         _uploader.VerifyAll();
     }
@@ -116,6 +137,8 @@ public class BusinessLicenseValidationTests
         Assert.Equal(StatusCodeResponse.BadRequest, (await Service.UploadBusinessLicenseAsync(null!, 7)).StatusCode);
         Assert.Equal(StatusCodeResponse.BadRequest, (await Service.UploadBusinessLicenseAsync(File("license.pdf", "application/pdf", null!, 10), 7)).StatusCode);
         _uploader.VerifyNoOtherCalls();
+        _uploads.VerifyNoOtherCalls();
+        _unit.VerifyNoOtherCalls();
     }
 
     [Fact]
@@ -127,6 +150,8 @@ public class BusinessLicenseValidationTests
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
             Service.UploadBusinessLicenseAsync(File("license.pdf", "application/pdf", stream, Pdf.Length), 7, cancellation.Token));
         _uploader.VerifyNoOtherCalls();
+        _uploads.VerifyNoOtherCalls();
+        _unit.VerifyNoOtherCalls();
     }
 
     [Fact]
@@ -138,6 +163,8 @@ public class BusinessLicenseValidationTests
             Service.UploadBusinessLicenseAsync(File("license.pdf", "application/pdf", stream, Pdf.Length), 7, cancellation.Token));
         Assert.True(stream.CanRead);
         _uploader.VerifyNoOtherCalls();
+        _uploads.VerifyNoOtherCalls();
+        _unit.VerifyNoOtherCalls();
     }
 
     [Fact]
@@ -163,6 +190,8 @@ public class BusinessLicenseValidationTests
         Assert.Equal(StatusCodeResponse.Unauthorized,
             (await Service.UploadBusinessLicenseAsync(File("license.pdf", "application/pdf", input, Pdf.Length), ownerId)).StatusCode);
         _uploader.VerifyNoOtherCalls();
+        _uploads.VerifyNoOtherCalls();
+        _unit.VerifyNoOtherCalls();
     }
 
     [Fact]
@@ -173,12 +202,14 @@ public class BusinessLicenseValidationTests
         Assert.Equal(StatusCodeResponse.BadRequest,
             (await Service.UploadBusinessLicenseAsync(File("license.pdf", "application/pdf", input, Pdf.Length), 7)).StatusCode);
         _uploader.VerifyNoOtherCalls();
+        _uploads.VerifyNoOtherCalls();
+        _unit.VerifyNoOtherCalls();
     }
 
     private static UploadFileDTO File(string name, string mime, Stream stream, long size) =>
         new() { FileName = name, ContentType = mime, Content = stream, Size = size };
-    private static ApiResponse<UploadResultDTO> Success() =>
-        new() { StatusCode = StatusCodeResponse.Success, Content = new UploadResultDTO { Uploaded = true } };
+    private static ApiResponse<BusinessLicenseProviderUpload> Success() =>
+        new() { StatusCode = StatusCodeResponse.Success, Content = new BusinessLicenseProviderUpload("asset/id", "image", "upload", "https://example.com/license.pdf") };
 
     private sealed class NonSeekableStream(byte[] bytes) : MemoryStream(bytes)
     {

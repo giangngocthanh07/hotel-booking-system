@@ -43,6 +43,7 @@ public static class RepositoryServiceExtension
     public static IServiceCollection AddHotelRepositories(this IServiceCollection services)
     {
         services.AddScoped<IHotelRepository, HotelRepository>();
+        services.AddScoped<IBusinessLicenseUploadRepository, BusinessLicenseUploadRepository>();
         services.AddScoped<IPropertyTypeRepository, PropertyTypeRepository>();
         services.AddScoped<IRoomRepository, RoomRepository>();
         services.AddScoped<IRoomTypeRepository, RoomTypeRepository>();
