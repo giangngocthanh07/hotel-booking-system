@@ -12,6 +12,7 @@ import type { HotelApprovalRequest, UpgradeRequest, BaseRequest, RequestStats } 
 import "./AdminRequestsPage.css"; 
 import HotelRejectionDialog from "./HotelRejectionDialog";
 import HotelDecisionDetails from "./HotelDecisionDetails";
+import BusinessLicenseButton from "../../components/media/BusinessLicenseButton";
 
 type RequestType = "Hotel" | "Upgrade";
 
@@ -307,9 +308,7 @@ function AdminRequestsPage() {
                       <div className="info-row">
                         <span className="info-label">License Document</span>
                         <span className="info-val">
-                          <a href={hotelReq.businessLicenseUrl} target="_blank" rel="noreferrer" className="req-link-btn">
-                            View Document
-                          </a>
+                          <BusinessLicenseButton requestId={hotelReq.requestId} className="req-link-btn" label="View Document" />
                         </span>
                       </div>
                     </div>

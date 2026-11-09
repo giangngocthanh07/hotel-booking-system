@@ -15,7 +15,7 @@ const hotel: HotelApprovalRequest = {
   requestedAt: "2026-11-04T00:00:00Z", typeDisplay: "Hotel", canApprove: true, canReject: true,
   requesterName: "Owner", ownerId: 7, ownerFullName: "Owner", ownerEmail: "owner@example.com",
   ownerPhoneNumber: "0901234567", ownerAddress: "Owner address", taxCode: "1234567890",
-  businessLicenseUrl: "https://example.com/license.pdf", propertyTypeName: "Hotel",
+  propertyTypeName: "Hotel",
   publicPhone: "0901234567", publicEmail: "hotel@example.com", provinceName: "City", wardName: "Ward", countryName: "Vietnam",
 };
 
@@ -39,6 +39,15 @@ beforeEach(() => {
   vi.mocked(api.getUpgradeRequests).mockResolvedValue({
     statusCode: "Success", message: "OK",
     content: { items: [upgrade], pageIndex: 1, pageSize: 10, totalPages: 1, totalCount: 1 },
+  });
+});
+
+describe("Admin document access (FR-ONB-014)", () => {
+  it("offers authenticated document access without a provider URL", async () => {
+    render(<AdminRequestsPage />);
+    await userEvent.setup().click(await screen.findByText("Lake Hotel"));
+    expect(screen.getByRole("button", { name: "View Document" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "View Document" })).not.toBeInTheDocument();
   });
 });
 

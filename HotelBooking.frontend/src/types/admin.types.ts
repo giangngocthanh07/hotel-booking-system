@@ -24,7 +24,6 @@ export interface HotelApprovalRequest extends BaseRequest {
   name: string;
   address: string;
   taxCode: string;
-  businessLicenseUrl: string;
   ownerId: number;
   ownerFullName: string;
   ownerEmail: string;

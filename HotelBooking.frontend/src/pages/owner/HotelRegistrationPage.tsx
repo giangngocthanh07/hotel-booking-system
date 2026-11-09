@@ -7,6 +7,7 @@ import type { LocationItem, PropertyTypeItem, HotelRegistrationDTO, HotelRegistr
 import "./HotelRegistrationPage.css";
 import OwnerRegistrationDecision from "./OwnerRegistrationDecision";
 import useRegistrationCancellation from "./useRegistrationCancellation";
+import BusinessLicenseButton from "../../components/media/BusinessLicenseButton";
 
 export default function HotelRegistrationPage() {
   
@@ -345,7 +346,7 @@ export default function HotelRegistrationPage() {
                   </div>
                   <OwnerRegistrationDecision request={req} />
                   <div className="hi-footer">
-                    <a href={req.businessLicenseUrl} target="_blank" rel="noreferrer" className="btn-link">View License</a>
+                    <BusinessLicenseButton requestId={req.requestId} className="btn-link" />
                     {/* FR-ONB-018: terminal requests cannot be cancelled again. */}
                     {req.status === "Pending" && (
                       <button type="button" className="btn-cancel-registration" disabled={cancellingId !== null}
