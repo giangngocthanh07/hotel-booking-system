@@ -31,6 +31,7 @@ public static class ApplicationServiceExtension
         services.AddScoped<IPaymentService, PaymentService>();
         services.AddScoped<IPhotoService, PhotoService>();
         services.AddScoped<IFileService, FileService>();
+        services.AddScoped<IBusinessLicenseUploader, BusinessLicenseUploader>();
         services.AddScoped<IRoomTypeService, RoomTypeService>();
 
 
