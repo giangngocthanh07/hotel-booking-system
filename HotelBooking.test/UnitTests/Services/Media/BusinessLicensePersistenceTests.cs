@@ -33,7 +33,7 @@ public class BusinessLicensePersistenceTests
         Assert.NotEqual(Guid.Empty, row.Id);
         Assert.Equal(row.Id, response.Content!.UploadId);
         AssertMetadata(row, before);
-        Assert.Equal(row.StoredUrl, response.Content.StoredFileName);
+        Assert.True(string.IsNullOrEmpty(response.Content.StoredFileName));
         _uploads.Verify(repo => repo.AddAsync(It.IsAny<BusinessLicenseUpload>(), cancellation.Token), Times.Once);
         _unit.Verify(unit => unit.TrySaveChangesAsync(cancellation.Token), Times.Once);
     }

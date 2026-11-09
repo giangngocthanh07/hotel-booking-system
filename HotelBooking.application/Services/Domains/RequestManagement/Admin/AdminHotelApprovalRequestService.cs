@@ -316,8 +316,7 @@ public class AdminHotelApprovalRequestService : IAdminHotelApprovalRequestServic
                 Latitude = additionalInfo.Latitude,
                 Longitude = additionalInfo.Longitude,
 
-                TaxCode = request.TaxCode,
-                BusinessLicenseUrl = request.BusinessLicenseUrl
+                TaxCode = request.TaxCode
             };
 
             string hotelAdditionalJson = JsonSerializer.Serialize(hotelAdditionalData);

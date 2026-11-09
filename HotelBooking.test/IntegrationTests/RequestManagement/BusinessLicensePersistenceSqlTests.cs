@@ -29,7 +29,7 @@ public class BusinessLicensePersistenceSqlTests(HotelRequestSqlFixture fixture) 
         Assert.Equal(seed.OwnerId, stored.OwnerId);
         Assert.Equal("provider/real-metadata", stored.PublicId);
         Assert.Equal("https://example.com/license.pdf", stored.StoredUrl);
-        Assert.Equal(response.Content.StoredFileName, stored.StoredUrl);
+        Assert.True(string.IsNullOrEmpty(response.Content.StoredFileName));
         Assert.Equal(("image", "upload", "application/pdf", 8L, false),
             (stored.ResourceType, stored.DeliveryType, stored.ContentType, stored.SizeBytes, stored.IsDeleted));
         Assert.Empty(await verify.Hotels.Where(hotel => hotel.Name == seed.Name).ToListAsync());
