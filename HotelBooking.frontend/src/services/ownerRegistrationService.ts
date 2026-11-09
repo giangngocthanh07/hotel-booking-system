@@ -29,7 +29,7 @@ export interface HotelRegistrationDTO {
   latitude?: number;
   longitude?: number;
   taxCode: string;
-  businessLicenseUrl: string;
+  businessLicenseUploadId: string;
 }
 
 export interface ApiResponse<T> {
@@ -104,10 +104,17 @@ export const getWards = (provinceId: number) => request<LocationItem[]>(`/locati
 
 export const getPropertyTypes = () => request<PropertyTypeItem[]>('/hotels/property-types');
 
-export const uploadBusinessLicense = async (file: File): Promise<ApiResponse<any>> => {
+export interface BusinessLicenseUploadResult {
+  uploaded: boolean;
+  uploadId?: string | null;
+  fileName?: string | null;
+  storedFileName?: string | null;
+}
+
+export const uploadBusinessLicense = async (file: File): Promise<ApiResponse<BusinessLicenseUploadResult>> => {
   const formData = new FormData();
   formData.append('file', file);
-  return request<any>('/files/business-licenses', {
+  return request<BusinessLicenseUploadResult>('/files/business-licenses', {
     method: 'POST',
     body: formData
   });

@@ -49,16 +49,17 @@ public class HotelRegistrationIdentityTests
     [Fact]
     public async Task ValidOwnerIdentity_ForwardsSubmissionAndHistory()
     {
+        using var cancellation = new CancellationTokenSource();
         var input = new HotelRegistrationDTO();
         var created = new ApiResponse<HotelRegistrationDetailDTO> { StatusCode = StatusCodeResponse.Success };
         var history = new ApiResponse<List<HotelRegistrationDetailDTO>> { StatusCode = StatusCodeResponse.Success };
         var service = new Mock<IHotelRegistrationService>(MockBehavior.Strict);
-        service.Setup(value => value.CreateRequestAsync(42, input)).ReturnsAsync(created);
+        service.Setup(value => value.CreateRequestAsync(42, input, cancellation.Token)).ReturnsAsync(created);
         service.Setup(value => value.GetMyRequestsAsync(42)).ReturnsAsync(history);
         var controller = WithIdentity(new RequestController(service.Object, Mock.Of<IHotelRegistrationHistoryService>()), "42");
-        Assert.Same(created, Assert.IsType<ObjectResult>(await controller.HotelRegistration(input)).Value);
+        Assert.Same(created, Assert.IsType<ObjectResult>(await controller.HotelRegistration(input, cancellation.Token)).Value);
         Assert.Same(history, Assert.IsType<ObjectResult>(await controller.GetMyHotelRequests()).Value);
-        service.Verify(value => value.CreateRequestAsync(42, input), Times.Once);
+        service.Verify(value => value.CreateRequestAsync(42, input, cancellation.Token), Times.Once);
         service.Verify(value => value.GetMyRequestsAsync(42), Times.Once);
         service.VerifyNoOtherCalls();
     }

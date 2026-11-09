@@ -20,7 +20,9 @@ The script runs in a transaction and can be repeated for the schema it creates. 
 
 The upload-persistence checkpoint now stores registry rows through a specific repository and one UnitOfWork save. The API returns `UploadId` alongside `Uploaded`, `FileName` and `StoredFileName` only after SQL persistence succeeds. Provider identifiers/resource/delivery metadata remain internal, and the stored URL is the canonical `SecureUrl` returned by Cloudinary. Filename validation includes the database's 255-character limit.
 
-Registration/client enforcement is still a separate checkpoint: URL-only registrations are not yet rejected. SQL and Cloudinary are not a distributed transaction; a failed SQL save can leave an orphaned provider asset, but no usable receipt is returned. Private document delivery is also pending.
+New registrations now require `BusinessLicenseUploadId`: the service resolves a non-deleted upload owned by the authenticated Owner and derives the URL from that record. Unknown, foreign and deleted receipts receive the same validation response; client URLs cannot override stored URLs. React sends the returned receipt ID. Blazor was explicitly excluded from this frontend checkpoint, so its legacy URL-only registration flow requires a later update. Existing request history remains readable.
+
+SQL and Cloudinary are not a distributed transaction; a failed SQL save can leave an orphaned provider asset, but no usable receipt is returned. Private document delivery is also pending.
 
 ## Isolated verification
 

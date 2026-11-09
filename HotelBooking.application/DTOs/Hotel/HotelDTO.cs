@@ -37,6 +37,8 @@ public class HotelRegistrationDTO
 
     // 4. Legal / Approval Info
     public string TaxCode { get; set; } = string.Empty;
+    public Guid? BusinessLicenseUploadId { get; set; }
+    // FR-ONB-013: legacy input may bind this field, but registration uses only the owned upload's URL.
     public string BusinessLicenseUrl { get; set; } = string.Empty;
 }
 

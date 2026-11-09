@@ -69,11 +69,10 @@ public class HotelRegistrationValidator : AbstractValidator<HotelRegistrationDTO
             .NotEmpty().WithMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_EMPTY_TAX_CODE)
             .Matches(@"^\d{10}(\d{3})?$").WithMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_INVALID_TAX_CODE);
 
-        RuleFor(x => x.BusinessLicenseUrl)
-            .NotEmpty().WithMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_EMPTY_BUSINESS_LICENSE_URL)
-            .Must(uri => Uri.TryCreate(uri, UriKind.Absolute, out var outUri)
-                 && (outUri.Scheme == Uri.UriSchemeHttp || outUri.Scheme == Uri.UriSchemeHttps))
-            .WithMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_INVALID_BUSINESS_LICENSE_URL);
+        // FR-ONB-009/013: a caller-supplied URL is not proof of a successful owned upload.
+        RuleFor(x => x.BusinessLicenseUploadId)
+            .Must(id => id.HasValue && id.Value != Guid.Empty)
+            .WithMessage("A valid business license upload ID is required.");
     }
 
 

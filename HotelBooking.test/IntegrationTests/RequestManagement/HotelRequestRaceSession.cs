@@ -49,7 +49,7 @@ public sealed class HotelRequestRaceSession : TestHotelBookingDBContext
         IUserRepository users, IUnitOfWork unit, ICancellationTokenProvider token) => new(
         requests, hotels, new PropertyTypeRepository(this, token), new ProvinceRepository(this, token),
         new WardRepository(this, token), new HotelRegistrationValidator(), unit,
-        NullLogger<HotelRegistrationService>.Instance, users);
+        NullLogger<HotelRegistrationService>.Instance, users, new BusinessLicenseUploadRepository(this));
 
     private sealed class TestToken : ICancellationTokenProvider
     {

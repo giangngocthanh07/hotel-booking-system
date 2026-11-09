@@ -345,33 +345,30 @@ public class HotelRegistrationValidatorTests
         result.ShouldHaveValidationErrorFor(x => x.TaxCode).WithErrorMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_INVALID_TAX_CODE);
     }
 
-    [Fact]
-    public async Task ValidateAsync_EmptyBusinessLicenseUrl_ReturnsError()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    [Trait("Requirement", "FR-ONB-013")]
+    public async Task ValidateAsync_MissingOrEmptyUploadId_RejectsUrlOnlySubmission(bool emptyGuid)
     {
-        // 1. Arrange
         var request = CreateValidRequest();
-        request.BusinessLicenseUrl = "";
-
-        // 2. Act
+        request.BusinessLicenseUploadId = emptyGuid ? Guid.Empty : null;
         var result = await _validator.TestValidateAsync(request);
-
-        // 3. Assert
-        result.IsValid.Should().BeFalse();
-        result.ShouldHaveValidationErrorFor(x => x.BusinessLicenseUrl)
-            .WithErrorMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_EMPTY_BUSINESS_LICENSE_URL);
+        result.ShouldHaveValidationErrorFor(value => value.BusinessLicenseUploadId)
+            .WithErrorMessage("A valid business license upload ID is required.");
     }
 
-    [Fact]
-    public async Task ValidateAsync_InvalidBusinessLicenseUrl_ReturnsError()
+    [Theory]
+    [InlineData("")]
+    [InlineData("not-a-url")]
+    [InlineData("https://attacker.example/file.pdf")]
+    [Trait("Requirement", "FR-ONB-013")]
+    public async Task ValidateAsync_UploadIdReplacesUntrustedUrl(string url)
     {
         var request = CreateValidRequest();
-        request.BusinessLicenseUrl = "not-a-valid-url"; // Test format URL
-
+        request.BusinessLicenseUrl = url;
         var result = await _validator.TestValidateAsync(request);
-
-        result.IsValid.Should().BeFalse();
-        result.ShouldHaveValidationErrorFor(x => x.BusinessLicenseUrl)
-              .WithErrorMessage(MessageResponse.RequestManagement.HotelApproval.HOTEL_REGISTRATION_INVALID_BUSINESS_LICENSE_URL);
+        result.IsValid.Should().BeTrue();
     }
 
     [Theory]
@@ -444,6 +441,7 @@ public class HotelRegistrationValidatorTests
             Latitude = 10.0,
             Longitude = 20.0,
             TaxCode = "1234567890",
+            BusinessLicenseUploadId = Guid.NewGuid(),
             BusinessLicenseUrl = "https://example.com/license.pdf"
         };
     }
