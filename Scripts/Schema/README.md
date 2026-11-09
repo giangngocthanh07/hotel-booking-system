@@ -18,7 +18,9 @@ The script runs in a transaction and can be repeated for the schema it creates. 
 4. Review the generated changes for `BusinessLicenseUpload`, `HotelApprovalRequest`, `User`, the new DbSet, keys/relationships and context mapping. Preserve the existing `HotelBookingDBContext.Partial.cs` custom configuration.
 5. Do not scaffold only a subset of tables over the current context with `--force`; that can remove mappings for unrelated tables. Keep unrelated scaffold differences out of this commit.
 
-At this checkpoint application code still does not store or require upload IDs. Upload persistence and registration/client enforcement follow in separate commits. Before upload persistence, align metadata validation with database lengths (including the 255-character original filename limit).
+The upload-persistence checkpoint now stores registry rows through a specific repository and one UnitOfWork save. The API returns `UploadId` alongside `Uploaded`, `FileName` and `StoredFileName` only after SQL persistence succeeds. Provider identifiers/resource/delivery metadata remain internal, and the stored URL is the canonical `SecureUrl` returned by Cloudinary. Filename validation includes the database's 255-character limit.
+
+Registration/client enforcement is still a separate checkpoint: URL-only registrations are not yet rejected. SQL and Cloudinary are not a distributed transaction; a failed SQL save can leave an orphaned provider asset, but no usable receipt is returned. Private document delivery is also pending.
 
 ## Isolated verification
 
@@ -26,4 +28,4 @@ At this checkpoint application code still does not store or require upload IDs. 
 dotnet test HotelBooking.test/HotelBooking.test.csproj --artifacts-path artifacts/owner-inventory --no-restore --filter FullyQualifiedName~BusinessLicenseSchemaSqlTests --logger 'console;verbosity=minimal'
 ```
 
-Requires the Docker Linux engine. Tests apply this exact script to a disposable SQL Server database created from the current mapped schema, not the application database. Coverage includes repeat execution, legacy compatibility, defaults, size/MIME constraints, ownership FKs and reuse. The original full database creation script predates the current HotelApprovalRequests schema; this upgrade assumes the current application schema already exists.
+Requires the Docker Linux engine. Tests build a mapped pre-registry baseline in a disposable SQL Server container, then apply this exact script. This preserves SQL defaults/check constraints that are not fully represented by scaffolded EF mappings. The application database is not modified. Coverage includes repeat execution, legacy compatibility, defaults, size/MIME constraints, ownership FKs and reuse. The original full database creation script predates the current HotelApprovalRequests schema; this upgrade assumes the current application schema already exists.
