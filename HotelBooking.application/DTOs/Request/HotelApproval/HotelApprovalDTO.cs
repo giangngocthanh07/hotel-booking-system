@@ -1,6 +1,7 @@
 
 using HotelBooking.application.DTOs.Hotel;
 using HotelBooking.application.DTOs.Request.Base;
+using System.Text.Json.Serialization;
 
 namespace HotelBooking.application.DTOs.Request.HotelApproval;
 
@@ -13,6 +14,8 @@ public class HotelRegistrationDetailDTO : BaseRequestDTO
     public string Name { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;
     public string TaxCode { get; set; } = string.Empty;
+    // FR-ONB-013/014: document content is served only through the authorized endpoint.
+    [JsonIgnore]
     public string BusinessLicenseUrl { get; set; } = string.Empty;
 
     public int OwnerId { get; set; }
@@ -70,6 +73,8 @@ public class HotelEntityAdditionalData // Only for Hotel Entity
     public double? Longitude { get; set; }
     
     public string TaxCode { get; set; } = string.Empty;
+    // FR-ONB-013: business-license storage metadata must not propagate into Hotel JSON.
+    [JsonIgnore]
     public string BusinessLicenseUrl { get; set; } = string.Empty;
 }
 

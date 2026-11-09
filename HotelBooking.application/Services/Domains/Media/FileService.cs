@@ -80,7 +80,8 @@ public class FileService : IFileService
         }
         return ResponseFactory.Success(new UploadResultDTO
         {
-            UploadId = upload.Id, Uploaded = true, FileName = upload.OriginalFileName, StoredFileName = upload.StoredUrl,
+            // FR-ONB-013: return the receipt only; the provider URL stays in the registry.
+            UploadId = upload.Id, Uploaded = true, FileName = upload.OriginalFileName,
         }, MessageResponse.Common.UPDATE_SUCCESSFULLY);
     }
 
