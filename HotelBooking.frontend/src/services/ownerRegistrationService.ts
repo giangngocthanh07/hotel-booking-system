@@ -51,7 +51,6 @@ export interface HotelRegistrationHistoryItem {
   wardName: string;
   provinceName: string;
   taxCode: string;
-  businessLicenseUrl: string;
   adminRemark?: string | null;
   processedAt?: string | null;
 }

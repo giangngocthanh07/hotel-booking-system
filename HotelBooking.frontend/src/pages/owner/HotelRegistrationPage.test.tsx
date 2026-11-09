@@ -12,7 +12,7 @@ vi.mock("../../services/ownerRegistrationService", () => ({
 const registration = {
   requestId: 99, name: "Lake Hotel", status: "Rejected", requestedAt: "2026-11-04T00:00:00Z",
   propertyTypeName: "Hotel", address: "1 Lake Street", wardName: "Ward", provinceName: "City",
-  taxCode: "1234567890", businessLicenseUrl: "https://example.com/license.pdf",
+  taxCode: "1234567890",
   adminRemark: "The business license does not match the address. ".repeat(5).trim(),
   processedAt: "2026-11-04T01:00:00Z",
 };
@@ -25,6 +25,11 @@ beforeEach(() => {
 });
 
 describe("Owner hotel-registration history (FR-ONB-013)", () => {
+  it("offers authenticated license access without a provider URL", async () => {
+    render(<HotelRegistrationPage />);
+    expect(await screen.findByRole("button", { name: "View License" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "View License" })).not.toBeInTheDocument();
+  });
   it("requests three records per page without a page-size selector", async () => {
     const user = userEvent.setup();
     vi.mocked(api.getMyRegistrations).mockImplementation(async (page = 1, size = 3) => ({
