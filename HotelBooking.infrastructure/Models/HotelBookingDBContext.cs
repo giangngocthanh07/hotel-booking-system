@@ -27,6 +27,8 @@ public partial class HotelBookingDBContext : DbContext
 
     public virtual DbSet<BookingService> BookingServices { get; set; }
 
+    public virtual DbSet<BusinessLicenseUpload> BusinessLicenseUploads { get; set; }
+
     public virtual DbSet<Country> Countries { get; set; }
 
     public virtual DbSet<Hotel> Hotels { get; set; }
@@ -206,6 +208,33 @@ public partial class HotelBookingDBContext : DbContext
                 .HasConstraintName("FK_BookingServices_Services");
         });
 
+        modelBuilder.Entity<BusinessLicenseUpload>(entity =>
+        {
+            entity.HasIndex(e => e.OwnerId, "IX_BusinessLicenseUploads_OwnerId");
+
+            entity.HasIndex(e => new { e.Id, e.OwnerId }, "UQ_BusinessLicenseUploads_Id_Owner").IsUnique();
+
+            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.ContentType)
+                .HasMaxLength(64)
+                .IsUnicode(false);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
+            entity.Property(e => e.DeliveryType)
+                .HasMaxLength(32)
+                .IsUnicode(false);
+            entity.Property(e => e.OriginalFileName).HasMaxLength(255);
+            entity.Property(e => e.PublicId).HasMaxLength(512);
+            entity.Property(e => e.ResourceType)
+                .HasMaxLength(16)
+                .IsUnicode(false);
+            entity.Property(e => e.StoredUrl).HasMaxLength(2048);
+
+            entity.HasOne(d => d.Owner).WithMany(p => p.BusinessLicenseUploads)
+                .HasForeignKey(d => d.OwnerId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_BusinessLicenseUploads_Users");
+        });
+
         modelBuilder.Entity<Country>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Countrie__3214EC07A22038DC");
@@ -290,6 +319,8 @@ public partial class HotelBookingDBContext : DbContext
 
         modelBuilder.Entity<HotelApprovalRequest>(entity =>
         {
+            entity.HasIndex(e => new { e.BusinessLicenseUploadId, e.OwnerId }, "IX_HotelApprovalRequests_BusinessLicenseUploadId_OwnerId");
+
             entity.Property(e => e.Address).HasMaxLength(500);
             entity.Property(e => e.AdminRemark).HasMaxLength(500);
             entity.Property(e => e.BusinessLicenseUrl).HasMaxLength(2048);
@@ -307,6 +338,11 @@ public partial class HotelBookingDBContext : DbContext
                 .HasForeignKey(d => d.OwnerId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_HotelApprovalRequests_Users");
+
+            entity.HasOne(d => d.BusinessLicenseUpload).WithMany(p => p.HotelApprovalRequests)
+                .HasPrincipalKey(p => new { p.Id, p.OwnerId })
+                .HasForeignKey(d => new { d.BusinessLicenseUploadId, d.OwnerId })
+                .HasConstraintName("FK_HotelApprovalRequests_BusinessLicenseUploads_Owner");
         });
 
         modelBuilder.Entity<HotelImage>(entity =>

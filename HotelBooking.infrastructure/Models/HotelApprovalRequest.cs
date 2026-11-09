@@ -29,5 +29,9 @@ public partial class HotelApprovalRequest
 
     public DateTime? UpdatedAt { get; set; }
 
+    public Guid? BusinessLicenseUploadId { get; set; }
+
+    public virtual BusinessLicenseUpload? BusinessLicenseUpload { get; set; }
+
     public virtual User Owner { get; set; } = null!;
 }
