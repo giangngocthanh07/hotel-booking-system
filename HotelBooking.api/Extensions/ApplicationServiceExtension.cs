@@ -32,6 +32,10 @@ public static class ApplicationServiceExtension
         services.AddScoped<IPhotoService, PhotoService>();
         services.AddScoped<IFileService, FileService>();
         services.AddScoped<IBusinessLicenseUploader, BusinessLicenseUploader>();
+        // FR-ONB-013: redirects and HTTP URL logging can expose private signed download credentials.
+        services.AddHttpClient<IBusinessLicenseDownloader, BusinessLicenseDownloader>()
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
+            .RemoveAllLoggers();
         services.AddScoped<IRoomTypeService, RoomTypeService>();
 
 
