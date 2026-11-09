@@ -29,6 +29,7 @@ public class BusinessLicenseDependencyTests
         await using var scope = provider.CreateAsyncScope();
         Assert.IsType<BusinessLicenseUploadValidator>(scope.ServiceProvider.GetRequiredService<IValidator<UploadFileDTO>>());
         Assert.IsType<BusinessLicenseUploader>(scope.ServiceProvider.GetRequiredService<IBusinessLicenseUploader>());
+        Assert.IsType<BusinessLicenseDownloader>(scope.ServiceProvider.GetRequiredService<IBusinessLicenseDownloader>());
         Assert.IsType<FileService>(scope.ServiceProvider.GetRequiredService<IFileService>());
         Assert.IsType<BusinessLicenseUploadRepository>(scope.ServiceProvider.GetRequiredService<IBusinessLicenseUploadRepository>());
     }
