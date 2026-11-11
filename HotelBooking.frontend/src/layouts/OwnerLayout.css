@@ -64,6 +64,15 @@
 
 .owner-main {
   flex: 1;
+  min-width: 0;
   overflow-y: auto;
   position: relative;
+}
+
+@media (max-width: 760px) {
+  .owner-layout { flex-direction: column; }
+  .owner-sidebar { width: 100%; box-sizing: border-box; padding: 12px 0; border-right: 0; border-bottom: 1px solid #e2e8f0; }
+  .owner-sidebar__title { margin-top: 0; }
+  .owner-sidebar__nav { flex-direction: row; flex-wrap: wrap; }
+  .owner-sidebar__link { padding: 10px 12px; }
 }
