@@ -13,6 +13,9 @@ public sealed record HotelSearchSeed(int HotelId, int OwnerId, int RoomTypeId, i
         Assert.Equal(StatusCodeResponse.Success, (await approval.ExecuteAsync("Approved", request, request.AdminId)).StatusCode);
         await using var context = fixture.CreateContext();
         var hotel = await context.Hotels.SingleAsync(value => value.Name == request.Name);
+        // FR-CAT-006: approval leaves the Hotel Inactive; search fixtures explicitly arrange a public Hotel.
+        Assert.Equal("Inactive", hotel.Status);
+        hotel.Status = "Active";
         var roomType = CreateRoomType(hotel.Id);
         context.RoomTypes.Add(roomType);
         context.Reviews.Add(new Review { HotelId = hotel.Id, CustomerId = request.OwnerId, Rating = 5, IsDeleted = false });

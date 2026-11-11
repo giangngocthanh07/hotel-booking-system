@@ -1,25 +1,31 @@
-
 using System.Security.Claims;
-using HotelBooking.application.DTOs.Hotel;
-using HotelBooking.application.Services.Domains.RequestManagement.Owner;
+using HotelBooking.application.Services.Domains.HotelManagement.Owner;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-//using V1.Models;
 
-namespace HotelBooking.API.Controllers.V1.Owner
+namespace HotelBooking.api.Controllers.V1.Owner;
+
+[Route("api/v1/owner/hotels")]
+[ApiController]
+[Authorize(Roles = "Owner")]
+[Tags("Owner - Hotels")]
+public class HotelController(IOwnerHotelService hotels) : ControllerBase
 {
-    [Route("api/v1/[controller]")]
-    [ApiController]
-    [Authorize(Roles = "Owner")]
-    [Tags("Owner - Hotel Services")]
-    public class HotelController : ControllerBase
+    [HttpGet]
+    public async Task<IActionResult> GetPage([FromQuery] PagingRequest paging, CancellationToken cancellationToken = default)
     {
-
-        public HotelController()
-        {
-            
-        }
-
-
+        // FR-CAT-001/003: the caller cannot choose an Owner ID through route or query parameters.
+        if (!TryGetOwnerId(out var ownerId)) return Unauthorized();
+        return ApiResponseHandlerHelper.HandleResponse(await hotels.GetPageAsync(ownerId, paging, cancellationToken));
     }
+
+    [HttpGet("{hotelId:int}")]
+    public async Task<IActionResult> GetById(int hotelId, CancellationToken cancellationToken = default)
+    {
+        if (!TryGetOwnerId(out var ownerId)) return Unauthorized();
+        return ApiResponseHandlerHelper.HandleResponse(await hotels.GetByIdAsync(ownerId, hotelId, cancellationToken));
+    }
+
+    private bool TryGetOwnerId(out int ownerId) =>
+        int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out ownerId) && ownerId > 0;
 }
