@@ -5,6 +5,8 @@ using System.Linq.Expressions;
 
 public interface IHotelRepository : IRepository<Hotel>
 {
+    Task<Hotel?> GetOwnedForUpdateAsync(int ownerId, int hotelId, CancellationToken cancellationToken = default);
+    Task<bool> IsLocationValidAsync(int countryId, int provinceId, int wardId, CancellationToken cancellationToken = default);
     Task<(List<Hotel> Items, int TotalCount)> GetPageByOwnerAsync(int ownerId, int pageIndex, int pageSize, CancellationToken cancellationToken = default);
     Task<Hotel?> GetByOwnerAsync(int ownerId, int hotelId, CancellationToken cancellationToken = default);
     Task<List<SearchHotelResult>> GetSearchHotelsAsync(string cityName, DateTime? checkIn, DateTime? checkOut, int? adults, int? children, int? rooms);
@@ -12,6 +14,16 @@ public interface IHotelRepository : IRepository<Hotel>
 }
 public class HotelRepository : Repository<Hotel>, IHotelRepository
 {
+    public async Task<Hotel?> GetOwnedForUpdateAsync(int ownerId, int hotelId, CancellationToken cancellationToken = default) =>
+        // FR-CAT-002/003: tracking lets SaveChanges update only edited columns, preserving operational fields.
+        await _dbSet.AsTracking().SingleOrDefaultAsync(hotel => hotel.Id == hotelId && hotel.OwnerId == ownerId && hotel.IsDeleted != true,
+            cancellationToken);
+
+    public async Task<bool> IsLocationValidAsync(int countryId, int provinceId, int wardId, CancellationToken cancellationToken = default) =>
+        await _context.Countries.AnyAsync(country => country.Id == countryId &&
+            _context.Provinces.Any(province => province.Id == provinceId && province.CountryId == countryId) &&
+            _context.Wards.Any(ward => ward.Id == wardId && ward.ProvinceId == provinceId), cancellationToken);
+
     public async Task<(List<Hotel> Items, int TotalCount)> GetPageByOwnerAsync(int ownerId, int pageIndex, int pageSize,
         CancellationToken cancellationToken = default)
     {

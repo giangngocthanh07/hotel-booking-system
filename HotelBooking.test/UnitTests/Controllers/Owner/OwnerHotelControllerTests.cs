@@ -60,6 +60,37 @@ public class OwnerHotelControllerTests
         Assert.Equal("Owner", ((AuthorizeAttribute)attribute).Roles);
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("invalid")]
+    [InlineData("0")]
+    public async Task Update_InvalidIdentity_DoesNotCallUpdater(string? id)
+    {
+        var updater = new Mock<IOwnerHotelUpdateService>(MockBehavior.Strict);
+        var result = await Controller(Mock.Of<IOwnerHotelService>(), id).UpdateInformation(42, new(), updater.Object);
+        Assert.IsType<UnauthorizedResult>(result);
+        updater.VerifyNoOtherCalls();
+    }
+
+    [Theory]
+    [InlineData(StatusCodeResponse.Success, 200)]
+    [InlineData(StatusCodeResponse.NotFound, 404)]
+    [InlineData(StatusCodeResponse.BadRequest, 400)]
+    [InlineData(StatusCodeResponse.Conflict, 409)]
+    public async Task Update_ForwardsTrustedIdentityBodyAndCancellation(string status, int httpStatus)
+    {
+        using var cancellation = new CancellationTokenSource();
+        var input = new OwnerHotelUpdateDTO();
+        var response = new ApiResponse<bool> { StatusCode = status };
+        var updater = new Mock<IOwnerHotelUpdateService>(MockBehavior.Strict);
+        updater.Setup(service => service.UpdateAsync(7, 42, input, cancellation.Token)).ReturnsAsync(response);
+        var controller = Controller(Mock.Of<IOwnerHotelService>(), "7");
+        var result = Assert.IsType<ObjectResult>(await controller.UpdateInformation(42, input, updater.Object, cancellation.Token));
+        Assert.Equal(httpStatus, result.StatusCode);
+        Assert.Same(response, result.Value);
+        updater.VerifyAll();
+    }
+
     private static HotelController Controller(IOwnerHotelService service, string? id)
     {
         var claims = id == null ? Array.Empty<Claim>() : [new Claim(ClaimTypes.NameIdentifier, id)];

@@ -1,5 +1,7 @@
 using HotelBooking.application.Validators.Media.BusinessLicenses;
 using FluentValidation;
+using HotelBooking.application.DTOs.Hotel.Owner;
+using HotelBooking.application.Validators.HotelManagement.Owner;
 using HotelBooking.application.DTOs.User.Login;
 using HotelBooking.application.DTOs.User.Register;
 using HotelBooking.application.DTOs.Request.UpgradeRequest;
@@ -25,6 +27,7 @@ public static class ValidatorServiceExtension
     {
         // Resolve the rejection validator through DI so the application service enforces the same rule for every caller.
         services.AddScoped<IValidator<RejectHotelRegistrationDTO>, RejectHotelRegistrationValidator>();
+        services.AddScoped<IValidator<OwnerHotelUpdateDTO>, OwnerHotelUpdateValidator>();
         services.AddScoped<IValidator<UploadFileDTO>, BusinessLicenseUploadValidator>();
         services.AddScoped<IValidator<RejectUpgradeRequestDTO>, RejectUpgradeRequestValidator>();
         services.AddUserValidators();
