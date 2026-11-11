@@ -26,6 +26,7 @@ public static class ApplicationServiceExtension
         // Hotel & Business Services
         services.AddScoped<IHotelService, HotelService>();
         services.AddScoped<IOwnerHotelService, OwnerHotelService>();
+        services.AddScoped<IOwnerHotelUpdateService, OwnerHotelUpdateService>();
         services.AddScoped<IBookingService, BookingService>();
         services.AddScoped<ILocationService, LocationService>();
         services.AddScoped<IRoomService, RoomService>();

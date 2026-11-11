@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using HotelBooking.application.DTOs.Hotel.Owner;
 using HotelBooking.application.Services.Domains.HotelManagement.Owner;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -24,6 +25,15 @@ public class HotelController(IOwnerHotelService hotels) : ControllerBase
     {
         if (!TryGetOwnerId(out var ownerId)) return Unauthorized();
         return ApiResponseHandlerHelper.HandleResponse(await hotels.GetByIdAsync(ownerId, hotelId, cancellationToken));
+    }
+
+    [HttpPut("{hotelId:int}/information")]
+    public async Task<IActionResult> UpdateInformation(int hotelId, [FromBody] OwnerHotelUpdateDTO input,
+        [FromServices] IOwnerHotelUpdateService updater, CancellationToken cancellationToken = default)
+    {
+        // FR-CAT-002/003: the Owner identity comes only from trusted authentication claims.
+        if (!TryGetOwnerId(out var ownerId)) return Unauthorized();
+        return ApiResponseHandlerHelper.HandleResponse(await updater.UpdateAsync(ownerId, hotelId, input, cancellationToken));
     }
 
     private bool TryGetOwnerId(out int ownerId) =>
