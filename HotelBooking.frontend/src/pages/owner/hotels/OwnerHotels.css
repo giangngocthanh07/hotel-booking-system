@@ -37,5 +37,17 @@
 .owned-field:last-child { border: 0; }
 .owned-field dt { font-size: 12px; color: #64748b; margin-bottom: 5px; }
 .owned-field dd { margin: 0; overflow-wrap: anywhere; }
+.owned-detail-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; }
+.owned-form-grid { border: 0; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.owned-form-fields { display: grid; gap: 18px; }
+.owned-form-fields label { display: grid; gap: 8px; font-size: 14px; font-weight: 600; }
+.owned-form-fields :is(input, textarea, select) { box-sizing: border-box; width: 100%; min-width: 0; border: 1px solid #cbd5e1; border-radius: 8px; padding: 11px 12px; color: #0f172a; background: white; font: inherit; font-weight: 400; }
+.owned-form-fields textarea { resize: vertical; }
+.owned-form-fields :is(input, textarea, select):focus-visible { outline: 2px solid #ea580c; outline-offset: 2px; }
+.owned-form-fields :disabled, .owned-form-grid:disabled { opacity: .7; }
+.owned-form-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+.owned-hotels .owned-save { background: #c2410c; color: white; border-color: #c2410c; }
+.owned-success { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px; color: #166534; }
+@media (max-width: 900px) { .owned-form-grid { grid-template-columns: 1fr; } }
 @media (max-width: 900px) { .owned-info-grid { grid-template-columns: 1fr; } .owned-hotels { padding: 24px; } }
 @media (max-width: 600px) { .owned-hotels { padding: 16px; } .owned-heading { flex-direction: column; } .owned-detail-cover .owned-cover { height: 220px; } }

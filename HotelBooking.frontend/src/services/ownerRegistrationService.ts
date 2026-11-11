@@ -97,9 +97,9 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   return data as ApiResponse<T>;
 }
 
-export const getCountries = () => request<LocationItem[]>('/locations/countries');
-export const getProvinces = (countryId: number) => request<LocationItem[]>(`/locations/countries/${countryId}/provinces`);
-export const getWards = (provinceId: number) => request<LocationItem[]>(`/locations/provinces/${provinceId}/wards`);
+export const getCountries = (signal?: AbortSignal) => request<LocationItem[]>('/locations/countries', { signal });
+export const getProvinces = (countryId: number, signal?: AbortSignal) => request<LocationItem[]>(`/locations/countries/${countryId}/provinces`, { signal });
+export const getWards = (provinceId: number, signal?: AbortSignal) => request<LocationItem[]>(`/locations/provinces/${provinceId}/wards`, { signal });
 
 export const getPropertyTypes = () => request<PropertyTypeItem[]>('/hotels/property-types');
 

@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useParams, useSearchParams } from "react-router-dom";
 import { getOwnerHotel, OwnerHotelApiError } from "../../../services/owner/ownerHotelService";
 import type { OwnerHotelDetails } from "../../../types/owner/ownerHotel.types";
 import { HotelField, OwnerHotelCover, OwnerHotelStatus } from "./OwnerHotelPresentation";
@@ -10,6 +10,7 @@ import "./OwnerHotels.css";
 export default function OwnerHotelDetailsPage() {
   const { hotelId } = useParams();
   const [search] = useSearchParams();
+  const location = useLocation();
   const load = useCallback((signal: AbortSignal) => {
     if (!hotelId || !/^\d+$/.test(hotelId) || Number(hotelId) <= 0 || Number(hotelId) > 2147483647)
       return Promise.reject(new OwnerHotelApiError("Invalid Hotel ID.", 400));
@@ -21,8 +22,10 @@ export default function OwnerHotelDetailsPage() {
     {loading && <p role="status" className="owned-state">Loading hotel details…</p>}
     {error && <div role="alert" className="owned-state owned-error"><h1>Hotel details unavailable</h1><p>{error}</p><button onClick={retry}>Retry</button></div>}
     {!loading && !error && data && <>
+      {location.state?.hotelInformationSaved === true && <p role="status" className="owned-success">Hotel information saved.</p>}
       <header className="owned-heading"><div><p className="owned-eyebrow">Hotel details</p><h1>{data.name}</h1><p>{data.address}</p></div>
-        <OwnerHotelStatus hotel={data} /></header>
+        <div className="owned-detail-actions"><OwnerHotelStatus hotel={data} />
+          <Link className="owned-action" to={`/owner/hotels/${data.id}/information?pageIndex=${ownerPageIndex(search.get("pageIndex"))}`}>Edit information</Link></div></header>
       <div className="owned-detail-cover"><OwnerHotelCover key={data.coverImageUrl} src={data.coverImageUrl} name={data.name} /></div>
       <HotelInformation hotel={data} />
     </>}
