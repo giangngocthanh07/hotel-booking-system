@@ -349,6 +349,8 @@ public partial class HotelBookingDBContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK__HotelIma__3214EC071B042318");
 
+            entity.HasIndex(e => new { e.HotelId, e.DisplayOrder, e.Id }, "IX_HotelImages_DisplayOrder");
+
             entity.HasIndex(e => e.HotelId, "IX_HotelImages_HotelId");
 
             entity.Property(e => e.ImageUrl).HasMaxLength(500);

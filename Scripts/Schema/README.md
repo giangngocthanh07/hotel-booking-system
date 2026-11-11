@@ -1,4 +1,9 @@
-# Business license upload registry — step 1
+# Schema upgrades
+
+- Hotel gallery ordering: [2026-11-11-hotel-image-display-order.README.md](2026-11-11-hotel-image-display-order.README.md).
+- Business-license upload registry: instructions below.
+
+## Business license upload registry — step 1
 
 Run `2026-11-09-business-license-uploads.sql` against the intended application database after review. This is a database-first schema upgrade, not an EF migration. The script rejects system databases and requires existing `dbo.Users` and `dbo.HotelApprovalRequests` tables.
 
