@@ -13,5 +13,7 @@ public partial class HotelImage
 
     public bool? IsDeleted { get; set; }
 
+    public int DisplayOrder { get; set; }
+
     public virtual Hotel Hotel { get; set; } = null!;
 }
