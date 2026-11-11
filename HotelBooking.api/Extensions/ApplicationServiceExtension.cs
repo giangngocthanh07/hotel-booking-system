@@ -4,6 +4,7 @@ using HotelBooking.application.Services.Domains.Media;
 using HotelBooking.application.Services.Domains.AdminManagement;
 using HotelBooking.application.Services.Domains.HotelManagement;
 using HotelBooking.application.Services.Domains.HotelManagement.Owner;
+using HotelBooking.application.Services.Domains.HotelManagement.Owner.Images;
 using HotelBooking.application.Services.Domains.RequestManagement;
 using HotelBooking.application.Services.Domains.RequestManagement.Admin;
 using HotelBooking.application.Services.Domains.RequestManagement.Customer;
@@ -27,6 +28,7 @@ public static class ApplicationServiceExtension
         services.AddScoped<IHotelService, HotelService>();
         services.AddScoped<IOwnerHotelService, OwnerHotelService>();
         services.AddScoped<IOwnerHotelUpdateService, OwnerHotelUpdateService>();
+        services.AddScoped<IOwnerHotelImageReadService, OwnerHotelImageReadService>();
         services.AddScoped<IBookingService, BookingService>();
         services.AddScoped<ILocationService, LocationService>();
         services.AddScoped<IRoomService, RoomService>();
