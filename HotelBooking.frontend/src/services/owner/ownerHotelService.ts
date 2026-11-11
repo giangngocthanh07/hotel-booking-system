@@ -1,20 +1,21 @@
 import { API_BASE_URL } from "../../config/api";
 import { getAuthToken } from "../authService";
-import type { OwnerHotelDetails, OwnerHotelsPageData } from "../../types/owner/ownerHotel.types";
+import type { OwnerHotelDetails, OwnerHotelsPageData, OwnerHotelInformationUpdate } from "../../types/owner/ownerHotel.types";
 
 export class OwnerHotelApiError extends Error {
   readonly status: number;
   constructor(message: string, status: number) { super(message); this.status = status; }
 }
 
-async function read<T>(path: string, signal?: AbortSignal): Promise<T> {
+async function read<T>(path: string, signal?: AbortSignal, options: RequestInit = {}): Promise<T> {
   const token = getAuthToken();
   if (!token) throw new OwnerHotelApiError("Please sign in again to view your hotels.", 401);
   const response = await fetch(`${API_BASE_URL}/owner/hotels${path}`, {
-    headers: { Authorization: `Bearer ${token}` }, signal, cache: "no-store",
+    ...options, headers: { Authorization: `Bearer ${token}`, ...(options.body ? { "Content-Type": "application/json" } : {}) }, signal, cache: "no-store",
   });
-  const body = await response.json().catch(() => null);
-  if (!response.ok) throw new OwnerHotelApiError(messageFor(response.status), response.status);
+  const body = await response.json().catch(failure => { if (signal?.aborted) throw failure; return null; });
+  if (!response.ok) throw new OwnerHotelApiError(
+    [400, 409].includes(response.status) && typeof body?.message === "string" ? body.message : messageFor(response.status), response.status);
   if (body?.statusCode !== "Success" || body.content == null)
     throw new OwnerHotelApiError("Unable to load hotel information. Please try again.", 500);
   return body.content as T;
@@ -35,4 +36,14 @@ export function getOwnerHotel(hotelId: number, signal?: AbortSignal): Promise<Ow
   if (!Number.isSafeInteger(hotelId) || hotelId <= 0 || hotelId > 2147483647)
     return Promise.reject(new OwnerHotelApiError("Invalid Hotel ID.", 400));
   return read<OwnerHotelDetails>(`/${hotelId}`, signal);
+}
+
+export async function updateOwnerHotelInformation(hotelId: number, input: OwnerHotelInformationUpdate, signal?: AbortSignal): Promise<boolean> {
+  if (!Number.isSafeInteger(hotelId) || hotelId <= 0 || hotelId > 2147483647) throw new OwnerHotelApiError("Invalid Hotel ID.", 400);
+  // FR-CAT-002/003: serialize only the editable fields, even if the caller supplies a larger object.
+  const { name, description, address, publicPhone, publicEmail, countryId, provinceId, wardId, latitude, longitude } = input;
+  const result = await read<boolean>(`/${hotelId}/information`, signal, { method: "PUT",
+    body: JSON.stringify({ name, description, address, publicPhone, publicEmail, countryId, provinceId, wardId, latitude, longitude }) });
+  if (result !== true) throw new OwnerHotelApiError("Hotel information could not be saved.", 500);
+  return true;
 }

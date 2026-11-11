@@ -33,3 +33,16 @@ export interface OwnerHotelsPageData {
   pageIndex: number;
   pageSize: number;
 }
+
+export interface OwnerHotelInformationUpdate {
+  name: string;
+  description: string;
+  address: string;
+  publicPhone: string;
+  publicEmail: string;
+  countryId: number;
+  provinceId: number;
+  wardId: number;
+  latitude: number | null;
+  longitude: number | null;
+}
