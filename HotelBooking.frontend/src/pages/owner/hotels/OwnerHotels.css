@@ -1,0 +1,41 @@
+.owned-hotels { max-width: 1120px; margin: 0 auto; padding: 32px; color: #0f172a; }
+.owned-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin: 20px 0 28px; }
+.owned-heading h1 { font-size: 28px; margin: 4px 0 10px; overflow-wrap: anywhere; }
+.owned-heading p, .owned-card-body p { color: #64748b; line-height: 1.6; margin: 0; overflow-wrap: anywhere; }
+.owned-eyebrow { color: #c2410c !important; text-transform: uppercase; font-size: 12px; font-weight: 700; letter-spacing: .1em; }
+.owned-action, .owned-hotels button { border: 1px solid #cbd5e1; border-radius: 8px; background: white; padding: 10px 16px; font: inherit; cursor: pointer; }
+.owned-action { text-decoration: none; color: #9a3412; white-space: nowrap; }
+.owned-hotels button:disabled { opacity: .5; cursor: default; }
+.owned-hotels :is(a, button):focus-visible { outline: 3px solid #ea580c; outline-offset: 4px; }
+.owned-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 22px; }
+.owned-card, .owned-info, .owned-state { background: white; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; }
+.owned-card-body { padding: 20px; }
+.owned-card h2 { font-size: 20px; margin: 14px 0 8px; overflow-wrap: anywhere; }
+.owned-card h2 a { color: #0f172a; text-decoration: none; }
+.owned-card h2 a:hover { color: #c2410c; text-decoration: underline; }
+.owned-cover { width: 100%; height: 185px; display: block; object-fit: cover; }
+.owned-cover--empty { display: grid; place-items: center; background: #f1f5f9; color: #64748b; }
+.owned-statuses { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.owned-status { font-size: 12px; font-weight: 700; border-radius: 30px; padding: 5px 10px; background: #e2e8f0; }
+.owned-status[data-status="Active"] { background: #dcfce7; color: #166534; }
+.owned-status[data-status="Inactive"] { background: #ffedd5; color: #9a3412; }
+.owned-status[data-status="Suspended"] { background: #fee2e2; color: #991b1b; }
+.owned-verification { font-size: 12px; color: #475569; }
+.owned-state { padding: 28px; text-align: center; margin: 24px 0; }
+.owned-state h2 { font-size: 20px; }
+.owned-error { color: #991b1b; background: #fff7f7; }
+.owned-pagination { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 16px; margin-top: 28px; font-size: 14px; }
+.owned-back { color: #9a3412; text-underline-offset: 4px; }
+.owned-detail-cover { border-radius: 14px; overflow: hidden; margin-bottom: 24px; }
+.owned-detail-cover .owned-cover { height: 300px; }
+.owned-info-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.owned-info { padding: 24px; }
+.owned-info h2 { margin-top: 0; font-size: 20px; }
+.owned-description { white-space: pre-wrap; line-height: 1.7; color: #475569; overflow-wrap: anywhere; }
+.owned-info dl { margin: 0; }
+.owned-field { padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
+.owned-field:last-child { border: 0; }
+.owned-field dt { font-size: 12px; color: #64748b; margin-bottom: 5px; }
+.owned-field dd { margin: 0; overflow-wrap: anywhere; }
+@media (max-width: 900px) { .owned-info-grid { grid-template-columns: 1fr; } .owned-hotels { padding: 24px; } }
+@media (max-width: 600px) { .owned-hotels { padding: 16px; } .owned-heading { flex-direction: column; } .owned-detail-cover .owned-cover { height: 220px; } }

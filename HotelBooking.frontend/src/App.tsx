@@ -16,6 +16,8 @@ import UserProfilePage from "./pages/user/UserProfilePage";
 import HotelRegistrationPage from "./pages/owner/HotelRegistrationPage";
 import OwnerLayout from "./layouts/OwnerLayout";
 import OwnerDashboardPage from "./pages/owner/OwnerDashboardPage";
+import OwnerHotelsPage from "./pages/owner/hotels/OwnerHotelsPage";
+import OwnerHotelDetailsPage from "./pages/owner/hotels/OwnerHotelDetailsPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import NotFoundPage from "./pages/NotFoundPage";
 
@@ -47,6 +49,8 @@ function App() {
           <Route path="/owner" element={<OwnerLayout />}>
             <Route path="dashboard" element={<OwnerDashboardPage />} />
             <Route path="registration" element={<HotelRegistrationPage />} />
+            <Route path="hotels" element={<OwnerHotelsPage />} />
+            <Route path="hotels/:hotelId" element={<OwnerHotelDetailsPage />} />
           </Route>
         </Route>
 
