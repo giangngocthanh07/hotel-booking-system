@@ -50,9 +50,11 @@ public class HotelRepository : Repository<Hotel>, IHotelRepository
     {
         // FR-ONB-016 / FR-CAT-006/007: public links must respect approval and operational state.
         // Keep this local to public details so management reads can still access hidden Hotels.
-        return await _dbSet
+        return await _dbSet.AsNoTracking()
             .Where(h => h.Id == id && h.IsVerified == true && h.Status == "Active" && h.IsDeleted != true)
-            .Include(h => h.HotelImages)
+            // FR-MED-005/007: stable gallery order; no tracking prevents deleted-image navigation fixup.
+            .Include(h => h.HotelImages.Where(image => image.IsDeleted != true)
+                .OrderBy(image => image.DisplayOrder).ThenBy(image => image.Id))
             .Include(h => h.HotelAmenities).ThenInclude(ha => ha.Amenity)
             .Include(h => h.RoomTypes).ThenInclude(rt => rt.RoomImages)
             .Include(h => h.RoomTypes).ThenInclude(rt => rt.RoomAmenities).ThenInclude(ra => ra.Amenity)
