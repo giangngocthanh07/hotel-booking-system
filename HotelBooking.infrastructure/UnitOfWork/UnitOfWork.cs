@@ -4,15 +4,26 @@ public interface IUnitOfWork : IAsyncDisposable
 {
 
     Task BeginTransactionAsync();
+    Task BeginTransactionAsync(CancellationToken cancellationToken);
     Task CommitTransactionAsync();
+    Task CommitTransactionAsync(CancellationToken cancellationToken);
 
     Task<int> SaveChangesAsync();
     Task<SaveChangesResult> TrySaveChangesAsync(CancellationToken cancellationToken = default);
     Task RollBackTransactionAsync();
+    Task RollBackTransactionAsync(CancellationToken cancellationToken);
 }
 
 public class UnitOfWork : IUnitOfWork
 {
+    public async Task BeginTransactionAsync(CancellationToken cancellationToken) =>
+        await _context.Database.BeginTransactionAsync(cancellationToken);
+
+    public async Task CommitTransactionAsync(CancellationToken cancellationToken) =>
+        await _context.Database.CommitTransactionAsync(cancellationToken);
+
+    public async Task RollBackTransactionAsync(CancellationToken cancellationToken) =>
+        await _context.Database.RollbackTransactionAsync(cancellationToken);
 
     private readonly HotelBookingDBContext _context;
 

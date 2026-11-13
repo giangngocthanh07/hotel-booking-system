@@ -21,24 +21,6 @@ public static class BusinessLicenseFileRules
         _ => false,
     };
 
-    public static async Task<MemoryStream?> ReadContentAsync(Stream source, CancellationToken cancellationToken)
-    {
-        var content = new MemoryStream();
-        try
-        {
-            if (source.CanSeek) source.Position = 0;
-            var block = new byte[64 * 1024];
-            while (content.Length <= MaximumSize)
-            {
-                // Read at most one byte past the limit, even when metadata lies or the stream cannot seek.
-                var count = Math.Min(block.Length, MaximumSize + 1 - (int)content.Length);
-                var read = await source.ReadAsync(block.AsMemory(0, count), cancellationToken);
-                if (read == 0) { content.Position = 0; return content; }
-                await content.WriteAsync(block.AsMemory(0, read), cancellationToken);
-            }
-            await content.DisposeAsync();
-            return null;
-        }
-        catch { await content.DisposeAsync(); throw; }
-    }
+    public static Task<MemoryStream?> ReadContentAsync(Stream source, CancellationToken cancellationToken) =>
+        HotelBooking.application.Services.Helpers.Media.BoundedMediaContent.ReadAsync(source, MaximumSize, cancellationToken);
 }
