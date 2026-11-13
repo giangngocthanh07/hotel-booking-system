@@ -1,10 +1,17 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getOwnerHotelMedia, uploadOwnerHotelImage } from "./ownerHotelMediaService";
+import { deleteOwnerHotelImage, getOwnerHotelMedia, uploadOwnerHotelImage } from "./ownerHotelMediaService";
 
 vi.mock("../authService", () => ({ getAuthToken: () => "owner-token" }));
 afterEach(() => vi.unstubAllGlobals());
 
 describe("Owner images (FR-CAT-003, FR-MED-001/002/003)", () => {
+  it("deletes exactly the selected image through the authenticated gallery endpoint", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ statusCode: "Success", content: true }) });
+    vi.stubGlobal("fetch", fetchMock);
+    const signal = new AbortController().signal;
+    await expect(deleteOwnerHotelImage(42, 7, signal)).resolves.toBe(true);
+    expect(fetchMock).toHaveBeenCalledWith(expect.stringMatching(/\/42\/images\/gallery\/7$/), expect.objectContaining({ method: "DELETE", signal, headers: { Authorization: "Bearer owner-token" } }));
+  });
   it("reads owned media with authentication and cancellation", async () => {
     const content = { hotelId: 42, coverImageUrl: null, gallery: [] };
     const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ statusCode: "Success", content }) });

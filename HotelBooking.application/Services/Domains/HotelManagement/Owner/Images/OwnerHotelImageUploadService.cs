@@ -45,10 +45,10 @@ public class OwnerHotelImageUploadService(IHotelImageRepository images, IPhotoSe
         // FR-CAT-003 / FR-MED-003: do not read a foreign Hotel's file or reach the provider before ownership checks.
         if (!await images.OwnsHotelAsync(ownerId, hotelId, cancellationToken)) return Missing();
         await using var content = await BoundedMediaContent.ReadAsync(file.Content, HotelImageFileRules.MaximumSize, cancellationToken);
-        if (content == null) return Invalid("Hotel images must be no larger than 10 MiB.");
-        if (content.Length == 0 || content.Length != file.Size) return Invalid("Image content size does not match the declared size.");
+        if (content == null) return Invalid("This photo is too large. Choose a JPG, JPEG or PNG photo no larger than 10 MB.");
+        if (content.Length == 0 || content.Length != file.Size) return Invalid("This image is empty or could not be read completely. Choose the original JPG, JPEG or PNG image, up to 10 MB, and try again.");
         if (!HotelImageFileRules.MatchesSignature(file.FileName, content.GetBuffer().AsSpan(0, (int)content.Length)))
-            return Invalid("Image content must match its extension and MIME type.");
+            return Invalid("This file is not a valid JPG, JPEG or PNG image. Open and export it as JPG or PNG, then upload it again (maximum 10 MB). Simply renaming the file is not enough.");
         var uploaded = await photos.UploadHotelImageAsync(new UploadFileDTO
         {
             FileName = file.FileName, ContentType = file.ContentType, Size = content.Length, Content = content,

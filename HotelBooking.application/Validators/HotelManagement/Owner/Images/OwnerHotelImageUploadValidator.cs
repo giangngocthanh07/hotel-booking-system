@@ -13,8 +13,8 @@ public class OwnerHotelImageUploadValidator : AbstractValidator<OwnerHotelImageF
             .Must(name => HotelImageFileRules.ExpectedMime(name) != null).WithMessage("Hotel images must be JPEG or PNG files.");
         RuleFor(file => file.ContentType).NotEmpty()
             .Must((file, mime) => string.Equals(mime, HotelImageFileRules.ExpectedMime(file.FileName), StringComparison.OrdinalIgnoreCase))
-            .WithMessage("Image MIME type must match the file extension.");
-        RuleFor(file => file.Size).InclusiveBetween(1, HotelImageFileRules.MaximumSize).WithMessage("Hotel images must contain data and be no larger than 10 MiB.");
-        RuleFor(file => file.Content).NotNull().Must(content => content.CanRead).WithMessage("Image content must be readable.");
+            .WithMessage("Please choose a genuine JPG, JPEG or PNG image. Renaming another file to .jpg or .png does not convert it into an image.");
+        RuleFor(file => file.Size).InclusiveBetween(1, HotelImageFileRules.MaximumSize).WithMessage("Choose a photo that is not empty and no larger than 10 MB.");
+        RuleFor(file => file.Content).NotNull().Must(content => content.CanRead).WithMessage("This photo could not be read. Choose the original JPG, JPEG or PNG photo and try again.");
     }
 }

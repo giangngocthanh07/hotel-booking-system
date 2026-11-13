@@ -29,6 +29,14 @@ public class HotelImagesController(IOwnerHotelImageReadService images) : Control
     public Task<IActionResult> UploadCover(int hotelId, IFormFile? file, [FromServices] IOwnerHotelImageUploadService uploader,
         CancellationToken cancellationToken = default) => Upload(hotelId, file, uploader, true, cancellationToken);
 
+    [HttpDelete("gallery/{imageId:int}")]
+    public async Task<IActionResult> DeleteGallery(int hotelId, int imageId, [FromServices] IOwnerHotelImageDeleteService remover,
+        CancellationToken cancellationToken = default)
+    {
+        if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var ownerId) || ownerId <= 0) return Unauthorized();
+        return ApiResponseHandlerHelper.HandleResponse(await remover.DeleteAsync(ownerId, hotelId, imageId, cancellationToken));
+    }
+
     [HttpPost("gallery")]
     [Consumes("multipart/form-data")]
     [RequestSizeLimit(HotelImageFileRules.MaximumSize + 1024 * 1024)]

@@ -10,10 +10,20 @@ public interface IHotelImageRepository : IRepository<HotelImage>
     Task<int?> GetMaximumDisplayOrderAsync(int hotelId, CancellationToken cancellationToken = default);
     Task<int> GetAdditionalImageCountAsync(int hotelId, string? coverUrl, CancellationToken cancellationToken = default);
     Task AddGalleryImageAsync(HotelImage image, CancellationToken cancellationToken = default);
+    Task<HotelImage?> GetGalleryImageForWriteAsync(int hotelId, int imageId, CancellationToken cancellationToken = default);
+    Task<int> GetAdditionalImageCountExcludingAsync(int hotelId, string? coverUrl, int imageId, CancellationToken cancellationToken = default);
 }
 
 public class HotelImageRepository : Repository<HotelImage>, IHotelImageRepository
 {
+    public async Task<HotelImage?> GetGalleryImageForWriteAsync(int hotelId, int imageId, CancellationToken cancellationToken = default) =>
+        await _dbSet.AsTracking().SingleOrDefaultAsync(image => image.Id == imageId && image.HotelId == hotelId && image.IsDeleted != true, cancellationToken);
+
+    public async Task<int> GetAdditionalImageCountExcludingAsync(int hotelId, string? coverUrl, int imageId, CancellationToken cancellationToken = default) =>
+        await _dbSet.Where(image => image.HotelId == hotelId && image.Id != imageId && image.IsDeleted != true
+            && image.ImageUrl.Trim() != "" && image.ImageUrl != coverUrl)
+            .Select(image => image.ImageUrl).Distinct().CountAsync(cancellationToken);
+
     public async Task<bool> OwnsHotelAsync(int ownerId, int hotelId, CancellationToken cancellationToken = default) =>
         await _context.Hotels.AnyAsync(hotel => hotel.Id == hotelId && hotel.OwnerId == ownerId && hotel.IsDeleted != true, cancellationToken);
 

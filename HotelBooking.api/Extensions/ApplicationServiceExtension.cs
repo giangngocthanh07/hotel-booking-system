@@ -30,6 +30,7 @@ public static class ApplicationServiceExtension
         services.AddScoped<IOwnerHotelUpdateService, OwnerHotelUpdateService>();
         services.AddScoped<IOwnerHotelImageReadService, OwnerHotelImageReadService>();
         services.AddScoped<IOwnerHotelImageUploadService, OwnerHotelImageUploadService>();
+        services.AddScoped<IOwnerHotelImageDeleteService, OwnerHotelImageDeleteService>();
         services.AddScoped<IBookingService, BookingService>();
         services.AddScoped<ILocationService, LocationService>();
         services.AddScoped<IRoomService, RoomService>();
