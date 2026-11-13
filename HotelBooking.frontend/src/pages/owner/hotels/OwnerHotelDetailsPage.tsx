@@ -25,7 +25,8 @@ export default function OwnerHotelDetailsPage() {
       {location.state?.hotelInformationSaved === true && <p role="status" className="owned-success">Hotel information saved.</p>}
       <header className="owned-heading"><div><p className="owned-eyebrow">Hotel details</p><h1>{data.name}</h1><p>{data.address}</p></div>
         <div className="owned-detail-actions"><OwnerHotelStatus hotel={data} />
-          <Link className="owned-action" to={`/owner/hotels/${data.id}/information?pageIndex=${ownerPageIndex(search.get("pageIndex"))}`}>Edit information</Link></div></header>
+          <Link className="owned-action" to={`/owner/hotels/${data.id}/information?pageIndex=${ownerPageIndex(search.get("pageIndex"))}`}>Edit information</Link>
+          <Link className="owned-action" to={`/owner/hotels/${data.id}/images?pageIndex=${ownerPageIndex(search.get("pageIndex"))}`}>Manage images</Link></div></header>
       <div className="owned-detail-cover"><OwnerHotelCover key={data.coverImageUrl} src={data.coverImageUrl} name={data.name} /></div>
       <HotelInformation hotel={data} />
     </>}
