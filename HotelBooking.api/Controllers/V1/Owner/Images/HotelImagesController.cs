@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using HotelBooking.application.DTOs.Hotel.Owner.Images;
+using HotelBooking.application.Services.Helpers.Media.HotelImages;
 using HotelBooking.application.Services.Domains.HotelManagement.Owner.Images;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,5 +20,30 @@ public class HotelImagesController(IOwnerHotelImageReadService images) : Control
         if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var ownerId) || ownerId <= 0)
             return Unauthorized();
         return ApiResponseHandlerHelper.HandleResponse(await images.GetAsync(ownerId, hotelId, cancellationToken));
+    }
+
+    [HttpPost("cover")]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(HotelImageFileRules.MaximumSize + 1024 * 1024)]
+    [RequestFormLimits(MultipartBodyLengthLimit = HotelImageFileRules.MaximumSize + 1024 * 1024)]
+    public Task<IActionResult> UploadCover(int hotelId, IFormFile? file, [FromServices] IOwnerHotelImageUploadService uploader,
+        CancellationToken cancellationToken = default) => Upload(hotelId, file, uploader, true, cancellationToken);
+
+    [HttpPost("gallery")]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(HotelImageFileRules.MaximumSize + 1024 * 1024)]
+    [RequestFormLimits(MultipartBodyLengthLimit = HotelImageFileRules.MaximumSize + 1024 * 1024)]
+    public Task<IActionResult> UploadGallery(int hotelId, IFormFile? file, [FromServices] IOwnerHotelImageUploadService uploader,
+        CancellationToken cancellationToken = default) => Upload(hotelId, file, uploader, false, cancellationToken);
+
+    private async Task<IActionResult> Upload(int hotelId, IFormFile? file, IOwnerHotelImageUploadService uploader,
+        bool cover, CancellationToken cancellationToken)
+    {
+        if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var ownerId) || ownerId <= 0) return Unauthorized();
+        if (file == null) return ApiResponseHandlerHelper.HandleResponse(
+            ResponseFactory.Failure<OwnerHotelImageUploadDTO>(StatusCodeResponse.BadRequest, "An image file is required."));
+        await using var stream = file.OpenReadStream();
+        var input = new OwnerHotelImageFileDTO { FileName = file.FileName, ContentType = file.ContentType, Size = file.Length, Content = stream };
+        return ApiResponseHandlerHelper.HandleResponse(await uploader.UploadAsync(ownerId, hotelId, input, cover, cancellationToken));
     }
 }
